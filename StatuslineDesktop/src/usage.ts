@@ -177,7 +177,7 @@ function copyForError(code: UsageErrorCode): StatusCopy {
         eyebrow: "SOURCE / MISSING",
         title: "Codex CLI not found",
         detail:
-          "Instala la CLI o define STATUSLINE_CODEX_PATH y vuelve a actualizar.",
+          "Abre Source Settings para detectar o seleccionar la CLI local.",
       };
     case "timeout":
       return {

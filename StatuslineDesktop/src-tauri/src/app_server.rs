@@ -1,6 +1,5 @@
 use std::{
-    env,
-    path::{Path, PathBuf},
+    path::Path,
     process::Stdio,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -9,18 +8,21 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines},
-    process::{Child, ChildStdin, ChildStdout, Command},
+    process::{Child, ChildStdin, ChildStdout},
     time::timeout,
 };
 
-use crate::usage::{UsageResponse, normalize_usage};
+use crate::{
+    codex_installation::{configure_hidden_process, resolve_codex_launch},
+    usage::{UsageResponse, normalize_usage},
+};
 
 const RESPONSE_TIMEOUT: Duration = Duration::from_secs(12);
 const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum AppServerError {
-    #[error("Codex CLI was not found; install Codex or set STATUSLINE_CODEX_PATH")]
+    #[error("Codex CLI was not found; install Codex or configure its path in Statusline")]
     CodexNotFound,
     #[error("Could not start Codex App Server: {0}")]
     Spawn(String),
@@ -40,29 +42,9 @@ pub enum AppServerError {
     Shutdown(String),
 }
 
-#[must_use]
-pub fn codex_candidates(
-    configured: Option<&Path>,
-    known_install: Option<&Path>,
-    path_entries: &[PathBuf],
-    executable_name: &str,
-) -> Vec<PathBuf> {
-    let mut candidates = Vec::new();
-    if let Some(path) = configured {
-        push_unique(&mut candidates, path.to_path_buf());
-    }
-    if let Some(path) = known_install {
-        push_unique(&mut candidates, path.to_path_buf());
-    }
-    for entry in path_entries {
-        push_unique(&mut candidates, entry.join(executable_name));
-    }
-    candidates
-}
-
-pub async fn fetch_usage(client_version: &str) -> UsageResponse {
+pub async fn fetch_usage(client_version: &str, settings_directory: Option<&Path>) -> UsageResponse {
     let checked_at = unix_timestamp();
-    match query_account_usage(client_version).await {
+    match query_account_usage(client_version, settings_directory).await {
         Ok(results) => normalize_usage(results.account, results.rate_limits, checked_at),
         Err(error) => UsageResponse::Error {
             code: error.code().to_owned(),
@@ -169,9 +151,12 @@ impl AppServerError {
     }
 }
 
-async fn query_account_usage(client_version: &str) -> Result<AccountUsageResults, AppServerError> {
-    let executable = resolve_codex_executable()?;
-    let mut command = Command::new(executable);
+async fn query_account_usage(
+    client_version: &str,
+    settings_directory: Option<&Path>,
+) -> Result<AccountUsageResults, AppServerError> {
+    let launch = resolve_codex_launch(settings_directory).ok_or(AppServerError::CodexNotFound)?;
+    let mut command = launch.command();
     command
         .arg("app-server")
         .arg("--listen")
@@ -267,90 +252,10 @@ async fn stop_child(child: &mut Child) -> Result<(), AppServerError> {
     }
 }
 
-fn resolve_codex_executable() -> Result<PathBuf, AppServerError> {
-    let configured = env::var_os("STATUSLINE_CODEX_PATH").map(PathBuf::from);
-    let known_install = known_install_path();
-    let path_entries = env::var_os("PATH")
-        .map(|path| env::split_paths(&path).collect::<Vec<_>>())
-        .unwrap_or_default();
-    let candidates = codex_candidates(
-        configured.as_deref(),
-        known_install.as_deref(),
-        &path_entries,
-        codex_executable_name(),
-    );
-
-    candidates
-        .into_iter()
-        .find(|candidate| candidate.is_file())
-        .ok_or(AppServerError::CodexNotFound)
-}
-
-#[cfg(windows)]
-fn known_install_path() -> Option<PathBuf> {
-    env::var_os("LOCALAPPDATA").map(|local_app_data| {
-        PathBuf::from(local_app_data)
-            .join("Programs")
-            .join("OpenAI")
-            .join("Codex")
-            .join("bin")
-            .join("codex.exe")
-    })
-}
-
-#[cfg(not(windows))]
-fn known_install_path() -> Option<PathBuf> {
-    env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/bin/codex"))
-}
-
-#[cfg(windows)]
-const fn codex_executable_name() -> &'static str {
-    "codex.exe"
-}
-
-#[cfg(not(windows))]
-const fn codex_executable_name() -> &'static str {
-    "codex"
-}
-
-#[cfg(windows)]
-fn configure_hidden_process(command: &mut Command) {
-    use std::os::windows::process::CommandExt;
-
-    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-    command.as_std_mut().creation_flags(CREATE_NO_WINDOW);
-}
-
-#[cfg(not(windows))]
-fn configure_hidden_process(_command: &mut Command) {}
-
 fn unix_timestamp() -> i64 {
     let seconds = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
     i64::try_from(seconds).unwrap_or(i64::MAX)
-}
-
-fn push_unique(candidates: &mut Vec<PathBuf>, candidate: PathBuf) {
-    if !candidates
-        .iter()
-        .any(|existing| paths_are_equal(existing, &candidate))
-    {
-        candidates.push(candidate);
-    }
-}
-
-#[cfg(windows)]
-fn paths_are_equal(left: &Path, right: &Path) -> bool {
-    left.components()
-        .map(|component| component.as_os_str().to_string_lossy().to_ascii_lowercase())
-        .eq(right
-            .components()
-            .map(|component| component.as_os_str().to_string_lossy().to_ascii_lowercase()))
-}
-
-#[cfg(not(windows))]
-fn paths_are_equal(left: &Path, right: &Path) -> bool {
-    left == right
 }

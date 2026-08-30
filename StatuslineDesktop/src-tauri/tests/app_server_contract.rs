@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
 use serde_json::json;
-use statusline_desktop_lib::app_server::{
-    AppServerError, codex_candidates, protocol_messages, response_result,
+use statusline_desktop_lib::{
+    app_server::{AppServerError, protocol_messages, response_result},
+    codex_installation::{codex_candidates, unix_common_paths, windows_common_paths},
 };
 
 #[test]
@@ -94,9 +95,9 @@ fn codex_candidates_prioritize_configuration_then_known_install_then_path() {
 
     let candidates = codex_candidates(
         Some(&configured),
-        Some(&known_install),
+        std::slice::from_ref(&known_install),
         &path_entries,
-        "codex.exe",
+        &["codex.exe"],
     );
 
     assert_eq!(
@@ -115,10 +116,39 @@ fn codex_candidates_remove_duplicates_without_changing_precedence() {
     let configured = PathBuf::from("C:/same/codex.exe");
     let path_entries = [PathBuf::from("C:/same"), PathBuf::from("C:/other")];
 
-    let candidates = codex_candidates(Some(&configured), None, &path_entries, "codex.exe");
+    let candidates = codex_candidates(Some(&configured), &[], &path_entries, &["codex.exe"]);
 
     assert_eq!(
         candidates,
         vec![configured, PathBuf::from("C:/other/codex.exe")]
     );
+}
+
+#[test]
+fn windows_common_paths_cover_standalone_npm_volta_and_nvm() {
+    let paths = windows_common_paths(
+        Some(PathBuf::from("C:/Users/Ada").as_path()),
+        Some(PathBuf::from("C:/Users/Ada/AppData/Roaming").as_path()),
+        Some(PathBuf::from("C:/Users/Ada/AppData/Local").as_path()),
+        Some(PathBuf::from("C:/Program Files").as_path()),
+        Some(PathBuf::from("C:/nvm/current").as_path()),
+    );
+
+    assert!(paths.contains(&PathBuf::from("C:/Users/Ada/.local/bin/codex.exe")));
+    assert!(paths.contains(&PathBuf::from(
+        "C:/Users/Ada/AppData/Local/Programs/OpenAI/Codex/bin/codex.exe"
+    )));
+    assert!(paths.contains(&PathBuf::from("C:/Users/Ada/AppData/Roaming/npm/codex.cmd")));
+    assert!(paths.contains(&PathBuf::from("C:/Users/Ada/.volta/bin/codex.exe")));
+    assert!(paths.contains(&PathBuf::from("C:/nvm/current/codex.cmd")));
+}
+
+#[test]
+fn unix_common_paths_cover_gui_safe_install_locations() {
+    let home = PathBuf::from("/home/ada");
+    let paths = unix_common_paths(Some(&home));
+
+    assert!(paths.contains(&PathBuf::from("/home/ada/.local/bin/codex")));
+    assert!(paths.contains(&PathBuf::from("/home/ada/.volta/bin/codex")));
+    assert!(paths.contains(&PathBuf::from("/opt/homebrew/bin/codex")));
 }

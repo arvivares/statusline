@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -70,6 +70,8 @@ const windowsConfig = readJson("src-tauri/tauri.windows.conf.json");
 const linuxConfig = readJson("src-tauri/tauri.linux.conf.json");
 const cargoToml = readText("src-tauri/Cargo.toml");
 const cargoLock = readText("src-tauri/Cargo.lock");
+const capabilities = readJson("src-tauri/capabilities/default.json");
+const workflow = readText("../.github/workflows/desktop-installers.yml");
 
 const expectedName = "statusline-desktop";
 const expectedProductName = "Statusline Companion";
@@ -107,6 +109,31 @@ assert(
   `Tauri identifier must be ${expectedIdentifier}`,
 );
 assert(tauriConfig.bundle?.active === true, "Tauri bundling must stay enabled");
+assert(
+  packageJson.author === "Inmerzion" &&
+    cargoToml.includes('authors = ["Inmerzion"]'),
+  "npm and Cargo publisher metadata must identify Inmerzion",
+);
+assert(
+  packageJson.homepage === "https://github.com/arvivares/statusline" &&
+    tauriConfig.bundle?.homepage === packageJson.homepage,
+  "homepage metadata must point to the Statusline repository",
+);
+assert(
+  tauriConfig.bundle?.publisher === "Inmerzion" &&
+    tauriConfig.bundle?.category === "Utility" &&
+    typeof tauriConfig.bundle?.copyright === "string",
+  "native bundle publisher, category and copyright metadata are required",
+);
+assert(
+  packageJson.dependencies?.["@tauri-apps/plugin-dialog"] === "2.7.2" &&
+    cargoToml.includes('tauri-plugin-dialog = "=2.7.2"'),
+  "the native Codex executable selector must stay version-pinned",
+);
+assert(
+  capabilities.permissions?.includes("dialog:allow-open"),
+  "the main window must explicitly allow the native open dialog",
+);
 
 const uniqueVersions = new Set(Object.values(versions));
 assert(
@@ -135,6 +162,49 @@ assert(
   linuxConfig.bundle?.linux?.appimage?.bundleMediaFramework === false,
   "AppImage must not bundle unused multimedia frameworks",
 );
+
+for (const relativePath of [
+  "scripts/generate-checksums.mjs",
+  "scripts/smoke-installers-windows.ps1",
+  "scripts/smoke-installers-linux.sh",
+  "scripts/prepare-windows-signing.ps1",
+  "scripts/cleanup-windows-signing.ps1",
+  "../PRIVACY.md",
+  "../SUPPORT.md",
+  "../docs/release/public-beta-checklist.md",
+]) {
+  assert(
+    existsSync(join(projectRoot, relativePath)),
+    `${relativePath} is required`,
+  );
+}
+
+const actionReferences = [...workflow.matchAll(/^\s*uses:\s*([^\s#]+)/gmu)].map(
+  (match) => match[1],
+);
+assert(
+  actionReferences.length >= 8,
+  "release workflow action references are missing",
+);
+assert(
+  actionReferences.every((reference) => /@[0-9a-f]{40}$/u.test(reference)),
+  "every release action must be pinned to an immutable commit SHA",
+);
+for (const requiredWorkflowToken of [
+  "WINDOWS_CERTIFICATE",
+  "WINDOWS_CERTIFICATE_PASSWORD",
+  "WINDOWS_TIMESTAMP_URL",
+  "Get-AuthenticodeSignature",
+  "smoke-installers-windows.ps1",
+  "smoke-installers-linux.sh",
+  "generate-checksums.mjs",
+  "SHA256SUMS.txt",
+]) {
+  assert(
+    workflow.includes(requiredWorkflowToken),
+    `release workflow is missing ${requiredWorkflowToken}`,
+  );
+}
 assert(
   windowsConfig.app?.windows?.[0]?.visible === true &&
     linuxConfig.app?.windows?.[0]?.visible === true,

@@ -1,7 +1,14 @@
 {
   "name": "statusline-desktop",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
+  "description": "Private, cross-platform companion for local Codex usage limits.",
+  "author": "Inmerzion",
+  "homepage": "https://github.com/arvivares/statusline",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arvivares/statusline.git"
+  },
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
@@ -12,18 +19,20 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "format": "prettier --write \"src/**/*.{ts,css}\" \"scripts/**/*.mjs\" \"src-tauri/tauri*.json\" ../.github/workflows/desktop-installers.yml ../docs/release/desktop-installers.md index.html package.json tsconfig.json vite.config.ts README.md",
-    "format:check": "prettier --check \"src/**/*.{ts,css}\" \"scripts/**/*.mjs\" \"src-tauri/tauri*.json\" ../.github/workflows/desktop-installers.yml ../docs/release/desktop-installers.md index.html package.json tsconfig.json vite.config.ts README.md",
+    "format": "prettier --write \"src/**/*.{ts,css}\" \"scripts/**/*.mjs\" \"src-tauri/tauri*.json\" ../.github/workflows/desktop-installers.yml ../docs/release/desktop-installers.md ../docs/release/public-beta-checklist.md ../PRIVACY.md ../SUPPORT.md index.html package.json tsconfig.json vite.config.ts README.md",
+    "format:check": "prettier --check \"src/**/*.{ts,css}\" \"scripts/**/*.mjs\" \"src-tauri/tauri*.json\" ../.github/workflows/desktop-installers.yml ../docs/release/desktop-installers.md ../docs/release/public-beta-checklist.md ../PRIVACY.md ../SUPPORT.md index.html package.json tsconfig.json vite.config.ts README.md",
     "build": "npm run check && vite build",
     "release:preflight": "node scripts/check-release.mjs",
     "release:check": "npm run release:preflight && npm run format:check && npm test && npm run check",
+    "checksums": "node scripts/generate-checksums.mjs",
     "bundle:windows": "tauri build --ci --bundles nsis,msi",
     "bundle:linux": "tauri build --ci --bundles deb,rpm,appimage",
     "preview": "vite preview",
     "tauri": "tauri"
   },
   "dependencies": {
-    "@tauri-apps/api": "2.11.1"
+    "@tauri-apps/api": "2.11.1",
+    "@tauri-apps/plugin-dialog": "2.7.2"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.11.4",

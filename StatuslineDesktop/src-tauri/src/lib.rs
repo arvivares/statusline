@@ -1,4 +1,5 @@
 pub mod app_server;
+pub mod codex_installation;
 pub mod usage;
 
 use tauri::{
@@ -9,6 +10,7 @@ use tauri::{
 use tauri_plugin_positioner::{Position, WindowExt};
 use tokio::sync::Mutex;
 
+use codex_installation::CodexDiagnostic;
 use usage::UsageResponse;
 
 const TRAY_ID: &str = "statusline-companion-tray";
@@ -65,11 +67,43 @@ async fn refresh_usage(
     state: State<'_, RefreshState>,
 ) -> Result<UsageResponse, String> {
     let _refresh_guard = state.lock.lock().await;
-    let response = app_server::fetch_usage(env!("CARGO_PKG_VERSION")).await;
+    let settings_directory = app.path().app_config_dir().ok();
+    let response =
+        app_server::fetch_usage(env!("CARGO_PKG_VERSION"), settings_directory.as_deref()).await;
     if let Some(tray) = app.tray_by_id(TRAY_ID) {
         let _ = tray.set_tooltip(Some(response.tray_tooltip()));
     }
     Ok(response)
+}
+
+#[tauri::command]
+async fn inspect_codex(app: AppHandle) -> Result<CodexDiagnostic, String> {
+    let settings_directory = app.path().app_config_dir().ok();
+    codex_installation::inspect_codex(settings_directory.as_deref())
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+async fn set_codex_path(app: AppHandle, path: String) -> Result<CodexDiagnostic, String> {
+    let settings_directory = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
+    codex_installation::save_codex_path(&settings_directory, &path)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+async fn clear_codex_path(app: AppHandle) -> Result<CodexDiagnostic, String> {
+    let settings_directory = app
+        .path()
+        .app_config_dir()
+        .map_err(|error| error.to_string())?;
+    codex_installation::clear_codex_path(&settings_directory)
+        .await
+        .map_err(|error| error.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -78,6 +112,7 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             show_main_window(app);
         }))
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_positioner::init())
         .manage(RefreshState::default())
         .setup(|app| {
@@ -131,7 +166,12 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![refresh_usage])
+        .invoke_handler(tauri::generate_handler![
+            refresh_usage,
+            inspect_codex,
+            set_codex_path,
+            clear_codex_path
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

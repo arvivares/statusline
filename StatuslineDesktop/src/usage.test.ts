@@ -109,8 +109,7 @@ describe("copyForState", () => {
     expect(copy).toEqual({
       eyebrow: "SOURCE / MISSING",
       title: "Codex CLI not found",
-      detail:
-        "Instala la CLI o define STATUSLINE_CODEX_PATH y vuelve a actualizar.",
+      detail: "Abre Source Settings para detectar o seleccionar la CLI local.",
     });
   });
 

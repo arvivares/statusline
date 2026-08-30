@@ -1,6 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { open } from "@tauri-apps/plugin-dialog";
 
+import {
+  labelForCodexSource,
+  parseCodexDiagnostic,
+  type CodexDiagnostic,
+} from "./codex";
 import { UsageController } from "./controller";
 import { copyForState, type UsageState } from "./usage";
 
@@ -30,6 +36,31 @@ const recordValue = requireElement("record-value", HTMLElement);
 const updatedValue = requireElement("updated-value", HTMLElement);
 const refreshButton = requireElement("refresh-button", HTMLButtonElement);
 const refreshLabel = requireElement("refresh-label", HTMLElement);
+const settingsButton = requireElement("settings-button", HTMLButtonElement);
+const sourcePanel = requireElement("source-panel", HTMLElement);
+const sourceClose = requireElement("source-close", HTMLButtonElement);
+const sourceSummary = requireElement("source-summary", HTMLElement);
+const sourceStatus = requireElement("source-status", HTMLElement);
+const sourcePath = requireElement("source-path", HTMLElement);
+const sourceOrigin = requireElement("source-origin", HTMLElement);
+const sourceVersion = requireElement("source-version", HTMLElement);
+const sourceChoose = requireElement("source-choose", HTMLButtonElement);
+const sourceScan = requireElement("source-scan", HTMLButtonElement);
+const sourceReset = requireElement("source-reset", HTMLButtonElement);
+const sourceFeedback = requireElement("source-feedback", HTMLElement);
+const installCommand = requireElement("install-command", HTMLElement);
+
+type SourceRuntime = Readonly<{
+  inspect: () => Promise<unknown>;
+  save: (path: string) => Promise<unknown>;
+  clear: () => Promise<unknown>;
+  refreshUsage: () => Promise<void>;
+}>;
+
+let sourceRuntime: SourceRuntime | null = null;
+let sourceActionPending = false;
+let sourceAutoOpened = false;
+let focusBeforeSourcePanel: HTMLElement | null = null;
 
 const meterSegments = Array.from({ length: SEGMENT_COUNT }, () => {
   const segment = document.createElement("span");
@@ -57,6 +88,15 @@ function startTauriRuntime(): void {
     () => Math.floor(Date.now() / 1_000),
   );
 
+  sourceRuntime = {
+    inspect: () => invoke<unknown>("inspect_codex"),
+    save: (path) => invoke<unknown>("set_codex_path", { path }),
+    clear: () => invoke<unknown>("clear_codex_path"),
+    refreshUsage: () => controller.refresh(),
+  };
+  bindSourcePanel();
+  void refreshSourceDiagnostic();
+
   refreshButton.addEventListener("click", () => {
     void controller.refresh();
   });
@@ -79,6 +119,15 @@ function startTauriRuntime(): void {
 }
 
 function startPreview(initialState: UsageState): void {
+  bindSourcePanel();
+  renderCodexDiagnostic({
+    status: initialState.status === "error" ? "missing" : "ready",
+    path: initialState.status === "error" ? null : "/opt/homebrew/bin/codex",
+    source: initialState.status === "error" ? null : "standalone",
+    version: initialState.status === "error" ? null : "codex-cli 0.149.1",
+    savedPath: null,
+    message: null,
+  });
   renderUsage(initialState);
   refreshButton.addEventListener("click", () => {
     renderUsage({ status: "loading" });
@@ -157,6 +206,214 @@ function renderUsage(state: UsageState): void {
       ? "ERROR · NO CREDENTIALS EXPOSED"
       : "OFFLINE · NO SAMPLE AVAILABLE";
   updatedValue.textContent = `LAST ATTEMPT ${formatTime(state.checkedAt)} · CODEX LOCAL`;
+
+  if (
+    state.status === "error" &&
+    state.code === "codexNotFound" &&
+    sourceRuntime !== null &&
+    !sourceAutoOpened
+  ) {
+    sourceAutoOpened = true;
+    openSourcePanel();
+  }
+}
+
+function bindSourcePanel(): void {
+  installCommand.textContent = officialInstallCommand();
+
+  settingsButton.addEventListener("click", () => {
+    if (sourcePanel.hidden) {
+      openSourcePanel();
+    } else {
+      closeSourcePanel();
+    }
+  });
+  sourceClose.addEventListener("click", closeSourcePanel);
+  sourceScan.addEventListener("click", () => {
+    void refreshSourceDiagnostic();
+  });
+  sourceChoose.addEventListener("click", () => {
+    void chooseCodexExecutable();
+  });
+  sourceReset.addEventListener("click", () => {
+    void useAutomaticDetection();
+  });
+  sourcePanel.addEventListener("keydown", trapSourcePanelFocus);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !sourcePanel.hidden) {
+      closeSourcePanel();
+    }
+  });
+}
+
+function openSourcePanel(): void {
+  if (!sourcePanel.hidden) {
+    return;
+  }
+  focusBeforeSourcePanel =
+    document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+  sourcePanel.hidden = false;
+  settingsButton.setAttribute("aria-expanded", "true");
+  sourceClose.focus();
+  if (sourceRuntime !== null) {
+    void refreshSourceDiagnostic();
+  }
+}
+
+function closeSourcePanel(): void {
+  if (sourcePanel.hidden) {
+    return;
+  }
+  sourcePanel.hidden = true;
+  settingsButton.setAttribute("aria-expanded", "false");
+  focusBeforeSourcePanel?.focus();
+  focusBeforeSourcePanel = null;
+}
+
+async function refreshSourceDiagnostic(): Promise<void> {
+  if (sourceRuntime === null || sourceActionPending) {
+    return;
+  }
+  setSourceBusy("SCANNING LOCAL INSTALLS");
+  try {
+    const diagnostic = parseCodexDiagnostic(await sourceRuntime.inspect());
+    renderCodexDiagnostic(diagnostic);
+  } catch (error: unknown) {
+    renderSourceFailure(error);
+  } finally {
+    setSourceControlsDisabled(false);
+  }
+}
+
+async function chooseCodexExecutable(): Promise<void> {
+  if (sourceRuntime === null || sourceActionPending) {
+    return;
+  }
+
+  let selected: string | string[] | null;
+  try {
+    selected = await open({
+      multiple: false,
+      directory: false,
+      title: "Select the Codex executable",
+    });
+  } catch (error: unknown) {
+    renderSourceFailure(error);
+    return;
+  }
+  if (typeof selected !== "string") {
+    return;
+  }
+
+  setSourceBusy("VERIFYING CODEX --VERSION");
+  try {
+    const diagnostic = parseCodexDiagnostic(await sourceRuntime.save(selected));
+    renderCodexDiagnostic(diagnostic);
+    sourceFeedback.textContent =
+      "Verified and saved. Refreshing the local account sample…";
+    await sourceRuntime.refreshUsage();
+  } catch (error: unknown) {
+    renderSourceFailure(error);
+  } finally {
+    setSourceControlsDisabled(false);
+  }
+}
+
+async function useAutomaticDetection(): Promise<void> {
+  if (sourceRuntime === null || sourceActionPending) {
+    return;
+  }
+  setSourceBusy("RESETTING SOURCE");
+  try {
+    const diagnostic = parseCodexDiagnostic(await sourceRuntime.clear());
+    renderCodexDiagnostic(diagnostic);
+    await sourceRuntime.refreshUsage();
+  } catch (error: unknown) {
+    renderSourceFailure(error);
+  } finally {
+    setSourceControlsDisabled(false);
+  }
+}
+
+function renderCodexDiagnostic(diagnostic: CodexDiagnostic): void {
+  sourceSummary.dataset.status = diagnostic.status;
+  sourceStatus.textContent =
+    diagnostic.status === "ready"
+      ? "VERIFIED"
+      : diagnostic.status === "missing"
+        ? "NOT FOUND"
+        : "INVALID SOURCE";
+  sourcePath.textContent = diagnostic.path ?? "No Codex executable detected";
+  sourcePath.title = diagnostic.path ?? "";
+  sourceOrigin.textContent = labelForCodexSource(diagnostic.source);
+  sourceVersion.textContent = diagnostic.version ?? "—";
+  sourceReset.hidden = diagnostic.savedPath === null;
+  sourceFeedback.textContent =
+    diagnostic.message ??
+    (diagnostic.status === "ready"
+      ? "Codex is local, verified and ready for account metadata."
+      : "Install Codex or select its executable manually.");
+}
+
+function renderSourceFailure(error: unknown): void {
+  sourceSummary.dataset.status = "invalid";
+  sourceStatus.textContent = "CHECK FAILED";
+  sourceFeedback.textContent = errorMessage(error);
+}
+
+function setSourceBusy(message: string): void {
+  sourceActionPending = true;
+  setSourceControlsDisabled(true);
+  sourceSummary.dataset.status = "reading";
+  sourceStatus.textContent = "READING";
+  sourceFeedback.textContent = message;
+}
+
+function setSourceControlsDisabled(disabled: boolean): void {
+  sourceActionPending = disabled;
+  sourceChoose.disabled = disabled;
+  sourceScan.disabled = disabled;
+  sourceReset.disabled = disabled;
+}
+
+function trapSourcePanelFocus(event: KeyboardEvent): void {
+  if (event.key !== "Tab") {
+    return;
+  }
+  const focusable = [sourceClose, sourceChoose, sourceScan, sourceReset].filter(
+    (element) => !element.hidden && !element.disabled,
+  );
+  const first = focusable[0];
+  const last = focusable.at(-1);
+  if (first === undefined || last === undefined) {
+    return;
+  }
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function officialInstallCommand(): string {
+  if (navigator.userAgent.includes("Windows")) {
+    return 'powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1 | iex"';
+  }
+  return "curl -fsSL https://chatgpt.com/codex/install.sh | sh";
+}
+
+function errorMessage(error: unknown): string {
+  if (typeof error === "string" && error.trim().length > 0) {
+    return error;
+  }
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+  return "Statusline could not verify the selected Codex executable.";
 }
 
 function setMeter(percentage: number | null, loading: boolean): void {

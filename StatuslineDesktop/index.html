@@ -17,9 +17,26 @@
           <span data-tauri-drag-region>/ COMPANION / DATA PLANE</span>
         </p>
 
-        <div class="live-state" data-tauri-drag-region>
-          <span class="live-signal" aria-hidden="true"></span>
-          <span id="live-label">READING</span>
+        <div class="topbar-actions">
+          <div class="live-state" data-tauri-drag-region>
+            <span class="live-signal" aria-hidden="true"></span>
+            <span id="live-label">READING</span>
+          </div>
+          <button
+            class="settings-button"
+            id="settings-button"
+            type="button"
+            aria-label="Configurar origen de Codex"
+            aria-controls="source-panel"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M4 5h12M4 10h12M4 15h12" />
+              <circle cx="8" cy="5" r="1.5" />
+              <circle cx="13" cy="10" r="1.5" />
+              <circle cx="7" cy="15" r="1.5" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -117,6 +134,81 @@
         </button>
         <p class="updated" id="updated-value">WAITING FOR LOCAL SAMPLE</p>
       </footer>
+
+      <section
+        class="source-panel"
+        id="source-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="source-panel-title"
+        hidden
+      >
+        <header class="source-heading">
+          <div>
+            <p>SYSTEM / CODEX SOURCE</p>
+            <h2 id="source-panel-title">Runtime connection</h2>
+          </div>
+          <button
+            class="source-close"
+            id="source-close"
+            type="button"
+            aria-label="Cerrar configuración"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="m5 5 10 10M15 5 5 15" />
+            </svg>
+          </button>
+        </header>
+
+        <div class="source-summary" id="source-summary" data-status="reading">
+          <span class="source-beacon" aria-hidden="true"></span>
+          <div>
+            <span>CODEX.RUNTIME</span>
+            <strong id="source-status">READING</strong>
+          </div>
+        </div>
+
+        <dl class="source-grid">
+          <div class="source-path-cell">
+            <dt>EXECUTABLE.PATH</dt>
+            <dd id="source-path" title="">Scanning local system…</dd>
+          </div>
+          <div>
+            <dt>ORIGIN</dt>
+            <dd id="source-origin">AUTO DETECT</dd>
+          </div>
+          <div>
+            <dt>VERSION</dt>
+            <dd id="source-version">—</dd>
+          </div>
+        </dl>
+
+        <div class="source-guidance">
+          <p class="source-guidance-label">OFFICIAL SETUP</p>
+          <p>
+            Instala Codex CLI, ejecuta <code>codex</code> y completa
+            <strong>Sign in with ChatGPT</strong> antes de actualizar.
+          </p>
+          <code class="install-command" id="install-command"
+            >npm install -g @openai/codex</code
+          >
+        </div>
+
+        <div class="source-actions">
+          <button class="source-primary" id="source-choose" type="button">
+            SELECT EXECUTABLE
+          </button>
+          <button class="source-secondary" id="source-scan" type="button">
+            SCAN AGAIN
+          </button>
+        </div>
+        <button class="source-reset" id="source-reset" type="button" hidden>
+          USE AUTOMATIC DETECTION
+        </button>
+        <p class="source-feedback" id="source-feedback" aria-live="polite">
+          Statusline stores only the selected local path.
+        </p>
+      </section>
     </main>
   </body>
 </html>

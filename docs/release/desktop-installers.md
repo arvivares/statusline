@@ -2,7 +2,7 @@
 
 El companion multiplataforma se empaqueta de forma nativa en GitHub Actions. El workflow evita cross-compilation y genera los artefactos desde el sistema operativo correspondiente.
 
-## Artefactos preparados
+## Artefactos
 
 | Plataforma  | Formato       | Uso recomendado                                                                                                            |
 | ----------- | ------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -10,13 +10,13 @@ El companion multiplataforma se empaqueta de forma nativa en GitHub Actions. El 
 | Windows x64 | WiX `.msi`    | Despliegues administrados. El asistente se genera en español y la instalación puede solicitar elevación.                   |
 | Linux x64   | Debian `.deb` | Ubuntu, Debian y distribuciones derivadas.                                                                                 |
 | Linux x64   | RPM `.rpm`    | Fedora, RHEL y distribuciones derivadas.                                                                                   |
-| Linux x64   | `.AppImage`   | Distribución portátil cuando no se desea usar el gestor de paquetes; antes de abrirla hay que ejecutar `chmod +x`.         |
+| Linux x64   | `.AppImage`   | Distribución portátil; después de descargarla hay que ejecutar `chmod +x`.                                                 |
 
-El instalador NSIS incorpora el bootstrapper Evergreen de WebView2. Añade aproximadamente 1,8 MB y sólo necesita descargar el runtime cuando Windows no lo tiene instalado. El AppImage no incluye GStreamer porque Statusline no reproduce audio ni vídeo.
+El instalador NSIS incorpora el bootstrapper Evergreen de WebView2. El AppImage no incluye GStreamer porque Statusline no reproduce audio ni vídeo.
 
 Windows y Linux muestran la ventana en el primer inicio. Después funciona como companion de bandeja: cerrar la ventana la oculta sin finalizar el proceso. En Linux también se conserva el comportamiento de ocultarla al perder foco para escritorios sin soporte de bandeja.
 
-## Validación rápida
+## Validación local económica
 
 Desde `StatuslineDesktop`:
 
@@ -26,44 +26,60 @@ npm run release:check
 cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 ```
 
-`release:check` comprueba que la versión coincide en npm, Cargo y Tauri; valida los targets de bundle; ejecuta Prettier, los tests TypeScript y el chequeo estricto de tipos. No compila Rust ni crea instaladores.
+`release:check` no crea instaladores. Comprueba versiones, metadatos, targets, acciones fijadas por commit, scripts de firma y smoke test, Prettier, tests TypeScript y tipos estrictos.
 
-Para una compilación local, usa el comando correspondiente únicamente dentro del sistema operativo destino:
+Para compilar localmente, usa el comando correspondiente únicamente dentro del sistema operativo destino:
 
 ```shell
 npm run bundle:windows
 npm run bundle:linux
 ```
 
-## Ejecutar el workflow
+## Workflow y retención
 
-El archivo [`desktop-installers.yml`](../../.github/workflows/desktop-installers.yml) admite dos flujos:
+[`desktop-installers.yml`](../../.github/workflows/desktop-installers.yml) admite dos flujos:
 
-1. **Actions > Desktop installers > Run workflow** crea artefactos temporales descargables, sin crear una release.
-2. Un tag `desktop-v<versión>` crea una release borrador y adjunta todos los instaladores.
+1. **Actions → Desktop installers → Run workflow** crea artefactos temporales para beta privada. Estos builds no necesitan certificado y permanecen sin firma.
+2. Un tag `desktop-v<versión>` crea una GitHub Release duradera en estado borrador. Los tags exigen firma Authenticode de Windows antes de compilar.
 
-Por ejemplo, para la versión actual:
+Para la versión actual:
 
 ```shell
-git tag desktop-v0.1.1
-git push origin desktop-v0.1.1
+git tag desktop-v0.1.2
+git push origin desktop-v0.1.2
 ```
 
-El preflight rechazará el build si el tag no coincide exactamente con la versión `0.1.1` de los manifiestos. Este repositorio local todavía no tiene un remote configurado: antes de ejecutar el workflow hay que crear o elegir el repositorio GitHub y añadir `origin`.
+El preflight rechaza un tag que no coincide exactamente con la versión de npm, Cargo y Tauri. No se debe crear el tag público hasta completar la configuración de firma y la checklist de beta.
 
-## Requisito de Codex
+Después de compilar, el pipeline:
 
-Los instaladores no incluyen Codex ni credenciales. Cada usuario debe instalar la CLI oficial, ejecutar `codex login` y conservar esa sesión local. Statusline inicia `codex app-server` por `stdio` y sólo procesa metadatos de cuota.
+- instala, abre durante cuatro segundos y desinstala NSIS y MSI en el runner de Windows;
+- inspecciona RPM y AppImage, instala, abre y elimina el paquete Debian en Linux;
+- genera `SHA256SUMS.txt` sobre los cinco instaladores;
+- conserva el manifiesto como artefacto y lo adjunta a la release borrador cuando el build proviene de un tag.
 
-Si la aplicación no encuentra la CLI, se puede iniciar con `STATUSLINE_CODEX_PATH` apuntando al ejecutable. En Linux se reconoce además `~/.local/bin/codex`; en Windows se comprueba la instalación habitual de la aplicación oficial. Antes de una publicación general conviene añadir una selección de ejecutable dentro de la UI para instalaciones gestionadas por NVM, Volta o rutas no estándar.
+## Codex en el equipo del usuario
 
-## Firma y publicación pública
+Los instaladores no incluyen Codex ni credenciales. Cada usuario instala la CLI oficial, ejecuta `codex` y completa **Sign in with ChatGPT**. Statusline inicia `codex app-server` por `stdio` y sólo procesa metadatos de cuota.
 
-El pipeline está deliberadamente sin secretos y las releases creadas por tag quedan en borrador. Antes de publicar a usuarios finales faltan estos gates:
+**Source Settings** detecta las ubicaciones del instalador standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y el `PATH` del sistema. También permite seleccionar `codex.exe`, `codex.cmd` o el ejecutable Unix. La ruta se guarda sólo después de que `codex --version` la valide.
 
-- firmar ejecutable e instaladores de Windows con Authenticode para evitar advertencias de editor desconocido y mejorar la reputación de SmartScreen;
-- probar cada formato en una máquina limpia, incluyendo instalación, primer inicio, bandeja, actualización manual y desinstalación;
-- definir licencia, política de privacidad y canal de soporte;
-- firmar AppImage o repositorios Linux si los paquetes pasan a distribuirse fuera de GitHub Releases.
+En Windows, los launchers npm `.cmd` no se ejecutan mediante una cadena de shell arbitraria: Statusline comprueba el paquete oficial adyacente `@openai/codex` y lo inicia con Node.js. `STATUSLINE_CODEX_PATH` continúa disponible como override de administración.
 
-El updater de Tauri no está integrado: el workflow no genera `latest.json` ni firmas de actualización. La primera entrega se actualiza instalando manualmente una versión posterior.
+## Firma de Windows
+
+Las releases por tag requieren:
+
+- secret `WINDOWS_CERTIFICATE`: PFX de code signing codificado en base64;
+- secret `WINDOWS_CERTIFICATE_PASSWORD`: contraseña del PFX;
+- variable `WINDOWS_TIMESTAMP_URL`: endpoint de timestamp recomendado por el proveedor.
+
+El runner importa temporalmente el certificado en `CurrentUser\My` y genera un overlay de configuración Tauri con thumbprint, SHA-256 y timestamp. Tras el bundle verifica la aplicación, el NSIS y el MSI con `Get-AuthenticodeSignature`. El certificado importado, el PFX y el overlay se eliminan incluso cuando falla un paso posterior.
+
+Un run manual permanece sin firma. Esto mantiene disponible el circuito de prueba sin rebajar el gate de una release etiquetada.
+
+## Publicación
+
+La [checklist de beta pública](public-beta-checklist.md) cubre máquinas limpias, SmartScreen, checksums, privacidad, soporte y licencia. La licencia de distribución todavía requiere una decisión del propietario y sigue siendo un blocker explícito para publicar.
+
+El updater de Tauri no está integrado: el workflow no genera `latest.json` ni firmas de actualización. La beta se actualiza instalando manualmente una versión posterior.

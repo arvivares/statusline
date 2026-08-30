@@ -7,6 +7,7 @@ Companion de bandeja multiplataforma para consultar la cuota de Codex en Windows
 - `StatuslineDesktop` convive como proyecto hermano con la app iOS, el widget y el companion nativo de macOS; no modifica sus targets ni su UI.
 - Consulta la sesión local mediante el [Codex App Server oficial](https://learn.chatgpt.com/docs/app-server) y muestra límite semanal, reinicio, ventana corta y plan.
 - No copia, persiste ni transmite tokens, API keys o correo. El contrato Rust → TypeScript contiene únicamente metadatos de cuota.
+- **Source Settings** detecta la CLI, valida `codex --version` y permite guardar una ruta local sin guardar credenciales.
 - El relay privado por CloudKit continúa en `StatuslineCompanion`, la implementación SwiftUI de macOS.
 - Windows y Linux todavía no publican muestras al iPhone: hace falta implementar el transporte multiplataforma descrito en [`docs/architecture/cross-platform-companion.md`](../docs/architecture/cross-platform-companion.md).
 
@@ -27,10 +28,10 @@ Los estados conservan la posición de la cuota y reemplazan solamente el context
 
 1. Node.js 24 o posterior.
 2. Rust estable mediante `rustup`, con `rustfmt` y `clippy`.
-3. La CLI de Codex instalada y autenticada con `codex login`.
+3. La CLI de Codex instalada; ejecuta `codex` y completa **Sign in with ChatGPT** la primera vez.
 4. Los [prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/) del sistema operativo.
 
-Si Codex no está en `PATH`, se puede indicar la ruta con `STATUSLINE_CODEX_PATH`. En Windows también se comprueba la ubicación habitual de la aplicación oficial.
+Statusline busca instalaciones standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y el `PATH`. Si la aplicación gráfica hereda un `PATH` incompleto, abre **Source Settings** y selecciona el ejecutable. `STATUSLINE_CODEX_PATH` permanece disponible como override de administración.
 
 ## Desarrollo
 
@@ -85,13 +86,13 @@ npm run bundle:windows
 npm run bundle:linux
 ```
 
-Windows produce NSIS `.exe` y WiX `.msi`; Linux produce `.deb`, `.rpm` y `.AppImage`. Cada comando debe ejecutarse dentro de su sistema operativo destino. El workflow de GitHub Actions y los gates de firma están documentados en [`docs/release/desktop-installers.md`](../docs/release/desktop-installers.md).
+Windows produce NSIS `.exe` y WiX `.msi`; Linux produce `.deb`, `.rpm` y `.AppImage`. Cada comando debe ejecutarse dentro de su sistema operativo destino. El workflow, los smoke tests y los gates de firma están documentados en [`docs/release/desktop-installers.md`](../docs/release/desktop-installers.md). La política factual actual está en [`PRIVACY.md`](../PRIVACY.md) y el flujo de incidencias en [`SUPPORT.md`](../SUPPORT.md).
 
 ## Última validación local
 
 Validado en macOS arm64 con Rust 1.98.0:
 
-- 10 tests TypeScript y 18 tests Rust aprobados;
+- 15 tests TypeScript y 23 tests Rust aprobados;
 - TypeScript estricto, Prettier, `cargo fmt` y Clippy sin advertencias;
 - build Vite de producción correcto;
 - bundle `.app` debug abierto con una sesión real y Data Plane verificado a 400 × 600.
@@ -101,13 +102,17 @@ El bundle de prueba y su `target` se generan en una carpeta temporal para no dej
 ## Estructura
 
 - `src/usage.ts`: validación en runtime del contrato Rust → TypeScript.
+- `src/codex.ts`: validación del diagnóstico de instalación y etiquetas de origen.
 - `src/controller.ts`: refresco, concurrencia y estados seguros de UI.
 - `src/main.ts`: binding de Data Plane y previews locales.
 - `src-tauri/src/app_server.rs`: proceso `codex app-server`, handshake JSONL y timeouts.
+- `src-tauri/src/codex_installation.rs`: detección multiplataforma, configuración persistente y validación de launchers.
 - `src-tauri/src/usage.rs`: selección y normalización de ventanas de cuota.
 - `src-tauri/src/lib.rs`: bandeja, ventana, instancia única y comandos Tauri.
 - `src-tauri/tauri.windows.conf.json`: NSIS, MSI y primer inicio en Windows.
 - `src-tauri/tauri.linux.conf.json`: DEB, RPM, AppImage y primer inicio en Linux.
 - `scripts/check-release.mjs`: consistencia de versión y configuración antes del bundle.
+- `scripts/generate-checksums.mjs`: manifiesto SHA-256 determinista.
+- `scripts/smoke-installers-*`: instalación, arranque y desinstalación en CI.
 
 Las carpetas `node_modules`, `dist`, `src-tauri/target` y los esquemas generados no forman parte del repositorio.
