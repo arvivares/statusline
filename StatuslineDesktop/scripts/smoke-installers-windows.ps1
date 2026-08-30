@@ -120,6 +120,34 @@ function Invoke-MsiPackage {
     }
 }
 
+function Write-MsiInstallContext {
+    param([Parameter(Mandatory = $true)][string]$LogPath)
+
+    if (-not (Test-Path -LiteralPath $LogPath -PathType Leaf)) {
+        Write-Warning "MSI installation log was not found at $LogPath"
+        return
+    }
+
+    $contextLines = @(
+        Select-String `
+            -LiteralPath $LogPath `
+            -Pattern @(
+                "PROPERTY CHANGE: (Adding|Modifying) '(ALLUSERS|MSIINSTALLPERUSER)'",
+                "Property\(S\): (ALLUSERS|MSIINSTALLPERUSER) =",
+                "Product registered:"
+            ) |
+            ForEach-Object { $_.Line.Trim() }
+    )
+    Write-Host "MSI installation context:"
+    if ($contextLines.Count -eq 0) {
+        Write-Host "  ALLUSERS and MSIINSTALLPERUSER were not set in the installer session."
+        return
+    }
+    foreach ($line in $contextLines) {
+        Write-Host "  $line"
+    }
+}
+
 function Get-StatuslineUninstallEntry {
     $registryRoots = @(
         "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall",
@@ -332,13 +360,14 @@ try {
         -Action "install" `
         -PackagePath $msi `
         -LogPath $msiInstallLog
+    Write-MsiInstallContext -LogPath $msiInstallLog
     $msiEntry = Wait-ForStatuslineEntry -Present $true
     $msiExecutable = Get-StatuslineExecutable -Entry $msiEntry
-    Assert-CurrentUserInstall -Entry $msiEntry -Executable $msiExecutable
     Assert-CodexDetected `
         -StatuslineExecutable $msiExecutable `
         -CodexExecutable $codexFixture `
         -BundleLabel "msi"
+    Assert-CurrentUserInstall -Entry $msiEntry -Executable $msiExecutable
     Assert-AppStarts -Executable $msiExecutable
     Invoke-MsiPackage `
         -Action "uninstall" `
