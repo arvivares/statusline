@@ -357,13 +357,13 @@ fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
 
 #[cfg(windows)]
 fn collect_windows_candidates(candidates: &mut Vec<Candidate>) {
-    let user_profile = env::var_os("USERPROFILE").map(PathBuf::from);
-    let app_data = env::var_os("APPDATA").map(PathBuf::from).or_else(|| {
+    let user_profile = windows_user_profile();
+    let app_data = windows_app_data().or_else(|| {
         user_profile
             .as_ref()
             .map(|profile| profile.join("AppData").join("Roaming"))
     });
-    let local_app_data = env::var_os("LOCALAPPDATA").map(PathBuf::from).or_else(|| {
+    let local_app_data = windows_local_app_data().or_else(|| {
         user_profile
             .as_ref()
             .map(|profile| profile.join("AppData").join("Local"))
@@ -586,7 +586,7 @@ fn node_candidates(prefix: &Path) -> Vec<PathBuf> {
             program_files_x86.join("nodejs").join("node.exe"),
         );
     }
-    if let Some(user_profile) = env::var_os("USERPROFILE").map(PathBuf::from) {
+    if let Some(user_profile) = windows_user_profile() {
         push_unique_path(
             &mut candidates,
             user_profile.join(".volta").join("bin").join("node.exe"),
@@ -597,7 +597,7 @@ fn node_candidates(prefix: &Path) -> Vec<PathBuf> {
             true,
         );
     }
-    if let Some(local_app_data) = env::var_os("LOCALAPPDATA").map(PathBuf::from) {
+    if let Some(local_app_data) = windows_local_app_data() {
         push_unique_path(
             &mut candidates,
             local_app_data.join("Volta").join("bin").join("node.exe"),
@@ -608,7 +608,7 @@ fn node_candidates(prefix: &Path) -> Vec<PathBuf> {
             true,
         );
     }
-    if let Some(app_data) = env::var_os("APPDATA").map(PathBuf::from) {
+    if let Some(app_data) = windows_app_data() {
         push_windows_version_manager_nodes(&mut candidates, &app_data.join("nvm"), false);
         push_windows_version_manager_nodes(
             &mut candidates,
@@ -702,7 +702,7 @@ fn expand_windows_environment(value: &std::ffi::OsStr) -> OsString {
             return OsString::from(expanded);
         };
         let variable = &after_start[..end];
-        if let Some(replacement) = env::var_os(variable) {
+        if let Some(replacement) = known_windows_environment(variable) {
             expanded.push_str(&replacement.to_string_lossy());
         } else {
             expanded.push('%');
@@ -713,6 +713,47 @@ fn expand_windows_environment(value: &std::ffi::OsStr) -> OsString {
     }
     expanded.push_str(remaining);
     OsString::from(expanded)
+}
+
+#[cfg(windows)]
+fn known_windows_environment(variable: &str) -> Option<OsString> {
+    match variable.to_ascii_uppercase().as_str() {
+        "USERPROFILE" => windows_user_profile().map(PathBuf::into_os_string),
+        "APPDATA" => windows_app_data().map(PathBuf::into_os_string),
+        "LOCALAPPDATA" => windows_local_app_data().map(PathBuf::into_os_string),
+        _ => None,
+    }
+    .or_else(|| env::var_os(variable))
+}
+
+#[cfg(windows)]
+fn windows_user_profile() -> Option<PathBuf> {
+    dirs::home_dir().or_else(|| env::var_os("USERPROFILE").map(PathBuf::from))
+}
+
+#[cfg(not(windows))]
+fn windows_user_profile() -> Option<PathBuf> {
+    env::var_os("USERPROFILE").map(PathBuf::from)
+}
+
+#[cfg(windows)]
+fn windows_app_data() -> Option<PathBuf> {
+    dirs::data_dir().or_else(|| env::var_os("APPDATA").map(PathBuf::from))
+}
+
+#[cfg(not(windows))]
+fn windows_app_data() -> Option<PathBuf> {
+    env::var_os("APPDATA").map(PathBuf::from)
+}
+
+#[cfg(windows)]
+fn windows_local_app_data() -> Option<PathBuf> {
+    dirs::data_local_dir().or_else(|| env::var_os("LOCALAPPDATA").map(PathBuf::from))
+}
+
+#[cfg(not(windows))]
+fn windows_local_app_data() -> Option<PathBuf> {
+    env::var_os("LOCALAPPDATA").map(PathBuf::from)
 }
 
 async fn verify_launch(launch: &CodexLaunch) -> Result<String, String> {
@@ -850,7 +891,27 @@ pub(crate) fn configure_hidden_process(_command: &mut Command) {}
 mod tests {
     use std::{env, fs, path::PathBuf, process};
 
-    use super::{Settings, launch_for_candidate, read_saved_path, write_settings};
+    use super::{
+        Settings, launch_for_candidate, read_saved_path, windows_common_paths, write_settings,
+    };
+
+    #[test]
+    fn windows_standalone_codex_path_is_user_independent() {
+        let local_app_data = PathBuf::from(r"C:\Users\Ada\AppData\Local");
+
+        let paths = windows_common_paths(None, None, Some(&local_app_data), None, None);
+
+        assert!(
+            paths.contains(
+                &local_app_data
+                    .join("Programs")
+                    .join("OpenAI")
+                    .join("Codex")
+                    .join("bin")
+                    .join("codex.exe")
+            )
+        );
+    }
 
     #[test]
     fn npm_cmd_launcher_requires_the_adjacent_official_package() {

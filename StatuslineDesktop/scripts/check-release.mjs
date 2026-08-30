@@ -76,6 +76,9 @@ const smokeWorkflow = readText(
   "../.github/workflows/desktop-installer-smoke.yml",
 );
 const windowsSmokeScript = readText("scripts/smoke-installers-windows.ps1");
+const windowsMsiTemplate = readText(
+  "src-tauri/windows/statusline-per-user.wxs",
+);
 const universalRelaySource = readText("src-tauri/src/universal_relay.rs");
 const relayProtocolSource = readText("src-tauri/src/relay_protocol.rs");
 
@@ -175,6 +178,14 @@ assert(
   "NSIS must use current-user installation",
 );
 assert(
+  windowsConfig.bundle?.windows?.wix?.template ===
+    "windows/statusline-per-user.wxs" &&
+    windowsMsiTemplate.includes('InstallScope="perUser"') &&
+    windowsMsiTemplate.includes('InstallPrivileges="limited"') &&
+    windowsMsiTemplate.includes('<Directory Id="LocalAppDataFolder">'),
+  "MSI must use the current user's LocalAppData installation context",
+);
+assert(
   windowsConfig.bundle?.windows?.webviewInstallMode?.type ===
     "embedBootstrapper",
   "Windows must embed the WebView2 bootstrapper",
@@ -190,6 +201,7 @@ for (const relativePath of [
   "scripts/smoke-installers-linux.sh",
   "scripts/prepare-windows-signing.ps1",
   "scripts/cleanup-windows-signing.ps1",
+  "src-tauri/windows/statusline-per-user.wxs",
   "../.github/workflows/desktop-installer-smoke.yml",
   "../PRIVACY.md",
   "../SUPPORT.md",
@@ -200,6 +212,12 @@ for (const relativePath of [
     `${relativePath} is required`,
   );
 }
+assert(
+  windowsSmokeScript.includes("--statusline-codex-diagnostic") &&
+    windowsSmokeScript.includes("Assert-CurrentUserInstall") &&
+    windowsSmokeScript.includes("Programs\\OpenAI\\Codex\\bin\\codex.exe"),
+  "Windows smoke tests must verify Codex discovery in both current-user installers",
+);
 
 const actionReferences = [workflow, smokeWorkflow].flatMap((contents) =>
   [...contents.matchAll(/^\s*uses:\s*([^\s#]+)/gmu)].map((match) => match[1]),

@@ -4,6 +4,8 @@ pub mod relay_protocol;
 pub mod universal_relay;
 pub mod usage;
 
+use std::{fs, path::Path};
+
 use tauri::{
     AppHandle, Emitter, Manager, State, WindowEvent,
     menu::{Menu, MenuItem},
@@ -17,6 +19,13 @@ use universal_relay::{RelayStatus, UniversalRelayState};
 use usage::UsageResponse;
 
 const TRAY_ID: &str = "statusline-companion-tray";
+
+pub fn write_codex_diagnostic(output_path: &Path) -> Result<(), String> {
+    let diagnostic = tauri::async_runtime::block_on(codex_installation::inspect_codex(None))
+        .map_err(|error| error.to_string())?;
+    let encoded = serde_json::to_vec_pretty(&diagnostic).map_err(|error| error.to_string())?;
+    fs::write(output_path, encoded).map_err(|error| error.to_string())
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum WindowVisibility {

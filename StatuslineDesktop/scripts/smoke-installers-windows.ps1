@@ -24,12 +24,16 @@ function Invoke-CheckedProcess {
         [Parameter(Mandatory = $true)][string]$FilePath,
         [string[]]$Arguments = @(),
         [int[]]$AllowedExitCodes = @(0),
+        [string[]]$RemoveEnvironmentVariables = @(),
         [ValidateRange(1, 600)][int]$TimeoutSeconds = 120
     )
 
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $FilePath
     $startInfo.UseShellExecute = $false
+    foreach ($variable in $RemoveEnvironmentVariables) {
+        $startInfo.Environment.Remove($variable) | Out-Null
+    }
     foreach ($argument in $Arguments) {
         $startInfo.ArgumentList.Add($argument)
     }
@@ -61,6 +65,34 @@ function Invoke-CheckedProcess {
         throw "$FilePath exited with code $exitCode"
     }
     Write-Host "Process completed: $(Split-Path -Leaf $FilePath) ($exitCode)"
+}
+
+function New-CodexFixture {
+    param([Parameter(Mandatory = $true)][string]$Executable)
+
+    if (Test-Path -LiteralPath $Executable) {
+        throw "Refusing to overwrite an existing Codex executable at $Executable"
+    }
+    $directory = Split-Path -Parent $Executable
+    New-Item -ItemType Directory -Path $directory -Force | Out-Null
+    $sourcePath = Join-Path ([IO.Path]::GetTempPath()) "statusline-codex-fixture-$PID.rs"
+    try {
+        @'
+fn main() {
+    if std::env::args().nth(1).as_deref() == Some("--version") {
+        println!("codex-cli 0.0.0-statusline-smoke");
+        return;
+    }
+    std::process::exit(2);
+}
+'@ | Set-Content -LiteralPath $sourcePath -Encoding utf8NoBOM
+        Invoke-CheckedProcess `
+            -FilePath (Get-Command "rustc.exe").Source `
+            -Arguments @($sourcePath, "-o", $Executable)
+    }
+    finally {
+        Remove-Item -LiteralPath $sourcePath -Force -ErrorAction SilentlyContinue
+    }
 }
 
 function Invoke-MsiPackage {
@@ -204,6 +236,53 @@ function Assert-AppStarts {
     $process.WaitForExit()
 }
 
+function Assert-CurrentUserInstall {
+    param(
+        [Parameter(Mandatory = $true)]$Entry,
+        [Parameter(Mandatory = $true)][string]$Executable
+    )
+
+    if ($Entry.PSPath -notmatch "HKEY_CURRENT_USER") {
+        throw "Statusline was registered outside HKEY_CURRENT_USER: $($Entry.PSPath)"
+    }
+    $localRoot = [IO.Path]::GetFullPath($env:LOCALAPPDATA).TrimEnd('\') + '\'
+    $installedPath = [IO.Path]::GetFullPath($Executable)
+    if (-not $installedPath.StartsWith($localRoot, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Statusline was installed outside the current user's LocalAppData: $installedPath"
+    }
+}
+
+function Assert-CodexDetected {
+    param(
+        [Parameter(Mandatory = $true)][string]$StatuslineExecutable,
+        [Parameter(Mandatory = $true)][string]$CodexExecutable,
+        [Parameter(Mandatory = $true)][string]$BundleLabel
+    )
+
+    $diagnosticPath = Join-Path ([IO.Path]::GetTempPath()) "statusline-$BundleLabel-codex-$PID.json"
+    try {
+        Invoke-CheckedProcess `
+            -FilePath $StatuslineExecutable `
+            -Arguments @("--statusline-codex-diagnostic", $diagnosticPath) `
+            -RemoveEnvironmentVariables @("PATH", "USERPROFILE", "APPDATA", "LOCALAPPDATA")
+        if (-not (Test-Path -LiteralPath $diagnosticPath -PathType Leaf)) {
+            throw "$BundleLabel did not write its Codex diagnostic"
+        }
+        $diagnostic = Get-Content -LiteralPath $diagnosticPath -Raw | ConvertFrom-Json
+        if ($diagnostic.status -ne "ready") {
+            throw "$BundleLabel did not detect Codex: $($diagnostic | ConvertTo-Json -Compress)"
+        }
+        $expectedPath = [IO.Path]::GetFullPath($CodexExecutable)
+        $actualPath = [IO.Path]::GetFullPath([string]$diagnostic.path)
+        if (-not $actualPath.Equals($expectedPath, [StringComparison]::OrdinalIgnoreCase)) {
+            throw "$BundleLabel detected the wrong Codex executable: $actualPath"
+        }
+    }
+    finally {
+        Remove-Item -LiteralPath $diagnosticPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Uninstall-Nsis {
     param([Parameter(Mandatory = $true)]$Entry)
 
@@ -225,15 +304,24 @@ $nsis = Get-SingleBundle -Directory $bundleRootPath -Filter "*.exe"
 $msi = Get-SingleBundle -Directory $bundleRootPath -Filter "*.msi"
 $msiInstallLog = Join-Path ([IO.Path]::GetTempPath()) "statusline-msi-install-$PID.log"
 $msiUninstallLog = Join-Path ([IO.Path]::GetTempPath()) "statusline-msi-uninstall-$PID.log"
+$codexFixture = Join-Path $env:LOCALAPPDATA "Programs\OpenAI\Codex\bin\codex.exe"
 
 Write-Host "Smoke testing NSIS install, launch and uninstall."
 $nsisInstalled = $false
 $msiInstalled = $false
 try {
+    New-CodexFixture -Executable $codexFixture
+
     $nsisInstalled = $true
     Invoke-CheckedProcess -FilePath $nsis -Arguments @("/S")
     $nsisEntry = Wait-ForStatuslineEntry -Present $true
-    Assert-AppStarts -Executable (Get-StatuslineExecutable -Entry $nsisEntry)
+    $nsisExecutable = Get-StatuslineExecutable -Entry $nsisEntry
+    Assert-CurrentUserInstall -Entry $nsisEntry -Executable $nsisExecutable
+    Assert-CodexDetected `
+        -StatuslineExecutable $nsisExecutable `
+        -CodexExecutable $codexFixture `
+        -BundleLabel "nsis"
+    Assert-AppStarts -Executable $nsisExecutable
     Uninstall-Nsis -Entry $nsisEntry
     $nsisInstalled = $false
     Wait-ForStatuslineEntry -Present $false | Out-Null
@@ -245,7 +333,13 @@ try {
         -PackagePath $msi `
         -LogPath $msiInstallLog
     $msiEntry = Wait-ForStatuslineEntry -Present $true
-    Assert-AppStarts -Executable (Get-StatuslineExecutable -Entry $msiEntry)
+    $msiExecutable = Get-StatuslineExecutable -Entry $msiEntry
+    Assert-CurrentUserInstall -Entry $msiEntry -Executable $msiExecutable
+    Assert-CodexDetected `
+        -StatuslineExecutable $msiExecutable `
+        -CodexExecutable $codexFixture `
+        -BundleLabel "msi"
+    Assert-AppStarts -Executable $msiExecutable
     Invoke-MsiPackage `
         -Action "uninstall" `
         -PackagePath $msi `
@@ -282,6 +376,7 @@ finally {
             Remove-Item -LiteralPath $logPath -Force
         }
     }
+    Remove-Item -LiteralPath $codexFixture -Force -ErrorAction SilentlyContinue
 }
 
 Write-Host "Windows installer smoke tests passed."

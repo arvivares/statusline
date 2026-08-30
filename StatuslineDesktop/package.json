@@ -1,7 +1,7 @@
 {
   "name": "statusline-desktop",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Cross-platform companion with end-to-end encrypted Codex usage sync.",
   "author": "Inmerzion",
   "homepage": "https://github.com/arvivares/statusline",

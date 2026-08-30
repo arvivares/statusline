@@ -61,8 +61,8 @@ La URL se incorpora al binario, pero no concede acceso a ningún canal. Cada ins
 Ejemplo:
 
 ```shell
-git tag desktop-v0.1.2
-git push origin desktop-v0.1.2
+git tag desktop-v0.1.3
+git push origin desktop-v0.1.3
 ```
 
 El preflight comprueba que el tag coincide con npm, Cargo y Tauri, valida frontend, contrato Rust y servicio relay, y falla antes del bundle si falta el endpoint universal.

@@ -35,7 +35,8 @@
         "compression": "lzma"
       },
       "wix": {
-        "language": "es-ES"
+        "language": "es-ES",
+        "template": "windows/statusline-per-user.wxs"
       }
     }
   }
