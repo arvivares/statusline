@@ -79,6 +79,7 @@ const windowsSmokeScript = readText("scripts/smoke-installers-windows.ps1");
 const windowsMsiTemplate = readText(
   "src-tauri/windows/statusline-per-user.wxs",
 );
+const desktopLibSource = readText("src-tauri/src/lib.rs");
 const universalRelaySource = readText("src-tauri/src/universal_relay.rs");
 const relayProtocolSource = readText("src-tauri/src/relay_protocol.rs");
 
@@ -274,9 +275,17 @@ for (const requiredProcessToken of [
   );
 }
 assert(
-  windowsConfig.app?.windows?.[0]?.visible === true &&
+  windowsConfig.app?.windows?.[0]?.visible === false &&
+    windowsConfig.app?.windows?.[0]?.focus === false &&
     linuxConfig.app?.windows?.[0]?.visible === true,
-  "installed desktop apps must be visible on first launch",
+  "Windows must wait for WebView readiness while Linux stays visible on first launch",
+);
+assert(
+  desktopLibSource.includes(".on_page_load") &&
+    desktopLibSource.includes("PageLoadEvent::Finished") &&
+    desktopLibSource.includes("INITIAL_WINDOW_ACTIVATED") &&
+    desktopLibSource.includes("show_main_window(_webview.app_handle())"),
+  "Windows must reveal and focus the main window after WebView2 finishes loading",
 );
 
 const version = packageJson.version;

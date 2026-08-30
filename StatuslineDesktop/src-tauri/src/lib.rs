@@ -6,6 +6,11 @@ pub mod usage;
 
 use std::{fs, path::Path};
 
+#[cfg(target_os = "windows")]
+use std::sync::atomic::{AtomicBool, Ordering};
+
+#[cfg(target_os = "windows")]
+use tauri::webview::PageLoadEvent;
 use tauri::{
     AppHandle, Emitter, Manager, State, WindowEvent,
     menu::{Menu, MenuItem},
@@ -19,6 +24,9 @@ use universal_relay::{RelayStatus, UniversalRelayState};
 use usage::UsageResponse;
 
 const TRAY_ID: &str = "statusline-companion-tray";
+
+#[cfg(target_os = "windows")]
+static INITIAL_WINDOW_ACTIVATED: AtomicBool = AtomicBool::new(false);
 
 pub fn write_codex_diagnostic(output_path: &Path) -> Result<(), String> {
     let diagnostic = tauri::async_runtime::block_on(codex_installation::inspect_codex(None))
@@ -156,6 +164,17 @@ pub fn run() {
         .plugin(tauri_plugin_positioner::init())
         .manage(RefreshState::default())
         .manage(UniversalRelayState::default())
+        .on_page_load(|_webview, _payload| {
+            #[cfg(target_os = "windows")]
+            if _webview.label() == "main"
+                && _payload.event() == PageLoadEvent::Finished
+                && INITIAL_WINDOW_ACTIVATED
+                    .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+                    .is_ok()
+            {
+                show_main_window(_webview.app_handle());
+            }
+        })
         .setup(|app| {
             let show_item = MenuItem::with_id(app, "show", "Mostrar", true, None::<&str>)?;
             let refresh_item = MenuItem::with_id(app, "refresh", "Actualizar", true, None::<&str>)?;

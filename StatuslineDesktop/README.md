@@ -44,7 +44,7 @@ HTTP sólo se admite para localhost en Debug. Para builds públicos:
 export STATUSLINE_RELAY_BASE_URL="https://statusline-relay.inmerzion.workers.dev"
 ```
 
-En macOS la ventana comienza oculta y se abre desde la bandeja. Windows y Linux la muestran en el primer inicio. Cerrar oculta el companion sin finalizarlo.
+En macOS la ventana comienza oculta y se abre desde la bandeja. Windows la revela y enfoca cuando WebView2 termina de cargar, evitando la ventana inactiva que puede producir el instalador; Linux la muestra en el primer inicio. Cerrar oculta el companion sin finalizarlo.
 
 ### Preview visual sin Rust
 
