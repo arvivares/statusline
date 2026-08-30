@@ -270,13 +270,19 @@ function Assert-CurrentUserInstall {
         [Parameter(Mandatory = $true)][string]$Executable
     )
 
-    if ($Entry.PSPath -notmatch "HKEY_CURRENT_USER") {
-        throw "Statusline was registered outside HKEY_CURRENT_USER: $($Entry.PSPath)"
-    }
     $localRoot = [IO.Path]::GetFullPath($env:LOCALAPPDATA).TrimEnd('\') + '\'
     $installedPath = [IO.Path]::GetFullPath($Executable)
     if (-not $installedPath.StartsWith($localRoot, [StringComparison]::OrdinalIgnoreCase)) {
         throw "Statusline was installed outside the current user's LocalAppData: $installedPath"
+    }
+    Write-Host "Current-user executable: $installedPath"
+
+    # Windows Installer can expose a per-user package's Add/Remove Programs
+    # record under HKLM even when ALLUSERS is empty and files stay in
+    # LocalAppData. Do not mistake that OS-managed ARP record for an elevated
+    # or Program Files installation.
+    if ($Entry.PSPath -notmatch "HKEY_CURRENT_USER") {
+        Write-Warning "Windows Installer exposed the uninstall entry under HKLM: $($Entry.PSPath)"
     }
 }
 
