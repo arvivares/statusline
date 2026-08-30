@@ -26,7 +26,7 @@
             class="settings-button"
             id="settings-button"
             type="button"
-            aria-label="Configurar origen de Codex"
+            aria-label="Configurar conexiones"
             aria-controls="source-panel"
             aria-expanded="false"
           >
@@ -109,9 +109,9 @@
           </div>
 
           <div class="metric-cell">
-            <dt>SOURCE.HOST</dt>
-            <dd>Codex local</dd>
-            <span>APP SERVER / STDIO</span>
+            <dt>RELAY.STATE</dt>
+            <dd id="relay-value">READING</dd>
+            <span id="relay-detail">E2E ENCRYPTED</span>
           </div>
         </dl>
 
@@ -145,8 +145,8 @@
       >
         <header class="source-heading">
           <div>
-            <p>SYSTEM / CODEX SOURCE</p>
-            <h2 id="source-panel-title">Runtime connection</h2>
+            <p>SYSTEM / CONNECTIONS</p>
+            <h2 id="source-panel-title">Data plane setup</h2>
           </div>
           <button
             class="source-close"
@@ -160,54 +160,156 @@
           </button>
         </header>
 
-        <div class="source-summary" id="source-summary" data-status="reading">
-          <span class="source-beacon" aria-hidden="true"></span>
-          <div>
-            <span>CODEX.RUNTIME</span>
-            <strong id="source-status">READING</strong>
-          </div>
-        </div>
-
-        <dl class="source-grid">
-          <div class="source-path-cell">
-            <dt>EXECUTABLE.PATH</dt>
-            <dd id="source-path" title="">Scanning local system…</dd>
-          </div>
-          <div>
-            <dt>ORIGIN</dt>
-            <dd id="source-origin">AUTO DETECT</dd>
-          </div>
-          <div>
-            <dt>VERSION</dt>
-            <dd id="source-version">—</dd>
-          </div>
-        </dl>
-
-        <div class="source-guidance">
-          <p class="source-guidance-label">OFFICIAL SETUP</p>
-          <p>
-            Instala Codex CLI, ejecuta <code>codex</code> y completa
-            <strong>Sign in with ChatGPT</strong> antes de actualizar.
-          </p>
-          <code class="install-command" id="install-command"
-            >npm install -g @openai/codex</code
+        <div class="settings-tabs" role="tablist" aria-label="Conexiones">
+          <button
+            class="settings-tab"
+            id="source-tab"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="source-settings-view"
           >
+            CODEX SOURCE
+          </button>
+          <button
+            class="settings-tab"
+            id="relay-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="relay-settings-view"
+            tabindex="-1"
+          >
+            UNIVERSAL RELAY
+          </button>
         </div>
 
-        <div class="source-actions">
-          <button class="source-primary" id="source-choose" type="button">
-            SELECT EXECUTABLE
+        <div
+          class="settings-view"
+          id="source-settings-view"
+          role="tabpanel"
+          aria-labelledby="source-tab"
+        >
+          <div class="source-summary" id="source-summary" data-status="reading">
+            <span class="source-beacon" aria-hidden="true"></span>
+            <div>
+              <span>CODEX.RUNTIME</span>
+              <strong id="source-status">READING</strong>
+            </div>
+          </div>
+
+          <dl class="source-grid">
+            <div class="source-path-cell">
+              <dt>EXECUTABLE.PATH</dt>
+              <dd id="source-path" title="">Scanning local system…</dd>
+            </div>
+            <div>
+              <dt>ORIGIN</dt>
+              <dd id="source-origin">AUTO DETECT</dd>
+            </div>
+            <div>
+              <dt>VERSION</dt>
+              <dd id="source-version">—</dd>
+            </div>
+          </dl>
+
+          <div class="source-guidance">
+            <p class="source-guidance-label">OFFICIAL SETUP</p>
+            <p>
+              Instala Codex CLI, ejecuta <code>codex</code> y completa
+              <strong>Sign in with ChatGPT</strong> antes de actualizar.
+            </p>
+            <code class="install-command" id="install-command"
+              >npm install -g @openai/codex</code
+            >
+          </div>
+
+          <div class="source-actions">
+            <button class="source-primary" id="source-choose" type="button">
+              SELECT EXECUTABLE
+            </button>
+            <button class="source-secondary" id="source-scan" type="button">
+              SCAN AGAIN
+            </button>
+          </div>
+          <button class="source-reset" id="source-reset" type="button" hidden>
+            USE AUTOMATIC DETECTION
           </button>
-          <button class="source-secondary" id="source-scan" type="button">
-            SCAN AGAIN
-          </button>
+          <p class="source-feedback" id="source-feedback" aria-live="polite">
+            Statusline stores only the selected local path.
+          </p>
         </div>
-        <button class="source-reset" id="source-reset" type="button" hidden>
-          USE AUTOMATIC DETECTION
-        </button>
-        <p class="source-feedback" id="source-feedback" aria-live="polite">
-          Statusline stores only the selected local path.
-        </p>
+
+        <div
+          class="settings-view"
+          id="relay-settings-view"
+          role="tabpanel"
+          aria-labelledby="relay-tab"
+          hidden
+        >
+          <div class="source-summary" id="relay-summary" data-status="reading">
+            <span class="source-beacon" aria-hidden="true"></span>
+            <div>
+              <span>PRIVATE.RELAY</span>
+              <strong id="relay-status">READING</strong>
+            </div>
+          </div>
+
+          <dl class="source-grid relay-grid">
+            <div>
+              <dt>ENDPOINT</dt>
+              <dd id="relay-endpoint">—</dd>
+            </div>
+            <div>
+              <dt>SESSION.STORAGE</dt>
+              <dd id="relay-storage">SYSTEM KEYCHAIN</dd>
+            </div>
+            <div class="source-path-cell">
+              <dt>LAST.PUBLISH</dt>
+              <dd id="relay-published">NO SAMPLE PUBLISHED</dd>
+            </div>
+          </dl>
+
+          <div class="source-guidance relay-guidance">
+            <p class="source-guidance-label">UNIVERSAL / E2E</p>
+            <p>
+              Crea un vínculo y escanea el QR desde Statusline en iOS o Android.
+              El relay sólo almacena un snapshot cifrado; tu sesión de Codex
+              permanece local.
+            </p>
+          </div>
+
+          <div class="relay-pairing" id="relay-pairing" hidden>
+            <div class="relay-qr-frame">
+              <img id="relay-qr" alt="QR privado para emparejar Statusline" />
+            </div>
+            <div class="relay-pairing-copy">
+              <p class="source-guidance-label">PAIRING.LINK</p>
+              <code id="relay-pairing-link">—</code>
+              <button class="source-secondary" id="relay-copy" type="button">
+                COPY PRIVATE LINK
+              </button>
+            </div>
+          </div>
+
+          <div class="source-actions relay-actions">
+            <button class="source-primary" id="relay-connect" type="button">
+              CREATE PAIRING
+            </button>
+            <button
+              class="source-secondary"
+              id="relay-disconnect"
+              type="button"
+              hidden
+            >
+              DISCONNECT
+            </button>
+          </div>
+          <p class="source-feedback" id="relay-feedback" aria-live="polite">
+            Publisher credentials and the encryption key stay in your system
+            vault.
+          </p>
+        </div>
       </section>
     </main>
   </body>

@@ -1,24 +1,22 @@
 # Instaladores de Statusline Companion
 
-El companion multiplataforma se empaqueta de forma nativa en GitHub Actions. El workflow evita cross-compilation y genera los artefactos desde el sistema operativo correspondiente.
+El companion se empaqueta de forma nativa en GitHub Actions. No se usa cross-compilation.
 
 ## Artefactos
 
-| Plataforma  | Formato       | Uso recomendado                                                                                                            |
-| ----------- | ------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Windows x64 | NSIS `.exe`   | Instalador principal. Se instala para el usuario actual, incluye inglés y español y no requiere permisos de administrador. |
-| Windows x64 | WiX `.msi`    | Despliegues administrados. El asistente se genera en español y la instalación puede solicitar elevación.                   |
-| Linux x64   | Debian `.deb` | Ubuntu, Debian y distribuciones derivadas.                                                                                 |
-| Linux x64   | RPM `.rpm`    | Fedora, RHEL y distribuciones derivadas.                                                                                   |
-| Linux x64   | `.AppImage`   | Distribución portátil; después de descargarla hay que ejecutar `chmod +x`.                                                 |
+| Plataforma  | Formato     | Uso recomendado                                            |
+| ----------- | ----------- | ---------------------------------------------------------- |
+| Windows x64 | NSIS .exe   | Instalador principal por usuario; incluye inglés y español |
+| Windows x64 | WiX .msi    | Despliegues administrados                                  |
+| Linux x64   | Debian .deb | Ubuntu, Debian y derivadas                                 |
+| Linux x64   | RPM .rpm    | Fedora, RHEL y derivadas                                   |
+| Linux x64   | .AppImage   | Distribución portátil; requiere chmod +x                   |
 
-El instalador NSIS incorpora el bootstrapper Evergreen de WebView2. El AppImage no incluye GStreamer porque Statusline no reproduce audio ni vídeo.
-
-Windows y Linux muestran la ventana en el primer inicio. Después funciona como companion de bandeja: cerrar la ventana la oculta sin finalizar el proceso. En Linux también se conserva el comportamiento de ocultarla al perder foco para escritorios sin soporte de bandeja.
+NSIS incorpora el bootstrapper Evergreen de WebView2. El AppImage no incluye GStreamer porque Statusline no reproduce multimedia.
 
 ## Validación local económica
 
-Desde `StatuslineDesktop`:
+Desde StatuslineDesktop:
 
 ```shell
 npm ci
@@ -26,70 +24,74 @@ npm run release:check
 cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 ```
 
-`release:check` no crea instaladores. Comprueba versiones, metadatos, targets, acciones fijadas por commit, scripts de firma y smoke test, Prettier, tests TypeScript y tipos estrictos.
+Desde StatuslineRelay:
 
-Para compilar localmente, usa el comando correspondiente únicamente dentro del sistema operativo destino:
+```shell
+npm ci
+npm test
+npm run check
+```
+
+Estas comprobaciones no crean instaladores. Para compilar, ejecuta sólo en el sistema destino:
 
 ```shell
 npm run bundle:windows
 npm run bundle:linux
 ```
 
+## Endpoint universal en los instaladores
+
+Configura una repository variable pública:
+
+```text
+STATUSLINE_RELAY_BASE_URL=https://statusline-relay.inmerzion.workers.dev
+```
+
+El workflow rechaza valores vacíos, con espacios o que no comiencen con https://. La misma URL debe configurarse en los builds Release de iOS y macOS. No se necesitan credenciales de servicios Apple ni secretos compartidos de aplicación.
+
+La URL se incorpora al binario, pero no concede acceso a ningún canal. Cada instalación obtiene credenciales aleatorias durante el emparejamiento y las conserva en el almacén seguro del sistema operativo.
+
 ## Workflow y retención
 
-[`desktop-installers.yml`](../../.github/workflows/desktop-installers.yml) admite dos flujos:
+[desktop-installers.yml](../../.github/workflows/desktop-installers.yml) admite:
 
-1. **Actions → Desktop installers → Run workflow** crea artefactos temporales para beta privada. Estos builds no necesitan certificado y permanecen sin firma.
-2. Un tag `desktop-v<versión>` crea una GitHub Release duradera en estado borrador. Los tags exigen firma Authenticode de Windows antes de compilar.
+1. Actions → Desktop installers → Run workflow para artefactos temporales, sin firma, de beta privada.
+2. Un tag desktop-v<versión> para una GitHub Release duradera en estado borrador. Los tags exigen firma Authenticode de Windows.
 
-Para la versión actual:
+Ejemplo:
 
 ```shell
 git tag desktop-v0.1.2
 git push origin desktop-v0.1.2
 ```
 
-El preflight rechaza un tag que no coincide exactamente con la versión de npm, Cargo y Tauri. No se debe crear el tag público hasta completar la configuración de firma y la checklist de beta.
+El preflight comprueba que el tag coincide con npm, Cargo y Tauri, valida frontend, contrato Rust y servicio relay, y falla antes del bundle si falta el endpoint universal.
 
 Después de compilar, el pipeline:
 
-- instala, abre durante cuatro segundos y desinstala NSIS y MSI en el runner de Windows;
-- inspecciona RPM y AppImage, instala, abre y elimina el paquete Debian en Linux;
-- genera `SHA256SUMS.txt` sobre los cinco instaladores;
-- conserva el manifiesto como artefacto y lo adjunta a la release borrador cuando el build proviene de un tag.
+- instala, abre y desinstala NSIS y MSI en Windows;
+- inspecciona RPM/AppImage e instala y elimina Debian en Linux;
+- genera SHA256SUMS.txt;
+- adjunta los artefactos a una release borrador para builds por tag.
 
-Si cambia únicamente un smoke test, [`desktop-installer-smoke.yml`](../../.github/workflows/desktop-installer-smoke.yml) puede volver a validar los artefactos de un run anterior sin recompilar. Recibe el ID del run y la plataforma:
-
-```shell
-gh workflow run desktop-installer-smoke.yml \
-  -f artifacts_run_id=<run-id> \
-  -f platform=windows
-```
-
-La validación reutilizable descarga los instaladores originales, aplica los scripts de `main` y limita cada proceso de instalación a tres minutos. El job completo expira en diez minutos para evitar runners bloqueados.
+Si cambia sólo un smoke test, [desktop-installer-smoke.yml](../../.github/workflows/desktop-installer-smoke.yml) revalida artefactos existentes sin recompilar.
 
 ## Codex en el equipo del usuario
 
-Los instaladores no incluyen Codex ni credenciales. Cada usuario instala la CLI oficial, ejecuta `codex` y completa **Sign in with ChatGPT**. Statusline inicia `codex app-server` por `stdio` y sólo procesa metadatos de cuota.
+Los instaladores no incluyen Codex ni credenciales. Cada usuario instala la CLI oficial, ejecuta codex y completa Sign in with ChatGPT. Statusline inicia codex app-server por entrada/salida estándar y sólo procesa metadatos de cuota.
 
-**Source Settings** detecta las ubicaciones del instalador standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y el `PATH` del sistema. También permite seleccionar `codex.exe`, `codex.cmd` o el ejecutable Unix. La ruta se guarda sólo después de que `codex --version` la valide.
-
-En Windows, los launchers npm `.cmd` no se ejecutan mediante una cadena de shell arbitraria: Statusline comprueba el paquete oficial adyacente `@openai/codex` y lo inicia con Node.js. `STATUSLINE_CODEX_PATH` continúa disponible como override de administración.
+Source Settings detecta standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y PATH. En Windows también inspecciona ubicaciones relativas a LOCALAPPDATA y APPDATA; ninguna ruta de usuario está hardcodeada.
 
 ## Firma de Windows
 
 Las releases por tag requieren:
 
-- secret `WINDOWS_CERTIFICATE`: PFX de code signing codificado en base64;
-- secret `WINDOWS_CERTIFICATE_PASSWORD`: contraseña del PFX;
-- variable `WINDOWS_TIMESTAMP_URL`: endpoint de timestamp recomendado por el proveedor.
+- secret WINDOWS_CERTIFICATE: PFX de code signing codificado en base64;
+- secret WINDOWS_CERTIFICATE_PASSWORD;
+- variable WINDOWS_TIMESTAMP_URL.
 
-El runner importa temporalmente el certificado en `CurrentUser\My` y genera un overlay de configuración Tauri con thumbprint, SHA-256 y timestamp. Tras el bundle verifica la aplicación, el NSIS y el MSI con `Get-AuthenticodeSignature`. El certificado importado, el PFX y el overlay se eliminan incluso cuando falla un paso posterior.
-
-Un run manual permanece sin firma. Esto mantiene disponible el circuito de prueba sin rebajar el gate de una release etiquetada.
+El runner importa temporalmente el certificado, firma aplicación/NSIS/MSI y valida cada archivo con Get-AuthenticodeSignature. El material temporal se elimina incluso si falla un paso posterior. Los runs manuales permanecen sin firma.
 
 ## Publicación
 
-La [checklist de beta pública](public-beta-checklist.md) cubre máquinas limpias, SmartScreen, checksums, privacidad, soporte y licencia. La licencia de distribución todavía requiere una decisión del propietario y sigue siendo un blocker explícito para publicar.
-
-El updater de Tauri no está integrado: el workflow no genera `latest.json` ni firmas de actualización. La beta se actualiza instalando manualmente una versión posterior.
+La [checklist de beta pública](public-beta-checklist.md) cubre máquinas limpias, relay, SmartScreen, checksums, privacidad, soporte y licencia. El updater de Tauri todavía no está integrado.

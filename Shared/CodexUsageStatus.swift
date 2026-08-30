@@ -2,7 +2,6 @@ import Foundation
 
 enum CodexStatusConstants {
     static let appGroupIdentifier = "group.inmerzion.statusline"
-    static let cloudKitContainerIdentifier = "iCloud.inmerzion.statusline.f3hrl896hj"
     static let storageKey = "codex.weeklyUsageStatus.v1"
     static let widgetKind = "CodexStatusWidget"
     static let exampleLine = "Weekly limit: [██████████████░░░░░░] 70% left (resets 09:02 on 2 Sep)"

@@ -68,6 +68,63 @@ struct CodexStatusParserTests {
     }
 }
 
+@Suite("Universal relay protocol")
+@MainActor
+struct StatusRelayProtocolTests {
+    @Test("Accepts HTTPS configuration and rejects remote cleartext endpoints")
+    func validatesRelayConfiguration() throws {
+        let configuration = try StatusRelayConfiguration("https://relay.statusline.example/path")
+
+        #expect(configuration.origin == "https://relay.statusline.example")
+        #expect(throws: CodexRelayError.self) {
+            try StatusRelayConfiguration("http://relay.statusline.example")
+        }
+    }
+
+    @Test("Parses the provider-neutral QR contract")
+    func parsesPairingURI() throws {
+        let channelID = try #require(
+            UUID(uuidString: "018f47a0-7b52-4c15-9e55-5f0f266b7440")
+        )
+        let pairing = try StatusRelayPairing(
+            uri: "statusline://pair?v=1&channel=018f47a0-7b52-4c15-9e55-5f0f266b7440&pairing=CAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg&key=BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc"
+        )
+
+        #expect(pairing.channelID == channelID)
+        #expect(pairing.pairingToken.count == 43)
+        #expect(pairing.encryptionKey == Data(repeating: 7, count: 32))
+    }
+
+    @Test("Decrypts the shared AES-256-GCM interoperability vector")
+    func decryptsCrossPlatformFixture() throws {
+        let channelID = try #require(
+            UUID(uuidString: "018f47a0-7b52-4c15-9e55-5f0f266b7440")
+        )
+        let credentials = StatusRelayReaderCredentials(
+            protocolVersion: 1,
+            relayOrigin: "https://relay.statusline.example",
+            channelID: channelID,
+            readerToken: "CAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg",
+            encryptionKey: Data(repeating: 7, count: 32)
+        )
+        let envelope = StatusRelayEnvelope(
+            protocolVersion: 1,
+            sequence: 42,
+            nonce: "AwMDAwMDAwMDAwMD",
+            ciphertext: "XtzQYDJNMyMsJTEvgjiRLtcNzM3G8PkRRrDu34S1JcrSwhNW-pzAYvS9eCmvvII2QlBSsKu4D0ccGBuTDhy4WNvBTgjLxwB0LafDpe6m_QPNmvlFOlN-ULB4xKEyQdYIufoRJhKAKfU"
+        )
+
+        let status = try StatusRelayCrypto.decrypt(
+            envelope: envelope,
+            credentials: credentials
+        )
+
+        #expect(status.remainingPercentage == 53)
+        #expect(status.resetDate == Date(timeIntervalSince1970: 2_000_500_000))
+        #expect(status.updatedAt == Date(timeIntervalSince1970: 1_900_000_000))
+    }
+}
+
 @Suite("Codex App Server rate limits")
 @MainActor
 struct CodexRateLimitsResponseTests {

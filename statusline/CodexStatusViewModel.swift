@@ -23,28 +23,31 @@ enum CodexStatusFeedback: Equatable {
     }
 
     var isError: Bool {
-        if case .error = self {
-            return true
-        }
-        return false
+        if case .error = self { true } else { false }
     }
 }
 
-enum CodexCloudSyncState: Equatable {
-    case idle
+enum CodexRelaySyncState: Equatable {
+    case notConfigured
+    case unpaired
+    case pairing
     case syncing
-    case waitingForMac
+    case waitingForDesktop
     case synced(Date)
     case failed(String)
 
     var message: String {
         switch self {
-        case .idle:
-            "Preparando sincronización…"
+        case .notConfigured:
+            "Este build todavía no tiene configurado el endpoint del relay."
+        case .unpaired:
+            "Escanea el QR que muestra Statusline Companion para conectar este dispositivo."
+        case .pairing:
+            "Validando el vínculo cifrado con el relay…"
         case .syncing:
-            "Buscando cambios en iCloud…"
-        case .waitingForMac:
-            "Esperando el primer estado enviado por tu Mac."
+            "Buscando el último snapshot cifrado…"
+        case .waitingForDesktop:
+            "Dispositivo conectado. Esperando la primera muestra del companion."
         case .synced(let date):
             "Sincronizado \(date.formatted(.relative(presentation: .named)))"
         case .failed(let message):
@@ -54,24 +57,34 @@ enum CodexCloudSyncState: Equatable {
 
     var systemImage: String {
         switch self {
-        case .idle:
-            "icloud"
+        case .notConfigured:
+            "network.slash"
+        case .unpaired:
+            "qrcode.viewfinder"
+        case .pairing:
+            "link.badge.plus"
         case .syncing:
-            "arrow.triangle.2.circlepath.icloud"
-        case .waitingForMac:
-            "macbook.and.iphone"
+            "arrow.triangle.2.circlepath"
+        case .waitingForDesktop:
+            "desktopcomputer"
         case .synced:
-            "checkmark.icloud.fill"
+            "checkmark.shield.fill"
         case .failed:
-            "exclamationmark.icloud.fill"
+            "exclamationmark.shield.fill"
         }
     }
 
     var isError: Bool {
-        if case .failed = self {
-            return true
+        if case .failed = self { true } else { false }
+    }
+
+    var isPaired: Bool {
+        switch self {
+        case .syncing, .waitingForDesktop, .synced:
+            true
+        case .notConfigured, .unpaired, .pairing, .failed:
+            false
         }
-        return false
     }
 }
 
@@ -81,29 +94,29 @@ final class CodexStatusViewModel {
     var sourceText: String
     private(set) var status: CodexUsageStatus?
     private(set) var feedback: CodexStatusFeedback?
-    private(set) var cloudSyncState: CodexCloudSyncState = .idle
+    private(set) var relaySyncState: CodexRelaySyncState = .unpaired
     private(set) var isManualUpdateInProgress = false
 
     private let parser: CodexStatusParser
     private let store: CodexStatusStore
-    private let cloudRepository: CodexCloudStatusRepository
+    private let relayRepository: CodexRelayReaderRepository
 
     convenience init() {
         self.init(
             parser: CodexStatusParser(),
             store: CodexStatusStore(),
-            cloudRepository: CodexCloudStatusRepository()
+            relayRepository: CodexRelayReaderRepository()
         )
     }
 
     init(
         parser: CodexStatusParser,
         store: CodexStatusStore,
-        cloudRepository: CodexCloudStatusRepository
+        relayRepository: CodexRelayReaderRepository
     ) {
         self.parser = parser
         self.store = store
-        self.cloudRepository = cloudRepository
+        self.relayRepository = relayRepository
 
         let savedStatus = store.loadSaved()
         status = savedStatus
@@ -112,51 +125,90 @@ final class CodexStatusViewModel {
             : CodexStatusConstants.exampleLine
     }
 
-    func start() async {
-        do {
-            try await cloudRepository.ensureChangeSubscription()
-        } catch {
-            cloudSyncState = .failed(error.localizedDescription)
-        }
+    var relayEndpoint: String? { relayRepository.endpoint }
 
-        await refreshFromCloud()
+    func start() async {
+        guard relayRepository.endpoint != nil else {
+            relaySyncState = .notConfigured
+            return
+        }
+        do {
+            guard try relayRepository.isPaired() else {
+                relaySyncState = .unpaired
+                return
+            }
+            await refreshFromRelay()
+        } catch {
+            relaySyncState = .failed(error.localizedDescription)
+        }
     }
 
-    func refreshFromCloud(userInitiated: Bool = false) async {
-        guard cloudSyncState != .syncing else {
+    func pair(using uri: String) async {
+        guard relaySyncState != .pairing else {
+            return
+        }
+        relaySyncState = .pairing
+        feedback = nil
+        do {
+            try await relayRepository.pair(using: uri)
+            feedback = .success("Dispositivo conectado de forma cifrada.")
+            await refreshFromRelay()
+        } catch {
+            relaySyncState = .failed(error.localizedDescription)
+            feedback = .error(error.localizedDescription)
+        }
+    }
+
+    func refreshFromRelay(userInitiated: Bool = false) async {
+        guard relaySyncState != .syncing else {
+            return
+        }
+        guard relayRepository.endpoint != nil else {
+            relaySyncState = .notConfigured
             return
         }
 
-        cloudSyncState = .syncing
-
+        relaySyncState = .syncing
         do {
-            guard let cloudStatus = try await cloudRepository.fetchStatus() else {
+            guard let relayStatus = try await relayRepository.fetchStatus() else {
                 store.clear()
                 status = nil
-                cloudSyncState = .waitingForMac
+                relaySyncState = .waitingForDesktop
                 WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
                 return
             }
-
-            try store.save(cloudStatus)
-            status = cloudStatus
-            cloudSyncState = .synced(cloudStatus.updatedAt)
+            try store.save(relayStatus)
+            status = relayStatus
+            relaySyncState = .synced(relayStatus.updatedAt)
             WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
-
             if userInitiated {
-                feedback = .success("Estado recibido desde iCloud.")
+                feedback = .success("Snapshot cifrado actualizado.")
             }
+        } catch CodexRelayError.notPaired {
+            relaySyncState = .unpaired
         } catch {
-            cloudSyncState = .failed(error.localizedDescription)
+            relaySyncState = .failed(error.localizedDescription)
+        }
+    }
+
+    func disconnectRelay() {
+        do {
+            try relayRepository.disconnect()
+            store.clear()
+            status = nil
+            relaySyncState = .unpaired
+            feedback = .success("Este dispositivo se desconectó del relay.")
+            WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
+        } catch {
+            relaySyncState = .failed(error.localizedDescription)
+            feedback = .error(error.localizedDescription)
         }
     }
 
     func reloadLocalStatus() {
         status = store.loadSaved()
         if let status {
-            cloudSyncState = .synced(status.updatedAt)
-        } else {
-            cloudSyncState = .waitingForMac
+            relaySyncState = .synced(status.updatedAt)
         }
     }
 
@@ -174,15 +226,7 @@ final class CodexStatusViewModel {
             try store.save(parsedStatus)
             status = parsedStatus
             WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
-
-            do {
-                try await cloudRepository.saveStatus(parsedStatus)
-                cloudSyncState = .synced(parsedStatus.updatedAt)
-                feedback = .success("Widget e iCloud actualizados correctamente.")
-            } catch {
-                cloudSyncState = .failed(error.localizedDescription)
-                feedback = .error("El widget local se actualizó, pero iCloud no: \(error.localizedDescription)")
-            }
+            feedback = .success("Widget local actualizado. El relay no fue modificado.")
         } catch {
             feedback = .error(error.localizedDescription)
         }

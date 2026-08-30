@@ -1,7 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
+import QRCode from "qrcode";
 
+import { parseRelayStatus, type RelayStatus } from "./relay";
 import {
   labelForCodexSource,
   parseCodexDiagnostic,
@@ -12,6 +14,7 @@ import { copyForState, type UsageState } from "./usage";
 
 const AUTO_REFRESH_MS = 5 * 60 * 1_000;
 const FOCUS_REFRESH_AGE_MS = 60 * 1_000;
+const PAIRING_POLL_MS = 3 * 1_000;
 const SEGMENT_COUNT = 20;
 
 const shell = requireElement("meter-shell", HTMLElement);
@@ -49,6 +52,24 @@ const sourceScan = requireElement("source-scan", HTMLButtonElement);
 const sourceReset = requireElement("source-reset", HTMLButtonElement);
 const sourceFeedback = requireElement("source-feedback", HTMLElement);
 const installCommand = requireElement("install-command", HTMLElement);
+const sourceTab = requireElement("source-tab", HTMLButtonElement);
+const relayTab = requireElement("relay-tab", HTMLButtonElement);
+const sourceSettingsView = requireElement("source-settings-view", HTMLElement);
+const relaySettingsView = requireElement("relay-settings-view", HTMLElement);
+const relaySummary = requireElement("relay-summary", HTMLElement);
+const relayStatus = requireElement("relay-status", HTMLElement);
+const relayValue = requireElement("relay-value", HTMLElement);
+const relayDetail = requireElement("relay-detail", HTMLElement);
+const relayEndpoint = requireElement("relay-endpoint", HTMLElement);
+const relayStorage = requireElement("relay-storage", HTMLElement);
+const relayPublished = requireElement("relay-published", HTMLElement);
+const relayConnect = requireElement("relay-connect", HTMLButtonElement);
+const relayDisconnect = requireElement("relay-disconnect", HTMLButtonElement);
+const relayFeedback = requireElement("relay-feedback", HTMLElement);
+const relayPairing = requireElement("relay-pairing", HTMLElement);
+const relayQRCode = requireElement("relay-qr", HTMLImageElement);
+const relayPairingLink = requireElement("relay-pairing-link", HTMLElement);
+const relayCopy = requireElement("relay-copy", HTMLButtonElement);
 
 type SourceRuntime = Readonly<{
   inspect: () => Promise<unknown>;
@@ -57,10 +78,20 @@ type SourceRuntime = Readonly<{
   refreshUsage: () => Promise<void>;
 }>;
 
+type RelayRuntime = Readonly<{
+  status: () => Promise<unknown>;
+  create: () => Promise<unknown>;
+  disconnect: () => Promise<unknown>;
+  refreshUsage: () => Promise<void>;
+}>;
+
 let sourceRuntime: SourceRuntime | null = null;
+let relayRuntime: RelayRuntime | null = null;
 let sourceActionPending = false;
+let relayActionPending = false;
 let sourceAutoOpened = false;
 let focusBeforeSourcePanel: HTMLElement | null = null;
+let currentPairingURI: string | null = null;
 
 const meterSegments = Array.from({ length: SEGMENT_COUNT }, () => {
   const segment = document.createElement("span");
@@ -94,8 +125,15 @@ function startTauriRuntime(): void {
     clear: () => invoke<unknown>("clear_codex_path"),
     refreshUsage: () => controller.refresh(),
   };
+  relayRuntime = {
+    status: () => invoke<unknown>("relay_status"),
+    create: () => invoke<unknown>("create_relay_pairing"),
+    disconnect: () => invoke<unknown>("disconnect_relay"),
+    refreshUsage: () => controller.refresh(),
+  };
   bindSourcePanel();
   void refreshSourceDiagnostic();
+  void refreshRelayStatus();
 
   refreshButton.addEventListener("click", () => {
     void controller.refresh();
@@ -111,8 +149,28 @@ function startTauriRuntime(): void {
     void controller.refresh();
   }, AUTO_REFRESH_MS);
 
+  window.setInterval(() => {
+    if (
+      !sourcePanel.hidden &&
+      !relaySettingsView.hidden &&
+      !relayPairing.hidden
+    ) {
+      void refreshRelayStatus();
+    }
+  }, PAIRING_POLL_MS);
+
   void listen("usage-refresh-requested", () => {
     void controller.refresh();
+  }).catch(() => undefined);
+
+  void listen<unknown>("relay-status-changed", (event) => {
+    try {
+      renderRelayStatus(parseRelayStatus(event.payload));
+    } catch {
+      renderRelayFailure(
+        "Statusline received an invalid universal relay state.",
+      );
+    }
   }).catch(() => undefined);
 
   void controller.refresh();
@@ -128,7 +186,17 @@ function startPreview(initialState: UsageState): void {
     savedPath: null,
     message: null,
   });
+  renderRelayStatus({
+    status: "connected",
+    endpoint: "https://relay.statusline.example",
+    lastPublishedAt: Math.floor(Date.now() / 1_000),
+  });
   renderUsage(initialState);
+  const previewPanel = new URLSearchParams(window.location.search).get("panel");
+  if (previewPanel === "source" || previewPanel === "relay") {
+    selectSettingsView(previewPanel);
+    openSourcePanel();
+  }
   refreshButton.addEventListener("click", () => {
     renderUsage({ status: "loading" });
     window.setTimeout(() => renderUsage(previewReadyState()), 420);
@@ -214,6 +282,7 @@ function renderUsage(state: UsageState): void {
     !sourceAutoOpened
   ) {
     sourceAutoOpened = true;
+    selectSettingsView("source");
     openSourcePanel();
   }
 }
@@ -238,6 +307,23 @@ function bindSourcePanel(): void {
   sourceReset.addEventListener("click", () => {
     void useAutomaticDetection();
   });
+  sourceTab.addEventListener("click", () => {
+    selectSettingsView("source", true);
+  });
+  relayTab.addEventListener("click", () => {
+    selectSettingsView("relay", true);
+  });
+  sourceTab.addEventListener("keydown", navigateSettingsTabs);
+  relayTab.addEventListener("keydown", navigateSettingsTabs);
+  relayConnect.addEventListener("click", () => {
+    void createRelayPairing();
+  });
+  relayDisconnect.addEventListener("click", () => {
+    void disconnectRelay();
+  });
+  relayCopy.addEventListener("click", () => {
+    void copyPairingLink();
+  });
   sourcePanel.addEventListener("keydown", trapSourcePanelFocus);
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !sourcePanel.hidden) {
@@ -257,8 +343,11 @@ function openSourcePanel(): void {
   sourcePanel.hidden = false;
   settingsButton.setAttribute("aria-expanded", "true");
   sourceClose.focus();
-  if (sourceRuntime !== null) {
+  if (!sourceSettingsView.hidden && sourceRuntime !== null) {
     void refreshSourceDiagnostic();
+  }
+  if (!relaySettingsView.hidden && relayRuntime !== null) {
+    void refreshRelayStatus();
   }
 }
 
@@ -270,6 +359,45 @@ function closeSourcePanel(): void {
   settingsButton.setAttribute("aria-expanded", "false");
   focusBeforeSourcePanel?.focus();
   focusBeforeSourcePanel = null;
+}
+
+function selectSettingsView(view: "source" | "relay", moveFocus = false): void {
+  const showSource = view === "source";
+  sourceSettingsView.hidden = !showSource;
+  relaySettingsView.hidden = showSource;
+  sourceTab.setAttribute("aria-selected", showSource ? "true" : "false");
+  relayTab.setAttribute("aria-selected", showSource ? "false" : "true");
+  sourceTab.tabIndex = showSource ? 0 : -1;
+  relayTab.tabIndex = showSource ? -1 : 0;
+  const selectedTab = showSource ? sourceTab : relayTab;
+  if (moveFocus) {
+    selectedTab.focus();
+  }
+  if (showSource) {
+    void refreshSourceDiagnostic();
+  } else {
+    void refreshRelayStatus();
+  }
+}
+
+function navigateSettingsTabs(event: KeyboardEvent): void {
+  if (!matchesSettingsTabNavigation(event.key)) {
+    return;
+  }
+  event.preventDefault();
+  const view =
+    event.key === "Home"
+      ? "source"
+      : event.key === "End"
+        ? "relay"
+        : event.currentTarget === sourceTab
+          ? "relay"
+          : "source";
+  selectSettingsView(view, true);
+}
+
+function matchesSettingsTabNavigation(key: string): boolean {
+  return ["ArrowLeft", "ArrowRight", "Home", "End"].includes(key);
 }
 
 async function refreshSourceDiagnostic(): Promise<void> {
@@ -378,12 +506,240 @@ function setSourceControlsDisabled(disabled: boolean): void {
   sourceReset.disabled = disabled;
 }
 
+async function refreshRelayStatus(): Promise<void> {
+  if (relayRuntime === null || relayActionPending) {
+    return;
+  }
+  try {
+    renderRelayStatus(parseRelayStatus(await relayRuntime.status()));
+  } catch (error: unknown) {
+    renderRelayFailure(errorMessage(error));
+  }
+}
+
+async function createRelayPairing(): Promise<void> {
+  if (relayRuntime === null || relayActionPending) {
+    return;
+  }
+  relayActionPending = true;
+  setRelayBusy("CREATING ENCRYPTED CHANNEL");
+  try {
+    const status = parseRelayStatus(await relayRuntime.create());
+    relayActionPending = false;
+    renderRelayStatus(status);
+    if (status.status === "pairing" || status.status === "connected") {
+      await relayRuntime.refreshUsage();
+    }
+  } catch (error: unknown) {
+    relayActionPending = false;
+    renderRelayFailure(errorMessage(error));
+  }
+}
+
+async function disconnectRelay(): Promise<void> {
+  if (relayRuntime === null || relayActionPending) {
+    return;
+  }
+  relayActionPending = true;
+  setRelayBusy("REMOVING LOCAL RELAY CREDENTIALS");
+  try {
+    const status = parseRelayStatus(await relayRuntime.disconnect());
+    relayActionPending = false;
+    renderRelayStatus(status);
+  } catch (error: unknown) {
+    relayActionPending = false;
+    renderRelayFailure(errorMessage(error));
+  }
+}
+
+function renderRelayStatus(state: RelayStatus): void {
+  const endpoint = state.status === "notConfigured" ? null : state.endpoint;
+  relayEndpoint.textContent =
+    endpoint === null ? "—" : compactEndpoint(endpoint);
+  relayEndpoint.title = endpoint ?? "";
+  relayConnect.hidden = false;
+  relayConnect.disabled = relayActionPending;
+  relayDisconnect.disabled = relayActionPending;
+  relayDisconnect.hidden = true;
+  relayPairing.hidden = true;
+  currentPairingURI = null;
+  relayPublished.textContent = "NO SAMPLE PUBLISHED";
+  relayDetail.textContent = "E2E / AES-256-GCM";
+
+  switch (state.status) {
+    case "notConfigured":
+      relaySummary.dataset.status = "invalid";
+      relayStatus.textContent = "BUILD NOT CONFIGURED";
+      relayValue.textContent = "UNAVAILABLE";
+      relayDetail.textContent = "INSTALLER CONFIG";
+      relayPublished.textContent = "RELAY URL NOT CONFIGURED";
+      relayConnect.disabled = true;
+      relayFeedback.textContent =
+        "This build needs STATUSLINE_RELAY_BASE_URL pointing to the public HTTPS relay.";
+      break;
+    case "unpaired":
+      relaySummary.dataset.status = "offline";
+      relayStatus.textContent = "READY TO PAIR";
+      relayValue.textContent = "OFFLINE";
+      relayConnect.textContent = "CREATE PAIRING";
+      relayFeedback.textContent =
+        "Create a private QR for Statusline on iOS or Android. No platform account is required.";
+      break;
+    case "creating":
+      relaySummary.dataset.status = "reading";
+      relayStatus.textContent = "CREATING CHANNEL";
+      relayValue.textContent = "PAIRING";
+      relayConnect.textContent = "CREATING…";
+      relayConnect.disabled = true;
+      relayFeedback.textContent =
+        "Generating independent read/write credentials.";
+      break;
+    case "pairing":
+      relaySummary.dataset.status = "reading";
+      relayStatus.textContent = "SCAN ON MOBILE";
+      relayValue.textContent = "PAIRING";
+      relayConnect.textContent = "REPLACE PAIRING";
+      relayDisconnect.hidden = false;
+      relayPairing.hidden = false;
+      currentPairingURI = state.pairingUri;
+      relayPairingLink.textContent = state.pairingUri;
+      relayPublished.textContent = `QR EXPIRES ${formatTime(state.pairingExpiresAt)}`;
+      relayFeedback.textContent =
+        "Scan this QR inside Statusline. Treat it like a password until the mobile device confirms pairing.";
+      void renderPairingQRCode(state.pairingUri);
+      break;
+    case "connected":
+      relaySummary.dataset.status = "ready";
+      relayStatus.textContent =
+        state.lastPublishedAt === null ? "CONNECTED" : "SYNCED";
+      relayValue.textContent =
+        state.lastPublishedAt === null ? "CONNECTED" : "SYNCED";
+      relayConnect.textContent = "REPLACE PAIRING";
+      relayDisconnect.hidden = false;
+      relayPublished.textContent =
+        state.lastPublishedAt === null
+          ? "WAITING FOR LOCAL SAMPLE"
+          : `${formatTime(state.lastPublishedAt)} · ENCRYPTED SNAPSHOT`;
+      relayFeedback.textContent =
+        state.lastPublishedAt === null
+          ? "Paired. Refresh Codex to publish the first encrypted snapshot."
+          : "The latest quota sample is available to paired iOS and Android clients.";
+      break;
+    case "error":
+      relaySummary.dataset.status = "invalid";
+      relayStatus.textContent = "RELAY NEEDS ATTENTION";
+      relayValue.textContent = "SYNC ERROR";
+      relayConnect.textContent = "CREATE NEW PAIRING";
+      relayDisconnect.hidden = !state.hasPairing;
+      relayPublished.textContent = state.code.toUpperCase();
+      relayFeedback.textContent = state.message;
+      break;
+  }
+  relayStorageLabel();
+  if (relayRuntime === null) {
+    relayConnect.disabled = true;
+    relayDisconnect.disabled = true;
+  }
+}
+
+function setRelayBusy(message: string): void {
+  relaySummary.dataset.status = "reading";
+  relayStatus.textContent = "WORKING";
+  relayValue.textContent = "PAIRING";
+  relayDetail.textContent = "E2E / AES-256-GCM";
+  relayPublished.textContent = "WAITING FOR RELAY";
+  relayFeedback.textContent = message;
+  relayConnect.disabled = true;
+  relayDisconnect.disabled = true;
+}
+
+function renderRelayFailure(message: string): void {
+  relaySummary.dataset.status = "invalid";
+  relayStatus.textContent = "CHECK FAILED";
+  relayValue.textContent = "SYNC ERROR";
+  relayDetail.textContent = "E2E / AES-256-GCM";
+  relayPublished.textContent = "STATUS UNAVAILABLE";
+  relayFeedback.textContent = message;
+  relayConnect.textContent = "RETRY PAIRING";
+  relayDisconnect.hidden = true;
+  relayConnect.disabled = relayRuntime === null;
+  relayDisconnect.disabled = relayRuntime === null;
+}
+
+async function renderPairingQRCode(pairingURI: string): Promise<void> {
+  try {
+    const imageURL = await QRCode.toDataURL(pairingURI, {
+      errorCorrectionLevel: "M",
+      margin: 2,
+      width: 220,
+      color: { dark: "#11120f", light: "#efc65a" },
+    });
+    if (currentPairingURI === pairingURI) {
+      relayQRCode.src = imageURL;
+    }
+  } catch {
+    if (currentPairingURI === pairingURI) {
+      relayQRCode.removeAttribute("src");
+      relayFeedback.textContent =
+        "Could not render the QR. Copy the private pairing link instead.";
+    }
+  }
+}
+
+async function copyPairingLink(): Promise<void> {
+  if (currentPairingURI === null) {
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(currentPairingURI);
+    relayCopy.textContent = "COPIED";
+    window.setTimeout(() => {
+      relayCopy.textContent = "COPY PRIVATE LINK";
+    }, 1_500);
+  } catch {
+    relayFeedback.textContent =
+      "Clipboard access failed. Select and copy the private link manually.";
+  }
+}
+
+function compactEndpoint(endpoint: string): string {
+  try {
+    return new URL(endpoint).host.toUpperCase();
+  } catch {
+    return "INVALID ENDPOINT";
+  }
+}
+
+function relayStorageLabel(): void {
+  const platform = navigator.userAgent;
+  const label = platform.includes("Windows")
+    ? "CREDENTIAL MANAGER"
+    : platform.includes("Linux")
+      ? "SECRET SERVICE"
+      : "SYSTEM KEYCHAIN";
+  relayStorage.textContent = label;
+}
+
 function trapSourcePanelFocus(event: KeyboardEvent): void {
   if (event.key !== "Tab") {
     return;
   }
-  const focusable = [sourceClose, sourceChoose, sourceScan, sourceReset].filter(
-    (element) => !element.hidden && !element.disabled,
+  const focusable = [
+    sourceClose,
+    sourceTab,
+    relayTab,
+    sourceChoose,
+    sourceScan,
+    sourceReset,
+    relayConnect,
+    relayDisconnect,
+    relayCopy,
+  ].filter(
+    (element) =>
+      !element.hidden &&
+      !element.disabled &&
+      element.tabIndex >= 0 &&
+      element.closest("[hidden]") === null,
   );
   const first = focusable[0];
   const last = focusable.at(-1);

@@ -14,29 +14,47 @@ enum CompanionConnectionState: Equatable {
 @MainActor
 final class CompanionViewModel {
     private(set) var connectionState: CompanionConnectionState = .checking
+    private(set) var relayState: StatusRelayPublisherState = .notConfigured
     private(set) var status: CodexUsageStatus?
     private(set) var loginChallenge: CodexLoginChallenge?
     private(set) var accountEmail: String?
     private(set) var message = "Comprobando tu sesión de Codex…"
+    private(set) var relayMessage = "Comprobando el relay universal…"
     private(set) var isBusy = false
+    private(set) var isRelayBusy = false
 
     private let appServer: CodexAppServerClient
-    private let cloudRepository: CodexCloudStatusRepository
+    private let relayPublisher: CodexRelayPublisherRepository
     private var serviceTask: Task<Void, Never>?
 
     convenience init() {
         self.init(
             appServer: CodexAppServerClient(),
-            cloudRepository: CodexCloudStatusRepository()
+            relayPublisher: CodexRelayPublisherRepository()
         )
     }
 
     init(
         appServer: CodexAppServerClient,
-        cloudRepository: CodexCloudStatusRepository
+        relayPublisher: CodexRelayPublisherRepository
     ) {
         self.appServer = appServer
-        self.cloudRepository = cloudRepository
+        self.relayPublisher = relayPublisher
+    }
+
+    var pairingURI: String? {
+        if case .pairing(_, let uri, _, _) = relayState { uri } else { nil }
+    }
+
+    var relayEndpoint: String? {
+        switch relayState {
+        case .notConfigured:
+            nil
+        case .unpaired(let endpoint),
+             .pairing(let endpoint, _, _, _),
+             .connected(let endpoint, _):
+            endpoint
+        }
     }
 
     func start() {
@@ -50,6 +68,7 @@ final class CompanionViewModel {
     }
 
     private func runServiceLoop() async {
+        await refreshRelayState()
         await restoreSession()
 
         while !Task.isCancelled {
@@ -59,6 +78,7 @@ final class CompanionViewModel {
                 break
             }
 
+            await refreshRelayState()
             if connectionState == .connected {
                 await refresh()
             }
@@ -98,7 +118,7 @@ final class CompanionViewModel {
 
             accountEmail = account.account?.email
             connectionState = .connected
-            try await fetchAndSyncStatus()
+            try await fetchAndPublishStatus()
         } catch {
             connectionState = error is CodexAppServerError ? .disconnected : .unavailable
             message = error.localizedDescription
@@ -114,7 +134,7 @@ final class CompanionViewModel {
 
         isBusy = true
         do {
-            try await fetchAndSyncStatus()
+            try await fetchAndPublishStatus()
         } catch {
             message = error.localizedDescription
         }
@@ -129,16 +149,62 @@ final class CompanionViewModel {
         isBusy = true
         do {
             try await appServer.logout()
-            try await cloudRepository.deleteStatus()
             status = nil
             accountEmail = nil
             loginChallenge = nil
             connectionState = .disconnected
-            message = "Cuenta desconectada y estado eliminado de iCloud."
+            message = "Cuenta de Codex desconectada. El vínculo con tus dispositivos se conserva."
         } catch {
             message = error.localizedDescription
         }
         isBusy = false
+    }
+
+    func createRelayPairing() async {
+        guard !isRelayBusy else {
+            return
+        }
+        isRelayBusy = true
+        relayMessage = "Creando credenciales independientes de lectura y escritura…"
+        do {
+            relayState = try await relayPublisher.createPairing()
+            relayMessage = "Escanea este QR desde Statusline en iOS o Android."
+            if let status {
+                relayState = try await relayPublisher.publish(status)
+            }
+        } catch {
+            relayMessage = error.localizedDescription
+        }
+        isRelayBusy = false
+    }
+
+    func refreshRelayState() async {
+        guard !isRelayBusy else {
+            return
+        }
+        isRelayBusy = true
+        do {
+            relayState = try await relayPublisher.status()
+            relayMessage = relayState.statusMessage
+        } catch {
+            relayMessage = error.localizedDescription
+        }
+        isRelayBusy = false
+    }
+
+    func disconnectRelay() async {
+        guard !isRelayBusy else {
+            return
+        }
+        isRelayBusy = true
+        do {
+            try await relayPublisher.disconnect()
+            relayState = relayEndpoint.map { .unpaired(endpoint: $0) } ?? .notConfigured
+            relayMessage = "Vínculo eliminado. El snapshot remoto ya no puede descifrarse."
+        } catch {
+            relayMessage = error.localizedDescription
+        }
+        isRelayBusy = false
     }
 
     func openAuthorizationPage() {
@@ -152,8 +218,15 @@ final class CompanionViewModel {
         guard let code = loginChallenge?.userCode else {
             return
         }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(code, forType: .string)
+        copyToPasteboard(code)
+    }
+
+    func copyPairingLink() {
+        guard let pairingURI else {
+            return
+        }
+        copyToPasteboard(pairingURI)
+        relayMessage = "Vínculo privado copiado. No lo compartas con terceros."
     }
 
     private func restoreSession() async {
@@ -175,7 +248,7 @@ final class CompanionViewModel {
 
             accountEmail = response.account?.email
             connectionState = .connected
-            try await fetchAndSyncStatus()
+            try await fetchAndPublishStatus()
         } catch CodexAppServerError.executableNotFound {
             connectionState = .unavailable
             message = CodexAppServerError.executableNotFound.localizedDescription
@@ -187,14 +260,51 @@ final class CompanionViewModel {
         isBusy = false
     }
 
-    private func fetchAndSyncStatus() async throws {
+    private func fetchAndPublishStatus() async throws {
         message = "Leyendo tu límite semanal de Codex…"
         let limits = try await appServer.rateLimits()
         let currentStatus = try limits.weeklyStatus()
-
         status = currentStatus
-        message = "Enviando el estado a tu iCloud privado…"
-        try await cloudRepository.saveStatus(currentStatus)
-        message = "Sincronizado correctamente."
+
+        switch relayState {
+        case .pairing, .connected:
+            relayMessage = "Cifrando y publicando el snapshot…"
+            do {
+                relayState = try await relayPublisher.publish(currentStatus)
+                relayMessage = relayState.statusMessage
+                message = "Codex leído y snapshot cifrado publicado."
+            } catch {
+                relayMessage = error.localizedDescription
+                message = "Codex leído; el relay necesita atención."
+            }
+        case .notConfigured:
+            message = "Codex leído. Configura el endpoint para sincronizar otros dispositivos."
+        case .unpaired:
+            message = "Codex leído. Crea un vínculo para sincronizar iOS o Android."
+        }
+    }
+
+    private func copyToPasteboard(_ value: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
+    }
+}
+
+private extension StatusRelayPublisherState {
+    var statusMessage: String {
+        switch self {
+        case .notConfigured:
+            "Este build no tiene configurado el endpoint del relay."
+        case .unpaired:
+            "Crea un vínculo para conectar iOS o Android."
+        case .pairing(_, _, let expiresAt, _):
+            "Esperando el escaneo del QR. Caduca \(expiresAt.formatted(.relative(presentation: .named)))."
+        case .connected(_, let lastPublishedAt):
+            if let lastPublishedAt {
+                "Snapshot cifrado publicado \(lastPublishedAt.formatted(.relative(presentation: .named)))."
+            } else {
+                "Dispositivo conectado. Esperando la primera publicación."
+            }
+        }
     }
 }

@@ -140,6 +140,12 @@ fn windows_common_paths_cover_standalone_npm_volta_and_nvm() {
     )));
     assert!(paths.contains(&PathBuf::from("C:/Users/Ada/AppData/Roaming/npm/codex.cmd")));
     assert!(paths.contains(&PathBuf::from("C:/Users/Ada/.volta/bin/codex.exe")));
+    assert!(paths.contains(&PathBuf::from(
+        "C:/Users/Ada/AppData/Local/Volta/bin/codex.exe"
+    )));
+    assert!(paths.contains(&PathBuf::from(
+        "C:/Users/Ada/AppData/Local/Microsoft/WindowsApps/codex.exe"
+    )));
     assert!(paths.contains(&PathBuf::from("C:/nvm/current/codex.cmd")));
 }
 

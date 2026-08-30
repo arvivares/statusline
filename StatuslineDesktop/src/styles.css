@@ -159,6 +159,7 @@ select {
 
 .settings-button:focus-visible,
 .source-close:focus-visible,
+.settings-tab:focus-visible,
 .source-primary:focus-visible,
 .source-secondary:focus-visible,
 .source-reset:focus-visible {
@@ -459,6 +460,51 @@ h1 {
   display: none;
 }
 
+.settings-tabs {
+  min-height: 38px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-tab {
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(20, 21, 15, 0.72);
+  font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", monospace;
+  font-size: 8px;
+  font-weight: 760;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.settings-tab:last-child {
+  border-right: 0;
+}
+
+.settings-tab[aria-selected="true"] {
+  color: var(--signal);
+  background: rgba(239, 198, 90, 0.07);
+  box-shadow: inset 0 -2px 0 var(--signal);
+}
+
+.settings-view {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: var(--line) transparent;
+  scrollbar-width: thin;
+}
+
+.settings-view[hidden] {
+  display: none;
+}
+
 .source-heading,
 .source-summary,
 .source-actions {
@@ -555,6 +601,11 @@ h1 {
   animation: status-pulse 1.25s ease-in-out infinite alternate;
 }
 
+.source-summary[data-status="ready"] .source-beacon {
+  border-color: var(--signal);
+  background: var(--signal);
+}
+
 .source-summary[data-status="missing"] .source-beacon,
 .source-summary[data-status="invalid"] .source-beacon {
   border-color: var(--critical);
@@ -562,9 +613,86 @@ h1 {
   box-shadow: 0 0 8px rgba(242, 104, 86, 0.38);
 }
 
+.source-summary[data-status="offline"] .source-beacon {
+  border-color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+}
+
+.source-summary[data-status="offline"] strong {
+  color: var(--muted);
+}
+
 .source-summary[data-status="missing"] strong,
 .source-summary[data-status="invalid"] strong {
   color: var(--critical);
+}
+
+.relay-grid .source-path-cell {
+  order: 3;
+}
+
+.relay-guidance {
+  min-height: 114px;
+  display: grid;
+  align-content: center;
+}
+
+.relay-pairing {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 13px;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(239, 198, 90, 0.035);
+}
+
+.relay-pairing[hidden] {
+  display: none;
+}
+
+.relay-qr-frame {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 5px;
+  background: var(--signal);
+}
+
+.relay-qr-frame img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.relay-pairing-copy {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 9px;
+}
+
+.relay-pairing-copy p {
+  margin: 0 !important;
+}
+
+.relay-pairing-copy code {
+  max-height: 42px;
+  overflow: hidden;
+  color: var(--muted);
+  font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", monospace;
+  font-size: 7px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.relay-pairing-copy .source-secondary {
+  min-height: 34px;
+}
+
+.relay-actions {
+  margin-top: auto;
 }
 
 .source-grid {

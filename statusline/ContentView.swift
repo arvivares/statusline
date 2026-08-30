@@ -4,25 +4,29 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var viewModel = CodexStatusViewModel()
     @State private var isManualUpdateExpanded = false
+    @State private var isPairingPresented = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    DataPlaneAppHeader(syncState: viewModel.cloudSyncState)
+                    DataPlaneAppHeader(syncState: viewModel.relaySyncState)
 
                     if let status = viewModel.status {
                         CodexDataPlanePanel(
                             status: status,
-                            syncState: viewModel.cloudSyncState
+                            syncState: viewModel.relaySyncState
                         )
                     } else {
-                        WaitingForMacPanel(syncState: viewModel.cloudSyncState)
+                        WaitingForDesktopPanel(syncState: viewModel.relaySyncState)
                     }
 
-                    CloudRelayPanel(
-                        state: viewModel.cloudSyncState,
-                        onRefresh: refreshFromCloud
+                    UniversalRelayPanel(
+                        state: viewModel.relaySyncState,
+                        endpoint: viewModel.relayEndpoint,
+                        onRefresh: refreshFromRelay,
+                        onPair: { isPairingPresented = true },
+                        onDisconnect: viewModel.disconnectRelay
                     )
 
                     ManualUpdatePanel(
@@ -50,17 +54,22 @@ struct ContentView: View {
                 await viewModel.start()
             }
             .onChange(of: scenePhase, handleScenePhaseChange)
-            .onReceive(NotificationCenter.default.publisher(for: .codexStatusDidSync)) { _ in
-                viewModel.reloadLocalStatus()
+            .sheet(isPresented: $isPairingPresented) {
+                RelayPairingSheet { uri in
+                    await viewModel.pair(using: uri)
+                    if viewModel.relaySyncState.isPaired {
+                        isPairingPresented = false
+                    }
+                }
             }
         }
         .tint(DataPlaneTheme.signal)
         .preferredColorScheme(.dark)
     }
 
-    private func refreshFromCloud() {
+    private func refreshFromRelay() {
         Task {
-            await viewModel.refreshFromCloud(userInitiated: true)
+            await viewModel.refreshFromRelay(userInitiated: true)
         }
     }
 
@@ -76,13 +85,13 @@ struct ContentView: View {
         }
 
         Task {
-            await viewModel.refreshFromCloud()
+            await viewModel.refreshFromRelay()
         }
     }
 }
 
 private struct DataPlaneAppHeader: View {
-    let syncState: CodexCloudSyncState
+    let syncState: CodexRelaySyncState
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -111,7 +120,7 @@ private struct DataPlaneAppHeader: View {
 
 private struct CodexDataPlanePanel: View {
     let status: CodexUsageStatus
-    let syncState: CodexCloudSyncState
+    let syncState: CodexRelaySyncState
 
     private let columns = [
         GridItem(.flexible(), spacing: 0),
@@ -166,14 +175,14 @@ private struct CodexDataPlanePanel: View {
 
                     DataPlaneMetricCell(
                         label: "SOURCE.HOST",
-                        value: "Mac companion",
+                        value: "Desktop companion",
                         detail: "CODEX SESSION LOCAL"
                     )
 
                     DataPlaneMetricCell(
                         label: "RELAY.STATE",
                         value: syncState.relayValue,
-                        detail: "PRIVATE ICLOUD"
+                        detail: "E2E · UNIVERSAL"
                     )
                 }
 
@@ -249,8 +258,8 @@ private struct DataPlaneQuotaContext: View {
     }
 }
 
-private struct WaitingForMacPanel: View {
-    let syncState: CodexCloudSyncState
+private struct WaitingForDesktopPanel: View {
+    let syncState: CodexRelaySyncState
 
     var body: some View {
         DataPlaneSurface(cornerRadius: 20) {
@@ -277,7 +286,7 @@ private struct WaitingForMacPanel: View {
                     DataPlaneMeter(remainingPercentage: 0)
                         .accessibilityHidden(true)
 
-                    Text("Abre Statusline Companion en tu Mac y conecta tu cuenta de Codex para publicar la primera muestra mediante iCloud.")
+                    Text("Abre Statusline Companion en Windows, Linux o macOS, crea un vínculo y escanea su QR para recibir la primera muestra cifrada.")
                         .font(.subheadline)
                         .foregroundStyle(DataPlaneTheme.muted)
                 }
@@ -301,9 +310,12 @@ private struct WaitingForMacPanel: View {
     }
 }
 
-private struct CloudRelayPanel: View {
-    let state: CodexCloudSyncState
+private struct UniversalRelayPanel: View {
+    let state: CodexRelaySyncState
+    let endpoint: String?
     let onRefresh: () -> Void
+    let onPair: () -> Void
+    let onDisconnect: () -> Void
 
     var body: some View {
         DataPlaneSurface {
@@ -323,24 +335,62 @@ private struct CloudRelayPanel: View {
                     .font(.subheadline.monospaced())
                     .foregroundStyle(state.isError ? DataPlaneTheme.critical : DataPlaneTheme.ink)
 
-                Text("El iPhone lee únicamente el porcentaje, el reinicio y la fecha de actualización desde tu base privada de iCloud.")
+                Text("El relay almacena únicamente un blob AES-256-GCM. Las credenciales de Codex y la clave de cifrado nunca salen de tus dispositivos.")
                     .font(.caption)
                     .foregroundStyle(DataPlaneTheme.muted)
 
-                Button(action: onRefresh) {
-                    HStack(spacing: 9) {
-                        if state == .syncing {
-                            ProgressView()
-                                .controlSize(.small)
-                                .tint(DataPlaneTheme.canvas)
-                        }
-                        Text(state == .syncing ? "Sincronizando" : "Actualizar data plane")
-                    }
+                if let endpoint {
+                    Text(endpoint)
+                        .font(.caption2.monospaced())
+                        .foregroundStyle(DataPlaneTheme.muted)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
                 }
-                .buttonStyle(DataPlanePrimaryButtonStyle())
-                .disabled(state == .syncing)
+
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) { controls }
+                    VStack(spacing: 10) { controls }
+                }
             }
             .padding(17)
+        }
+    }
+
+    @ViewBuilder
+    private var controls: some View {
+        switch state {
+        case .notConfigured:
+            EmptyView()
+
+        case .unpaired, .failed:
+            Button("Escanear QR", systemImage: "qrcode.viewfinder", action: onPair)
+                .buttonStyle(DataPlanePrimaryButtonStyle())
+
+        case .pairing:
+            HStack(spacing: 9) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Emparejando…")
+            }
+            .foregroundStyle(DataPlaneTheme.signal)
+
+        case .syncing, .waitingForDesktop, .synced:
+            Button(action: onRefresh) {
+                HStack(spacing: 9) {
+                    if state == .syncing {
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(DataPlaneTheme.canvas)
+                    }
+                    Text(state == .syncing ? "Sincronizando" : "Actualizar data plane")
+                }
+            }
+            .buttonStyle(DataPlanePrimaryButtonStyle())
+            .disabled(state == .syncing)
+
+            Button("Desconectar", systemImage: "link.badge.minus", action: onDisconnect)
+                .buttonStyle(DataPlaneSecondaryButtonStyle())
+                .disabled(state == .syncing)
         }
     }
 }
@@ -426,7 +476,7 @@ private struct CodexStatusEditor: View {
                 }
             }
 
-            Button("Guardar y sincronizar", systemImage: "arrow.triangle.2.circlepath", action: onUpdate)
+            Button("Guardar en este dispositivo", systemImage: "square.and.arrow.down", action: onUpdate)
                 .buttonStyle(DataPlanePrimaryButtonStyle())
                 .disabled(isUpdating)
 
@@ -449,14 +499,18 @@ private struct CodexStatusEditor: View {
     }
 }
 
-private extension CodexCloudSyncState {
+private extension CodexRelaySyncState {
     var dataPlaneLabel: String {
         switch self {
-        case .idle:
-            "standby"
+        case .notConfigured:
+            "no endpoint"
+        case .unpaired:
+            "unpaired"
+        case .pairing:
+            "pairing"
         case .syncing:
             "syncing"
-        case .waitingForMac:
+        case .waitingForDesktop:
             "waiting"
         case .synced:
             "current"
@@ -469,25 +523,29 @@ private extension CodexCloudSyncState {
         switch self {
         case .failed:
             DataPlaneTheme.critical
-        case .idle, .waitingForMac:
+        case .notConfigured, .unpaired, .waitingForDesktop:
             DataPlaneTheme.muted
-        case .syncing, .synced:
+        case .pairing, .syncing, .synced:
             DataPlaneTheme.signal
         }
     }
 
     var relayValue: String {
         switch self {
-        case .idle:
-            "iCloud / standby"
+        case .notConfigured:
+            "Relay / config"
+        case .unpaired:
+            "Relay / unpaired"
+        case .pairing:
+            "Relay / pairing"
         case .syncing:
-            "iCloud / syncing"
-        case .waitingForMac:
-            "iCloud / waiting"
+            "Relay / syncing"
+        case .waitingForDesktop:
+            "Relay / waiting"
         case .synced:
-            "iCloud / current"
+            "Relay / current"
         case .failed:
-            "iCloud / error"
+            "Relay / error"
         }
     }
 }

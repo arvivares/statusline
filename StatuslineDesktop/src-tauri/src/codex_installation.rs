@@ -132,6 +132,24 @@ pub fn windows_common_paths(
             &mut paths,
             user_profile.join("scoop").join("shims").join("codex.exe"),
         );
+        push_unique_path(
+            &mut paths,
+            user_profile
+                .join(".local")
+                .join("share")
+                .join("mise")
+                .join("shims")
+                .join("codex.exe"),
+        );
+        push_unique_path(
+            &mut paths,
+            user_profile
+                .join(".local")
+                .join("share")
+                .join("mise")
+                .join("shims")
+                .join("codex.cmd"),
+        );
     }
 
     if let Some(app_data) = app_data {
@@ -164,6 +182,17 @@ pub fn windows_common_paths(
                 .join("WinGet")
                 .join("Links")
                 .join("codex.exe"),
+        );
+        push_unique_path(
+            &mut paths,
+            local_app_data
+                .join("Microsoft")
+                .join("WindowsApps")
+                .join("codex.exe"),
+        );
+        push_unique_path(
+            &mut paths,
+            local_app_data.join("Volta").join("bin").join("codex.exe"),
         );
     }
 
@@ -313,10 +342,7 @@ fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
     #[cfg(not(windows))]
     collect_unix_candidates(&mut candidates);
 
-    let path_entries = env::var_os("PATH")
-        .map(|path| env::split_paths(&path).collect::<Vec<_>>())
-        .unwrap_or_default();
-    for entry in path_entries {
+    for entry in search_path_entries() {
         for executable_name in executable_names() {
             push_candidate(
                 &mut candidates,
@@ -332,8 +358,16 @@ fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
 #[cfg(windows)]
 fn collect_windows_candidates(candidates: &mut Vec<Candidate>) {
     let user_profile = env::var_os("USERPROFILE").map(PathBuf::from);
-    let app_data = env::var_os("APPDATA").map(PathBuf::from);
-    let local_app_data = env::var_os("LOCALAPPDATA").map(PathBuf::from);
+    let app_data = env::var_os("APPDATA").map(PathBuf::from).or_else(|| {
+        user_profile
+            .as_ref()
+            .map(|profile| profile.join("AppData").join("Roaming"))
+    });
+    let local_app_data = env::var_os("LOCALAPPDATA").map(PathBuf::from).or_else(|| {
+        user_profile
+            .as_ref()
+            .map(|profile| profile.join("AppData").join("Local"))
+    });
     let program_files = env::var_os("ProgramFiles").map(PathBuf::from);
     let nvm_symlink = env::var_os("NVM_SYMLINK").map(PathBuf::from);
 
@@ -344,23 +378,64 @@ fn collect_windows_candidates(candidates: &mut Vec<Candidate>) {
         program_files.as_deref(),
         nvm_symlink.as_deref(),
     ) {
-        let source = source_for_windows_path(&path, app_data.as_deref(), user_profile.as_deref());
+        let source = source_for_windows_path(
+            &path,
+            app_data.as_deref(),
+            local_app_data.as_deref(),
+            user_profile.as_deref(),
+        );
         push_candidate(candidates, path, source);
     }
 
     if let Some(nvm_home) = env::var_os("NVM_HOME").map(PathBuf::from) {
-        for version_directory in child_directories(&nvm_home) {
-            push_candidate(
-                candidates,
-                version_directory.join("codex.exe"),
-                CodexSource::VersionManager,
-            );
-            push_candidate(
-                candidates,
-                version_directory.join("codex.cmd"),
-                CodexSource::VersionManager,
-            );
-        }
+        push_windows_version_manager_codex(candidates, &nvm_home, false);
+    }
+    if let Some(app_data) = app_data.as_deref() {
+        push_windows_version_manager_codex(candidates, &app_data.join("nvm"), false);
+        push_windows_version_manager_codex(
+            candidates,
+            &app_data.join("fnm").join("node-versions"),
+            true,
+        );
+    }
+    if let Some(local_app_data) = local_app_data.as_deref() {
+        push_windows_version_manager_codex(
+            candidates,
+            &local_app_data.join("fnm").join("node-versions"),
+            true,
+        );
+    }
+    if let Some(user_profile) = user_profile.as_deref() {
+        push_windows_version_manager_codex(
+            candidates,
+            &user_profile.join(".fnm").join("node-versions"),
+            true,
+        );
+    }
+}
+
+#[cfg(windows)]
+fn push_windows_version_manager_codex(
+    candidates: &mut Vec<Candidate>,
+    versions_root: &Path,
+    uses_installation_directory: bool,
+) {
+    for version_directory in child_directories(versions_root) {
+        let executable_root = if uses_installation_directory {
+            version_directory.join("installation")
+        } else {
+            version_directory
+        };
+        push_candidate(
+            candidates,
+            executable_root.join("codex.exe"),
+            CodexSource::VersionManager,
+        );
+        push_candidate(
+            candidates,
+            executable_root.join("codex.cmd"),
+            CodexSource::VersionManager,
+        );
     }
 }
 
@@ -368,11 +443,14 @@ fn collect_windows_candidates(candidates: &mut Vec<Candidate>) {
 fn source_for_windows_path(
     path: &Path,
     app_data: Option<&Path>,
+    local_app_data: Option<&Path>,
     user_profile: Option<&Path>,
 ) -> CodexSource {
     if app_data.is_some_and(|root| path.starts_with(root.join("npm"))) {
         CodexSource::Npm
-    } else if user_profile.is_some_and(|root| path.starts_with(root.join(".volta"))) {
+    } else if user_profile.is_some_and(|root| path.starts_with(root.join(".volta")))
+        || local_app_data.is_some_and(|root| path.starts_with(root.join("Volta")))
+    {
         CodexSource::Volta
     } else if user_profile.is_some_and(|root| path.starts_with(root.join("scoop"))) {
         CodexSource::VersionManager
@@ -502,18 +580,139 @@ fn node_candidates(prefix: &Path) -> Vec<PathBuf> {
             program_files.join("nodejs").join("node.exe"),
         );
     }
+    if let Some(program_files_x86) = env::var_os("ProgramFiles(x86)").map(PathBuf::from) {
+        push_unique_path(
+            &mut candidates,
+            program_files_x86.join("nodejs").join("node.exe"),
+        );
+    }
     if let Some(user_profile) = env::var_os("USERPROFILE").map(PathBuf::from) {
         push_unique_path(
             &mut candidates,
             user_profile.join(".volta").join("bin").join("node.exe"),
         );
+        push_windows_version_manager_nodes(
+            &mut candidates,
+            &user_profile.join(".fnm").join("node-versions"),
+            true,
+        );
     }
-    if let Some(path) = env::var_os("PATH") {
-        for entry in env::split_paths(&path) {
-            push_unique_path(&mut candidates, entry.join("node.exe"));
-        }
+    if let Some(local_app_data) = env::var_os("LOCALAPPDATA").map(PathBuf::from) {
+        push_unique_path(
+            &mut candidates,
+            local_app_data.join("Volta").join("bin").join("node.exe"),
+        );
+        push_windows_version_manager_nodes(
+            &mut candidates,
+            &local_app_data.join("fnm").join("node-versions"),
+            true,
+        );
+    }
+    if let Some(app_data) = env::var_os("APPDATA").map(PathBuf::from) {
+        push_windows_version_manager_nodes(&mut candidates, &app_data.join("nvm"), false);
+        push_windows_version_manager_nodes(
+            &mut candidates,
+            &app_data.join("fnm").join("node-versions"),
+            true,
+        );
+    }
+    if let Some(nvm_home) = env::var_os("NVM_HOME").map(PathBuf::from) {
+        push_windows_version_manager_nodes(&mut candidates, &nvm_home, false);
+    }
+    for entry in search_path_entries() {
+        push_unique_path(&mut candidates, entry.join("node.exe"));
     }
     candidates
+}
+
+#[cfg(windows)]
+fn push_windows_version_manager_nodes(
+    candidates: &mut Vec<PathBuf>,
+    versions_root: &Path,
+    uses_installation_directory: bool,
+) {
+    for version_directory in child_directories(versions_root) {
+        let executable_root = if uses_installation_directory {
+            version_directory.join("installation")
+        } else {
+            version_directory
+        };
+        push_unique_path(candidates, executable_root.join("node.exe"));
+    }
+}
+
+#[cfg(not(windows))]
+fn push_windows_version_manager_nodes(
+    _candidates: &mut Vec<PathBuf>,
+    _versions_root: &Path,
+    _uses_installation_directory: bool,
+) {
+}
+
+fn search_path_entries() -> Vec<PathBuf> {
+    let entries = env::var_os("PATH")
+        .map(|path| env::split_paths(&path).collect::<Vec<_>>())
+        .unwrap_or_default();
+
+    #[cfg(windows)]
+    let entries = {
+        let mut entries = entries;
+        for entry in windows_registry_path_entries() {
+            push_unique_path(&mut entries, entry);
+        }
+        entries
+    };
+
+    entries
+}
+
+#[cfg(windows)]
+fn windows_registry_path_entries() -> Vec<PathBuf> {
+    use winreg::{RegKey, enums::HKEY_CURRENT_USER, enums::HKEY_LOCAL_MACHINE};
+
+    let keys = [
+        RegKey::predef(HKEY_CURRENT_USER).open_subkey("Environment"),
+        RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey(r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
+    ];
+    let mut entries = Vec::new();
+    for key in keys.into_iter().flatten() {
+        let Ok(path) = key.get_value::<OsString, _>("Path") else {
+            continue;
+        };
+        let expanded = expand_windows_environment(&path);
+        for entry in env::split_paths(&expanded) {
+            push_unique_path(&mut entries, entry);
+        }
+    }
+    entries
+}
+
+#[cfg(windows)]
+fn expand_windows_environment(value: &std::ffi::OsStr) -> OsString {
+    let source = value.to_string_lossy();
+    let mut expanded = String::with_capacity(source.len());
+    let mut remaining = source.as_ref();
+
+    while let Some(start) = remaining.find('%') {
+        expanded.push_str(&remaining[..start]);
+        let after_start = &remaining[start + 1..];
+        let Some(end) = after_start.find('%') else {
+            expanded.push_str(&remaining[start..]);
+            return OsString::from(expanded);
+        };
+        let variable = &after_start[..end];
+        if let Some(replacement) = env::var_os(variable) {
+            expanded.push_str(&replacement.to_string_lossy());
+        } else {
+            expanded.push('%');
+            expanded.push_str(variable);
+            expanded.push('%');
+        }
+        remaining = &after_start[end + 1..];
+    }
+    expanded.push_str(remaining);
+    OsString::from(expanded)
 }
 
 async fn verify_launch(launch: &CodexLaunch) -> Result<String, String> {

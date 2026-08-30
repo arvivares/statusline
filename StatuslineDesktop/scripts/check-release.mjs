@@ -76,6 +76,8 @@ const smokeWorkflow = readText(
   "../.github/workflows/desktop-installer-smoke.yml",
 );
 const windowsSmokeScript = readText("scripts/smoke-installers-windows.ps1");
+const universalRelaySource = readText("src-tauri/src/universal_relay.rs");
+const relayProtocolSource = readText("src-tauri/src/relay_protocol.rs");
 
 const expectedName = "statusline-desktop";
 const expectedProductName = "Statusline Companion";
@@ -138,6 +140,21 @@ assert(
   capabilities.permissions?.includes("dialog:allow-open"),
   "the main window must explicitly allow the native open dialog",
 );
+assert(
+  cargoToml.includes('keyring = "=4.2.0"') &&
+    cargoToml.includes('reqwest = { version = "=0.13.4"') &&
+    cargoToml.includes('base64 = "=0.22.1"') &&
+    cargoToml.includes('ring = "=0.17.14"') &&
+    cargoToml.includes('uuid = { version = "=1.26.0"'),
+  "the universal encrypted relay dependencies must stay version-pinned",
+);
+assert(
+  universalRelaySource.includes("STATUSLINE_RELAY_BASE_URL") &&
+    universalRelaySource.includes("https") &&
+    relayProtocolSource.includes("AES_256_GCM") &&
+    relayProtocolSource.includes("statusline.snapshot.v1"),
+  "the universal relay must enforce its configured endpoint and AES-GCM protocol",
+);
 
 const uniqueVersions = new Set(Object.values(versions));
 assert(
@@ -199,6 +216,9 @@ for (const requiredWorkflowToken of [
   "WINDOWS_CERTIFICATE",
   "WINDOWS_CERTIFICATE_PASSWORD",
   "WINDOWS_TIMESTAMP_URL",
+  "STATUSLINE_RELAY_BASE_URL",
+  "Validate universal relay service",
+  "db:migrate:local",
   "Get-AuthenticodeSignature",
   "smoke-installers-windows.ps1",
   "smoke-installers-linux.sh",

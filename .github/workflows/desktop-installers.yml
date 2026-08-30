@@ -17,6 +17,7 @@ env:
   CARGO_TERM_COLOR: always
   NODE_VERSION: "24"
   RUST_VERSION: "1.98.0"
+  STATUSLINE_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
 
 jobs:
   validate:
@@ -40,11 +41,21 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: StatuslineDesktop/package-lock.json
+          cache-dependency-path: |
+            StatuslineDesktop/package-lock.json
+            StatuslineRelay/package-lock.json
 
       - name: Install frontend dependencies
         run: npm ci
         working-directory: StatuslineDesktop
+
+      - name: Install relay dependencies
+        run: npm ci
+        working-directory: StatuslineRelay
+
+      - name: Validate universal relay service
+        run: npm run db:migrate:local && npm test && npm run check
+        working-directory: StatuslineRelay
 
       - name: Install pinned Rust formatter
         run: |
@@ -65,7 +76,16 @@ jobs:
           version=$(node -p "require('./StatuslineDesktop/package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Require Windows signing configuration for tagged releases
+      - name: Validate universal relay endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$STATUSLINE_RELAY_BASE_URL" =~ ^https://[^[:space:]]+$ ]]; then
+            echo "Set the STATUSLINE_RELAY_BASE_URL repository variable to the public HTTPS relay origin." >&2
+            exit 1
+          fi
+
+      - name: Require signing credentials for tagged releases
         if: startsWith(github.ref, 'refs/tags/desktop-v')
         shell: bash
         env:
@@ -75,7 +95,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "$WINDOWS_CERTIFICATE" || -z "$WINDOWS_CERTIFICATE_PASSWORD" || -z "$WINDOWS_TIMESTAMP_URL" ]]; then
-            echo "Tagged desktop releases require WINDOWS_CERTIFICATE, WINDOWS_CERTIFICATE_PASSWORD and WINDOWS_TIMESTAMP_URL." >&2
+            echo "Tagged desktop releases require the Windows signing configuration." >&2
             exit 1
           fi
 

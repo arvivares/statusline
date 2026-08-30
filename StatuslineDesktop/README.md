@@ -1,71 +1,71 @@
 # Statusline Desktop
 
-Companion de bandeja multiplataforma para consultar la cuota de Codex en Windows, Linux y macOS. Está construido con Tauri 2, Rust y TypeScript, y comparte el lenguaje visual **Data Plane** de las apps SwiftUI de Statusline.
+Companion de bandeja para consultar la cuota de Codex en Windows, Linux y macOS. Está construido con Tauri 2, Rust y TypeScript, y comparte el lenguaje visual Data Plane de las apps SwiftUI.
 
-## Estado de la integración
+## Integración
 
-- `StatuslineDesktop` convive como proyecto hermano con la app iOS, el widget y el companion nativo de macOS; no modifica sus targets ni su UI.
-- Consulta la sesión local mediante el [Codex App Server oficial](https://learn.chatgpt.com/docs/app-server) y muestra límite semanal, reinicio, ventana corta y plan.
-- No copia, persiste ni transmite tokens, API keys o correo. El contrato Rust → TypeScript contiene únicamente metadatos de cuota.
-- **Source Settings** detecta la CLI, valida `codex --version` y permite guardar una ruta local sin guardar credenciales.
-- El relay privado por CloudKit continúa en `StatuslineCompanion`, la implementación SwiftUI de macOS.
-- Windows y Linux todavía no publican muestras al iPhone: hace falta implementar el transporte multiplataforma descrito en [`docs/architecture/cross-platform-companion.md`](../docs/architecture/cross-platform-companion.md).
+- Consulta la sesión local mediante Codex App Server y muestra límite semanal, reinicio, ventana corta y plan.
+- No copia ni persiste tokens de Codex, API keys o correo.
+- Source Settings detecta la CLI, valida codex --version y permite guardar una ruta local.
+- Universal Relay publica sólo el snapshot mínimo cifrado de extremo a extremo para iOS y futuros clientes Android.
+- La credencial publisher y la clave AES permanecen en Keychain, Windows Credential Manager o Secret Service.
+- El frontend recibe estado operacional y el vínculo de emparejamiento mientras está vigente; nunca recibe la credencial publisher.
 
-Codex App Server continúa marcado como experimental. El parser admite campos nuevos, pero una ruptura del protocolo puede requerir actualizar el companion.
+Codex App Server continúa marcado como experimental. Una ruptura de su protocolo puede requerir actualizar el companion.
 
 ## Data Plane
 
-La interfaz usa los mismos tokens de las superficies Apple:
-
-- canvas `#0D0E0B` y surface `#14150F`;
-- texto principal `#ECE9DC` y secundario `#9D9B89`;
-- líneas `#3B3929`, señal ámbar `#EFC65A` y crítico `#F26856`;
-- grilla de 24 px, medidor de 20 segmentos y estados explícitos `LIVE`, `READING`, `OFFLINE` y `ERROR`.
-
-Los estados conservan la posición de la cuota y reemplazan solamente el contexto operacional. Las animaciones respetan `prefers-reduced-motion`.
+La interfaz conserva canvas #0D0E0B, surface #14150F, texto #ECE9DC, señal #EFC65A, grilla de 24 px, medidor de 20 segmentos y estados explícitos LIVE, READING, OFFLINE y ERROR. Las animaciones respetan prefers-reduced-motion.
 
 ## Requisitos
 
 1. Node.js 24 o posterior.
-2. Rust estable mediante `rustup`, con `rustfmt` y `clippy`.
-3. La CLI de Codex instalada; ejecuta `codex` y completa **Sign in with ChatGPT** la primera vez.
-4. Los [prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/) del sistema operativo.
+2. Rust 1.98 mediante rustup, con rustfmt y clippy.
+3. Codex CLI instalado y autenticado mediante Sign in with ChatGPT.
+4. Los [prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/) del sistema.
+5. Un Statusline Relay local o un origen HTTPS desplegado según [SETUP.md](../SETUP.md).
 
-Statusline busca instalaciones standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y el `PATH`. Si la aplicación gráfica hereda un `PATH` incompleto, abre **Source Settings** y selecciona el ejecutable. `STATUSLINE_CODEX_PATH` permanece disponible como override de administración.
+Statusline busca standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y PATH. Si la aplicación gráfica hereda un PATH incompleto, abre Source Settings y selecciona el ejecutable. STATUSLINE_CODEX_PATH permanece como override de administración.
 
 ## Desarrollo
 
 ```shell
 . "$HOME/.cargo/env"
+export STATUSLINE_RELAY_BASE_URL="http://127.0.0.1:8787"
 npm ci
 npm test
 npm run check
 npm run tauri dev
 ```
 
-Durante el desarrollo en macOS, la ventana comienza oculta y se abre desde el icono de bandeja. Los bundles de Windows y Linux la muestran en el primer inicio para que la aplicación instalada sea descubrible. Al cerrarla, vuelve a ocultarse. En Linux también se oculta al perder foco y algunos escritorios requieren usar el menú de bandeja en lugar del clic izquierdo.
+HTTP sólo se admite para localhost en Debug. Para builds públicos:
+
+```shell
+export STATUSLINE_RELAY_BASE_URL="https://statusline-relay.inmerzion.workers.dev"
+```
+
+En macOS la ventana comienza oculta y se abre desde la bandeja. Windows y Linux la muestran en el primer inicio. Cerrar oculta el companion sin finalizarlo.
 
 ### Preview visual sin Rust
-
-El frontend se puede revisar sin iniciar Tauri ni consultar una cuenta real:
 
 ```shell
 npm run dev
 ```
 
-Abre `http://127.0.0.1:1420/?preview=ready`. También existen `preview=loading`, `preview=empty` y `preview=error`. Este modo sólo se habilita en hosts locales.
+Abre http://127.0.0.1:1420/?preview=ready. También existen preview=loading, preview=empty y preview=error. Añade &panel=source o &panel=relay para abrir una superficie concreta.
 
 ## Verificación y build
 
-Ejecuta primero las comprobaciones rápidas:
+Comprobaciones rápidas:
 
 ```shell
 npm test
 npm run check
 npm run build
+npm run release:check
 ```
 
-Después valida el núcleo nativo:
+Núcleo nativo:
 
 ```shell
 cargo test --manifest-path src-tauri/Cargo.toml --locked
@@ -73,47 +73,28 @@ cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features --locked -- -D warnings
 ```
 
-Antes de empaquetar una release, ejecuta el preflight sin compilación nativa:
-
-```shell
-npm run release:check
-```
-
-Los instaladores se generan de forma nativa con:
+Bundles nativos:
 
 ```shell
 npm run bundle:windows
 npm run bundle:linux
 ```
 
-Windows produce NSIS `.exe` y WiX `.msi`; Linux produce `.deb`, `.rpm` y `.AppImage`. Cada comando debe ejecutarse dentro de su sistema operativo destino. El workflow, los smoke tests y los gates de firma están documentados en [`docs/release/desktop-installers.md`](../docs/release/desktop-installers.md). La política factual actual está en [`PRIVACY.md`](../PRIVACY.md) y el flujo de incidencias en [`SUPPORT.md`](../SUPPORT.md).
-
-## Última validación local
-
-Validado en macOS arm64 con Rust 1.98.0:
-
-- 15 tests TypeScript y 23 tests Rust aprobados;
-- TypeScript estricto, Prettier, `cargo fmt` y Clippy sin advertencias;
-- build Vite de producción correcto;
-- bundle `.app` debug abierto con una sesión real y Data Plane verificado a 400 × 600.
-
-El bundle de prueba y su `target` se generan en una carpeta temporal para no dejar varios gigabytes de artefactos en el repositorio.
+Windows produce NSIS y MSI; Linux produce DEB, RPM y AppImage. Consulta [docs/release/desktop-installers.md](../docs/release/desktop-installers.md).
 
 ## Estructura
 
-- `src/usage.ts`: validación en runtime del contrato Rust → TypeScript.
-- `src/codex.ts`: validación del diagnóstico de instalación y etiquetas de origen.
-- `src/controller.ts`: refresco, concurrencia y estados seguros de UI.
-- `src/main.ts`: binding de Data Plane y previews locales.
-- `src-tauri/src/app_server.rs`: proceso `codex app-server`, handshake JSONL y timeouts.
-- `src-tauri/src/codex_installation.rs`: detección multiplataforma, configuración persistente y validación de launchers.
-- `src-tauri/src/usage.rs`: selección y normalización de ventanas de cuota.
-- `src-tauri/src/lib.rs`: bandeja, ventana, instancia única y comandos Tauri.
-- `src-tauri/tauri.windows.conf.json`: NSIS, MSI y primer inicio en Windows.
-- `src-tauri/tauri.linux.conf.json`: DEB, RPM, AppImage y primer inicio en Linux.
-- `scripts/check-release.mjs`: consistencia de versión y configuración antes del bundle.
-- `scripts/generate-checksums.mjs`: manifiesto SHA-256 determinista.
-- `scripts/smoke-installers-*`: instalación, arranque y desinstalación en CI.
-- `.github/workflows/desktop-installer-smoke.yml`: revalida artefactos existentes sin recompilar.
+- src/usage.ts: validación del contrato Rust → TypeScript.
+- src/codex.ts: diagnóstico de instalación.
+- src/controller.ts: concurrencia y estados de UI.
+- src/relay.ts: validación del estado del relay y del vínculo v1.
+- src/main.ts: binding Data Plane, QR y previews.
+- src-tauri/src/app_server.rs: proceso codex app-server, JSONL y timeouts.
+- src-tauri/src/codex_installation.rs: detección y validación multiplataforma.
+- src-tauri/src/relay_protocol.rs: snapshot, AES-256-GCM, AAD y pairing URI.
+- src-tauri/src/universal_relay.rs: cliente HTTPS, secure storage y StatusPublisher.
+- src-tauri/src/usage.rs: normalización de cuota.
+- src-tauri/src/lib.rs: bandeja, ventana, instancia única y comandos Tauri.
+- scripts/check-release.mjs: preflight de release sin bundle.
 
-Las carpetas `node_modules`, `dist`, `src-tauri/target` y los esquemas generados no forman parte del repositorio.
+Las carpetas node_modules, dist y src-tauri/target no forman parte del repositorio.

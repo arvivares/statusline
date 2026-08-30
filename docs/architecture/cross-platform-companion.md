@@ -1,75 +1,96 @@
-# Statusline: arquitectura del companion multiplataforma
+# Statusline: arquitectura multiplataforma
 
-**Estado:** base local integrada; transporte móvil pendiente
-**Fecha:** 2026-08-29
+**Estado:** protocolo universal v1 implementado en Rust y Swift; cliente Android de producto pendiente
+**Fecha:** 2026-08-30
 
 ## Decisión
 
-El repositorio mantiene dos companions con una frontera de datos común:
+El transporte anterior deja de formar parte de la arquitectura. Todas las plataformas comparten un único contrato neutral: Statusline Relay Protocol v1.
 
-1. `StatuslineCompanion` es la aplicación SwiftUI de macOS. Autentica Codex, obtiene la cuota y publica una muestra mínima en la base privada de CloudKit del usuario para iOS y el widget.
-2. `StatuslineDesktop` es el companion Tauri/Rust para Windows, Linux y macOS. Obtiene y normaliza la cuota local, pero por ahora no la publica a un dispositivo móvil.
+No es una única biblioteca binaria —Rust, Swift y Kotlin usan primitivas nativas— sino el mismo adaptador lógico, con:
 
-Los targets SwiftUI siguen siendo la experiencia Apple canónica. El proyecto Tauri reutiliza Data Plane en HTML/CSS sin intentar compartir código de vistas entre SwiftUI y WebView.
+- endpoints y errores idénticos;
+- formato de emparejamiento idéntico;
+- esquema de snapshot idéntico;
+- AES-256-GCM, AAD y base64url idénticos;
+- separación estricta entre publisher y reader.
 
-## Flujo implementado
+La especificación normativa y el vector de interoperabilidad viven en [../../protocol/statusline-relay-v1.md](../../protocol/statusline-relay-v1.md) y [../../protocol/fixtures/aes-gcm-v1.json](../../protocol/fixtures/aes-gcm-v1.json).
+
+## Flujo
 
 ```text
 Codex CLI
-   │  JSONL por stdio
+   │ JSONL local
    ▼
-Codex App Server adapter (Rust)
-   │  UsageResponse sin credenciales
+Codex App Server adapter
+   │ UsageSnapshot normalizado
+   ├──────────────► Data Plane local
+   │
    ▼
-Normalización y selección del límite más exigente (Rust)
-   │  IPC local de Tauri
+Universal StatusPublisher
+   │ AES-256-GCM; la clave no sale del QR/secure store
    ▼
-Data Plane (TypeScript + HTML/CSS)
+Relay HTTPS ── blob opaco ──► Universal StatusReader
+                                  │
+                                  ├──► iOS
+                                  └──► caché App Group ──► widget
 ```
 
-La frontera serializable contiene sólo:
+## Fronteras de confianza
 
-- porcentaje usado y restante;
-- duración y reinicio de cada ventana;
-- etiqueta del límite, plan y tipo de cuenta;
-- fecha de lectura y cantidad de límites encontrados.
+El companion puede leer sólo metadatos de cuota desde la sesión local administrada por Codex. Nunca reenvía credenciales, correo, prompts ni código.
 
-El correo, los tokens y los detalles internos de errores no cruzan esta frontera.
+Al crear un canal:
 
-## Convivencia por plataforma
+1. El relay genera dos tokens aleatorios iniciales: publisher y pairing.
+2. El companion genera la clave AES local y conserva publisher + clave en el almacén seguro.
+3. El QR transporta channel + pairing + clave. No contiene publisher ni la URL del relay.
+4. El móvil acepta el QR sólo si su build está configurado para el mismo origen HTTPS y cambia pairing por un reader nuevo.
+5. El relay invalida pairing, guarda hashes de los tokens activos y conserva el ciphertext; nunca recibe la clave.
 
-| Host | UI local | Lectura de Codex | Relay actual a iOS | Android |
-| --- | --- | --- | --- | --- |
-| macOS SwiftUI | Sí | Sí | CloudKit privado | No |
-| macOS Tauri | Sí | Sí | No | No |
-| Windows Tauri | Sí | Sí | No | No |
-| Linux Tauri | Sí | Sí | No | No |
-| iOS + widget | Sí | No | Consume CloudKit | No aplica |
+La credencial pairing sólo puede reclamarse una vez; reader sólo puede leer. La publisher puede escribir, consultar el estado de emparejamiento y borrar el canal. La secuencia monotónica rechaza replay de snapshots anteriores.
 
-La variante Tauri para macOS sirve para validar portabilidad y mantener una sola base Rust de escritorio, pero no reemplaza todavía el companion SwiftUI firmado ni su integración con CloudKit.
+## Cobertura por plataforma
 
-## Próxima frontera: transporte móvil
+| Plataforma    | Codex local | Publisher |             Reader | Estado                                   |
+| ------------- | ----------: | --------: | -----------------: | ---------------------------------------- |
+| macOS SwiftUI |          Sí |     Swift |                  — | Implementado                             |
+| macOS Tauri   |          Sí |      Rust |                  — | Implementado                             |
+| Windows Tauri |          Sí |      Rust |                  — | Implementado                             |
+| Linux Tauri   |          Sí |      Rust |                  — | Implementado                             |
+| iOS           |           — |         — |              Swift | Implementado                             |
+| Widget iOS    |           — |         — |       Caché de iOS | Implementado                             |
+| Android       |           — |         — | Kotlin/Java Crypto | Contrato y fixture listos; app pendiente |
 
-Para que Windows y Linux alimenten iOS —y para añadir Android— el núcleo de dominio debe permanecer independiente del proveedor y publicar la misma muestra mediante un `StatusPublisher`. Una implementación futura necesita:
+Un futuro companion Android también podría implementar publisher sin cambiar el servidor ni el formato del QR.
 
-- emparejamiento explícito entre dispositivos;
-- identidad de usuario sin reutilizar una API key de OpenAI;
-- cifrado en tránsito y, preferentemente, cifrado de extremo a extremo;
-- almacenamiento mínimo con expiración y borrado de cuenta;
-- notificaciones push para iOS y Android;
-- protección contra replay, rate limiting y rotación de credenciales de dispositivo;
-- una política de privacidad coherente con App Store y Play Store.
+## Relay
 
-El contrato estable debe ser la muestra normalizada, no CloudKit ni una respuesta cruda de App Server. Así se pueden implementar dos adaptadores sin duplicar la lógica de cuota:
+StatuslineRelay es un Worker con D1:
 
-```text
-UsageSnapshot ──► CloudKitPublisher (Apple actual)
-              └─► CrossPlatformPublisher (Windows/Linux/iOS/Android futuro)
-```
+- no mantiene cuentas de usuario;
+- almacena un único ciphertext por canal;
+- limita creación por origen y operaciones por credencial;
+- rechaza cuerpos grandes, tokens mal formados, versiones desconocidas y secuencias obsoletas;
+- caduca el QR a los diez minutos y el canal tras treinta días sin publicar;
+- purga datos vencidos mediante cron.
 
-## Límites de esta integración
+HTTPS es obligatorio en producción. HTTP sólo se admite para loopback en builds Debug.
 
-- No se añadió backend, cuenta propia de Statusline ni emparejamiento ficticio.
-- No se envían muestras desde Windows o Linux al widget de iPhone.
-- No se cambió el esquema de CloudKit ni los targets nativos.
-- Cada paquete Tauri debe validarse en el sistema operativo donde se distribuirá.
+## Actualización móvil
+
+El transporte universal ya resuelve Windows/Linux/macOS → iOS sin Apple ID compartido. En la versión actual iOS obtiene el snapshot al abrir o actualizar manualmente y después recarga el widget desde App Group.
+
+Para refresco casi inmediato en segundo plano se añadirá una capa de señalización:
+
+- APNs para iOS;
+- FCM para Android;
+- ninguna carga de cuota dentro del push;
+- fetch cifrado posterior usando la credencial reader existente.
+
+Push es una optimización de entrega, no otro adaptador de datos.
+
+## Evolución
+
+Los cambios incompatibles requieren una nueva versión de protocolo y un AAD distinto. El relay v1 debe seguir tratando el payload como opaco. Nuevos campos compatibles pueden añadirse dentro del JSON cifrado sólo si los lectores antiguos pueden ignorarlos.

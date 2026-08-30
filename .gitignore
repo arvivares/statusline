@@ -25,5 +25,11 @@ StatuslineDesktop/dist-ssr/
 StatuslineDesktop/src-tauri/target/
 StatuslineDesktop/src-tauri/gen/schemas/
 
+# Universal relay build and local Cloudflare state
+StatuslineRelay/node_modules/
+StatuslineRelay/coverage/
+StatuslineRelay/.wrangler/
+StatuslineRelay/.dev.vars
+
 # Original Windows companion import (the maintained source is StatuslineDesktop)
 statustlinecompanionwin/

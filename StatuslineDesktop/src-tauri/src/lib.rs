@@ -1,5 +1,7 @@
 pub mod app_server;
 pub mod codex_installation;
+pub mod relay_protocol;
+pub mod universal_relay;
 pub mod usage;
 
 use tauri::{
@@ -11,6 +13,7 @@ use tauri_plugin_positioner::{Position, WindowExt};
 use tokio::sync::Mutex;
 
 use codex_installation::CodexDiagnostic;
+use universal_relay::{RelayStatus, UniversalRelayState};
 use usage::UsageResponse;
 
 const TRAY_ID: &str = "statusline-companion-tray";
@@ -65,6 +68,7 @@ struct RefreshState {
 async fn refresh_usage(
     app: AppHandle,
     state: State<'_, RefreshState>,
+    relay: State<'_, UniversalRelayState>,
 ) -> Result<UsageResponse, String> {
     let _refresh_guard = state.lock.lock().await;
     let settings_directory = app.path().app_config_dir().ok();
@@ -73,7 +77,34 @@ async fn refresh_usage(
     if let Some(tray) = app.tray_by_id(TRAY_ID) {
         let _ = tray.set_tooltip(Some(response.tray_tooltip()));
     }
+    let relay_status = relay.publish_usage(&response).await;
+    let _ = app.emit("relay-status-changed", relay_status);
     Ok(response)
+}
+
+#[tauri::command]
+async fn relay_status(state: State<'_, UniversalRelayState>) -> Result<RelayStatus, String> {
+    Ok(state.current_status().await)
+}
+
+#[tauri::command]
+async fn create_relay_pairing(
+    app: AppHandle,
+    state: State<'_, UniversalRelayState>,
+) -> Result<RelayStatus, String> {
+    let status = state.create_pairing().await;
+    let _ = app.emit("relay-status-changed", status.clone());
+    Ok(status)
+}
+
+#[tauri::command]
+async fn disconnect_relay(
+    app: AppHandle,
+    state: State<'_, UniversalRelayState>,
+) -> Result<RelayStatus, String> {
+    let status = state.disconnect().await;
+    let _ = app.emit("relay-status-changed", status.clone());
+    Ok(status)
 }
 
 #[tauri::command]
@@ -115,6 +146,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_positioner::init())
         .manage(RefreshState::default())
+        .manage(UniversalRelayState::default())
         .setup(|app| {
             let show_item = MenuItem::with_id(app, "show", "Mostrar", true, None::<&str>)?;
             let refresh_item = MenuItem::with_id(app, "refresh", "Actualizar", true, None::<&str>)?;
@@ -168,6 +200,9 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             refresh_usage,
+            relay_status,
+            create_relay_pairing,
+            disconnect_relay,
             inspect_codex,
             set_codex_path,
             clear_codex_path
