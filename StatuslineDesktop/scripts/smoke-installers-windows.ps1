@@ -12,7 +12,7 @@ function Get-SingleBundle {
         [Parameter(Mandatory = $true)][string]$Filter
     )
 
-    $files = @(Get-ChildItem -LiteralPath $Directory -Filter $Filter -File)
+    $files = @(Get-ChildItem -LiteralPath $Directory -Filter $Filter -File -Recurse)
     if ($files.Count -ne 1) {
         throw "Expected one $Filter file in $Directory, found $($files.Count)"
     }
@@ -23,16 +23,68 @@ function Invoke-CheckedProcess {
     param(
         [Parameter(Mandatory = $true)][string]$FilePath,
         [string[]]$Arguments = @(),
-        [int[]]$AllowedExitCodes = @(0)
+        [int[]]$AllowedExitCodes = @(0),
+        [ValidateRange(1, 600)][int]$TimeoutSeconds = 120
     )
 
-    $process = Start-Process `
-        -FilePath $FilePath `
-        -ArgumentList $Arguments `
-        -Wait `
-        -PassThru
-    if ($process.ExitCode -notin $AllowedExitCodes) {
-        throw "$FilePath exited with code $($process.ExitCode)"
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $FilePath
+    $startInfo.UseShellExecute = $false
+    foreach ($argument in $Arguments) {
+        $startInfo.ArgumentList.Add($argument)
+    }
+
+    $process = [System.Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    Write-Host "Starting process: $(Split-Path -Leaf $FilePath)"
+    try {
+        if (-not $process.Start()) {
+            throw "Could not start $FilePath"
+        }
+        if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
+            try {
+                $process.Kill($true)
+                $process.WaitForExit()
+            }
+            catch {
+                Write-Warning "Could not terminate timed-out process $($process.Id)"
+            }
+            throw "$FilePath timed out after $TimeoutSeconds seconds"
+        }
+        $exitCode = $process.ExitCode
+    }
+    finally {
+        $process.Dispose()
+    }
+
+    if ($exitCode -notin $AllowedExitCodes) {
+        throw "$FilePath exited with code $exitCode"
+    }
+    Write-Host "Process completed: $(Split-Path -Leaf $FilePath) ($exitCode)"
+}
+
+function Invoke-MsiPackage {
+    param(
+        [Parameter(Mandatory = $true)][ValidateSet("install", "uninstall")][string]$Action,
+        [Parameter(Mandatory = $true)][string]$PackagePath,
+        [Parameter(Mandatory = $true)][string]$LogPath,
+        [int[]]$AllowedExitCodes = @(0, 3010)
+    )
+
+    $mode = if ($Action -eq "install") { "/i" } else { "/x" }
+    try {
+        Invoke-CheckedProcess `
+            -FilePath "msiexec.exe" `
+            -Arguments @($mode, $PackagePath, "/qn", "/norestart", "/l*v", $LogPath) `
+            -AllowedExitCodes $AllowedExitCodes `
+            -TimeoutSeconds 180
+    }
+    catch {
+        if (Test-Path -LiteralPath $LogPath -PathType Leaf) {
+            Write-Host "Last 120 lines from $LogPath"
+            Get-Content -LiteralPath $LogPath -Tail 120
+        }
+        throw
     }
 }
 
@@ -169,8 +221,10 @@ function Uninstall-Nsis {
 }
 
 $bundleRootPath = (Resolve-Path -LiteralPath $BundleRoot).Path
-$nsis = Get-SingleBundle -Directory (Join-Path $bundleRootPath "nsis") -Filter "*.exe"
-$msi = Get-SingleBundle -Directory (Join-Path $bundleRootPath "msi") -Filter "*.msi"
+$nsis = Get-SingleBundle -Directory $bundleRootPath -Filter "*.exe"
+$msi = Get-SingleBundle -Directory $bundleRootPath -Filter "*.msi"
+$msiInstallLog = Join-Path ([IO.Path]::GetTempPath()) "statusline-msi-install-$PID.log"
+$msiUninstallLog = Join-Path ([IO.Path]::GetTempPath()) "statusline-msi-uninstall-$PID.log"
 
 Write-Host "Smoke testing NSIS install, launch and uninstall."
 $nsisInstalled = $false
@@ -186,25 +240,26 @@ try {
 
     Write-Host "Smoke testing MSI install, launch and uninstall."
     $msiInstalled = $true
-    Invoke-CheckedProcess `
-        -FilePath "msiexec.exe" `
-        -Arguments @("/i", $msi, "/qn", "/norestart") `
-        -AllowedExitCodes @(0, 3010)
+    Invoke-MsiPackage `
+        -Action "install" `
+        -PackagePath $msi `
+        -LogPath $msiInstallLog
     $msiEntry = Wait-ForStatuslineEntry -Present $true
     Assert-AppStarts -Executable (Get-StatuslineExecutable -Entry $msiEntry)
-    Invoke-CheckedProcess `
-        -FilePath "msiexec.exe" `
-        -Arguments @("/x", $msi, "/qn", "/norestart") `
-        -AllowedExitCodes @(0, 3010)
+    Invoke-MsiPackage `
+        -Action "uninstall" `
+        -PackagePath $msi `
+        -LogPath $msiUninstallLog
     $msiInstalled = $false
     Wait-ForStatuslineEntry -Present $false | Out-Null
 }
 finally {
     if ($msiInstalled) {
         try {
-            Invoke-CheckedProcess `
-                -FilePath "msiexec.exe" `
-                -Arguments @("/x", $msi, "/qn", "/norestart") `
+            Invoke-MsiPackage `
+                -Action "uninstall" `
+                -PackagePath $msi `
+                -LogPath $msiUninstallLog `
                 -AllowedExitCodes @(0, 1605, 3010)
         }
         catch {
@@ -220,6 +275,11 @@ finally {
         }
         catch {
             Write-Warning "NSIS cleanup failed: $($_.Exception.Message)"
+        }
+    }
+    foreach ($logPath in @($msiInstallLog, $msiUninstallLog)) {
+        if (Test-Path -LiteralPath $logPath -PathType Leaf) {
+            Remove-Item -LiteralPath $logPath -Force
         }
     }
 }

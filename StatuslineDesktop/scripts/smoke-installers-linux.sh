@@ -8,9 +8,24 @@ if [[ $# -ne 1 ]]; then
 fi
 
 bundle_root=$(realpath "$1")
-deb=$(realpath "${bundle_root}"/deb/*.deb)
-rpm=$(realpath "${bundle_root}"/rpm/*.rpm)
-appimage=$(realpath "${bundle_root}"/appimage/*.AppImage)
+
+find_single_bundle() {
+  local pattern=$1
+  local label=$2
+  local matches=()
+  while IFS= read -r -d '' match; do
+    matches+=("$match")
+  done < <(find "$bundle_root" -type f -name "$pattern" -print0)
+  if [[ ${#matches[@]} -ne 1 ]]; then
+    echo "Expected one ${label} in ${bundle_root}, found ${#matches[@]}" >&2
+    exit 1
+  fi
+  realpath "${matches[0]}"
+}
+
+deb=$(find_single_bundle "*.deb" "Debian package")
+rpm=$(find_single_bundle "*.rpm" "RPM package")
+appimage=$(find_single_bundle "*.AppImage" "AppImage")
 package_name=$(dpkg-deb -f "$deb" Package)
 installed_package=""
 app_pid=""

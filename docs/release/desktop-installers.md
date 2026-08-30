@@ -58,6 +58,16 @@ Después de compilar, el pipeline:
 - genera `SHA256SUMS.txt` sobre los cinco instaladores;
 - conserva el manifiesto como artefacto y lo adjunta a la release borrador cuando el build proviene de un tag.
 
+Si cambia únicamente un smoke test, [`desktop-installer-smoke.yml`](../../.github/workflows/desktop-installer-smoke.yml) puede volver a validar los artefactos de un run anterior sin recompilar. Recibe el ID del run y la plataforma:
+
+```shell
+gh workflow run desktop-installer-smoke.yml \
+  -f artifacts_run_id=<run-id> \
+  -f platform=windows
+```
+
+La validación reutilizable descarga los instaladores originales, aplica los scripts de `main` y limita cada proceso de instalación a tres minutos. El job completo expira en diez minutos para evitar runners bloqueados.
+
 ## Codex en el equipo del usuario
 
 Los instaladores no incluyen Codex ni credenciales. Cada usuario instala la CLI oficial, ejecuta `codex` y completa **Sign in with ChatGPT**. Statusline inicia `codex app-server` por `stdio` y sólo procesa metadatos de cuota.

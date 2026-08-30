@@ -72,6 +72,10 @@ const cargoToml = readText("src-tauri/Cargo.toml");
 const cargoLock = readText("src-tauri/Cargo.lock");
 const capabilities = readJson("src-tauri/capabilities/default.json");
 const workflow = readText("../.github/workflows/desktop-installers.yml");
+const smokeWorkflow = readText(
+  "../.github/workflows/desktop-installer-smoke.yml",
+);
+const windowsSmokeScript = readText("scripts/smoke-installers-windows.ps1");
 
 const expectedName = "statusline-desktop";
 const expectedProductName = "Statusline Companion";
@@ -169,6 +173,7 @@ for (const relativePath of [
   "scripts/smoke-installers-linux.sh",
   "scripts/prepare-windows-signing.ps1",
   "scripts/cleanup-windows-signing.ps1",
+  "../.github/workflows/desktop-installer-smoke.yml",
   "../PRIVACY.md",
   "../SUPPORT.md",
   "../docs/release/public-beta-checklist.md",
@@ -179,11 +184,11 @@ for (const relativePath of [
   );
 }
 
-const actionReferences = [...workflow.matchAll(/^\s*uses:\s*([^\s#]+)/gmu)].map(
-  (match) => match[1],
+const actionReferences = [workflow, smokeWorkflow].flatMap((contents) =>
+  [...contents.matchAll(/^\s*uses:\s*([^\s#]+)/gmu)].map((match) => match[1]),
 );
 assert(
-  actionReferences.length >= 8,
+  actionReferences.length >= 12,
   "release workflow action references are missing",
 );
 assert(
@@ -203,6 +208,27 @@ for (const requiredWorkflowToken of [
   assert(
     workflow.includes(requiredWorkflowToken),
     `release workflow is missing ${requiredWorkflowToken}`,
+  );
+}
+for (const requiredSmokeToken of [
+  "artifacts_run_id",
+  "run-id:",
+  "merge-multiple: true",
+  "timeout-minutes: 10",
+]) {
+  assert(
+    smokeWorkflow.includes(requiredSmokeToken),
+    `installer revalidation workflow is missing ${requiredSmokeToken}`,
+  );
+}
+for (const requiredProcessToken of [
+  "ArgumentList.Add",
+  "WaitForExit",
+  "TimeoutSeconds",
+]) {
+  assert(
+    windowsSmokeScript.includes(requiredProcessToken),
+    `Windows smoke test is missing ${requiredProcessToken}`,
   );
 }
 assert(

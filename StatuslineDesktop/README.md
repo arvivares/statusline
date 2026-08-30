@@ -114,5 +114,6 @@ El bundle de prueba y su `target` se generan en una carpeta temporal para no dej
 - `scripts/check-release.mjs`: consistencia de versión y configuración antes del bundle.
 - `scripts/generate-checksums.mjs`: manifiesto SHA-256 determinista.
 - `scripts/smoke-installers-*`: instalación, arranque y desinstalación en CI.
+- `.github/workflows/desktop-installer-smoke.yml`: revalida artefactos existentes sin recompilar.
 
 Las carpetas `node_modules`, `dist`, `src-tauri/target` y los esquemas generados no forman parte del repositorio.
