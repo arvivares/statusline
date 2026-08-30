@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statusline — Amber Operator</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --canvas: #0e0f0c;
+      --surface: #151611;
+      --surface-2: #1b1c15;
+      --ink: #ebe9df;
+      --muted: #a09e8e;
+      --line: #3b3b2c;
+      --signal: #f0c861;
+      --signal-soft: rgba(240,200,97,.12);
+      --mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body { min-height: 100vh; color: var(--ink); background: var(--canvas); font-family: var(--mono); -webkit-font-smoothing: antialiased; }
+    .board { width: min(1330px, calc(100% - 60px)); min-height: 100vh; margin: 0 auto; padding: 40px 0; display: grid; grid-template-columns: 225px 1fr; gap: 36px; align-items: center; }
+    .notes { align-self: start; padding-top: 16px; }
+    .eyebrow, .label { font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    .eyebrow { color: var(--signal); }
+    .notes h1 { margin: 15px 0 14px; font-family: var(--sans); font-size: clamp(32px, 3.2vw, 45px); line-height: .9; letter-spacing: -.065em; text-transform: uppercase; }
+    .notes p { margin: 0; color: var(--muted); font-family: var(--sans); font-size: 13px; line-height: 1.65; }
+    .coordinate { margin-top: 28px; display: inline-block; padding: 8px 10px; border: 1px solid var(--line); color: var(--signal); font-size: 9px; letter-spacing: .1em; }
+    .stage { display: grid; grid-template-columns: 360px minmax(490px, 1fr); gap: 24px; align-items: center; }
+    .phone, .widget, .mac { border: 1px solid var(--line); background-color: var(--surface); background-image: linear-gradient(rgba(240,200,97,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(240,200,97,.025) 1px, transparent 1px); background-size: 20px 20px; box-shadow: 0 28px 80px rgba(0,0,0,.33); }
+    .phone { width: 360px; min-height: 744px; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; }
+    .statusbar { height: 38px; padding: 0 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 8px; }
+    .operator-head { min-height: 58px; padding: 0 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+    .operator-head strong { font: 760 12px var(--sans); text-transform: uppercase; letter-spacing: -.01em; }
+    .online { display: inline-flex; align-items: center; gap: 7px; color: var(--signal); font-size: 8px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    .online i { width: 6px; height: 6px; background: var(--signal); box-shadow: 0 0 0 4px var(--signal-soft); }
+    .hero { padding: 28px 18px 25px; border-bottom: 1px solid var(--line); }
+    .hero-top { display: flex; justify-content: space-between; color: var(--muted); }
+    .hero-top span:last-child { color: var(--signal); }
+    .value-row { margin: 19px 0 25px; display: flex; justify-content: space-between; align-items: end; }
+    .value { font: 790 82px/.75 var(--sans); letter-spacing: -.09em; font-variant-numeric: tabular-nums; }
+    .value small { color: var(--signal); font-size: 30px; }
+    .value-meta { text-align: right; font-size: 9px; line-height: 1.55; }
+    .value-meta span { color: var(--muted); }
+    .meter { display: grid; grid-template-columns: repeat(20, 1fr); gap: 2px; }
+    .meter i { display: block; height: 16px; border: 1px solid #4a4836; background: transparent; }
+    .meter i.on { border-color: var(--signal); background: var(--signal); }
+    .meter i.cursor { border-color: var(--ink); background: var(--ink); }
+    .scale { margin-top: 8px; display: flex; justify-content: space-between; color: var(--muted); font-size: 8px; }
+    .coordinates { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); }
+    .coordinate-cell { min-height: 95px; padding: 17px 18px; }
+    .coordinate-cell + .coordinate-cell { border-left: 1px solid var(--line); }
+    .coordinate-cell strong { display: block; margin-top: 11px; color: var(--signal); font: 750 22px var(--sans); letter-spacing: -.04em; }
+    .coordinate-cell span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .systems { padding: 18px; display: grid; gap: 12px; }
+    .system-row { display: grid; grid-template-columns: 24px 1fr auto; gap: 9px; align-items: center; font-size: 9px; }
+    .system-index { color: var(--signal); }
+    .system-name { color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+    .system-state { text-align: right; line-height: 1.45; }
+    .phone-foot { margin-top: auto; padding: 0 18px 18px; }
+    button { width: 100%; min-height: 48px; border: 0; border-radius: 0; color: #181710; background: var(--signal); font: 800 9px var(--mono); letter-spacing: .11em; text-transform: uppercase; }
+    .footnote { margin-top: 11px; color: var(--muted); text-align: center; font-size: 8px; }
+    .right { display: grid; gap: 24px; }
+    .widget { min-height: 164px; padding: 19px 21px; display: grid; grid-template-columns: 115px 1fr 115px; gap: 21px; align-items: center; }
+    .widget-value { font: 790 50px/.78 var(--sans); letter-spacing: -.08em; }
+    .widget-value small { color: var(--signal); font-size: 20px; }
+    .widget-label { margin-top: 9px; color: var(--muted); font-size: 8px; letter-spacing: .08em; }
+    .widget .meter i { height: 12px; }
+    .widget-reset { min-height: 82px; border-left: 1px solid var(--line); padding-left: 20px; display: flex; flex-direction: column; justify-content: center; }
+    .widget-reset strong { margin-top: 9px; color: var(--signal); font: 750 17px/1.25 var(--sans); }
+    .mac { min-height: 422px; border-radius: 8px; overflow: hidden; }
+    .titlebar { height: 45px; padding: 0 15px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+    .traffic { display: flex; gap: 7px; }
+    .traffic i { width: 8px; height: 8px; border: 1px solid var(--line); }
+    .window-title { color: var(--muted); font-size: 8px; letter-spacing: .1em; text-transform: uppercase; }
+    .clock { text-align: right; color: var(--signal); font-size: 8px; }
+    .mac-body { display: grid; grid-template-columns: 165px 1fr; min-height: 377px; }
+    .side { border-right: 1px solid var(--line); padding: 21px 16px; display: flex; flex-direction: column; }
+    .side-title { font: 760 11px var(--sans); text-transform: uppercase; }
+    .side-list { margin-top: 23px; display: grid; gap: 16px; }
+    .side-item { color: var(--muted); font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
+    .side-item.active { color: var(--signal); }
+    .side-state { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line); font-size: 8px; line-height: 1.6; }
+    .side-state span { color: var(--muted); }
+    .main-panel { padding: 24px; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .panel-head strong { font: 760 12px var(--sans); text-transform: uppercase; }
+    .mac-quota { padding: 25px 0; border-bottom: 1px solid var(--line); }
+    .mac-quota-top { display: grid; grid-template-columns: 160px 1fr; gap: 27px; align-items: end; }
+    .mac-quota .value { font-size: 68px; }
+    .mac-reset { border-left: 1px solid var(--line); padding-left: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .mac-reset div { font-size: 9px; line-height: 1.5; }
+    .mac-reset span { display: block; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .08em; }
+    .mac-quota .meter { margin-top: 22px; }
+    .mac-systems { display: grid; grid-template-columns: repeat(3, 1fr); padding-top: 20px; }
+    .mac-systems > div + div { border-left: 1px solid var(--line); padding-left: 18px; }
+    .mac-systems span { display: block; color: var(--muted); font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
+    .mac-systems b { display: block; margin-top: 7px; font-size: 9px; }
+    .scan { position: relative; overflow: hidden; }
+    .scan::after { content: ""; position: absolute; left: -30%; right: auto; bottom: 0; width: 24%; height: 1px; background: var(--signal); animation: scan 3s ease-in-out infinite; }
+    @keyframes scan { 0% { left: -30%; } 75%, 100% { left: 110%; } }
+    @media (prefers-reduced-motion: reduce) { .scan::after { display: none; } }
+    @media (max-width: 900px) {
+      body { overflow-x: hidden; }
+      .board { width: min(100vw, 390px); max-width: 390px; min-height: 100vh; margin: 0; padding: 0; display: block; }
+      .notes, .right { display: none; }
+      .stage { display: block; width: min(100vw, 390px); max-width: 390px; }
+      .phone { width: min(100vw, 390px); max-width: 390px; min-height: 100vh; border: 0; border-radius: 0; box-shadow: none; }
+      .hero { padding-top: 34px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <aside class="notes">
+      <div class="eyebrow">06 // terminal branch</div>
+      <h1>Amber<br>Operator</h1>
+      <p>The instrumental route: a disciplined operations console with one warm signal and explicit system coordinates.</p>
+      <div class="coordinate">CDX.WK / 053 / LIVE</div>
+    </aside>
+    <section class="stage">
+      <article class="phone" aria-label="iPhone preview">
+        <div class="statusbar"><span>09:41</span><span>● ◒ ▰</span></div>
+        <header class="operator-head"><strong>Statusline / Operator</strong><span class="online"><i></i>online</span></header>
+        <section class="hero">
+          <div class="hero-top label"><span>CDX.WEEKLY_LIMIT</span><span>LIVE / 06</span></div>
+          <div class="value-row"><div class="value">53<small>%</small></div><div class="value-meta"><span>AVAILABLE</span><br>WEEKLY CAPACITY<br><span>REMAINING</span></div></div>
+          <div class="meter scan" aria-label="53 percent remaining"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cursor"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="scale"><span>000</span><span>053 / LEFT</span><span>100</span></div>
+        </section>
+        <section class="coordinates"><div class="coordinate-cell"><div class="label">RESET.TIME</div><strong>09:02</strong><span>LOCAL / UTC+02</span></div><div class="coordinate-cell"><div class="label">RESET.DATE</div><strong>02 SEP</strong><span>WEDNESDAY</span></div></section>
+        <section class="systems"><div class="system-row"><span class="system-index">A1</span><span class="system-name">Codex account</span><span class="system-state online">connected</span></div><div class="system-row"><span class="system-index">R2</span><span class="system-name">Private relay</span><span class="system-state">iCloud / live</span></div><div class="system-row"><span class="system-index">S3</span><span class="system-name">Last sample</span><span class="system-state">moments ago</span></div></section>
+        <footer class="phone-foot"><button>Execute sync / refresh</button><div class="footnote">ACCOUNT SESSION REMAINS ON THIS MAC</div></footer>
+      </article>
+      <div class="right">
+        <article class="widget" aria-label="Widget preview">
+          <div><div class="widget-value">53<small>%</small></div><div class="widget-label">CDX / WEEKLY / LEFT</div></div>
+          <div><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cursor"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="scale"><span>0</span><span>53 left</span><span>100</span></div></div>
+          <div class="widget-reset"><span class="label">RESET.COORD</span><strong>09:02<br>02 SEP</strong></div>
+        </article>
+        <article class="mac" aria-label="macOS preview">
+          <div class="titlebar"><div class="traffic"><i></i><i></i><i></i></div><div class="window-title">Statusline Operator Console</div><div class="clock">09:41:28</div></div>
+          <div class="mac-body">
+            <aside class="side"><div class="side-title">STL / 06</div><div class="side-list"><div class="side-item active">01 Quota</div><div class="side-item">02 Account</div><div class="side-item">03 Relay</div><div class="side-item">04 Privacy</div></div><div class="side-state"><span>SYSTEM STATE</span><br><b class="online">● operational</b></div></aside>
+            <section class="main-panel">
+              <div class="panel-head"><strong>Codex weekly allocation</strong><span class="online"><i></i>synced</span></div>
+              <div class="mac-quota"><div class="mac-quota-top"><div><div class="label">AVAILABLE</div><div class="value">53<small>%</small></div></div><div class="mac-reset"><div><span>Reset time</span>09:02<br>local</div><div><span>Reset date</span>02 Sep<br>Wednesday</div></div></div><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="cursor"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="scale"><span>000 / exhausted</span><span>053 / current</span><span>100 / full</span></div></div>
+              <div class="mac-systems"><div><span>Account</span><b>cuquito@example.com</b></div><div><span>Relay</span><b>private iCloud</b></div><div><span>Sample</span><b>moments ago</b></div></div>
+            </section>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

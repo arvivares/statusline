@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statusline — Terminal Editorial</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --canvas: #11130f;
+      --surface: #171a15;
+      --surface-2: #1c201a;
+      --ink: #e5e9de;
+      --muted: #8f988a;
+      --line: #333a30;
+      --signal: #8bf0a3;
+      --signal-soft: rgba(139, 240, 163, .12);
+      --mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 72% 18%, rgba(139, 240, 163, .045), transparent 28rem),
+        var(--canvas);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .board {
+      width: min(1320px, calc(100% - 64px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 44px 0;
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .notes { align-self: start; padding-top: 16px; }
+    .eyebrow,
+    .kicker,
+    .micro {
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .13em;
+    }
+    .eyebrow { color: var(--signal); font-size: 11px; }
+    .notes h1 {
+      margin: 16px 0 14px;
+      font-family: var(--mono);
+      font-size: clamp(26px, 3vw, 38px);
+      line-height: 1.02;
+      letter-spacing: -.045em;
+    }
+    .notes p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .swatches { display: flex; gap: 8px; margin-top: 28px; }
+    .swatches span { width: 28px; height: 5px; background: var(--line); }
+    .swatches span:nth-child(2) { background: var(--ink); }
+    .swatches span:nth-child(3) { background: var(--signal); }
+
+    .stage {
+      display: grid;
+      grid-template-columns: 360px minmax(460px, 1fr);
+      gap: 28px;
+      align-items: center;
+    }
+
+    .phone,
+    .widget,
+    .mac {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, .28);
+    }
+
+    .phone {
+      width: 360px;
+      min-height: 744px;
+      border-radius: 36px;
+      overflow: hidden;
+      padding: 14px 22px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .statusbar {
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font: 600 10px var(--mono);
+      color: var(--muted);
+    }
+    .status-icons { letter-spacing: .08em; }
+    .appbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { font: 650 13px var(--mono); letter-spacing: -.015em; }
+    .brand span { color: var(--muted); font-weight: 450; }
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font: 10px var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .09em;
+    }
+    .live-dot {
+      position: relative;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--signal);
+      box-shadow: 0 0 0 4px var(--signal-soft);
+    }
+    .live-dot::after {
+      content: "";
+      position: absolute;
+      inset: -5px;
+      border: 1px solid var(--signal);
+      border-radius: inherit;
+      opacity: 0;
+      animation: pulse 2.2s ease-out infinite;
+    }
+
+    .hero { padding: 54px 0 36px; }
+    .kicker { color: var(--muted); font-size: 10px; }
+    .value-row {
+      margin: 10px 0 21px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .value {
+      font: 680 clamp(66px, 8vw, 84px)/.92 var(--mono);
+      letter-spacing: -.085em;
+      font-variant-numeric: tabular-nums;
+    }
+    .left {
+      color: var(--signal);
+      font: 600 12px var(--mono);
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    .usage-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font: 12px/1 var(--mono);
+      white-space: nowrap;
+      letter-spacing: .015em;
+    }
+    .usage-line .fill { color: var(--signal); }
+    .usage-line .empty { color: #495145; }
+    .reset {
+      margin-top: 14px;
+      color: var(--muted);
+      font: 11px/1.4 var(--mono);
+    }
+    .reset strong { color: var(--ink); font-weight: 550; }
+
+    .facts { border-top: 1px solid var(--line); }
+    .fact {
+      min-height: 64px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .fact-label { color: var(--muted); font-size: 12px; }
+    .fact-value { text-align: right; font: 11px/1.45 var(--mono); }
+    .fact-value.signal { color: var(--signal); }
+    .phone-footer { margin-top: auto; padding-top: 20px; }
+    .refresh {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: var(--surface-2);
+      font: 600 11px var(--mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .privacy { margin: 13px 0 0; text-align: center; color: var(--muted); font-size: 10px; }
+
+    .right { display: grid; gap: 28px; }
+    .widget {
+      min-height: 164px;
+      border-radius: 26px;
+      padding: 24px 26px;
+      display: grid;
+      align-content: space-between;
+    }
+    .widget-top { display: flex; justify-content: space-between; align-items: center; }
+    .widget-title { font: 600 12px var(--mono); }
+    .widget .usage-line { font-size: clamp(12px, 1.2vw, 15px); justify-content: space-between; gap: 14px; }
+    .widget .usage-line b { color: var(--ink); font-weight: 600; }
+    .widget-foot { display: flex; justify-content: space-between; color: var(--muted); font: 10px var(--mono); }
+
+    .mac {
+      min-height: 422px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .titlebar {
+      height: 45px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 17px;
+    }
+    .traffic { display: flex; gap: 7px; }
+    .traffic i { display: block; width: 9px; height: 9px; border-radius: 50%; background: #3c4238; }
+    .window-title { color: var(--muted); font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .mac-body { padding: 26px; }
+    .connection {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .connection-name { display: flex; align-items: center; gap: 10px; font: 12px var(--mono); }
+    .mini-button {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      color: var(--ink);
+      background: var(--surface-2);
+      padding: 9px 12px;
+      font: 10px var(--mono);
+    }
+    .mac-usage { padding: 30px 0 26px; border-bottom: 1px solid var(--line); }
+    .mac-main { display: flex; justify-content: space-between; align-items: end; margin-bottom: 20px; }
+    .mac-value { font: 650 52px/.9 var(--mono); letter-spacing: -.07em; }
+    .mac-value span { color: var(--signal); font-size: 12px; letter-spacing: .08em; }
+    .mac-meta { display: grid; grid-template-columns: 1fr 1fr; padding-top: 20px; }
+    .mac-meta > div:last-child { border-left: 1px solid var(--line); padding-left: 20px; }
+    .micro { color: var(--muted); font-size: 9px; }
+    .meta-value { margin-top: 7px; font: 11px var(--mono); }
+
+    @keyframes pulse {
+      0% { transform: scale(.55); opacity: .5; }
+      75%, 100% { transform: scale(1.35); opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { .live-dot::after { animation: none; } }
+
+    @media (max-width: 900px) {
+      body { overflow-x: hidden; }
+      .board {
+        width: min(100vw, 390px);
+        max-width: 390px;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        display: block;
+      }
+      .notes, .right { display: none; }
+      .stage { display: block; width: min(100vw, 390px); max-width: 390px; }
+      .phone {
+        width: min(100vw, 390px);
+        max-width: 390px;
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 15px 24px 24px;
+      }
+      .hero { padding-top: 58px; }
+      .value { font-size: 80px; }
+      .usage-line { font-size: 11px; gap: 6px; }
+      .fact-value { min-width: 0; max-width: 180px; overflow-wrap: anywhere; }
+    }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <aside class="notes">
+      <div class="eyebrow">Direction 01</div>
+      <h1>Terminal<br>Editorial</h1>
+      <p>The Codex line becomes the interface. Sparse, monospaced, and unmistakably technical without feeling like a novelty terminal.</p>
+      <div class="swatches" aria-hidden="true"><span></span><span></span><span></span></div>
+    </aside>
+
+    <section class="stage" aria-label="Statusline design previews">
+      <article class="phone" aria-label="iPhone app preview">
+        <div class="statusbar"><span>09:41</span><span class="status-icons">● ◒ ▰</span></div>
+        <header class="appbar">
+          <div class="brand">statusline <span>/ codex</span></div>
+          <div class="live"><span class="live-dot"></span>synced</div>
+        </header>
+
+        <section class="hero">
+          <div class="kicker">Weekly limit</div>
+          <div class="value-row"><div class="value">53%</div><div class="left">left</div></div>
+          <div class="usage-line" aria-label="53 percent remaining">
+            <span>[</span><span class="fill">███████████</span><span class="empty">░░░░░░░░░</span><span>]</span>
+          </div>
+          <div class="reset">resets <strong>09:02</strong> on <strong>2 Sep</strong></div>
+        </section>
+
+        <section class="facts">
+          <div class="fact"><span class="fact-label">Codex account</span><span class="fact-value signal">● connected</span></div>
+          <div class="fact"><span class="fact-label">Private sync</span><span class="fact-value">iCloud<br>moments ago</span></div>
+          <div class="fact"><span class="fact-label">Source</span><span class="fact-value">Statusline Companion<br>this Mac</span></div>
+        </section>
+
+        <footer class="phone-footer">
+          <button class="refresh">↻&nbsp;&nbsp; Sync now</button>
+          <p class="privacy">Only quota data is stored in your private iCloud database.</p>
+        </footer>
+      </article>
+
+      <div class="right">
+        <article class="widget" aria-label="Medium widget preview">
+          <div class="widget-top"><span class="widget-title">statusline / codex</span><span class="live"><span class="live-dot"></span>live</span></div>
+          <div class="usage-line"><span>Weekly limit:</span><span><span>[</span><span class="fill">███████████</span><span class="empty">░░░░░░░░░</span><span>]</span></span><b>53% left</b></div>
+          <div class="widget-foot"><span>resets 09:02 on 2 Sep</span><span>updated now</span></div>
+        </article>
+
+        <article class="mac" aria-label="macOS companion preview">
+          <div class="titlebar">
+            <div class="traffic"><i></i><i></i><i></i></div>
+            <div class="window-title">Statusline Companion</div>
+            <div style="width:41px"></div>
+          </div>
+          <div class="mac-body">
+            <div class="connection">
+              <div class="connection-name"><span class="live-dot"></span>Codex connected</div>
+              <button class="mini-button">↻&nbsp; Sync now</button>
+            </div>
+            <section class="mac-usage">
+              <div class="mac-main"><div><div class="kicker">Weekly limit</div><div class="mac-value">53% <span>LEFT</span></div></div><div class="reset">resets <strong>09:02</strong> on <strong>2 Sep</strong></div></div>
+              <div class="usage-line"><span>[</span><span class="fill">███████████</span><span class="empty">░░░░░░░░░</span><span>]</span></div>
+            </section>
+            <div class="mac-meta">
+              <div><div class="micro">Account</div><div class="meta-value">cuquito@example.com</div></div>
+              <div><div class="micro">Private relay</div><div class="meta-value">iCloud · synced now</div></div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

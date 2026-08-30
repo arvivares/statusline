@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statusline — Quiet Native</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #e8e6e0;
+      --surface: #f8f7f3;
+      --surface-2: #efede7;
+      --ink: #1e211f;
+      --muted: #696e68;
+      --line: #d7d5cf;
+      --signal: #39735f;
+      --signal-soft: #dce9e3;
+      --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+      --mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .board {
+      width: min(1320px, calc(100% - 64px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 44px 0;
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .notes { align-self: start; padding-top: 16px; }
+    .eyebrow, .micro {
+      font: 600 10px var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .14em;
+    }
+    .eyebrow { color: var(--signal); }
+    .notes h1 {
+      margin: 16px 0 15px;
+      font: 500 clamp(34px, 4vw, 48px)/.95 var(--serif);
+      letter-spacing: -.05em;
+    }
+    .notes p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .swatches { display: flex; gap: 7px; margin-top: 28px; }
+    .swatches i { display: block; width: 29px; height: 5px; border-radius: 5px; background: var(--surface); }
+    .swatches i:nth-child(2) { background: var(--ink); }
+    .swatches i:nth-child(3) { background: var(--signal); }
+
+    .stage {
+      display: grid;
+      grid-template-columns: 360px minmax(460px, 1fr);
+      gap: 28px;
+      align-items: center;
+    }
+    .phone, .widget, .mac {
+      background: var(--surface);
+      border: 1px solid rgba(30, 33, 31, .08);
+      box-shadow: 0 28px 70px rgba(43, 42, 38, .12);
+    }
+    .phone {
+      width: 360px;
+      min-height: 744px;
+      border-radius: 42px;
+      overflow: hidden;
+      padding: 14px 24px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .statusbar {
+      height: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font: 600 10px var(--sans);
+    }
+    .appbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 17px 0;
+    }
+    .brand { font-size: 17px; font-weight: 620; letter-spacing: -.025em; }
+    .cloud {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--signal-soft);
+      color: var(--signal);
+      font: 700 12px var(--sans);
+    }
+
+    .hero { padding: 48px 0 34px; }
+    .label { color: var(--muted); font: 600 11px var(--mono); letter-spacing: .09em; text-transform: uppercase; }
+    .number-row { display: flex; align-items: baseline; gap: 9px; margin-top: 6px; }
+    .number {
+      font: 500 96px/.92 var(--serif);
+      letter-spacing: -.07em;
+      font-variant-numeric: tabular-nums;
+    }
+    .percent { font: 500 34px var(--serif); }
+    .remaining { color: var(--signal); font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .summary { margin: 18px 0 0; max-width: 270px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+
+    .meter { margin-top: 30px; }
+    .track {
+      position: relative;
+      height: 4px;
+      border-radius: 99px;
+      background: var(--line);
+      overflow: visible;
+    }
+    .track::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 53%;
+      border-radius: inherit;
+      background: var(--signal);
+    }
+    .track::after {
+      content: "";
+      position: absolute;
+      left: calc(53% - 5px);
+      top: -3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--signal);
+    }
+    .scale { margin-top: 9px; display: flex; justify-content: space-between; color: var(--muted); font: 9px var(--mono); }
+
+    .reset-panel {
+      padding: 22px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 12px;
+    }
+    .reset-time { margin-top: 6px; font: 500 25px var(--serif); letter-spacing: -.025em; }
+    .reset-date { text-align: right; color: var(--muted); font: 11px/1.5 var(--mono); }
+    .sync-row { padding: 18px 0; display: flex; justify-content: space-between; align-items: center; }
+    .sync-copy strong { display: block; font-size: 13px; font-weight: 600; }
+    .sync-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .synced { display: flex; align-items: center; gap: 6px; color: var(--signal); font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+    .synced i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--signal); }
+    .phone-footer { margin-top: auto; }
+    .refresh {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 15px;
+      color: #f7fbf8;
+      background: var(--signal);
+      font: 600 13px var(--sans);
+    }
+    .manual { margin-top: 13px; text-align: center; color: var(--muted); font-size: 11px; }
+
+    .right { display: grid; gap: 28px; }
+    .widget {
+      min-height: 164px;
+      border-radius: 28px;
+      padding: 24px 26px;
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 28px;
+      align-items: center;
+    }
+    .widget-number { font: 500 58px/.85 var(--serif); letter-spacing: -.06em; }
+    .widget-number small { font-size: 24px; }
+    .widget-copy { margin-top: 8px; color: var(--muted); font-size: 11px; }
+    .widget-reset { padding-left: 26px; border-left: 1px solid var(--line); }
+    .widget-reset strong { display: block; margin: 8px 0 13px; font: 500 21px var(--serif); }
+
+    .mac { min-height: 422px; border-radius: 20px; overflow: hidden; }
+    .titlebar {
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .traffic { display: flex; gap: 7px; }
+    .traffic i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+    .window-title { color: var(--muted); font-size: 11px; font-weight: 550; }
+    .mac-body { padding: 27px; }
+    .account { display: flex; justify-content: space-between; align-items: center; padding-bottom: 23px; border-bottom: 1px solid var(--line); }
+    .account-copy strong { display: block; font-size: 14px; }
+    .account-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .pill { padding: 8px 11px; border-radius: 99px; background: var(--signal-soft); color: var(--signal); font: 600 10px var(--mono); text-transform: uppercase; }
+    .mac-quota { display: grid; grid-template-columns: .7fr 1.3fr; gap: 32px; padding: 31px 0 28px; border-bottom: 1px solid var(--line); }
+    .mac-quota .number { font-size: 65px; }
+    .mac-quota .summary { margin-top: 10px; font-size: 12px; }
+    .mac-detail { display: grid; grid-template-columns: 1fr 1fr; padding-top: 20px; }
+    .mac-detail > div:last-child { border-left: 1px solid var(--line); padding-left: 22px; }
+    .detail-value { margin-top: 7px; font: 12px var(--mono); }
+
+    @media (max-width: 900px) {
+      body { overflow-x: hidden; }
+      .board { width: min(100vw, 390px); max-width: 390px; min-height: 100vh; margin: 0; padding: 0; display: block; }
+      .notes, .right { display: none; }
+      .stage { display: block; width: min(100vw, 390px); max-width: 390px; }
+      .phone {
+        width: min(100vw, 390px);
+        max-width: 390px;
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 15px 25px 24px;
+      }
+      .hero { padding-top: 54px; }
+      .number { font-size: 92px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <aside class="notes">
+      <div class="eyebrow">Direction 02</div>
+      <h1>Quiet<br>Native</h1>
+      <p>A softer Apple utility: generous space, warm materials, and elegant numerals, with technical metadata kept precise and compact.</p>
+      <div class="swatches" aria-hidden="true"><i></i><i></i><i></i></div>
+    </aside>
+
+    <section class="stage" aria-label="Statusline design previews">
+      <article class="phone" aria-label="iPhone app preview">
+        <div class="statusbar"><span>09:41</span><span>● ◒ ▰</span></div>
+        <header class="appbar"><div class="brand">Statusline</div><div class="cloud">✓</div></header>
+
+        <section class="hero">
+          <div class="label">Codex weekly limit</div>
+          <div class="number-row"><span class="number">53</span><span class="percent">%</span><span class="remaining">left</span></div>
+          <p class="summary">Just over half of your weekly Codex limit is available.</p>
+          <div class="meter" aria-label="53 percent remaining"><div class="track"></div><div class="scale"><span>0</span><span>weekly allowance</span><span>100</span></div></div>
+        </section>
+
+        <section class="reset-panel">
+          <div><div class="label">Resets at</div><div class="reset-time">09:02</div></div>
+          <div class="reset-date">Wednesday<br>2 September</div>
+        </section>
+        <section class="sync-row">
+          <div class="sync-copy"><strong>Private iCloud sync</strong><span>From Statusline Companion</span></div>
+          <div class="synced"><i></i>current</div>
+        </section>
+
+        <footer class="phone-footer">
+          <button class="refresh">Sync now</button>
+          <div class="manual">Having trouble? Update from a Codex status line</div>
+        </footer>
+      </article>
+
+      <div class="right">
+        <article class="widget" aria-label="Medium widget preview">
+          <div><div class="label">Codex weekly</div><div class="widget-number">53<small>%</small></div><div class="widget-copy">remaining</div></div>
+          <div class="widget-reset"><div class="label">Next reset</div><strong>2 Sep at 09:02</strong><div class="track"></div></div>
+        </article>
+
+        <article class="mac" aria-label="macOS companion preview">
+          <div class="titlebar"><div class="traffic"><i></i><i></i><i></i></div><div class="window-title">Statusline Companion</div><div style="width:41px"></div></div>
+          <div class="mac-body">
+            <div class="account"><div class="account-copy"><strong>Codex connected</strong><span>cuquito@example.com</span></div><div class="pill">● synced</div></div>
+            <section class="mac-quota">
+              <div><div class="label">Weekly limit</div><div class="number-row"><span class="number">53</span><span class="percent">%</span></div><p class="summary">remaining</p></div>
+              <div><div class="label">Allowance</div><div class="meter"><div class="track"></div><div class="scale"><span>0</span><span>53</span><span>100</span></div></div><p class="summary">Resets Wednesday, 2 September at 09:02.</p></div>
+            </section>
+            <div class="mac-detail"><div><div class="micro">Last update</div><div class="detail-value">moments ago</div></div><div><div class="micro">Relay</div><div class="detail-value">private iCloud</div></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

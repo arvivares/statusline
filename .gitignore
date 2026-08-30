@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# Xcode user and build state
+**/xcuserdata/
+*.xcuserstate
+DerivedData/
+*.xcresult
+.build/
+
+# Local environment and signing material
+.env
+.env.*
+!.env.example
+*.key
+*.p12
+*.pem
+*.pfx
+*.mobileprovision
+
+# Desktop frontend and Rust build output
+StatuslineDesktop/node_modules/
+StatuslineDesktop/dist/
+StatuslineDesktop/dist-ssr/
+StatuslineDesktop/src-tauri/target/
+StatuslineDesktop/src-tauri/gen/schemas/
+
+# Original Windows companion import (the maintained source is StatuslineDesktop)
+statustlinecompanionwin/

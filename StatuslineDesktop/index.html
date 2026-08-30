@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <title>Statusline Companion</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body data-state="loading">
+    <main class="plane-shell" id="meter-shell" aria-busy="true">
+      <header class="topbar" data-tauri-drag-region>
+        <p class="brand-route" data-tauri-drag-region>
+          <span class="brand-code" data-tauri-drag-region>STL</span>
+          <span data-tauri-drag-region>/ COMPANION / DATA PLANE</span>
+        </p>
+
+        <div class="live-state" data-tauri-drag-region>
+          <span class="live-signal" aria-hidden="true"></span>
+          <span id="live-label">READING</span>
+        </div>
+      </header>
+
+      <section class="quota-plane" aria-live="polite">
+        <header class="panel-heading">
+          <span>CDX.WEEKLY.QUOTA</span>
+          <span class="panel-index">PLANE / 010</span>
+        </header>
+
+        <div class="hero">
+          <div class="quota-value" aria-hidden="true">
+            <span id="meter-value">—</span>
+            <span class="quota-suffix" id="meter-suffix">%</span>
+            <span class="quota-unit" id="meter-unit">LEFT</span>
+          </div>
+
+          <dl class="hero-context">
+            <div>
+              <dt>STATUS</dt>
+              <dd id="status-value">READING</dd>
+            </div>
+            <div>
+              <dt>SAMPLE</dt>
+              <dd id="sample-value">WAITING</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="meter-block">
+          <div
+            class="segment-meter is-loading"
+            id="meter-track"
+            role="progressbar"
+            aria-label="Límite semanal de Codex"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          ></div>
+          <div class="meter-scale" aria-hidden="true">
+            <span>0</span>
+            <span id="scale-value">— / LEFT</span>
+            <span>100</span>
+          </div>
+        </div>
+
+        <div class="state-copy">
+          <p class="eyebrow" id="state-eyebrow">SOURCE / CODEX LOCAL</p>
+          <h1 id="state-title">Reading local session</h1>
+          <p class="state-detail" id="state-detail">
+            Consultando las ventanas de uso mediante Codex App Server.
+          </p>
+        </div>
+
+        <dl class="metric-grid">
+          <div class="metric-cell metric-cell--accent">
+            <dt>RESET.TIME</dt>
+            <dd id="reset-value">—</dd>
+            <span id="reset-detail">LOCAL TIME</span>
+          </div>
+
+          <div class="metric-cell">
+            <dt>SHORT.WINDOW</dt>
+            <dd id="short-value">—</dd>
+            <span id="short-detail">NOT PUBLISHED</span>
+          </div>
+
+          <div class="metric-cell">
+            <dt>ACCOUNT.PLAN</dt>
+            <dd id="plan-value">—</dd>
+            <span id="plan-detail">CHATGPT</span>
+          </div>
+
+          <div class="metric-cell">
+            <dt>SOURCE.HOST</dt>
+            <dd>Codex local</dd>
+            <span>APP SERVER / STDIO</span>
+          </div>
+        </dl>
+
+        <div class="record-line">
+          <div>
+            <span class="record-label">STATUS.RECORD</span>
+            <strong id="record-value">READING · LOCAL METADATA ONLY</strong>
+          </div>
+          <span class="record-signal" aria-hidden="true"></span>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <button class="refresh-button" id="refresh-button" type="button">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M15.7 7.1A6.2 6.2 0 1 0 16 11" />
+            <path d="M12.8 3.8h3.6v3.6" />
+          </svg>
+          <span id="refresh-label">REFRESH NOW</span>
+        </button>
+        <p class="updated" id="updated-value">WAITING FOR LOCAL SAMPLE</p>
+      </footer>
+    </main>
+  </body>
+</html>

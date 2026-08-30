@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statusline UI Directions</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #ecebe7;
+      --surface: #f8f7f3;
+      --ink: #171816;
+      --muted: #626760;
+      --line: #d3d2cc;
+      --mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 52px; background: var(--canvas); color: var(--ink); font-family: var(--sans); }
+    header { max-width: 780px; margin-bottom: 34px; }
+    .eyebrow { color: #39735f; font: 650 11px var(--mono); letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 12px 0 10px; font-size: clamp(34px, 5vw, 58px); line-height: .98; letter-spacing: -.055em; }
+    header p { margin: 0; color: var(--muted); line-height: 1.55; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    article { overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+    .preview { display: block; aspect-ratio: 1.44; overflow: hidden; border-bottom: 1px solid var(--line); background: #111; }
+    .preview img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .copy { padding: 20px; }
+    .number { color: var(--muted); font: 650 10px var(--mono); letter-spacing: .13em; }
+    h2 { margin: 9px 0 8px; font-size: 23px; letter-spacing: -.035em; }
+    .copy p { min-height: 63px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .actions { display: flex; gap: 8px; margin-top: 18px; }
+    a.button { padding: 9px 11px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font: 600 10px var(--mono); text-transform: uppercase; letter-spacing: .07em; }
+    a.button.primary { border-color: var(--ink); background: var(--ink); color: var(--surface); }
+    footer { margin-top: 24px; color: var(--muted); font: 11px var(--mono); }
+    @media (max-width: 920px) {
+      body { padding: 24px; }
+      .grid { grid-template-columns: 1fr; }
+      .copy p { min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Statusline / UI refresh</div>
+    <h1>Three ways to make quota feel immediate.</h1>
+    <p>Each direction uses the same real product content—53% remaining, reset at 09:02 on 2 September—and covers iPhone, WidgetKit, and the macOS companion.</p>
+  </header>
+  <main class="grid">
+    <article>
+      <a class="preview" href="direction-01-terminal-editorial.html"><img src="screenshots/direction-01-desktop.png" alt="Terminal Editorial previews"></a>
+      <div class="copy"><div class="number">01 / CLOSEST TO CODEX</div><h2>Terminal Editorial</h2><p>Dark, monospaced, and direct. The original bracketed status line becomes the product signature.</p><div class="actions"><a class="button primary" href="direction-01-terminal-editorial.html">Open prototype</a><a class="button" href="screenshots/direction-01-mobile.png">Mobile</a></div></div>
+    </article>
+    <article>
+      <a class="preview" href="direction-02-quiet-native.html"><img src="screenshots/direction-02-desktop.png" alt="Quiet Native previews"></a>
+      <div class="copy"><div class="number">02 / SOFTEST</div><h2>Quiet Native</h2><p>Warm, calm, and familiar on Apple platforms, with technical detail kept in a disciplined secondary layer.</p><div class="actions"><a class="button primary" href="direction-02-quiet-native.html">Open prototype</a><a class="button" href="screenshots/direction-02-mobile.png">Mobile</a></div></div>
+    </article>
+    <article>
+      <a class="preview" href="direction-03-swiss-instrument.html"><img src="screenshots/direction-03-desktop.png" alt="Swiss Instrument previews"></a>
+      <div class="copy"><div class="number">03 / MOST DISTINCTIVE</div><h2>Swiss Instrument</h2><p>Graphic and precise, using a rigid information grid and one high-energy vermilion signal.</p><div class="actions"><a class="button primary" href="direction-03-swiss-instrument.html">Open prototype</a><a class="button" href="screenshots/direction-03-mobile.png">Mobile</a></div></div>
+    </article>
+  </main>
+  <footer>Choose 01, 02, or 03 before the SwiftUI implementation pass.</footer>
+</body>
+</html>

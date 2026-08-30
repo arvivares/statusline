@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statusline — Swiss Instrument</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #dcd9cf;
+      --surface: #f2efe5;
+      --ink: #151614;
+      --muted: #696a64;
+      --line: #bdbbb2;
+      --signal: #b1290d;
+      --sans: "Arial Narrow", "Helvetica Neue", Helvetica, sans-serif;
+      --mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .board {
+      width: min(1340px, calc(100% - 56px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 38px 0;
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      gap: 34px;
+      align-items: center;
+    }
+    .notes { align-self: start; padding-top: 14px; }
+    .eyebrow, .micro, .label {
+      font: 650 10px var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .14em;
+    }
+    .eyebrow { color: var(--signal); }
+    .notes h1 {
+      margin: 15px 0 14px;
+      font-size: clamp(34px, 3.5vw, 47px);
+      font-weight: 760;
+      line-height: .9;
+      letter-spacing: -.065em;
+      text-transform: uppercase;
+    }
+    .notes p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .key { margin-top: 28px; display: grid; grid-template-columns: 38px 38px 38px; height: 6px; }
+    .key i { background: var(--surface); }
+    .key i:nth-child(2) { background: var(--ink); }
+    .key i:nth-child(3) { background: var(--signal); }
+
+    .stage {
+      display: grid;
+      grid-template-columns: 360px minmax(470px, 1fr);
+      gap: 24px;
+      align-items: center;
+    }
+    .phone, .widget, .mac {
+      background-color: var(--surface);
+      background-image:
+        linear-gradient(rgba(21, 22, 20, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(21, 22, 20, .035) 1px, transparent 1px);
+      background-size: 24px 24px;
+      border: 1px solid var(--ink);
+      box-shadow: 10px 10px 0 rgba(21, 22, 20, .12);
+    }
+    .phone {
+      width: 360px;
+      min-height: 744px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .statusbar {
+      height: 38px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--ink);
+      font: 650 9px var(--mono);
+    }
+    .appbar {
+      height: 58px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--ink);
+    }
+    .brand { font-size: 15px; font-weight: 760; letter-spacing: -.025em; text-transform: uppercase; }
+    .index { color: var(--muted); font: 10px var(--mono); }
+
+    .hero { padding: 29px 18px 26px; border-bottom: 1px solid var(--ink); }
+    .hero-grid { display: grid; grid-template-columns: 1fr 44px; gap: 10px; }
+    .value {
+      margin-top: 7px;
+      font-size: 112px;
+      font-weight: 800;
+      line-height: .78;
+      letter-spacing: -.095em;
+      font-variant-numeric: tabular-nums;
+    }
+    .percent { color: var(--signal); font-size: 45px; vertical-align: top; letter-spacing: -.05em; }
+    .vertical {
+      border-left: 1px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      color: var(--signal);
+      font: 700 10px var(--mono);
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+    .meter {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 2px;
+    }
+    .meter i { display: block; height: 18px; border: 1px solid var(--ink); background: transparent; }
+    .meter i.on { background: var(--ink); }
+    .meter i.marker { background: var(--signal); border-color: var(--signal); }
+    .meter-scale { margin-top: 8px; display: flex; justify-content: space-between; color: var(--muted); font: 9px var(--mono); }
+
+    .reset {
+      min-height: 102px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--ink);
+    }
+    .reset > div { padding: 18px; }
+    .reset > div + div { border-left: 1px solid var(--ink); }
+    .reset strong { display: block; margin-top: 10px; font: 740 25px/.95 var(--sans); letter-spacing: -.04em; text-transform: uppercase; }
+    .reset .orange { color: var(--signal); }
+
+    .sync { padding: 18px; display: grid; gap: 12px; }
+    .sync-line { display: flex; justify-content: space-between; align-items: center; font: 11px var(--mono); }
+    .sync-state { color: var(--signal); font-weight: 700; text-transform: uppercase; }
+    .button-row { display: grid; grid-template-columns: 1fr 48px; gap: 8px; }
+    button {
+      min-height: 48px;
+      border: 1px solid var(--ink);
+      border-radius: 0;
+      color: var(--surface);
+      background: var(--ink);
+      font: 700 10px var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .11em;
+    }
+    button.secondary { color: var(--ink); background: transparent; font-size: 15px; }
+    .privacy { margin: auto 18px 18px; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font: 9px/1.45 var(--mono); }
+
+    .right { display: grid; gap: 24px; }
+    .widget { min-height: 164px; padding: 20px 22px; }
+    .widget-top { display: flex; justify-content: space-between; padding-bottom: 13px; border-bottom: 1px solid var(--ink); }
+    .widget-main { display: grid; grid-template-columns: 105px 1fr 105px; gap: 18px; align-items: end; padding-top: 17px; }
+    .widget-value { font: 800 51px/.75 var(--sans); letter-spacing: -.08em; }
+    .widget-value span { color: var(--signal); font-size: 22px; }
+    .widget .meter { margin: 0; }
+    .widget .meter i { height: 13px; }
+    .widget-reset { text-align: right; font: 10px/1.55 var(--mono); }
+
+    .mac { min-height: 422px; overflow: hidden; }
+    .titlebar {
+      height: 47px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--ink);
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+    }
+    .traffic { display: flex; gap: 7px; }
+    .traffic i { width: 9px; height: 9px; border: 1px solid var(--ink); border-radius: 50%; }
+    .titlebar strong { font: 700 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+    .version { text-align: right; color: var(--muted); font: 9px var(--mono); }
+    .mac-body { display: grid; grid-template-columns: 160px 1fr; min-height: 374px; }
+    .mac-side { padding: 22px 17px; border-right: 1px solid var(--ink); display: flex; flex-direction: column; }
+    .connected { margin-top: 12px; color: var(--signal); font: 700 10px var(--mono); text-transform: uppercase; }
+    .email { margin-top: 6px; color: var(--muted); font: 9px/1.45 var(--mono); overflow-wrap: anywhere; }
+    .side-button { margin-top: auto; width: 100%; min-height: 40px; }
+    .mac-main { padding: 25px 23px; }
+    .mac-value-row { display: flex; align-items: end; justify-content: space-between; padding-bottom: 22px; border-bottom: 1px solid var(--ink); }
+    .mac-value { font: 800 72px/.75 var(--sans); letter-spacing: -.09em; }
+    .mac-value span { color: var(--signal); font-size: 28px; }
+    .mac-copy { text-align: right; font: 10px/1.55 var(--mono); }
+    .mac-main .meter { margin-top: 24px; }
+    .mac-facts { display: grid; grid-template-columns: 1fr 1fr; margin-top: 24px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+    .mac-facts > div { padding: 15px 0; }
+    .mac-facts > div + div { border-left: 1px solid var(--ink); padding-left: 18px; }
+    .fact-value { margin-top: 7px; font: 11px var(--mono); }
+
+    @media (max-width: 900px) {
+      body { overflow-x: hidden; }
+      .board { width: min(100vw, 390px); max-width: 390px; min-height: 100vh; margin: 0; padding: 0; display: block; }
+      .notes, .right { display: none; }
+      .stage { display: block; width: min(100vw, 390px); max-width: 390px; }
+      .phone { width: min(100vw, 390px); max-width: 390px; min-height: 100vh; border: 0; box-shadow: none; }
+      .hero { padding-top: 36px; }
+      .value { font-size: 118px; }
+      .privacy { margin-top: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <aside class="notes">
+      <div class="eyebrow">Direction 03</div>
+      <h1>Swiss<br>Instrument</h1>
+      <p>A sharper information system: rigid grid, bold measurement, and a single vermilion signal. Minimal, but intentionally graphic.</p>
+      <div class="key" aria-hidden="true"><i></i><i></i><i></i></div>
+    </aside>
+
+    <section class="stage" aria-label="Statusline design previews">
+      <article class="phone" aria-label="iPhone app preview">
+        <div class="statusbar"><span>09:41</span><span>● ◒ ▰</span></div>
+        <header class="appbar"><div class="brand">Statusline®</div><div class="index">CDX / 01</div></header>
+        <section class="hero">
+          <div class="hero-grid">
+            <div><div class="label">Weekly limit / Codex</div><div class="value">53<span class="percent">%</span></div></div>
+            <div class="vertical">remaining</div>
+          </div>
+          <div class="meter" aria-label="53 percent remaining">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="marker"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="meter-scale"><span>00</span><span>53 / LEFT</span><span>100</span></div>
+        </section>
+        <section class="reset">
+          <div><div class="label">Reset / time</div><strong class="orange">09:02</strong></div>
+          <div><div class="label">Reset / date</div><strong>02 Sep</strong></div>
+        </section>
+        <section class="sync">
+          <div class="sync-line"><span>Private iCloud relay</span><span class="sync-state">● synced</span></div>
+          <div class="button-row"><button>Sync current status</button><button class="secondary">↻</button></div>
+        </section>
+        <p class="privacy">SOURCE / STATUSLINE COMPANION<br>UPDATED / MOMENTS AGO · ACCOUNT DATA STAYS ON MAC</p>
+      </article>
+
+      <div class="right">
+        <article class="widget" aria-label="Medium widget preview">
+          <div class="widget-top"><span class="label">Statusline® / Codex</span><span class="label" style="color:var(--signal)">● live</span></div>
+          <div class="widget-main">
+            <div class="widget-value">53<span>%</span></div>
+            <div><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="marker"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="meter-scale"><span>weekly limit</span><span>left</span></div></div>
+            <div class="widget-reset">RESET<br><strong>09:02</strong><br>02 SEP</div>
+          </div>
+        </article>
+
+        <article class="mac" aria-label="macOS companion preview">
+          <div class="titlebar"><div class="traffic"><i></i><i></i><i></i></div><strong>Statusline Companion</strong><div class="version">V1.0</div></div>
+          <div class="mac-body">
+            <aside class="mac-side"><div class="label">Codex account</div><div class="connected">● connected</div><div class="email">cuquito@example.com</div><button class="side-button">Sync now</button></aside>
+            <section class="mac-main">
+              <div class="mac-value-row"><div><div class="label">Weekly limit</div><div class="mac-value">53<span>%</span></div></div><div class="mac-copy">LEFT<br>RESET 09:02<br>02 SEP</div></div>
+              <div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="marker"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="meter-scale"><span>00 / exhausted</span><span>100 / full</span></div>
+              <div class="mac-facts"><div><div class="micro">Last update</div><div class="fact-value">moments ago</div></div><div><div class="micro">Private relay</div><div class="fact-value">iCloud / active</div></div></div>
+            </section>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

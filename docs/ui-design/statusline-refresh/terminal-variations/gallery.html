@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statusline — Terminal Editorial Variations</title>
+  <style>
+    :root { color-scheme: dark; --canvas:#0d100d; --surface:#151915; --ink:#e5e8df; --muted:#969f94; --line:#343b34; --signal:#8bf0a3; --mono:ui-monospace,"SFMono-Regular","SF Mono",Menlo,monospace; --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif; }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:48px 52px; background:var(--canvas); color:var(--ink); font-family:var(--sans); }
+    header { max-width:840px; margin-bottom:32px; }
+    .eyebrow { color:var(--signal); font:700 10px var(--mono); letter-spacing:.14em; text-transform:uppercase; }
+    h1 { margin:12px 0 10px; font-size:clamp(34px,4.8vw,57px); line-height:.98; letter-spacing:-.055em; }
+    header p { margin:0; color:var(--muted); line-height:1.55; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+    article { overflow:hidden; border:1px solid var(--line); background:var(--surface); }
+    .preview { display:block; aspect-ratio:1.44; overflow:hidden; border-bottom:1px solid var(--line); background:#090b09; }
+    .preview img { width:100%; height:100%; display:block; object-fit:cover; }
+    .copy { padding:19px 20px 20px; }
+    .number { color:var(--signal); font:700 9px var(--mono); letter-spacing:.12em; text-transform:uppercase; }
+    h2 { margin:9px 0 8px; font-size:22px; letter-spacing:-.035em; }
+    .copy p { min-height:61px; margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .actions { display:flex; gap:8px; margin-top:17px; }
+    .button { padding:9px 11px; border:1px solid var(--line); color:var(--ink); text-decoration:none; font:700 9px var(--mono); letter-spacing:.07em; text-transform:uppercase; }
+    .button.primary { border-color:var(--ink); background:var(--ink); color:var(--canvas); }
+    footer { margin-top:22px; color:var(--muted); font:10px var(--mono); }
+    @media (max-width:920px) { body { padding:24px; } .grid { grid-template-columns:1fr; } .copy p { min-height:0; } }
+  </style>
+</head>
+<body>
+  <header><div class="eyebrow">Statusline / Terminal Editorial / Round 02</div><h1>Three terminals, three levels of intensity.</h1><p>All three retain the Codex line, dark monospaced language, and the same iPhone–widget–Mac family. What changes is how literal, spacious, or operational the interface feels.</p></header>
+  <main class="grid">
+    <article><a class="preview" href="direction-04-phosphor-console.html"><img src="screenshots/direction-04-desktop.png" alt="Phosphor Console previews"></a><div class="copy"><div class="number">04 / most literal</div><h2>Phosphor Console</h2><p>The `/status` command and its output become the interface. Closest to working directly inside Codex.</p><div class="actions"><a class="button primary" href="direction-04-phosphor-console.html">Open prototype</a><a class="button" href="screenshots/direction-04-mobile.png">Mobile</a></div></div></article>
+    <article><a class="preview" href="direction-05-midnight-ledger.html"><img src="screenshots/direction-05-desktop.png" alt="Midnight Ledger previews"></a><div class="copy"><div class="number">05 / most refined</div><h2>Midnight Ledger</h2><p>Terminal precision with generous spacing and editorial alignment. The strongest premium App Store direction.</p><div class="actions"><a class="button primary" href="direction-05-midnight-ledger.html">Open prototype</a><a class="button" href="screenshots/direction-05-mobile.png">Mobile</a></div></div></article>
+    <article><a class="preview" href="direction-06-amber-operator.html"><img src="screenshots/direction-06-desktop.png" alt="Amber Operator previews"></a><div class="copy"><div class="number">06 / most operational</div><h2>Amber Operator</h2><p>A denser expert console with explicit coordinates, square meters, and one warm amber signal.</p><div class="actions"><a class="button primary" href="direction-06-amber-operator.html">Open prototype</a><a class="button" href="screenshots/direction-06-mobile.png">Mobile</a></div></div></article>
+  </main>
+  <footer>Choose 04, 05, or 06 — or specify one element to borrow from another branch.</footer>
+</body>
+</html>
