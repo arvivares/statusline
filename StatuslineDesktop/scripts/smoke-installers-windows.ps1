@@ -132,8 +132,8 @@ function Write-MsiInstallContext {
         Select-String `
             -LiteralPath $LogPath `
             -Pattern @(
-                "PROPERTY CHANGE: (Adding|Modifying) '(ALLUSERS|MSIINSTALLPERUSER)'",
-                "Property\(S\): (ALLUSERS|MSIINSTALLPERUSER) =",
+                "ALLUSERS",
+                "MSIINSTALLPERUSER",
                 "Product registered:"
             ) |
             ForEach-Object { $_.Line.Trim() }
