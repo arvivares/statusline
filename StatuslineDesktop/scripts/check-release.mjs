@@ -182,7 +182,9 @@ assert(
     "windows/statusline-per-user.wxs" &&
     windowsMsiTemplate.includes('InstallScope="perUser"') &&
     windowsMsiTemplate.includes('InstallPrivileges="limited"') &&
-    windowsMsiTemplate.includes('<Directory Id="LocalAppDataFolder">'),
+    windowsMsiTemplate.includes('<Directory Id="LocalAppDataFolder">') &&
+    windowsMsiTemplate.includes('Name="MainExecutable"') &&
+    windowsMsiTemplate.includes('Root="HKCU"'),
   "MSI must use the current user's LocalAppData installation context",
 );
 assert(
@@ -238,6 +240,8 @@ for (const requiredWorkflowToken of [
   "Validate universal relay service",
   "db:migrate:local",
   "Get-AuthenticodeSignature",
+  "Diagnose WiX linker failure",
+  "retryAttempts: 0",
   "smoke-installers-windows.ps1",
   "smoke-installers-linux.sh",
   "generate-checksums.mjs",

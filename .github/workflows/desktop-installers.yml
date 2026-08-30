@@ -200,11 +200,37 @@ jobs:
           releaseBody: ${{ env.IS_RELEASE == 'true' && 'Beta de Statusline Companion para Windows y Linux. Verifica los instaladores con SHA256SUMS.txt antes de usarlos.' || '' }}
           releaseDraft: ${{ env.IS_RELEASE == 'true' }}
           generateReleaseNotes: ${{ env.IS_RELEASE == 'true' }}
-          retryAttempts: 1
+          retryAttempts: 0
           uploadUpdaterJson: false
           uploadUpdaterSignatures: false
           uploadWorkflowArtifacts: true
           workflowArtifactNamePattern: statusline-[version]-[platform]-[arch]-[bundle]
+
+      - name: Diagnose WiX linker failure
+        if: failure() && runner.os == 'Windows'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $buildPath = Resolve-Path "StatuslineDesktop/src-tauri/target/release/wix/x64"
+          $wixPath = Join-Path $env:LOCALAPPDATA "tauri/WixTools314"
+          $light = Join-Path $wixPath "light.exe"
+          if (-not (Test-Path -LiteralPath $light -PathType Leaf)) {
+            throw "WiX light.exe was not found at $light"
+          }
+          Push-Location $buildPath
+          try {
+            & $light `
+              -ext (Join-Path $wixPath "WixUIExtension.dll") `
+              -ext (Join-Path $wixPath "WixUtilExtension.dll") `
+              -o "diagnostic-output.msi" `
+              "-cultures:es-es;en-US" `
+              -loc "locale.wxl" `
+              "*.wixobj"
+            exit $LASTEXITCODE
+          }
+          finally {
+            Pop-Location
+          }
 
       - name: Verify Windows Authenticode signatures
         if: runner.os == 'Windows' && env.IS_RELEASE == 'true'
