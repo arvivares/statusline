@@ -70,6 +70,24 @@ function Get-OptionalEntryValue {
     return [string]$property.Value
 }
 
+function ConvertFrom-RegistryPath {
+    param(
+        [AllowEmptyString()][string]$Value,
+        [switch]$RemoveIconIndex
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return ""
+    }
+    $normalized = if ($RemoveIconIndex) {
+        $Value -replace ",[0-9]+$", ""
+    }
+    else {
+        $Value
+    }
+    return $normalized.Trim().Trim([char]0x22)
+}
+
 function Wait-ForStatuslineEntry {
     param([Parameter(Mandatory = $true)][bool]$Present)
 
@@ -90,10 +108,13 @@ function Get-StatuslineExecutable {
     param([Parameter(Mandatory = $true)]$Entry)
 
     $candidates = @()
-    $displayIcon = Get-OptionalEntryValue -Entry $Entry -Name "DisplayIcon"
-    $installLocation = Get-OptionalEntryValue -Entry $Entry -Name "InstallLocation"
+    $displayIcon = ConvertFrom-RegistryPath `
+        -Value (Get-OptionalEntryValue -Entry $Entry -Name "DisplayIcon") `
+        -RemoveIconIndex
+    $installLocation = ConvertFrom-RegistryPath `
+        -Value (Get-OptionalEntryValue -Entry $Entry -Name "InstallLocation")
     if (-not [string]::IsNullOrWhiteSpace($displayIcon)) {
-        $candidates += ($displayIcon -replace ",[0-9]+$", "").Trim('"')
+        $candidates += $displayIcon
     }
     if (-not [string]::IsNullOrWhiteSpace($installLocation)) {
         $candidates += Join-Path $installLocation "Statusline Companion.exe"
