@@ -4,5 +4,7 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Statusline usa la cámara únicamente para escanear el QR privado de emparejamiento.</string>
+	<key>StatuslineRelayBaseURL</key>
+	<string>$(STATUSLINE_RELAY_BASE_URL)</string>
 </dict>
 </plist>
