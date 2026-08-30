@@ -13,12 +13,14 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 
 ## Universal relay
 
-- [ ] Deploy StatuslineRelay with a production D1 database and public HTTPS hostname.
-- [ ] Apply all remote D1 migrations and verify GET /health.
+- [ ] Choose a supported production adapter. The current release supports Cloudflare Workers + D1; do not select Linux until its container is implemented and validated.
+- [ ] Deploy StatuslineRelay with a public HTTPS hostname and verify GET /health.
+- [ ] For Cloudflare, apply all remote D1 migrations and inspect both Worker requests and D1 row metrics.
 - [ ] Set the STATUSLINE_RELAY_BASE_URL repository variable and the matching Xcode Release build setting.
 - [ ] Verify QR expiry, single-use credential rotation, replay rejection, channel expiry and publisher deletion.
 - [ ] Confirm publisher tokens, reader tokens, encryption keys and full pairing links never appear in logs or frontend IPC.
-- [ ] Review Worker observability, WAF rules, rate limits and retention against PRIVACY.md.
+- [ ] Review provider observability, edge protection, rate limits, backups and retention against PRIVACY.md.
+- [ ] Review the [relay capacity calculation](../relay/deployment-options.md#cálculo-para-la-versión-actual), reserve at least 20%, and configure usage alerts.
 - [ ] Run the shared AES-GCM fixture against Rust, Swift and the Android client before shipping Android.
 
 ## Windows signing

@@ -1,6 +1,6 @@
 # Statusline Relay
 
-Relay universal y neutral para Statusline. El servicio emite credenciales separadas de publicación, emparejamiento y lectura, guarda únicamente hashes SHA-256 y conserva el último snapshot como un blob AES-256-GCM que no puede descifrar.
+Relay universal y neutral para Statusline. El servicio emite credenciales separadas de publicación, emparejamiento y lectura, guarda únicamente hashes SHA-256 y conserva el último snapshot como un blob AES-256-GCM que no puede descifrar. Este directorio incluye el adaptador operativo para Cloudflare Workers + D1; el núcleo HTTP y `RelayStore` están separados del proveedor.
 
 El token del QR caduca a los diez minutos. Al reclamarlo se invalida y se intercambia por una credencial reader distinta y duradera. El contrato normativo está en [../protocol/statusline-relay-v1.md](../protocol/statusline-relay-v1.md).
 
@@ -11,7 +11,7 @@ El token del QR caduca a los diez minutos. Al reclamarlo se invalida y se interc
 3. Ejecuta `npm run dev`; el endpoint local habitual es `http://127.0.0.1:8787`.
 4. Configura desktop e iOS con `STATUSLINE_RELAY_BASE_URL=http://127.0.0.1:8787` sólo para desarrollo local.
 
-## Despliegue
+## Despliegue en Cloudflare
 
 1. Crea una base D1: `npx wrangler d1 create statusline-relay`.
 2. Sustituye el `database_id` de `wrangler.jsonc` por el identificador devuelto.
@@ -20,3 +20,5 @@ El token del QR caduca a los diez minutos. Al reclamarlo se invalida y se interc
 5. Para el plan gratuito, usa `https://statusline-relay.inmerzion.workers.dev` como `STATUSLINE_RELAY_BASE_URL` en todos los clientes. Antes de un lanzamiento crítico puede sustituirse por un dominio propio sin cambiar el protocolo.
 
 Los canales caducan tras 30 días sin publicaciones. El QR inicial sólo puede reclamarse durante 10 minutos. El cron diario elimina datos vencidos. Los límites incluidos son 10 canales nuevos/minuto por origen y 120 operaciones/minuto por credencial; para producción deben complementarse con reglas WAF y observabilidad.
+
+La [guía de opciones y capacidad](../docs/relay/deployment-options.md) conserva el procedimiento completo de Cloudflare, calcula cuánto rinden sus 100.000 solicitudes diarias y describe el adaptador Linux autohospedado previsto. La opción Linux todavía no se distribuye como imagen o instalador.

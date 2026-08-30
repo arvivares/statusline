@@ -1,6 +1,6 @@
 # Statusline: arquitectura multiplataforma
 
-**Estado:** protocolo universal v1 implementado en Rust y Swift; cliente Android de producto pendiente
+**Estado:** protocolo universal v1 implementado en Rust y Swift; adaptador Linux del relay y cliente Android de producto pendientes
 **Fecha:** 2026-08-30
 
 ## Decisión
@@ -67,7 +67,7 @@ Un futuro companion Android también podría implementar publisher sin cambiar e
 
 ## Relay
 
-StatuslineRelay es un Worker con D1:
+StatuslineRelay separa el núcleo de protocolo y la persistencia. El adaptador desplegado actualmente es un Worker con D1; un contenedor Linux con almacenamiento intercambiable está planificado:
 
 - no mantiene cuentas de usuario;
 - almacena un único ciphertext por canal;
@@ -77,6 +77,8 @@ StatuslineRelay es un Worker con D1:
 - purga datos vencidos mediante cron.
 
 HTTPS es obligatorio en producción. HTTP sólo se admite para loopback en builds Debug.
+
+Las opciones de hosting, el estado real de cada adaptador y el cálculo de capacidad están en [../relay/deployment-options.md](../relay/deployment-options.md).
 
 ## Actualización móvil
 
