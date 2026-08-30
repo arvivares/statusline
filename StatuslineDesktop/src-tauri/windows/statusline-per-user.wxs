@@ -32,9 +32,6 @@
                  SummaryCodepage="!(loc.TauriCodepage)"/>
 
         <Property Id="REINSTALLMODE" Value="amus" />
-        <Property Id="AUTOLAUNCHAPP" Secure="yes" />
-        <Property Id="LAUNCHAPPARGS" Secure="yes" />
-
         {{#if allow_downgrades}}
             <MajorUpgrade Schedule="afterInstallInitialize" AllowDowngrades="yes" />
         {{else}}
@@ -73,12 +70,7 @@
           <RegistrySearch Id="PrevInstallDirWithName" Root="HKCU" Key="Software\\{{manufacturer}}\\{{product_name}}" Name="InstallDir" Type="raw" />
         </Property>
 
-        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="!(loc.LaunchApp)" />
-        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1"/>
-        <CustomAction Id="LaunchApplication" Impersonate="yes" FileKey="Path" ExeCommand="[LAUNCHAPPARGS]" Return="asyncNoWait" />
-
         <UI>
-            <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
             <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
 
             {{#unless license}}
@@ -338,10 +330,6 @@
             <Custom Action="DeleteUpdateTask" Before='InstallFinalize'>(REMOVE = "ALL") AND NOT UPGRADINGPRODUCTCODE</Custom>
         </InstallExecuteSequence>
         {{/if}}
-
-        <InstallExecuteSequence>
-          <Custom Action="LaunchApplication" After="InstallFinalize">AUTOLAUNCHAPP AND NOT Installed</Custom>
-        </InstallExecuteSequence>
 
         <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLDIR]" After="CostFinalize"/>
     </Product>

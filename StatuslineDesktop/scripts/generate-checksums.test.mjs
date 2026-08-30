@@ -20,12 +20,14 @@ describe("generateChecksums", () => {
     testDirectory = await mkdtemp(join(tmpdir(), "statusline-checksums-"));
     await writeFile(join(testDirectory, "Statusline.msi"), "abc");
     await writeFile(join(testDirectory, "Statusline.exe"), "abc");
+    await writeFile(join(testDirectory, "Statusline.dmg"), "abc");
     await writeFile(join(testDirectory, "notes.txt"), "not an installer");
 
     const output = await generateChecksums(testDirectory);
 
     expect(output).toBe(
-      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.exe\n" +
+      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.dmg\n" +
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.exe\n" +
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.msi\n",
     );
   });

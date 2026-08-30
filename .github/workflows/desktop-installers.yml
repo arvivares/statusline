@@ -31,10 +31,12 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Parse Linux release scripts
+      - name: Parse Unix release scripts
         if: runner.os == 'Linux'
         shell: bash
-        run: bash -n StatuslineDesktop/scripts/smoke-installers-linux.sh
+        run: |
+          bash -n StatuslineDesktop/scripts/smoke-installers-linux.sh
+          bash -n StatuslineDesktop/scripts/smoke-installer-macos.sh
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -113,10 +115,13 @@ jobs:
         include:
           - name: Windows x64
             runner: windows-latest
-            bundles: nsis,msi
+            build_args: --ci --bundles nsis,msi
           - name: Linux x64
             runner: ubuntu-22.04
-            bundles: deb,rpm,appimage
+            build_args: --ci --bundles deb,rpm,appimage
+          - name: macOS universal
+            runner: macos-latest
+            build_args: --ci --target universal-apple-darwin --bundles dmg
 
     steps:
       - name: Check out repository
@@ -151,6 +156,10 @@ jobs:
         run: |
           rustup toolchain install ${{ env.RUST_VERSION }} --profile minimal
           rustup default ${{ env.RUST_VERSION }}
+
+      - name: Add universal macOS Rust targets
+        if: runner.os == 'macOS'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
@@ -194,10 +203,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: StatuslineDesktop
-          args: --ci --bundles ${{ matrix.bundles }} ${{ steps.signing.outputs.args }}
+          args: ${{ matrix.build_args }} ${{ steps.signing.outputs.args }}
           tagName: ${{ env.IS_RELEASE == 'true' && github.ref_name || '' }}
           releaseName: ${{ env.IS_RELEASE == 'true' && 'Statusline Companion v__VERSION__' || '' }}
-          releaseBody: ${{ env.IS_RELEASE == 'true' && 'Beta de Statusline Companion para Windows y Linux. Verifica los instaladores con SHA256SUMS.txt antes de usarlos.' || '' }}
+          releaseBody: ${{ env.IS_RELEASE == 'true' && 'Beta de Statusline Companion para Windows, Linux y macOS. Verifica los instaladores con SHA256SUMS.txt antes de usarlos.' || '' }}
           releaseDraft: ${{ env.IS_RELEASE == 'true' }}
           generateReleaseNotes: ${{ env.IS_RELEASE == 'true' }}
           retryAttempts: 0
@@ -260,6 +269,12 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: bash ./scripts/smoke-installers-linux.sh ./src-tauri/target/release/bundle
+        working-directory: StatuslineDesktop
+
+      - name: Smoke test macOS DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        run: bash ./scripts/smoke-installer-macos.sh ./src-tauri/target/universal-apple-darwin/release/bundle
         working-directory: StatuslineDesktop
 
       - name: Remove temporary Windows signing material

@@ -173,6 +173,7 @@ function startTauriRuntime(): void {
     }
   }).catch(() => undefined);
 
+  void invoke("frontend_ready").catch(() => undefined);
   void controller.refresh();
 }
 

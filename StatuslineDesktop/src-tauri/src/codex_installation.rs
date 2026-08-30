@@ -13,6 +13,7 @@ use tokio::{process::Command, time::timeout};
 const SETTINGS_FILE: &str = "settings.json";
 const VERSION_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_SCANNED_VERSIONS: usize = 64;
+const WINDOWS_PRODUCT_DIRECTORY: &str = "Statusline Companion";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -209,6 +210,33 @@ pub fn windows_common_paths(
 }
 
 #[must_use]
+pub fn windows_local_app_data_from_executable(executable: &Path) -> Option<PathBuf> {
+    let product_directory = executable.parent()?;
+    if !product_directory
+        .file_name()?
+        .to_string_lossy()
+        .eq_ignore_ascii_case(WINDOWS_PRODUCT_DIRECTORY)
+    {
+        return None;
+    }
+
+    let local_app_data = product_directory.parent()?;
+    if !local_app_data
+        .file_name()?
+        .to_string_lossy()
+        .eq_ignore_ascii_case("Local")
+        || !local_app_data
+            .parent()?
+            .file_name()?
+            .to_string_lossy()
+            .eq_ignore_ascii_case("AppData")
+    {
+        return None;
+    }
+    Some(local_app_data.to_path_buf())
+}
+
+#[must_use]
 pub fn unix_common_paths(home: Option<&Path>) -> Vec<PathBuf> {
     let mut paths = vec![
         PathBuf::from("/usr/local/bin/codex"),
@@ -357,40 +385,44 @@ fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
 
 #[cfg(windows)]
 fn collect_windows_candidates(candidates: &mut Vec<Candidate>) {
-    let user_profile = windows_user_profile();
-    let app_data = windows_app_data().or_else(|| {
-        user_profile
-            .as_ref()
-            .map(|profile| profile.join("AppData").join("Roaming"))
-    });
-    let local_app_data = windows_local_app_data().or_else(|| {
-        user_profile
-            .as_ref()
-            .map(|profile| profile.join("AppData").join("Local"))
-    });
+    let user_profiles = windows_user_profile_roots();
+    let app_data_roots = windows_app_data_roots();
+    let local_app_data_roots = windows_local_app_data_roots();
     let program_files = env::var_os("ProgramFiles").map(PathBuf::from);
     let nvm_symlink = env::var_os("NVM_SYMLINK").map(PathBuf::from);
 
+    for local_app_data in &local_app_data_roots {
+        for path in windows_common_paths(None, None, Some(local_app_data), None, None) {
+            let source = source_for_windows_path(&path, None, Some(local_app_data), None);
+            push_candidate(candidates, path, source);
+        }
+    }
+    for app_data in &app_data_roots {
+        for path in windows_common_paths(None, Some(app_data), None, None, None) {
+            let source = source_for_windows_path(&path, Some(app_data), None, None);
+            push_candidate(candidates, path, source);
+        }
+    }
+    for user_profile in &user_profiles {
+        for path in windows_common_paths(Some(user_profile), None, None, None, None) {
+            let source = source_for_windows_path(&path, None, None, Some(user_profile));
+            push_candidate(candidates, path, source);
+        }
+    }
     for path in windows_common_paths(
-        user_profile.as_deref(),
-        app_data.as_deref(),
-        local_app_data.as_deref(),
+        None,
+        None,
+        None,
         program_files.as_deref(),
         nvm_symlink.as_deref(),
     ) {
-        let source = source_for_windows_path(
-            &path,
-            app_data.as_deref(),
-            local_app_data.as_deref(),
-            user_profile.as_deref(),
-        );
-        push_candidate(candidates, path, source);
+        push_candidate(candidates, path, CodexSource::Standalone);
     }
 
     if let Some(nvm_home) = env::var_os("NVM_HOME").map(PathBuf::from) {
         push_windows_version_manager_codex(candidates, &nvm_home, false);
     }
-    if let Some(app_data) = app_data.as_deref() {
+    for app_data in &app_data_roots {
         push_windows_version_manager_codex(candidates, &app_data.join("nvm"), false);
         push_windows_version_manager_codex(
             candidates,
@@ -398,14 +430,14 @@ fn collect_windows_candidates(candidates: &mut Vec<Candidate>) {
             true,
         );
     }
-    if let Some(local_app_data) = local_app_data.as_deref() {
+    for local_app_data in &local_app_data_roots {
         push_windows_version_manager_codex(
             candidates,
             &local_app_data.join("fnm").join("node-versions"),
             true,
         );
     }
-    if let Some(user_profile) = user_profile.as_deref() {
+    for user_profile in &user_profiles {
         push_windows_version_manager_codex(
             candidates,
             &user_profile.join(".fnm").join("node-versions"),
@@ -586,7 +618,7 @@ fn node_candidates(prefix: &Path) -> Vec<PathBuf> {
             program_files_x86.join("nodejs").join("node.exe"),
         );
     }
-    if let Some(user_profile) = windows_user_profile() {
+    for user_profile in windows_user_profile_roots() {
         push_unique_path(
             &mut candidates,
             user_profile.join(".volta").join("bin").join("node.exe"),
@@ -597,7 +629,7 @@ fn node_candidates(prefix: &Path) -> Vec<PathBuf> {
             true,
         );
     }
-    if let Some(local_app_data) = windows_local_app_data() {
+    for local_app_data in windows_local_app_data_roots() {
         push_unique_path(
             &mut candidates,
             local_app_data.join("Volta").join("bin").join("node.exe"),
@@ -608,7 +640,7 @@ fn node_candidates(prefix: &Path) -> Vec<PathBuf> {
             true,
         );
     }
-    if let Some(app_data) = windows_app_data() {
+    for app_data in windows_app_data_roots() {
         push_windows_version_manager_nodes(&mut candidates, &app_data.join("nvm"), false);
         push_windows_version_manager_nodes(
             &mut candidates,
@@ -728,7 +760,7 @@ fn known_windows_environment(variable: &str) -> Option<OsString> {
 
 #[cfg(windows)]
 fn windows_user_profile() -> Option<PathBuf> {
-    dirs::home_dir().or_else(|| env::var_os("USERPROFILE").map(PathBuf::from))
+    windows_user_profile_roots().into_iter().next()
 }
 
 #[cfg(not(windows))]
@@ -738,7 +770,7 @@ fn windows_user_profile() -> Option<PathBuf> {
 
 #[cfg(windows)]
 fn windows_app_data() -> Option<PathBuf> {
-    dirs::data_dir().or_else(|| env::var_os("APPDATA").map(PathBuf::from))
+    windows_app_data_roots().into_iter().next()
 }
 
 #[cfg(not(windows))]
@@ -748,12 +780,94 @@ fn windows_app_data() -> Option<PathBuf> {
 
 #[cfg(windows)]
 fn windows_local_app_data() -> Option<PathBuf> {
-    dirs::data_local_dir().or_else(|| env::var_os("LOCALAPPDATA").map(PathBuf::from))
+    windows_local_app_data_roots().into_iter().next()
 }
 
 #[cfg(not(windows))]
 fn windows_local_app_data() -> Option<PathBuf> {
     env::var_os("LOCALAPPDATA").map(PathBuf::from)
+}
+
+#[cfg(windows)]
+fn windows_user_profile_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if let Some(local_app_data) = installed_windows_local_app_data()
+        && let Some(profile) = profile_from_local_app_data(&local_app_data)
+    {
+        push_unique_path(&mut roots, profile);
+    }
+    if let Some(profile) = env::var_os("USERPROFILE").map(PathBuf::from) {
+        push_unique_path(&mut roots, profile);
+    }
+    if let Some(profile) = dirs::home_dir() {
+        push_unique_path(&mut roots, profile);
+    }
+    roots
+}
+
+#[cfg(windows)]
+fn windows_app_data_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if let Some(local_app_data) = installed_windows_local_app_data()
+        && let Some(app_data) = local_app_data.parent()
+    {
+        push_unique_path(&mut roots, app_data.join("Roaming"));
+    }
+    if let Some(app_data) = env::var_os("APPDATA").map(PathBuf::from) {
+        push_unique_path(&mut roots, app_data);
+    }
+    if let Some(app_data) = dirs::data_dir() {
+        push_unique_path(&mut roots, app_data);
+    }
+    for profile in windows_user_profile_roots() {
+        push_unique_path(&mut roots, profile.join("AppData").join("Roaming"));
+    }
+    roots
+}
+
+#[cfg(windows)]
+fn windows_local_app_data_roots() -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if let Some(local_app_data) = installed_windows_local_app_data() {
+        push_unique_path(&mut roots, local_app_data);
+    }
+    if let Some(local_app_data) = env::var_os("LOCALAPPDATA").map(PathBuf::from) {
+        push_unique_path(&mut roots, local_app_data);
+    }
+    if let Some(local_app_data) = dirs::data_local_dir() {
+        push_unique_path(&mut roots, local_app_data);
+    }
+    for profile in windows_user_profile_roots() {
+        push_unique_path(&mut roots, profile.join("AppData").join("Local"));
+    }
+    roots
+}
+
+#[cfg(windows)]
+fn installed_windows_local_app_data() -> Option<PathBuf> {
+    env::current_exe()
+        .ok()
+        .and_then(|path| windows_local_app_data_from_executable(&path))
+}
+
+#[cfg(windows)]
+fn profile_from_local_app_data(local_app_data: &Path) -> Option<PathBuf> {
+    local_app_data.parent()?.parent().map(Path::to_path_buf)
+}
+
+#[cfg(not(windows))]
+fn windows_user_profile_roots() -> Vec<PathBuf> {
+    windows_user_profile().into_iter().collect()
+}
+
+#[cfg(not(windows))]
+fn windows_app_data_roots() -> Vec<PathBuf> {
+    windows_app_data().into_iter().collect()
+}
+
+#[cfg(not(windows))]
+fn windows_local_app_data_roots() -> Vec<PathBuf> {
+    windows_local_app_data().into_iter().collect()
 }
 
 async fn verify_launch(launch: &CodexLaunch) -> Result<String, String> {
@@ -892,7 +1006,8 @@ mod tests {
     use std::{env, fs, path::PathBuf, process};
 
     use super::{
-        Settings, launch_for_candidate, read_saved_path, windows_common_paths, write_settings,
+        Settings, launch_for_candidate, read_saved_path, windows_common_paths,
+        windows_local_app_data_from_executable, write_settings,
     };
 
     #[test]
@@ -911,6 +1026,24 @@ mod tests {
                     .join("codex.exe")
             )
         );
+    }
+
+    #[test]
+    fn installed_executable_recovers_the_current_users_local_app_data() {
+        let executable =
+            PathBuf::from("C:/Users/Ada/AppData/Local/Statusline Companion/statusline-desktop.exe");
+
+        assert_eq!(
+            windows_local_app_data_from_executable(&executable),
+            Some(PathBuf::from("C:/Users/Ada/AppData/Local"))
+        );
+    }
+
+    #[test]
+    fn custom_install_directory_is_not_mistaken_for_local_app_data() {
+        let executable = PathBuf::from("D:/Apps/Statusline Companion/statusline-desktop.exe");
+
+        assert_eq!(windows_local_app_data_from_executable(&executable), None);
     }
 
     #[test]

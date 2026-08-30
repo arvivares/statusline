@@ -32,7 +32,8 @@
       "nsis": {
         "installMode": "currentUser",
         "languages": ["English", "Spanish"],
-        "compression": "lzma"
+        "compression": "lzma",
+        "installerHooks": "windows/nsis-hooks.nsh"
       },
       "wix": {
         "language": "es-ES",

@@ -4,13 +4,17 @@ pub mod relay_protocol;
 pub mod universal_relay;
 pub mod usage;
 
-use std::{fs, path::Path};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    sync::OnceLock,
+};
 
 #[cfg(target_os = "windows")]
-use std::sync::atomic::{AtomicBool, Ordering};
-
-#[cfg(target_os = "windows")]
-use tauri::webview::PageLoadEvent;
+use std::{
+    sync::atomic::{AtomicBool, Ordering},
+    time::Duration,
+};
 use tauri::{
     AppHandle, Emitter, Manager, State, WindowEvent,
     menu::{Menu, MenuItem},
@@ -27,12 +31,17 @@ const TRAY_ID: &str = "statusline-companion-tray";
 
 #[cfg(target_os = "windows")]
 static INITIAL_WINDOW_ACTIVATED: AtomicBool = AtomicBool::new(false);
+static WINDOW_READY_MARKER: OnceLock<PathBuf> = OnceLock::new();
 
 pub fn write_codex_diagnostic(output_path: &Path) -> Result<(), String> {
     let diagnostic = tauri::async_runtime::block_on(codex_installation::inspect_codex(None))
         .map_err(|error| error.to_string())?;
     let encoded = serde_json::to_vec_pretty(&diagnostic).map_err(|error| error.to_string())?;
     fs::write(output_path, encoded).map_err(|error| error.to_string())
+}
+
+pub fn set_window_ready_marker(output_path: PathBuf) -> Result<(), PathBuf> {
+    WINDOW_READY_MARKER.set(output_path)
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -154,6 +163,15 @@ async fn clear_codex_path(app: AppHandle) -> Result<CodexDiagnostic, String> {
         .map_err(|error| error.to_string())
 }
 
+#[tauri::command]
+fn frontend_ready(app: AppHandle) {
+    #[cfg(target_os = "windows")]
+    schedule_initial_window_activation(app);
+
+    #[cfg(not(target_os = "windows"))]
+    let _ = app;
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -164,17 +182,6 @@ pub fn run() {
         .plugin(tauri_plugin_positioner::init())
         .manage(RefreshState::default())
         .manage(UniversalRelayState::default())
-        .on_page_load(|_webview, _payload| {
-            #[cfg(target_os = "windows")]
-            if _webview.label() == "main"
-                && _payload.event() == PageLoadEvent::Finished
-                && INITIAL_WINDOW_ACTIVATED
-                    .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-                    .is_ok()
-            {
-                show_main_window(_webview.app_handle());
-            }
-        })
         .setup(|app| {
             let show_item = MenuItem::with_id(app, "show", "Mostrar", true, None::<&str>)?;
             let refresh_item = MenuItem::with_id(app, "refresh", "Actualizar", true, None::<&str>)?;
@@ -233,10 +240,38 @@ pub fn run() {
             disconnect_relay,
             inspect_codex,
             set_codex_path,
-            clear_codex_path
+            clear_codex_path,
+            frontend_ready
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(target_os = "windows")]
+fn schedule_initial_window_activation(app: AppHandle) {
+    if INITIAL_WINDOW_ACTIVATED
+        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        .is_err()
+    {
+        return;
+    }
+
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(Duration::from_millis(150)).await;
+        let app_for_window = app.clone();
+        let marker = WINDOW_READY_MARKER.get().cloned();
+        if app
+            .run_on_main_thread(move || {
+                show_main_window(&app_for_window);
+                if let Some(path) = marker {
+                    let _ = fs::write(path, b"ready\n");
+                }
+            })
+            .is_err()
+        {
+            INITIAL_WINDOW_ACTIVATED.store(false, Ordering::Release);
+        }
+    });
 }
 
 fn show_main_window(app: &AppHandle) {

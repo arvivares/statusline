@@ -251,17 +251,55 @@ function Get-StatuslineExecutable {
     return $executable
 }
 
-function Assert-AppStarts {
-    param([Parameter(Mandatory = $true)][string]$Executable)
+function Assert-AppReady {
+    param(
+        [Parameter(Mandatory = $true)][string]$Executable,
+        [Parameter(Mandatory = $true)][string]$BundleLabel
+    )
 
-    $process = Start-Process -FilePath $Executable -PassThru
-    Start-Sleep -Seconds 4
-    $process.Refresh()
-    if ($process.HasExited) {
-        throw "Statusline exited during the four-second launch smoke test"
+    $markerPath = Join-Path ([IO.Path]::GetTempPath()) "statusline-$BundleLabel-window-ready-$PID.txt"
+    Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $Executable
+    $startInfo.UseShellExecute = $false
+    $startInfo.ArgumentList.Add("--statusline-window-smoke")
+    $startInfo.ArgumentList.Add($markerPath)
+    $process = [System.Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    $started = $false
+    try {
+        if (-not $process.Start()) {
+            throw "Could not start the $BundleLabel application"
+        }
+        $started = $true
+        $deadline = [DateTime]::UtcNow.AddSeconds(20)
+        while (-not (Test-Path -LiteralPath $markerPath -PathType Leaf)) {
+            $process.Refresh()
+            if ($process.HasExited) {
+                throw "$BundleLabel exited before its frontend became ready"
+            }
+            if ([DateTime]::UtcNow -ge $deadline) {
+                throw "$BundleLabel did not complete the frontend-ready handshake within 20 seconds"
+            }
+            Start-Sleep -Milliseconds 250
+        }
+        if ((Get-Content -LiteralPath $markerPath -Raw).Trim() -ne "ready") {
+            throw "$BundleLabel wrote an invalid frontend-ready marker"
+        }
+        $process.Refresh()
+        if (-not $process.Responding) {
+            throw "$BundleLabel created its window but the native message loop is not responding"
+        }
+        Write-Host "$BundleLabel frontend is ready and responsive."
     }
-    Stop-Process -Id $process.Id -Force
-    $process.WaitForExit()
+    finally {
+        if ($started -and -not $process.HasExited) {
+            $process.Kill($true)
+            $process.WaitForExit()
+        }
+        $process.Dispose()
+        Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+    }
 }
 
 function Assert-CurrentUserInstall {
@@ -355,7 +393,7 @@ try {
         -StatuslineExecutable $nsisExecutable `
         -CodexExecutable $codexFixture `
         -BundleLabel "nsis"
-    Assert-AppStarts -Executable $nsisExecutable
+    Assert-AppReady -Executable $nsisExecutable -BundleLabel "nsis"
     Uninstall-Nsis -Entry $nsisEntry
     $nsisInstalled = $false
     Wait-ForStatuslineEntry -Present $false | Out-Null
@@ -374,7 +412,7 @@ try {
         -CodexExecutable $codexFixture `
         -BundleLabel "msi"
     Assert-CurrentUserInstall -Entry $msiEntry -Executable $msiExecutable
-    Assert-AppStarts -Executable $msiExecutable
+    Assert-AppReady -Executable $msiExecutable -BundleLabel "msi"
     Invoke-MsiPackage `
         -Action "uninstall" `
         -PackagePath $msi `

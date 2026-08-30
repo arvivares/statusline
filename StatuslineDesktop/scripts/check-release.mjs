@@ -68,6 +68,7 @@ const packageLock = readJson("package-lock.json");
 const tauriConfig = readJson("src-tauri/tauri.conf.json");
 const windowsConfig = readJson("src-tauri/tauri.windows.conf.json");
 const linuxConfig = readJson("src-tauri/tauri.linux.conf.json");
+const macosConfig = readJson("src-tauri/tauri.macos.conf.json");
 const cargoToml = readText("src-tauri/Cargo.toml");
 const cargoLock = readText("src-tauri/Cargo.lock");
 const capabilities = readJson("src-tauri/capabilities/default.json");
@@ -76,10 +77,14 @@ const smokeWorkflow = readText(
   "../.github/workflows/desktop-installer-smoke.yml",
 );
 const windowsSmokeScript = readText("scripts/smoke-installers-windows.ps1");
+const macosSmokeScript = readText("scripts/smoke-installer-macos.sh");
 const windowsMsiTemplate = readText(
   "src-tauri/windows/statusline-per-user.wxs",
 );
+const windowsNsisHooks = readText("src-tauri/windows/nsis-hooks.nsh");
 const desktopLibSource = readText("src-tauri/src/lib.rs");
+const desktopMainSource = readText("src/main.ts");
+const desktopEntrySource = readText("src-tauri/src/main.rs");
 const universalRelaySource = readText("src-tauri/src/universal_relay.rs");
 const relayProtocolSource = readText("src-tauri/src/relay_protocol.rs");
 
@@ -174,9 +179,13 @@ assertExactTargets(
   ["deb", "rpm", "appimage"],
   "Linux",
 );
+assertExactTargets(macosConfig.bundle?.targets, ["dmg"], "macOS");
 assert(
-  windowsConfig.bundle?.windows?.nsis?.installMode === "currentUser",
-  "NSIS must use current-user installation",
+  windowsConfig.bundle?.windows?.nsis?.installMode === "currentUser" &&
+    windowsConfig.bundle?.windows?.nsis?.installerHooks ===
+      "windows/nsis-hooks.nsh" &&
+    windowsNsisHooks.includes("MUI_FINISHPAGE_RUN_NOTCHECKED"),
+  "NSIS must use current-user installation without default installer launch",
 );
 assert(
   windowsConfig.bundle?.windows?.wix?.template ===
@@ -185,8 +194,10 @@ assert(
     windowsMsiTemplate.includes('InstallPrivileges="limited"') &&
     windowsMsiTemplate.includes('<Directory Id="LocalAppDataFolder">') &&
     windowsMsiTemplate.includes('Name="MainExecutable"') &&
-    windowsMsiTemplate.includes('Root="HKCU"'),
-  "MSI must use the current user's LocalAppData installation context",
+    windowsMsiTemplate.includes('Root="HKCU"') &&
+    !windowsMsiTemplate.includes("LaunchApplication") &&
+    !windowsMsiTemplate.includes("AUTOLAUNCHAPP"),
+  "MSI must install in the current user's LocalAppData without launching from Windows Installer",
 );
 assert(
   windowsConfig.bundle?.windows?.webviewInstallMode?.type ===
@@ -202,9 +213,11 @@ for (const relativePath of [
   "scripts/generate-checksums.mjs",
   "scripts/smoke-installers-windows.ps1",
   "scripts/smoke-installers-linux.sh",
+  "scripts/smoke-installer-macos.sh",
   "scripts/prepare-windows-signing.ps1",
   "scripts/cleanup-windows-signing.ps1",
   "src-tauri/windows/statusline-per-user.wxs",
+  "src-tauri/windows/nsis-hooks.nsh",
   "../.github/workflows/desktop-installer-smoke.yml",
   "../PRIVACY.md",
   "../SUPPORT.md",
@@ -217,9 +230,18 @@ for (const relativePath of [
 }
 assert(
   windowsSmokeScript.includes("--statusline-codex-diagnostic") &&
+    windowsSmokeScript.includes("--statusline-window-smoke") &&
+    windowsSmokeScript.includes("frontend-ready handshake") &&
     windowsSmokeScript.includes("Assert-CurrentUserInstall") &&
     windowsSmokeScript.includes("Programs\\OpenAI\\Codex\\bin\\codex.exe"),
-  "Windows smoke tests must verify Codex discovery in both current-user installers",
+  "Windows smoke tests must verify Codex discovery and frontend readiness in both installers",
+);
+assert(
+  macosSmokeScript.includes("lipo -archs") &&
+    macosSmokeScript.includes("arm64") &&
+    macosSmokeScript.includes("x86_64") &&
+    macosSmokeScript.includes("--statusline-codex-diagnostic"),
+  "macOS smoke tests must verify the universal DMG and Codex discovery",
 );
 
 const actionReferences = [workflow, smokeWorkflow].flatMap((contents) =>
@@ -245,6 +267,8 @@ for (const requiredWorkflowToken of [
   "retryAttempts: 0",
   "smoke-installers-windows.ps1",
   "smoke-installers-linux.sh",
+  "smoke-installer-macos.sh",
+  "universal-apple-darwin",
   "generate-checksums.mjs",
   "SHA256SUMS.txt",
 ]) {
@@ -281,11 +305,12 @@ assert(
   "Windows must wait for WebView readiness while Linux stays visible on first launch",
 );
 assert(
-  desktopLibSource.includes(".on_page_load") &&
-    desktopLibSource.includes("PageLoadEvent::Finished") &&
+  desktopMainSource.includes('invoke("frontend_ready")') &&
+    desktopLibSource.includes("fn frontend_ready") &&
+    desktopLibSource.includes("schedule_initial_window_activation") &&
     desktopLibSource.includes("INITIAL_WINDOW_ACTIVATED") &&
-    desktopLibSource.includes("show_main_window(_webview.app_handle())"),
-  "Windows must reveal and focus the main window after WebView2 finishes loading",
+    desktopEntrySource.includes("--statusline-window-smoke"),
+  "Windows must reveal the main window only after the frontend-ready handshake",
 );
 
 const version = packageJson.version;
@@ -301,5 +326,5 @@ if (releaseTag) {
 }
 
 console.log(
-  `Release preflight passed: ${expectedProductName} ${version} (Windows + Linux).`,
+  `Release preflight passed: ${expectedProductName} ${version} (Windows + Linux + macOS).`,
 );

@@ -34,11 +34,20 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 
 Tagged builds fail before compilation when any required signing value is missing. The temporary PFX, generated Tauri signing configuration and imported runner certificate are removed after the build.
 
+## macOS signing and notarization
+
+- [ ] Acquire a Developer ID Application certificate for the publishing team.
+- [ ] Configure CI signing without exporting long-lived plaintext credentials.
+- [ ] Notarize the universal app and DMG, staple the ticket and validate with spctl.
+- [ ] Install on clean Apple Silicon and Intel Macs without bypassing Gatekeeper.
+
+Until these checks pass, the generated DMG is a private unsigned test artifact, not a public macOS release.
+
 ## Distribution integrity
 
-- [ ] Confirm all five installers are attached to one draft GitHub Release.
+- [ ] Confirm all six installers are attached to one draft GitHub Release.
 - [ ] Verify every asset against SHA256SUMS.txt after downloading it.
-- [ ] Review the automated NSIS, MSI, Debian, RPM and AppImage smoke-test logs.
+- [ ] Review the automated NSIS, MSI, Debian, RPM, AppImage and universal DMG smoke-test logs.
 - [ ] Install and uninstall each package manually on a clean target system.
 
 ## Policy and support

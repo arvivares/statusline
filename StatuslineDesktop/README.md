@@ -44,7 +44,7 @@ HTTP sólo se admite para localhost en Debug. Para builds públicos:
 export STATUSLINE_RELAY_BASE_URL="https://statusline-relay.inmerzion.workers.dev"
 ```
 
-En macOS la ventana comienza oculta y se abre desde la bandeja. Windows la revela y enfoca cuando WebView2 termina de cargar, evitando la ventana inactiva que puede producir el instalador; Linux la muestra en el primer inicio. Cerrar oculta el companion sin finalizarlo.
+En macOS la ventana comienza oculta y se abre desde la bandeja. Windows espera una confirmación explícita del frontend antes de revelar y enfocar la ventana; Linux la muestra en el primer inicio. Cerrar oculta el companion sin finalizarlo. Los instaladores de Windows no inician la aplicación por defecto: el primer arranque normal debe hacerse desde Inicio o el acceso directo para no heredar el contexto transitorio del instalador.
 
 ### Preview visual sin Rust
 
@@ -78,9 +78,10 @@ Bundles nativos:
 ```shell
 npm run bundle:windows
 npm run bundle:linux
+npm run bundle:macos
 ```
 
-Windows produce NSIS y MSI; Linux produce DEB, RPM y AppImage. Consulta [docs/release/desktop-installers.md](../docs/release/desktop-installers.md).
+Windows produce NSIS y MSI; Linux produce DEB, RPM y AppImage; macOS produce un DMG universal para Apple Silicon e Intel. Consulta [docs/release/desktop-installers.md](../docs/release/desktop-installers.md).
 
 ## Estructura
 

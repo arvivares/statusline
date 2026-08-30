@@ -4,15 +4,18 @@ El companion se empaqueta de forma nativa en GitHub Actions. No se usa cross-com
 
 ## Artefactos
 
-| Plataforma  | Formato     | Uso recomendado                                            |
-| ----------- | ----------- | ---------------------------------------------------------- |
-| Windows x64 | NSIS .exe   | Instalador principal por usuario; incluye inglés y español |
-| Windows x64 | WiX .msi    | Despliegues administrados                                  |
-| Linux x64   | Debian .deb | Ubuntu, Debian y derivadas                                 |
-| Linux x64   | RPM .rpm    | Fedora, RHEL y derivadas                                   |
-| Linux x64   | .AppImage   | Distribución portátil; requiere chmod +x                   |
+| Plataforma      | Formato     | Uso recomendado                                              |
+| --------------- | ----------- | ------------------------------------------------------------ |
+| Windows x64     | NSIS .exe   | Instalador principal por usuario; incluye inglés y español   |
+| Windows x64     | WiX .msi    | Despliegues administrados                                    |
+| Linux x64       | Debian .deb | Ubuntu, Debian y derivadas                                   |
+| Linux x64       | RPM .rpm    | Fedora, RHEL y derivadas                                     |
+| Linux x64       | .AppImage   | Distribución portátil; requiere chmod +x                     |
+| macOS universal | .dmg        | Apple Silicon e Intel; instalación mediante arrastrar a Apps |
 
-NSIS incorpora el bootstrapper Evergreen de WebView2. El AppImage no incluye GStreamer porque Statusline no reproduce multimedia.
+NSIS incorpora el bootstrapper Evergreen de WebView2. El AppImage no incluye GStreamer porque Statusline no reproduce multimedia. El DMG contiene un único binario universal con arquitecturas arm64 y x86_64.
+
+MSI no inicia Statusline desde Windows Installer y NSIS deja desmarcada por defecto la opción de abrirlo al finalizar. El usuario debe hacer el primer arranque desde Inicio o el acceso directo; esto garantiza que la detección de Codex reciba el entorno de su sesión y que WebView2 complete su inicialización antes de mostrar la ventana.
 
 ## Validación local económica
 
@@ -37,6 +40,7 @@ Estas comprobaciones no crean instaladores. Para compilar, ejecuta sólo en el s
 ```shell
 npm run bundle:windows
 npm run bundle:linux
+npm run bundle:macos
 ```
 
 ## Endpoint universal en los instaladores
@@ -61,8 +65,8 @@ La URL se incorpora al binario, pero no concede acceso a ningún canal. Cada ins
 Ejemplo:
 
 ```shell
-git tag desktop-v0.1.3
-git push origin desktop-v0.1.3
+git tag desktop-v0.1.4
+git push origin desktop-v0.1.4
 ```
 
 El preflight comprueba que el tag coincide con npm, Cargo y Tauri, valida frontend, contrato Rust y servicio relay, y falla antes del bundle si falta el endpoint universal.
@@ -71,6 +75,7 @@ Después de compilar, el pipeline:
 
 - instala, abre y desinstala NSIS y MSI en Windows;
 - inspecciona RPM/AppImage e instala y elimina Debian en Linux;
+- monta el DMG, verifica arm64 + x86_64, icono y detección de Codex en macOS;
 - genera SHA256SUMS.txt;
 - adjunta los artefactos a una release borrador para builds por tag.
 
@@ -82,6 +87,8 @@ Los instaladores no incluyen Codex ni credenciales. Cada usuario instala la CLI 
 
 Source Settings detecta standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y PATH. En Windows también inspecciona ubicaciones relativas a LOCALAPPDATA y APPDATA; ninguna ruta de usuario está hardcodeada.
 
+En una instalación por usuario de Windows, Statusline también recupera LOCALAPPDATA a partir de la ubicación de su propio ejecutable. Esto mantiene la detección estable aunque MSI, el shell o una herramienta corporativa entreguen variables o PATH incompletos.
+
 ## Firma de Windows
 
 Las releases por tag requieren:
@@ -91,6 +98,10 @@ Las releases por tag requieren:
 - variable WINDOWS_TIMESTAMP_URL.
 
 El runner importa temporalmente el certificado, firma aplicación/NSIS/MSI y valida cada archivo con Get-AuthenticodeSignature. El material temporal se elimina incluso si falla un paso posterior. Los runs manuales permanecen sin firma.
+
+## Firma de macOS
+
+El workflow ya construye y valida el DMG universal, pero todavía no configura Developer ID ni notarización. Un artefacto de prueba sin firma puede requerir clic secundario → Abrir. Antes de una beta pública se deben añadir credenciales de Apple, firmar la app y el DMG, enviarlos al servicio notarial y validar el ticket con stapler.
 
 ## Publicación
 

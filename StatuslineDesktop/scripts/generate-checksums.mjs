@@ -9,6 +9,7 @@ import { pathToFileURL } from "node:url";
 const installerExtensions = new Set([
   ".appimage",
   ".deb",
+  ".dmg",
   ".exe",
   ".msi",
   ".rpm",
