@@ -263,10 +263,12 @@ assert(
 assert(
   macosPackageScript.includes("productbuild") &&
     macosPackageScript.includes("APPLE_INSTALLER_SIGNING_IDENTITY") &&
+    macosPackageScript.includes("hdiutil attach") &&
+    macosPackageScript.includes('xcrun stapler validate "$app_path"') &&
     macosNotarizationScript.includes("notarytool submit") &&
     macosNotarizationScript.includes("stapler staple") &&
     macosNotarizationScript.includes("--type install"),
-  "macOS packaging must sign and notarize both distributable formats",
+  "macOS packaging must reuse the stapled app from the DMG, then sign and notarize both distributable formats",
 );
 
 const actionReferences = [workflow, smokeWorkflow].flatMap((contents) =>
@@ -312,7 +314,7 @@ const nativeBuildStep = workflow.match(
 )?.[1];
 assert(nativeBuildStep, "release workflow is missing the native build step");
 assert(
-  !/^\s+APPLE_(?:ID|PASSWORD|API_KEY|API_ISSUER):/gmu.test(nativeBuildStep),
+  !/^\s+APPLE_(?:ID|PASSWORD|API_KEY|API_ISSUER):/mu.test(nativeBuildStep),
   "native builds must inherit one selected notarization method instead of receiving empty Apple credential variables",
 );
 for (const selectedCredentialExport of [

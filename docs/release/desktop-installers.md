@@ -126,7 +126,7 @@ Para autenticar la notarización elige uno de estos métodos:
 
 Si ambos métodos están configurados, el workflow prioriza la Team Key. Antes de invocar Tauri exporta únicamente el conjunto completo seleccionado; no propaga variables vacías del método alternativo porque Tauri podría interpretarlas como una solicitud de autenticación con Apple ID.
 
-El workflow importa ambos `.p12` en una keychain efímera. Tauri firma la app con Hardened Runtime, la envía al servicio notarial y grapa su ticket antes de crear el DMG. `productbuild` crea el PKG desde esa misma app y lo firma con Developer ID Installer. Finalmente, DMG y PKG se notarizan y grapan de forma independiente, y se validan con `codesign`, `pkgutil`, `stapler` y `spctl`. La keychain y los archivos decodificados se eliminan incluso si el job falla.
+El workflow importa ambos `.p12` en una keychain efímera. Tauri firma la app con Hardened Runtime, la envía al servicio notarial, grapa su ticket y crea el DMG. Como Tauri elimina la carpeta `.app` temporal al terminar el DMG, el empaquetador monta ese DMG en modo de sólo lectura y `productbuild` crea el PKG desde la misma app ya firmada y grapada; no realiza una segunda compilación. Finalmente, DMG y PKG se notarizan y grapan de forma independiente, y se validan con `codesign`, `pkgutil`, `stapler` y `spctl`. La keychain, el montaje temporal y los archivos decodificados se eliminan incluso si el job falla.
 
 Para comprobar las credenciales sin crear una release, ejecuta Actions → Desktop installers con:
 

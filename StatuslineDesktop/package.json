@@ -27,7 +27,7 @@
     "checksums": "node scripts/generate-checksums.mjs",
     "bundle:windows": "tauri build --ci --bundles nsis,msi",
     "bundle:linux": "tauri build --ci --bundles deb,rpm,appimage",
-    "bundle:macos": "tauri build --ci --target universal-apple-darwin --bundles dmg && bash scripts/package-macos-pkg.sh \"src-tauri/target/universal-apple-darwin/release/bundle/macos/Statusline Companion.app\" src-tauri/target/universal-apple-darwin/release/bundle/pkg \"$npm_package_version\"",
+    "bundle:macos": "tauri build --ci --target universal-apple-darwin --bundles dmg && bash scripts/package-macos-pkg.sh \"src-tauri/target/universal-apple-darwin/release/bundle/dmg/Statusline Companion_${npm_package_version}_universal.dmg\" src-tauri/target/universal-apple-darwin/release/bundle/pkg \"$npm_package_version\"",
     "preview": "vite preview",
     "tauri": "tauri"
   },
