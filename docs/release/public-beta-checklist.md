@@ -8,6 +8,7 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 - [ ] Validate automatic detection and manual selection on Ubuntu/Debian and Fedora.
 - [ ] Verify signed-in, signed-out, missing CLI, invalid launcher and timeout states.
 - [ ] Verify first launch, tray reopen, refresh, close-to-tray and quit.
+- [ ] Verify a clean signed install accesses its relay Keychain item without repeated prompts; separately test migration from an unsigned prerelease build.
 - [ ] Pair clean Windows, Linux and macOS publishers with iOS and verify the same snapshot in the app and widget.
 - [ ] Confirm no account shared between desktop and mobile is requested.
 
@@ -39,8 +40,10 @@ Tagged builds fail before compilation when any required signing value is missing
 - [x] Acquire a Developer ID Application certificate for the publishing team.
 - [x] Acquire a Developer ID Installer certificate for the publishing team.
 - [x] Configure CI signing with encrypted repository secrets and an App Store Connect Team Key.
-- [ ] Notarize the universal app, DMG and PKG, staple their tickets and validate with Gatekeeper.
+- [x] Notarize the universal app, DMG and PKG, staple their tickets and validate with Gatekeeper.
 - [ ] Install on clean Apple Silicon and Intel Macs without bypassing Gatekeeper.
+
+Automated and local trust validation passed for installer run [33370463028](https://github.com/arvivares/statusline/actions/runs/33370463028) and clean-runner revalidation [33372028599](https://github.com/arvivares/statusline/actions/runs/33372028599).
 
 Until these checks pass, the generated DMG and PKG are private test artifacts, not a public macOS release.
 

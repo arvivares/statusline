@@ -128,6 +128,12 @@ Si ambos métodos están configurados, el workflow prioriza la Team Key. Antes d
 
 El workflow importa ambos `.p12` en una keychain efímera. Tauri firma la app con Hardened Runtime, la envía al servicio notarial, grapa su ticket y crea el DMG. Como Tauri elimina la carpeta `.app` temporal al terminar el DMG, el empaquetador monta ese DMG en modo de sólo lectura y `productbuild` crea el PKG desde la misma app ya firmada y grapada; no realiza una segunda compilación. Finalmente, DMG y PKG se notarizan y grapan de forma independiente, y se validan con `codesign`, `pkgutil`, `stapler` y `spctl`. La keychain, el montaje temporal y los archivos decodificados se eliminan incluso si el job falla.
 
+### Keychain durante actualizaciones
+
+Statusline Companion guarda un único registro del publisher del relay en la keychain `login`, con service `inmerzion.statusline.relay` y account `universal-publisher-v1`. Una instalación limpia y las actualizaciones firmadas con la misma identidad Developer ID no deben solicitar repetidamente la contraseña de la keychain.
+
+Al sustituir una build de desarrollo sin firma por la primera build Developer ID, macOS puede considerar que cambió la identidad autorizada para el registro existente. Una autorización administrativa al instalar el PKG es normal; varios avisos de Keychain no lo son. Para conservar el pairing, selecciona **Permitir siempre** una vez. Para reiniciar el estado, usa **Disconnect**; si la build anterior no puede borrar el registro, cierra la app, elimínalo desde Keychain Access y vuelve a emparejar. Este caso de migración debe probarse por separado de una instalación limpia antes de publicar.
+
 Para comprobar las credenciales sin crear una release, ejecuta Actions → Desktop installers con:
 
 ```text

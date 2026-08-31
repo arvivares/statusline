@@ -12,6 +12,7 @@ const installerExtensions = new Set([
   ".dmg",
   ".exe",
   ".msi",
+  ".pkg",
   ".rpm",
 ]);
 

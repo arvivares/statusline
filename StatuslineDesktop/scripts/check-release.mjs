@@ -82,6 +82,7 @@ const macosSigningScript = readText("scripts/prepare-macos-signing.sh");
 const macosPackageScript = readText("scripts/package-macos-pkg.sh");
 const macosNotarizationScript = readText("scripts/notarize-macos-artifact.sh");
 const macosSigningCleanupScript = readText("scripts/cleanup-macos-signing.sh");
+const checksumScript = readText("scripts/generate-checksums.mjs");
 const windowsMsiTemplate = readText(
   "src-tauri/windows/statusline-per-user.wxs",
 );
@@ -270,6 +271,10 @@ assert(
     macosNotarizationScript.includes("--type install"),
   "macOS packaging must reuse the stapled app from the DMG, then sign and notarize both distributable formats",
 );
+assert(
+  checksumScript.includes('".pkg"') && !workflow.includes("archive: false"),
+  "checksum artifacts must include PKG installers and remain downloadable as standard archives",
+);
 
 const actionReferences = [workflow, smokeWorkflow].flatMap((contents) =>
   [...contents.matchAll(/^\s*uses:\s*([^\s#]+)/gmu)].map((match) => match[1]),
@@ -334,6 +339,8 @@ for (const requiredSmokeToken of [
   "run-id:",
   "merge-multiple: true",
   "timeout-minutes: 10",
+  "Installer checksum manifest",
+  "generate-checksums.mjs",
 ]) {
   assert(
     smokeWorkflow.includes(requiredSmokeToken),
