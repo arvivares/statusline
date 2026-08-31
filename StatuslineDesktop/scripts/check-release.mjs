@@ -69,6 +69,7 @@ const tauriConfig = readJson("src-tauri/tauri.conf.json");
 const windowsConfig = readJson("src-tauri/tauri.windows.conf.json");
 const linuxConfig = readJson("src-tauri/tauri.linux.conf.json");
 const macosConfig = readJson("src-tauri/tauri.macos.conf.json");
+const macosInfoPlist = readText("src-tauri/Info.macos.plist");
 const cargoToml = readText("src-tauri/Cargo.toml");
 const cargoLock = readText("src-tauri/Cargo.lock");
 const capabilities = readJson("src-tauri/capabilities/default.json");
@@ -186,6 +187,15 @@ assertExactTargets(
 );
 assertExactTargets(macosConfig.bundle?.targets, ["dmg"], "macOS");
 assert(
+  macosConfig.bundle?.macOS?.infoPlist === "Info.macos.plist" &&
+    /<key>LSUIElement<\/key>\s*<true\/>/u.test(macosInfoPlist) &&
+    tauriConfig.app?.windows?.[0]?.skipTaskbar === true &&
+    desktopLibSource.includes(
+      "set_activation_policy(tauri::ActivationPolicy::Accessory)",
+    ),
+  "macOS must run as a menu-bar-only accessory application",
+);
+assert(
   windowsConfig.bundle?.windows?.nsis?.installMode === "currentUser" &&
     windowsConfig.bundle?.windows?.nsis?.installerHooks ===
       "windows/nsis-hooks.nsh" &&
@@ -227,6 +237,7 @@ for (const relativePath of [
   "scripts/cleanup-windows-signing.ps1",
   "src-tauri/windows/statusline-per-user.wxs",
   "src-tauri/windows/nsis-hooks.nsh",
+  "src-tauri/Info.macos.plist",
   "../.github/workflows/desktop-installer-smoke.yml",
   "../PRIVACY.md",
   "../SUPPORT.md",
@@ -251,8 +262,16 @@ assert(
     macosSmokeScript.includes("x86_64") &&
     macosSmokeScript.includes("--statusline-codex-diagnostic") &&
     macosSmokeScript.includes("pkgutil --payload-files") &&
-    macosSmokeScript.includes("Developer ID Installer:"),
-  "macOS smoke tests must verify the universal DMG, PKG and Codex discovery",
+    macosSmokeScript.includes("Developer ID Installer:") &&
+    macosSmokeScript.includes("LSUIElement"),
+  "macOS smoke tests must verify the universal menu-bar app, DMG, PKG and Codex discovery",
+);
+assert(
+  desktopLibSource.includes("WindowEvent::CloseRequested") &&
+    desktopLibSource.includes("api.prevent_close()") &&
+    desktopLibSource.includes("window.hide()") &&
+    desktopLibSource.includes('"quit" => app.exit(0)'),
+  "the companion window must close to the tray and exit only from its explicit menu command",
 );
 assert(
   macosSigningScript.includes("APPLE_CERTIFICATE") &&

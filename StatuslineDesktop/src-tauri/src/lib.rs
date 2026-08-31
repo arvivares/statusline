@@ -183,6 +183,10 @@ pub fn run() {
         .manage(RefreshState::default())
         .manage(UniversalRelayState::default())
         .setup(|app| {
+            #[cfg(target_os = "macos")]
+            app.handle()
+                .set_activation_policy(tauri::ActivationPolicy::Accessory)?;
+
             let show_item = MenuItem::with_id(app, "show", "Mostrar", true, None::<&str>)?;
             let refresh_item = MenuItem::with_id(app, "refresh", "Actualizar", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Salir", true, None::<&str>)?;

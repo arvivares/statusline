@@ -128,6 +128,8 @@ Si ambos métodos están configurados, el workflow prioriza la Team Key. Antes d
 
 El workflow importa ambos `.p12` en una keychain efímera. Tauri firma la app con Hardened Runtime, la envía al servicio notarial, grapa su ticket y crea el DMG. Como Tauri elimina la carpeta `.app` temporal al terminar el DMG, el empaquetador monta ese DMG en modo de sólo lectura y `productbuild` crea el PKG desde la misma app ya firmada y grapada; no realiza una segunda compilación. Finalmente, DMG y PKG se notarizan y grapan de forma independiente, y se validan con `codesign`, `pkgutil`, `stapler` y `spctl`. La keychain, el montaje temporal y los archivos decodificados se eliminan incluso si el job falla.
 
+El bundle macOS declara `LSUIElement=true` y el runtime usa la política `Accessory`: Statusline permanece únicamente en la barra de menú, no aparece en el Dock ni en `⌘ Tab`, y cerrar su ventana sólo la oculta. El comando **Salir** del menú superior es la salida explícita del proceso. El smoke test inspecciona esta propiedad directamente en el `Info.plist` del DMG.
+
 ### Keychain durante actualizaciones
 
 Statusline Companion guarda un único registro del publisher del relay en la keychain `login`, con service `inmerzion.statusline.relay` y account `universal-publisher-v1`. Una instalación limpia y las actualizaciones firmadas con la misma identidad Developer ID no deben solicitar repetidamente la contraseña de la keychain.

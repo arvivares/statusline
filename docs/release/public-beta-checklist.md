@@ -8,6 +8,7 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 - [ ] Validate automatic detection and manual selection on Ubuntu/Debian and Fedora.
 - [ ] Verify signed-in, signed-out, missing CLI, invalid launcher and timeout states.
 - [ ] Verify first launch, tray reopen, refresh, close-to-tray and quit.
+- [ ] Verify macOS stays out of the Dock and Command-Tab while remaining available from the menu bar.
 - [ ] Verify a clean signed install accesses its relay Keychain item without repeated prompts; separately test migration from an unsigned prerelease build.
 - [ ] Pair clean Windows, Linux and macOS publishers with iOS and verify the same snapshot in the app and widget.
 - [ ] Confirm no account shared between desktop and mobile is requested.

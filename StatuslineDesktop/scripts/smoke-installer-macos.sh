@@ -74,12 +74,23 @@ mounted=true
 app_path="$mount_point/Statusline Companion.app"
 binary_path="$app_path/Contents/MacOS/statusline-desktop"
 icon_path="$app_path/Contents/Resources/icon.icns"
+info_plist_path="$app_path/Contents/Info.plist"
 if [[ ! -x "$binary_path" ]]; then
   echo "The DMG does not contain the Statusline application binary." >&2
   exit 1
 fi
 if [[ ! -f "$icon_path" ]]; then
   echo "The macOS application icon is missing." >&2
+  exit 1
+fi
+if [[ ! -f "$info_plist_path" ]]; then
+  echo "The macOS application Info.plist is missing." >&2
+  exit 1
+fi
+
+menu_bar_agent=$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' "$info_plist_path" 2>/dev/null || true)
+if [[ "$menu_bar_agent" != true ]]; then
+  echo "The macOS application must set LSUIElement=true to stay out of the Dock." >&2
   exit 1
 fi
 
@@ -123,4 +134,4 @@ node -e '
   }
 ' "$diagnostic_path" "$codex_fixture"
 
-echo "macOS DMG + PKG smoke passed: $architectures, icon present, Codex detected, trust required=$require_trust."
+echo "macOS DMG + PKG smoke passed: $architectures, menu-bar agent, icon present, Codex detected, trust required=$require_trust."

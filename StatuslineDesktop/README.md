@@ -44,7 +44,7 @@ HTTP sólo se admite para localhost en Debug. Para builds públicos:
 export STATUSLINE_RELAY_BASE_URL="https://statusline-relay.inmerzion.workers.dev"
 ```
 
-En macOS la ventana comienza oculta y se abre desde la bandeja. Windows espera una confirmación explícita del frontend antes de revelar y enfocar la ventana; Linux la muestra en el primer inicio. Cerrar oculta el companion sin finalizarlo. Los instaladores de Windows no inician la aplicación por defecto: el primer arranque normal debe hacerse desde Inicio o el acceso directo para no heredar el contexto transitorio del instalador.
+En macOS funciona como agente de barra de menú: no aparece en el Dock ni en `⌘ Tab`, la ventana comienza oculta y se abre desde el icono superior. Windows espera una confirmación explícita del frontend antes de revelar y enfocar la ventana; Linux la muestra en el primer inicio. Cerrar oculta el companion sin finalizarlo; sólo **Salir** desde su menú termina el proceso. Los instaladores de Windows no inician la aplicación por defecto: el primer arranque normal debe hacerse desde Inicio o el acceso directo para no heredar el contexto transitorio del instalador.
 
 ### Preview visual sin Rust
 
