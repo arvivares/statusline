@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Statusline</string>
+    <string name="widget_name">Codex Data Plane</string>
+    <string name="widget_description">Cuota semanal de Codex y próxima fecha de reinicio.</string>
+    <string name="widget_weekly_limit_label">WEEKLY LIMIT</string>
+    <string name="widget_remaining_label">REMAINING</string>
+    <string name="widget_live_label">LIVE</string>
+    <string name="widget_no_data_label">NO DATA</string>
+    <string name="widget_resets_label">RESETS</string>
+    <string name="widget_connect_companion">CONNECT COMPANION</string>
+    <string name="widget_quota_number_placeholder">53</string>
+    <string name="widget_empty_quota_placeholder">--</string>
+    <string name="widget_percent_symbol" formatted="false">%</string>
+    <string name="widget_reset_time_placeholder">09:02</string>
+    <string name="widget_reset_date_placeholder">02 SEP</string>
+    <string name="widget_meter_scale_min">0</string>
+    <string name="widget_meter_scale_placeholder">53 LEFT</string>
+    <string name="widget_meter_scale_max">100</string>
+</resources>

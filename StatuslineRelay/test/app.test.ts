@@ -8,14 +8,24 @@ const NOW = 1_900_000_000;
 const CHANNEL_ID = "018f47a0-7b52-4c15-9e55-5f0f266b7440";
 const allow: RateLimitBinding = { limit: async () => ({ success: true }) };
 
-function makeApp(store = new MemoryRelayStore(), limiter = allow) {
+interface TestLimiters {
+  readonly client?: RateLimitBinding;
+  readonly create?: RateLimitBinding;
+  readonly channel?: RateLimitBinding;
+}
+
+function makeApp(
+  store = new MemoryRelayStore(),
+  limiters: TestLimiters = {},
+) {
   let fill = 0;
   return {
     store,
     app: createRelayApp({
       store,
-      createRateLimiter: limiter,
-      channelRateLimiter: limiter,
+      clientRateLimiter: limiters.client ?? allow,
+      createRateLimiter: limiters.create ?? allow,
+      channelRateLimiter: limiters.channel ?? allow,
       now: () => NOW,
       randomUUID: () => CHANNEL_ID,
       randomBytes: (length) => {
@@ -29,6 +39,35 @@ function makeApp(store = new MemoryRelayStore(), limiter = allow) {
 }
 
 describe("Statusline universal relay", () => {
+  it("serves tracker-free public pages without invoking API limits", async () => {
+    const mustNotRun: RateLimitBinding = {
+      limit: async () => {
+        throw new Error("API limiter must not run for a public page");
+      },
+    };
+    const { app } = makeApp(new MemoryRelayStore(), {
+      client: mustNotRun,
+      create: mustNotRun,
+      channel: mustNotRun,
+    });
+
+    for (const path of ["/", "/privacy", "/support"]) {
+      const response = await app(new Request(`https://relay.test${path}`));
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toContain("text/html");
+      expect(response.headers.get("Content-Security-Policy")).toContain(
+        "default-src 'none'",
+      );
+      expect(await response.text()).not.toContain("<script");
+    }
+
+    const head = await app(
+      new Request("https://relay.test/privacy", { method: "HEAD" }),
+    );
+    expect(head.status).toBe(200);
+    expect(await head.text()).toBe("");
+  });
+
   it("creates independent publisher and reader credentials", async () => {
     const { app, store } = makeApp();
     const response = await app(
@@ -148,6 +187,7 @@ describe("Statusline universal relay", () => {
     let fill = 0;
     const app = createRelayApp({
       store,
+      clientRateLimiter: allow,
       createRateLimiter: allow,
       channelRateLimiter: allow,
       now: () => currentTime,
@@ -185,9 +225,56 @@ describe("Statusline universal relay", () => {
     const denied: RateLimitBinding = {
       limit: async () => ({ success: false }),
     };
-    const { app } = makeApp(new MemoryRelayStore(), denied);
+    const { app } = makeApp(new MemoryRelayStore(), { client: denied });
     const response = await app(
       new Request("https://relay.test/v1/channels", { method: "POST" }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("60");
+  });
+
+  it("rate limits an origin before parsing credentials or reading the store", async () => {
+    const keys: string[] = [];
+    const denied: RateLimitBinding = {
+      limit: async ({ key }) => {
+        keys.push(key);
+        return { success: false };
+      },
+    };
+    const mustNotRun: RateLimitBinding = {
+      limit: async () => {
+        throw new Error("credential limiter must not run");
+      },
+    };
+    const { app } = makeApp(new MemoryRelayStore(), {
+      client: denied,
+      channel: mustNotRun,
+    });
+    const response = await app(
+      new Request(`https://relay.test/v1/channels/${CHANNEL_ID}/snapshot`, {
+        headers: {
+          Authorization: `Bearer ${"A".repeat(43)}`,
+          "CF-Connecting-IP": "203.0.113.42",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toMatch(/^client:[A-Za-z0-9_-]{43}$/u);
+    expect(keys[0]).not.toContain("203.0.113.42");
+  });
+
+  it("keeps the stricter channel limit after the origin limit passes", async () => {
+    const denied: RateLimitBinding = {
+      limit: async () => ({ success: false }),
+    };
+    const { app } = makeApp(new MemoryRelayStore(), { channel: denied });
+    const response = await app(
+      new Request(`https://relay.test/v1/channels/${CHANNEL_ID}/snapshot`, {
+        headers: { Authorization: `Bearer ${"A".repeat(43)}` },
+      }),
     );
 
     expect(response.status).toBe(429);

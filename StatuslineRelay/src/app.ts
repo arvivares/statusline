@@ -10,6 +10,7 @@ import {
   randomToken,
   type SnapshotEnvelope,
 } from "./protocol";
+import { publicPageResponse } from "./public-pages";
 import type { RelayChannel, RelayStore, StoreResult } from "./store";
 import type { RateLimitBinding } from "./types";
 
@@ -17,6 +18,7 @@ const MAX_REQUEST_BYTES = 8_192;
 
 export interface RelayAppDependencies {
   readonly store: RelayStore;
+  readonly clientRateLimiter: RateLimitBinding;
   readonly createRateLimiter: RateLimitBinding;
   readonly channelRateLimiter: RateLimitBinding;
   readonly now?: () => number;
@@ -31,26 +33,40 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
 
   return async (request: Request): Promise<Response> => {
     try {
+      const url = new URL(request.url);
+      const publicPage = publicPageResponse(url.pathname, request.method);
+      if (publicPage !== null) {
+        return publicPage;
+      }
+
       if (
         request.method === "GET" &&
-        new URL(request.url).pathname === "/health"
+        url.pathname === "/health"
       ) {
         return json({ status: "ok", protocolVersion: PROTOCOL_VERSION });
       }
 
-      const url = new URL(request.url);
       const segments = url.pathname.split("/").filter(Boolean);
       if (segments[0] !== "v1" || segments[1] !== "channels") {
         return apiError(404, "notFound", "Endpoint not found.");
       }
 
+      const clientKey = await anonymousClientKey(request);
+      if (
+        !(
+          await dependencies.clientRateLimiter.limit({
+            key: `client:${clientKey}`,
+          })
+        ).success
+      ) {
+        return rateLimited();
+      }
+
       if (segments.length === 2 && request.method === "POST") {
-        const rateKey =
-          request.headers.get("cf-connecting-ip") ?? "unknown-client";
         if (
           !(
             await dependencies.createRateLimiter.limit({
-              key: `create:${rateKey}`,
+              key: `create:${clientKey}`,
             })
           ).success
         ) {
@@ -302,6 +318,15 @@ function secureRandomBytes(length: number): Uint8Array {
   return bytes;
 }
 
+async function anonymousClientKey(request: Request): Promise<string> {
+  const header = request.headers.get("cf-connecting-ip")?.trim();
+  const source =
+    header !== undefined && header.length > 0 && header.length <= 64
+      ? header.toLowerCase()
+      : "unknown-client";
+  return hashToken(source);
+}
+
 function rateLimited(): Response {
   const response = apiError(
     429,
@@ -328,5 +353,6 @@ function responseHeaders(): Headers {
     "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
     "Referrer-Policy": "no-referrer",
     "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
   });
 }

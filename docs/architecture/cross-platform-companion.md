@@ -1,7 +1,7 @@
 # Statusline: arquitectura multiplataforma
 
-**Estado:** protocolo universal v1 implementado en Rust y Swift; adaptador Linux del relay y cliente Android de producto pendientes
-**Fecha:** 2026-08-30
+**Estado:** protocolo universal v1 implementado en Rust, Swift y Kotlin; adaptador Linux del relay pendiente
+**Fecha:** 2026-08-31
 
 ## Decisión
 
@@ -33,8 +33,8 @@ Universal StatusPublisher
    ▼
 Relay HTTPS ── blob opaco ──► Universal StatusReader
                                   │
-                                  ├──► iOS
-                                  └──► caché App Group ──► widget
+                                  ├──► iOS ─────► caché App Group ──► widget
+                                  └──► Android ─► caché privada ────► widget
 ```
 
 ## Fronteras de confianza
@@ -61,7 +61,8 @@ La credencial pairing sólo puede reclamarse una vez; reader sólo puede leer. L
 | Linux Tauri   |          Sí |      Rust |                  — | Implementado                             |
 | iOS           |           — |         — |              Swift | Implementado                             |
 | Widget iOS    |           — |         — |       Caché de iOS | Implementado                             |
-| Android       |           — |         — | Kotlin/Java Crypto | Contrato y fixture listos; app pendiente |
+| Android       |           — |         — |             Kotlin | Implementado                             |
+| Widget Android|           — |         — | Caché de Android   | Implementado                             |
 
 Un futuro companion Android también podría implementar publisher sin cambiar el servidor ni el formato del QR.
 
@@ -82,7 +83,7 @@ Las opciones de hosting, el estado real de cada adaptador y el cálculo de capac
 
 ## Actualización móvil
 
-El transporte universal ya resuelve Windows/Linux/macOS → iOS sin Apple ID compartido. En la versión actual iOS obtiene el snapshot al abrir o actualizar manualmente y después recarga el widget desde App Group.
+El transporte universal ya resuelve Windows/Linux/macOS → iOS y Android sin una cuenta compartida. En la versión actual cada app móvil obtiene el snapshot al abrir o actualizar manualmente y después recarga su widget desde una caché privada local.
 
 Para refresco casi inmediato en segundo plano se añadirá una capa de señalización:
 

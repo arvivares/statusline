@@ -17,6 +17,9 @@ DerivedData/
 *.pem
 *.pfx
 *.mobileprovision
+*.jks
+*.keystore
+keystore.properties
 
 # Desktop frontend and Rust build output
 StatuslineDesktop/node_modules/
@@ -30,6 +33,13 @@ StatuslineRelay/node_modules/
 StatuslineRelay/coverage/
 StatuslineRelay/.wrangler/
 StatuslineRelay/.dev.vars
+
+# Android build state and local SDK configuration
+StatuslineAndroid/.gradle/
+StatuslineAndroid/local.properties
+StatuslineAndroid/app/build/
+StatuslineAndroid/build/
+StatuslineAndroid/.android-sdk/
 
 # Original Windows companion import (the maintained source is StatuslineDesktop)
 statustlinecompanionwin/

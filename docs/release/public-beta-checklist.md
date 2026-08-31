@@ -10,7 +10,7 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 - [ ] Verify first launch, tray reopen, refresh, close-to-tray and quit.
 - [ ] Verify macOS stays out of the Dock and Command-Tab while remaining available from the menu bar.
 - [ ] Verify a clean signed install accesses its relay Keychain item without repeated prompts; separately test migration from an unsigned prerelease build.
-- [ ] Pair clean Windows, Linux and macOS publishers with iOS and verify the same snapshot in the app and widget.
+- [ ] Pair clean Windows, Linux and macOS publishers with iOS and Android; verify the same snapshot in both apps and widgets.
 - [ ] Confirm no account shared between desktop and mobile is requested.
 
 ## Universal relay
@@ -24,6 +24,28 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 - [ ] Review provider observability, edge protection, rate limits, backups and retention against PRIVACY.md.
 - [ ] Review the [relay capacity calculation](../relay/deployment-options.md#cálculo-para-la-versión-actual), reserve at least 20%, and configure usage alerts.
 - [ ] Run the shared AES-GCM fixture against Rust, Swift and the Android client before shipping Android.
+
+## Android
+
+- [x] Build an installable debug APK with minSdk 23 and targetSdk 36.
+- [x] Run Android unit tests and Lint, including the shared AES-GCM fixture.
+- [x] Provide a clearly labeled local demo that updates both the app and widget without network access.
+- [x] Version the native Android project and produce a debug APK artifact in GitHub Actions.
+- [ ] Test bundled QR, deep-link and manual-paste pairing on a physical device; cover camera permission acceptance, denial and later revocation.
+- [ ] Test bundled QR and manual pairing on a device without Google Play services, and manual fallback on a device without a camera.
+- [ ] Verify the Android widget starts at 4×1 Compact, then test Small and Medium by resizing across the 110 dp height and 270 dp width boundaries; recheck after process/device restart.
+- [ ] Create an upload keystore, protect it in CI and build a signed release AAB/APK.
+- [ ] Complete Play Console Data safety, store listing and closed-track testing.
+
+## iOS / App Store
+
+- [x] Build the app and widget with deployment target iOS 17 using the current SDK.
+- [x] Bundle `PrivacyInfo.xcprivacy` in both executables with the App Group UserDefaults reason.
+- [x] Provide public Privacy and Support links inside the app.
+- [x] Limit the first release, widget and test targets to iPhone only.
+- [ ] Create or allow Xcode to manage an Apple Distribution identity and App Store profiles.
+- [ ] Archive a signed Release build and upload it to TestFlight.
+- [ ] Complete App Privacy, age rating, DSA trader status, screenshots and Review Notes.
 
 ## Windows signing
 
@@ -57,8 +79,9 @@ Until these checks pass, the generated DMG and PKG are private test artifacts, n
 
 ## Policy and support
 
-- [ ] Review [PRIVACY.md](../../PRIVACY.md) against the deployed relay behavior and hosting provider.
-- [ ] Confirm [SUPPORT.md](../../SUPPORT.md) points to the intended public support channel.
+- [x] Review [PRIVACY.md](../../PRIVACY.md) against the deployed relay behavior and hosting provider.
+- [x] Publish the current policy and support documents as tracker-free HTTPS pages.
+- [x] Confirm [SUPPORT.md](../../SUPPORT.md) and the public support page use founder@inmerzion.io.
 - [ ] Decide whether background mobile updates are required for beta; document foreground-only refresh if APNs/FCM is deferred.
 - [ ] Choose the source-code and binary distribution license. The repository currently grants no explicit open-source license.
 - [ ] Add the chosen license or EULA to package metadata and release notes.

@@ -10,6 +10,7 @@ export default {
   ): Promise<Response> {
     return createRelayApp({
       store: new D1RelayStore(env.DB),
+      clientRateLimiter: env.CLIENT_RATE_LIMITER,
       createRateLimiter: env.CREATE_RATE_LIMITER,
       channelRateLimiter: env.CHANNEL_RATE_LIMITER,
     })(request);

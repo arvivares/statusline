@@ -1,0 +1,227 @@
+name: Android artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: Build signed APK and AAB release artifacts
+        required: true
+        default: false
+        type: boolean
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/android.yml"
+      - "StatuslineAndroid/**"
+      - "protocol/**"
+  push:
+    branches:
+      - main
+    tags:
+      - "android-v*"
+    paths:
+      - ".github/workflows/android.yml"
+      - "StatuslineAndroid/**"
+      - "protocol/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ANDROID_BUILD_TOOLS: "36.0.0"
+  ANDROID_PLATFORM: "android-36"
+  JAVA_VERSION: "17"
+
+jobs:
+  validate:
+    name: Tests, lint and debug APK
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Install Android SDK components
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;$ANDROID_PLATFORM" \
+            "build-tools;$ANDROID_BUILD_TOOLS"
+
+      - name: Test, lint and build debug APK
+        shell: bash
+        env:
+          REPOSITORY_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
+        working-directory: StatuslineAndroid
+        run: |
+          set -euo pipefail
+          relay_args=()
+          if [[ -n "$REPOSITORY_RELAY_BASE_URL" ]]; then
+            if [[ ! "$REPOSITORY_RELAY_BASE_URL" =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$ ]]; then
+              echo "STATUSLINE_RELAY_BASE_URL must be an HTTPS origin without a path." >&2
+              exit 1
+            fi
+            relay_args+=("-PSTATUSLINE_RELAY_BASE_URL=$REPOSITORY_RELAY_BASE_URL")
+          fi
+          ./gradlew --no-daemon \
+            testDebugUnitTest \
+            lintRelease \
+            assembleDebug \
+            "${relay_args[@]}"
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-android-debug-${{ github.run_number }}-${{ github.sha }}
+          path: StatuslineAndroid/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  release:
+    name: Signed release APK and AAB
+    needs: validate
+    if: >-
+      startsWith(github.ref, 'refs/tags/android-v') ||
+      (github.event_name == 'workflow_dispatch' && inputs.release)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Install Android SDK components
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;$ANDROID_PLATFORM" \
+            "build-tools;$ANDROID_BUILD_TOOLS"
+
+      - name: Require release configuration
+        shell: bash
+        env:
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          REPOSITORY_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -n "$ANDROID_UPLOAD_KEYSTORE_BASE64" ]] || missing+=(ANDROID_UPLOAD_KEYSTORE_BASE64)
+          [[ -n "$ANDROID_UPLOAD_KEYSTORE_PASSWORD" ]] || missing+=(ANDROID_UPLOAD_KEYSTORE_PASSWORD)
+          [[ -n "$ANDROID_UPLOAD_KEY_ALIAS" ]] || missing+=(ANDROID_UPLOAD_KEY_ALIAS)
+          [[ -n "$ANDROID_UPLOAD_KEY_PASSWORD" ]] || missing+=(ANDROID_UPLOAD_KEY_PASSWORD)
+          [[ -n "$REPOSITORY_RELAY_BASE_URL" ]] || missing+=(STATUSLINE_RELAY_BASE_URL)
+          if (( ${#missing[@]} > 0 )); then
+            printf 'Missing Android release configuration: %s\n' "${missing[*]}" >&2
+            exit 1
+          fi
+          if [[ ! "$REPOSITORY_RELAY_BASE_URL" =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$ ]]; then
+            echo "STATUSLINE_RELAY_BASE_URL must be an HTTPS origin without a path." >&2
+            exit 1
+          fi
+
+      - name: Decode temporary upload keystore
+        id: keystore
+        shell: bash
+        env:
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          keystore_path="$RUNNER_TEMP/statusline-upload.jks"
+          printf '%s' "$ANDROID_UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$keystore_path"
+          [[ -s "$keystore_path" ]]
+          chmod 600 "$keystore_path"
+          echo "path=$keystore_path" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed release artifacts
+        shell: bash
+        env:
+          REPOSITORY_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
+          STATUSLINE_ANDROID_KEYSTORE_FILE: ${{ steps.keystore.outputs.path }}
+          STATUSLINE_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+          STATUSLINE_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          STATUSLINE_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        working-directory: StatuslineAndroid
+        run: |
+          set -euo pipefail
+          ./gradlew --no-daemon \
+            testDebugUnitTest \
+            lintRelease \
+            assembleRelease \
+            bundleRelease \
+            "-PSTATUSLINE_RELAY_BASE_URL=$REPOSITORY_RELAY_BASE_URL"
+
+      - name: Verify and collect release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="StatuslineAndroid/app/build/outputs/apk/release/app-release.apk"
+          aab="StatuslineAndroid/app/build/outputs/bundle/release/app-release.aab"
+          mapping="StatuslineAndroid/app/build/outputs/mapping/release/mapping.txt"
+          artifact_dir="$RUNNER_TEMP/statusline-android-release"
+
+          [[ -s "$apk" && -s "$aab" && -s "$mapping" ]]
+          "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign" -c -P 16 -v 4 "$apk"
+          "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" \
+            verify --verbose --print-certs "$apk"
+          jarsigner -verify -verbose -certs "$aab"
+
+          mkdir -p "$artifact_dir"
+          cp "$apk" "$artifact_dir/statusline-release.apk"
+          cp "$aab" "$artifact_dir/statusline-release.aab"
+          cp "$mapping" "$artifact_dir/mapping.txt"
+          cd "$artifact_dir"
+          sha256sum statusline-release.apk statusline-release.aab mapping.txt > SHA256SUMS.txt
+
+      - name: Upload signed release artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-android-release-${{ github.run_number }}-${{ github.sha }}
+          path: ${{ runner.temp }}/statusline-android-release
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Remove temporary upload keystore
+        if: always()
+        shell: bash
+        run: |
+          KEYSTORE_PATH="$RUNNER_TEMP/statusline-upload.jks"
+          if [[ -n "$KEYSTORE_PATH" && -f "$KEYSTORE_PATH" ]]; then
+            rm -f -- "$KEYSTORE_PATH"
+          fi

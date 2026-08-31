@@ -15,10 +15,12 @@ El token del QR caduca a los diez minutos. Al reclamarlo se invalida y se interc
 
 1. Crea una base D1: `npx wrangler d1 create statusline-relay`.
 2. Sustituye el `database_id` de `wrangler.jsonc` por el identificador devuelto.
-3. Cambia los dos `namespace_id` de rate limiting si ya están usados en tu cuenta.
+3. Cambia los tres `namespace_id` de rate limiting si ya están usados en tu cuenta.
 4. Ejecuta `npm run db:migrate:remote` y luego `npm run deploy`.
 5. Para el plan gratuito, usa `https://statusline-relay.inmerzion.workers.dev` como `STATUSLINE_RELAY_BASE_URL` en todos los clientes. Antes de un lanzamiento crítico puede sustituirse por un dominio propio sin cambiar el protocolo.
 
-Los canales caducan tras 30 días sin publicaciones. El QR inicial sólo puede reclamarse durante 10 minutos. El cron diario elimina datos vencidos. Los límites incluidos son 10 canales nuevos/minuto por origen y 120 operaciones/minuto por credencial; para producción deben complementarse con reglas WAF y observabilidad.
+Los canales caducan tras 30 días sin publicaciones. El QR inicial sólo puede reclamarse durante 10 minutos. El cron diario elimina datos vencidos. Antes de parsear credenciales o consultar D1 se aplica un máximo de 60 solicitudes/minuto por origen usando un hash SHA-256 de la IP. Se mantienen límites adicionales de 10 canales nuevos/minuto por origen y 120 operaciones/minuto por credencial.
+
+La persistencia de invocation logs está desactivada en `wrangler.jsonc`; las métricas agregadas de plataforma siguen disponibles. Si un operador habilita logs persistentes debe revisar su contenido, muestreo, retención y política de privacidad. Los límites ejecutados dentro del Worker protegen D1, pero no evitan que la invocación cuente para la cuota de Workers. Para producción deben complementarse con un dominio propio y protección edge/WAF.
 
 La [guía de opciones y capacidad](../docs/relay/deployment-options.md) conserva el procedimiento completo de Cloudflare, calcula cuánto rinden sus 100.000 solicitudes diarias y describe el adaptador Linux autohospedado previsto. La opción Linux todavía no se distribuye como imagen o instalador.

@@ -1,6 +1,8 @@
 # Statusline Support
 
-Use [GitHub Issues](https://github.com/arvivares/statusline/issues) for reproducible bugs and installation problems. Before opening an issue, remove account identifiers, pairing links, QR codes, API keys, access tokens and private paths.
+Public support page: https://statusline-relay.inmerzion.workers.dev/support
+
+Email [founder@inmerzion.io](mailto:founder@inmerzion.io) for reproducible bugs, installation problems and privacy questions. Before sending a report, remove account identifiers, pairing links, QR codes, API keys, access tokens and private paths.
 
 ## Codex CLI not found on Windows
 
@@ -44,6 +46,10 @@ Statusline detects common standalone, Homebrew, npm, Volta, NVM, FNM, asdf and m
 6. If the channel expired or was deleted, disconnect both sides and pair again.
 
 The same flow works regardless of whether the publisher runs on Windows, Linux or macOS. It does not depend on the Apple ID used by the devices.
+
+## Review or explore Android without a desktop
+
+Use `VIEW DEMO` in Relay Control. Statusline creates a clearly labeled local sample for the app and widget without contacting the relay or using a Codex account. Use `CLEAR DEMO` to remove it; pairing a real device replaces it automatically.
 
 ## Useful diagnostic details
 

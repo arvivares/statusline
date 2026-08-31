@@ -25,7 +25,7 @@ npx wrangler d1 create statusline-relay
 ```
 
 1. Copia el `database_id` devuelto en `StatuslineRelay/wrangler.jsonc`.
-2. Sustituye los dos `namespace_id` de rate limiting si `41001` o `41002` ya están ocupados en la cuenta.
+2. Sustituye los tres `namespace_id` de rate limiting si `41001`, `41002` o `41003` ya están ocupados en la cuenta.
 3. Aplica la migración y publica el Worker:
 
 ```shell
@@ -37,6 +37,16 @@ npm run deploy
 5. Usa ese origen, sin rutas adicionales, como `STATUSLINE_RELAY_BASE_URL` en desktop, iOS y futuros clientes Android.
 
 El ejemplo mantenido por el proyecto es `https://statusline-relay.inmerzion.workers.dev`. Para producción conviene usar un dominio propio estable, por ejemplo `https://relay.example.com`, y apuntarlo al proveedor actual. Así se puede cambiar de infraestructura sin cambiar el origen que guardan los clientes; para conservar emparejamientos también habría que migrar los registros del relay.
+
+El adaptador Cloudflare aplica tres capas de límite:
+
+- 60 solicitudes por minuto y origen, antes de parsear canal o credencial y usando un hash SHA-256 de la IP;
+- 10 canales nuevos por minuto y origen;
+- 120 operaciones por minuto y credencial.
+
+La primera capa evita que la rotación de tokens falsos fuerce consultas ilimitadas a D1. Como los límites se evalúan dentro del Worker, una solicitud rechazada sigue siendo una invocación de Workers. Un dominio propio permite añadir reglas edge/WAF para proteger también esa cuota.
+
+`wrangler.jsonc` desactiva la persistencia de invocation logs. Cloudflare mantiene métricas agregadas; si un despliegue decide habilitar logs debe definir muestreo y retención, verificar que no se conserven cabeceras sensibles y actualizar su política de privacidad.
 
 Consulta también la guía general en [SETUP.md](../../SETUP.md).
 

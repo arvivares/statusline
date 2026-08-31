@@ -14,6 +14,14 @@
   ],
   "ratelimits": [
     {
+      "name": "CLIENT_RATE_LIMITER",
+      "namespace_id": "41003",
+      "simple": {
+        "limit": 60,
+        "period": 60,
+      },
+    },
+    {
       "name": "CREATE_RATE_LIMITER",
       "namespace_id": "41001",
       "simple": {
@@ -34,6 +42,6 @@
     "crons": ["17 3 * * *"],
   },
   "observability": {
-    "enabled": true,
+    "enabled": false,
   },
 }

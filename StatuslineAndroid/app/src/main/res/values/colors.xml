@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="data_plane_canvas">#0D0E0B</color>
+    <color name="data_plane_surface">#14150F</color>
+    <color name="data_plane_ink">#ECE9DC</color>
+    <color name="data_plane_muted">#9D9B89</color>
+    <color name="data_plane_line">#3B3929</color>
+    <color name="data_plane_grid">#0CEFC65A</color>
+    <color name="data_plane_signal">#EFC65A</color>
+    <color name="data_plane_critical">#F26856</color>
+</resources>

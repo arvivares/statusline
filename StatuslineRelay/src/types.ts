@@ -21,6 +21,7 @@ export interface D1Database {
 
 export interface Env {
   readonly DB: D1Database;
+  readonly CLIENT_RATE_LIMITER: RateLimitBinding;
   readonly CREATE_RATE_LIMITER: RateLimitBinding;
   readonly CHANNEL_RATE_LIMITER: RateLimitBinding;
 }

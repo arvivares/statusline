@@ -38,6 +38,11 @@ struct ContentView: View {
                         onRestoreExample: viewModel.restoreExample,
                         onUpdate: updateStatus
                     )
+
+                    StatuslineLegalFooter(
+                        privacyURL: StatuslinePublicPage.url(path: "privacy"),
+                        supportURL: StatuslinePublicPage.url(path: "support")
+                    )
                 }
                 .frame(maxWidth: 720)
                 .frame(maxWidth: .infinity)
@@ -87,6 +92,80 @@ struct ContentView: View {
         Task {
             await viewModel.refreshFromRelay()
         }
+    }
+}
+
+private enum StatuslinePublicPage {
+    private static let fallbackBaseURL = URL(
+        string: "https://statusline-relay.inmerzion.workers.dev"
+    )!
+
+    static func url(path: String) -> URL {
+        let baseURL = StatusRelayConfiguration.current()?.baseURL ?? fallbackBaseURL
+        return baseURL.appending(path: path)
+    }
+}
+
+private struct StatuslineLegalFooter: View {
+    let privacyURL: URL
+    let supportURL: URL
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                DataPlaneLabel(text: "PRIVACY / SUPPORT")
+                Spacer()
+                DataPlaneLabel(text: "INDEPENDENT", tint: DataPlaneTheme.ink)
+            }
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    DataPlaneExternalLink(
+                        title: "Privacidad",
+                        systemImage: "hand.raised",
+                        destination: privacyURL
+                    )
+                    DataPlaneExternalLink(
+                        title: "Soporte",
+                        systemImage: "questionmark.circle",
+                        destination: supportURL
+                    )
+                }
+
+                VStack(spacing: 10) {
+                    DataPlaneExternalLink(
+                        title: "Privacidad",
+                        systemImage: "hand.raised",
+                        destination: privacyURL
+                    )
+                    DataPlaneExternalLink(
+                        title: "Soporte",
+                        systemImage: "questionmark.circle",
+                        destination: supportURL
+                    )
+                }
+            }
+
+            Text("Statusline es una aplicación independiente y no está afiliada ni respaldada por OpenAI.")
+                .font(.caption)
+                .foregroundStyle(DataPlaneTheme.muted)
+        }
+        .padding(.horizontal, 2)
+        .accessibilityElement(children: .contain)
+    }
+}
+
+private struct DataPlaneExternalLink: View {
+    let title: String
+    let systemImage: String
+    let destination: URL
+
+    var body: some View {
+        Link(destination: destination) {
+            Label(title, systemImage: systemImage)
+        }
+        .buttonStyle(DataPlaneSecondaryButtonStyle())
+        .accessibilityHint("Abre una página web externa")
     }
 }
 
