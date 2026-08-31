@@ -307,6 +307,26 @@ for (const requiredWorkflowToken of [
     `release workflow is missing ${requiredWorkflowToken}`,
   );
 }
+const nativeBuildStep = workflow.match(
+  /\n      - name: Build native installers\n([\s\S]*?)(?=\n      - name: )/u,
+)?.[1];
+assert(nativeBuildStep, "release workflow is missing the native build step");
+assert(
+  !/^\s+APPLE_(?:ID|PASSWORD|API_KEY|API_ISSUER):/gmu.test(nativeBuildStep),
+  "native builds must inherit one selected notarization method instead of receiving empty Apple credential variables",
+);
+for (const selectedCredentialExport of [
+  'echo "APPLE_API_KEY=$APPLE_API_KEY"',
+  'echo "APPLE_API_ISSUER=$APPLE_API_ISSUER"',
+  'echo "APPLE_API_KEY_PATH=$api_key_path"',
+  'echo "APPLE_ID=$APPLE_ID"',
+  'echo "APPLE_PASSWORD=$APPLE_PASSWORD"',
+]) {
+  assert(
+    workflow.includes(selectedCredentialExport),
+    `release workflow is missing the selected credential export ${selectedCredentialExport}`,
+  );
+}
 for (const requiredSmokeToken of [
   "artifacts_run_id",
   "run-id:",

@@ -124,6 +124,8 @@ Para autenticar la notarización elige uno de estos métodos:
 1. Apple ID: secrets `APPLE_ID` y `APPLE_PASSWORD`. `APPLE_PASSWORD` debe ser una contraseña específica para apps, nunca la contraseña normal de la cuenta.
 2. App Store Connect API: una **Team Key** con rol `Developer` y los secrets `APPLE_API_KEY`, `APPLE_API_ISSUER` y `APPLE_API_PRIVATE_KEY`. No uses una Individual Key porque `notarytool` no las admite. El último secret contiene el texto completo del archivo `AuthKey_<KEY_ID>.p8`, que Apple permite descargar una sola vez.
 
+Si ambos métodos están configurados, el workflow prioriza la Team Key. Antes de invocar Tauri exporta únicamente el conjunto completo seleccionado; no propaga variables vacías del método alternativo porque Tauri podría interpretarlas como una solicitud de autenticación con Apple ID.
+
 El workflow importa ambos `.p12` en una keychain efímera. Tauri firma la app con Hardened Runtime, la envía al servicio notarial y grapa su ticket antes de crear el DMG. `productbuild` crea el PKG desde esa misma app y lo firma con Developer ID Installer. Finalmente, DMG y PKG se notarizan y grapan de forma independiente, y se validan con `codesign`, `pkgutil`, `stapler` y `spctl`. La keychain y los archivos decodificados se eliminan incluso si el job falla.
 
 Para comprobar las credenciales sin crear una release, ejecuta Actions → Desktop installers con:

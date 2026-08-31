@@ -306,21 +306,40 @@ jobs:
         run: ./scripts/prepare-windows-signing.ps1
         working-directory: StatuslineDesktop
 
-      - name: Prepare App Store Connect API key
+      - name: Prepare macOS notarization credentials
         if: runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
         shell: bash
         env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          if [[ -z "$APPLE_API_PRIVATE_KEY" ]]; then
+
+          if [[ -n "$APPLE_API_KEY" && -n "$APPLE_API_ISSUER" && -n "$APPLE_API_PRIVATE_KEY" ]]; then
+            api_key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY}.p8"
+            printf '%s' "$APPLE_API_PRIVATE_KEY" > "$api_key_path"
+            chmod 600 "$api_key_path"
+            {
+              echo "APPLE_API_KEY=$APPLE_API_KEY"
+              echo "APPLE_API_ISSUER=$APPLE_API_ISSUER"
+              echo "APPLE_API_KEY_PATH=$api_key_path"
+            } >> "$GITHUB_ENV"
             exit 0
           fi
-          api_key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY}.p8"
-          printf '%s' "$APPLE_API_PRIVATE_KEY" > "$api_key_path"
-          chmod 600 "$api_key_path"
-          echo "APPLE_API_KEY_PATH=$api_key_path" >> "$GITHUB_ENV"
+
+          if [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" ]]; then
+            {
+              echo "APPLE_ID=$APPLE_ID"
+              echo "APPLE_PASSWORD=$APPLE_PASSWORD"
+            } >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          echo "No complete macOS notarization credential set is available." >&2
+          exit 1
 
       - name: Prepare macOS Developer ID identities
         id: macos-signing
@@ -342,10 +361,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && vars.APPLE_SIGNING_IDENTITY || '' }}
           APPLE_TEAM_ID: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && vars.APPLE_TEAM_ID || '' }}
-          APPLE_ID: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && secrets.APPLE_ID || '' }}
-          APPLE_PASSWORD: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && secrets.APPLE_PASSWORD || '' }}
-          APPLE_API_KEY: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && secrets.APPLE_API_KEY || '' }}
-          APPLE_API_ISSUER: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && secrets.APPLE_API_ISSUER || '' }}
         with:
           projectPath: StatuslineDesktop
           args: ${{ matrix.build_args }} ${{ steps.signing.outputs.args }}
@@ -382,10 +397,6 @@ jobs:
         shell: bash
         env:
           APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: |
           set -euo pipefail
           dmg_path=$(find ./src-tauri/target/universal-apple-darwin/release/bundle/dmg -type f -name '*.dmg' -print -quit)
