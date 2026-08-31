@@ -27,6 +27,7 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 
 ## Android
 
+- [x] Select a Personal Play Console account owned by founder@inmerzion.io while Inmerzion remains a non-incorporated brand/project.
 - [x] Build an installable debug APK with minSdk 23 and targetSdk 36.
 - [x] Run Android unit tests and Lint, including the shared AES-GCM fixture.
 - [x] Provide a clearly labeled local demo that updates both the app and widget without network access.

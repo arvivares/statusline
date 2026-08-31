@@ -10,10 +10,15 @@ Validated on 1 September 2026. Recheck the linked store requirements immediately
 
 ## Google Play
 
-`founder@inmerzion.io` can own or administer the Play Console account because it is a Google/Google Workspace account. The email domain does not determine the legal account type:
+### Account selected
 
-- choose **Organization** only if Inmerzion is a legally registered business or organization and its legal details, website and D-U-N-S number can be verified;
-- otherwise choose **Personal** and use the legal identity requested by Google.
+Use a **Personal** Play Console account owned by `founder@inmerzion.io`.
+
+Decision recorded on 1 September 2026: Inmerzion is currently a brand/project with the `inmerzion.io` domain, not a legally registered organization, and has no D-U-N-S number. The public developer name can be **Inmerzion**, while account verification must use the owner's real legal identity and personal Google payments profile.
+
+If Inmerzion becomes a legal entity later, review Google's current account and app-transfer process before changing ownership. Do not create a second listing or register a different package name merely to change account type.
+
+### Current requirements
 
 Google currently charges a one-time USD 25 registration fee. New Personal accounts must also verify access to an Android device and complete a closed test with at least 12 continuously opted-in testers for 14 days before applying for production access.
 
