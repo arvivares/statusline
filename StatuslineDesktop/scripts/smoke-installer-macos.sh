@@ -2,13 +2,36 @@
 set -euo pipefail
 
 bundle_root=${1:?"Usage: smoke-installer-macos.sh <bundle-directory>"}
+require_trust=${STATUSLINE_REQUIRE_MACOS_TRUST:-false}
+if [[ "$require_trust" != true && "$require_trust" != false ]]; then
+  echo "STATUSLINE_REQUIRE_MACOS_TRUST must be true or false." >&2
+  exit 1
+fi
+
 dmg_files=()
 while IFS= read -r path; do
   dmg_files+=("$path")
 done < <(find "$bundle_root" -type f -name '*.dmg' -print)
 
+pkg_files=()
+while IFS= read -r path; do
+  pkg_files+=("$path")
+done < <(find "$bundle_root" -type f -name '*.pkg' -print)
+
 if [[ ${#dmg_files[@]} -ne 1 ]]; then
   echo "Expected one DMG in $bundle_root, found ${#dmg_files[@]}" >&2
+  exit 1
+fi
+if [[ ${#pkg_files[@]} -ne 1 ]]; then
+  echo "Expected one PKG in $bundle_root, found ${#pkg_files[@]}" >&2
+  exit 1
+fi
+
+hdiutil verify "${dmg_files[0]}"
+
+pkg_payload=$(pkgutil --payload-files "${pkg_files[0]}")
+if [[ "$pkg_payload" != *"Statusline Companion.app/Contents/MacOS/statusline-desktop"* ]]; then
+  echo "The PKG does not install the Statusline application bundle." >&2
   exit 1
 fi
 
@@ -25,6 +48,26 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p "$mount_point"
+
+if [[ "$require_trust" == true ]]; then
+  codesign --verify --strict --verbose=2 "${dmg_files[0]}"
+  xcrun stapler validate "${dmg_files[0]}"
+  spctl --assess \
+    --type open \
+    --context context:primary-signature \
+    --verbose=4 \
+    "${dmg_files[0]}"
+
+  pkg_signature=$(pkgutil --check-signature "${pkg_files[0]}" 2>&1)
+  echo "$pkg_signature"
+  if [[ "$pkg_signature" != *"Developer ID Installer:"* || "$pkg_signature" != *"Signed with a trusted timestamp"* ]]; then
+    echo "The PKG is missing its Developer ID Installer signature or trusted timestamp." >&2
+    exit 1
+  fi
+  xcrun stapler validate "${pkg_files[0]}"
+  spctl --assess --type install --verbose=4 "${pkg_files[0]}"
+fi
+
 hdiutil attach "${dmg_files[0]}" -readonly -nobrowse -mountpoint "$mount_point" >/dev/null
 mounted=true
 
@@ -38,6 +81,17 @@ fi
 if [[ ! -f "$icon_path" ]]; then
   echo "The macOS application icon is missing." >&2
   exit 1
+fi
+
+if [[ "$require_trust" == true ]]; then
+  codesign --verify --deep --strict --verbose=2 "$app_path"
+  signature_details=$(codesign --display --verbose=4 "$app_path" 2>&1)
+  if [[ "$signature_details" != *"Authority=Developer ID Application:"* ]]; then
+    echo "The app is not signed with a Developer ID Application identity." >&2
+    exit 1
+  fi
+  xcrun stapler validate "$app_path"
+  spctl --assess --type execute --verbose=4 "$app_path"
 fi
 
 architectures=$(lipo -archs "$binary_path")
@@ -69,4 +123,4 @@ node -e '
   }
 ' "$diagnostic_path" "$codex_fixture"
 
-echo "macOS DMG smoke passed: $architectures, icon present, Codex detected."
+echo "macOS DMG + PKG smoke passed: $architectures, icon present, Codex detected, trust required=$require_trust."

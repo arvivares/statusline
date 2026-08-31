@@ -2,6 +2,22 @@ name: Desktop installers
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Platformas que se deben compilar
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - windows
+          - linux
+          - macos
+      sign_macos:
+        description: Firmar y notarizar el DMG y PKG de macOS
+        required: true
+        default: false
+        type: boolean
   push:
     tags:
       - "desktop-v*"
@@ -26,6 +42,8 @@ jobs:
     timeout-minutes: 15
     outputs:
       version: ${{ steps.metadata.outputs.version }}
+      matrix: ${{ steps.metadata.outputs.matrix }}
+      signed_macos: ${{ steps.metadata.outputs.signed_macos }}
 
     steps:
       - name: Check out repository
@@ -37,6 +55,10 @@ jobs:
         run: |
           bash -n StatuslineDesktop/scripts/smoke-installers-linux.sh
           bash -n StatuslineDesktop/scripts/smoke-installer-macos.sh
+          bash -n StatuslineDesktop/scripts/prepare-macos-signing.sh
+          bash -n StatuslineDesktop/scripts/package-macos-pkg.sh
+          bash -n StatuslineDesktop/scripts/notarize-macos-artifact.sh
+          bash -n StatuslineDesktop/scripts/cleanup-macos-signing.sh
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -74,9 +96,43 @@ jobs:
       - name: Read release metadata
         id: metadata
         shell: bash
+        env:
+          DISPATCH_PLATFORM: ${{ inputs.platform || 'all' }}
+          DISPATCH_SIGN_MACOS: ${{ inputs.sign_macos || false }}
         run: |
+          set -euo pipefail
           version=$(node -p "require('./StatuslineDesktop/package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          case "$DISPATCH_PLATFORM" in
+            windows)
+              matrix='{"include":[{"name":"Windows x64","runner":"windows-latest","build_args":"--ci --bundles nsis,msi"}]}'
+              ;;
+            linux)
+              matrix='{"include":[{"name":"Linux x64","runner":"ubuntu-22.04","build_args":"--ci --bundles deb,rpm,appimage"}]}'
+              ;;
+            macos)
+              matrix='{"include":[{"name":"macOS universal","runner":"macos-latest","build_args":"--ci --target universal-apple-darwin --bundles dmg"}]}'
+              ;;
+            all)
+              matrix='{"include":[{"name":"Windows x64","runner":"windows-latest","build_args":"--ci --bundles nsis,msi"},{"name":"Linux x64","runner":"ubuntu-22.04","build_args":"--ci --bundles deb,rpm,appimage"},{"name":"macOS universal","runner":"macos-latest","build_args":"--ci --target universal-apple-darwin --bundles dmg"}]}'
+              ;;
+            *)
+              echo "Unsupported workflow platform: $DISPATCH_PLATFORM" >&2
+              exit 1
+              ;;
+          esac
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+          signed_macos=false
+          if [[ "$GITHUB_REF" == refs/tags/desktop-v* ]]; then
+            signed_macos=true
+          elif [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$DISPATCH_SIGN_MACOS" == true ]]; then
+            if [[ "$DISPATCH_PLATFORM" == macos || "$DISPATCH_PLATFORM" == all ]]; then
+              signed_macos=true
+            fi
+          fi
+          echo "signed_macos=$signed_macos" >> "$GITHUB_OUTPUT"
 
       - name: Validate universal relay endpoint
         shell: bash
@@ -101,27 +157,80 @@ jobs:
             exit 1
           fi
 
+      - name: Require macOS signing and notarization credentials
+        if: steps.metadata.outputs.signed_macos == 'true'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_INSTALLER_CERTIFICATE: ${{ secrets.APPLE_INSTALLER_CERTIFICATE }}
+          APPLE_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
+          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ vars.APPLE_INSTALLER_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$APPLE_CERTIFICATE" || -z "$APPLE_CERTIFICATE_PASSWORD" || -z "$APPLE_INSTALLER_CERTIFICATE" || -z "$APPLE_INSTALLER_CERTIFICATE_PASSWORD" || -z "$APPLE_SIGNING_IDENTITY" || -z "$APPLE_INSTALLER_SIGNING_IDENTITY" || -z "$APPLE_TEAM_ID" ]]; then
+            echo "Signed macOS builds require both Developer ID certificates, their passwords, both identities and the team ID." >&2
+            exit 1
+          fi
+
+          has_apple_id=false
+          if [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" ]]; then
+            has_apple_id=true
+          fi
+
+          has_api_key=false
+          if [[ -n "$APPLE_API_KEY" && -n "$APPLE_API_ISSUER" && -n "$APPLE_API_PRIVATE_KEY" ]]; then
+            has_api_key=true
+          fi
+
+          if [[ "$has_apple_id" != true && "$has_api_key" != true ]]; then
+            echo "Configure either APPLE_ID + APPLE_PASSWORD or the three App Store Connect API key secrets." >&2
+            exit 1
+          fi
+
+  prepare-release:
+    name: Prepare draft release
+    needs: validate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Create draft release for a tagged build
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STATUSLINE_VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --draft \
+            --generate-notes \
+            --title "Statusline Companion v$STATUSLINE_VERSION"
+
   installers:
     name: ${{ matrix.name }}
-    needs: validate
+    needs: [validate, prepare-release]
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
+    timeout-minutes: 75
     env:
       IS_RELEASE: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/desktop-v') }}
+      MACOS_SIGNED_BUILD: ${{ needs.validate.outputs.signed_macos }}
       STATUSLINE_VERSION: ${{ needs.validate.outputs.version }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: Windows x64
-            runner: windows-latest
-            build_args: --ci --bundles nsis,msi
-          - name: Linux x64
-            runner: ubuntu-22.04
-            build_args: --ci --bundles deb,rpm,appimage
-          - name: macOS universal
-            runner: macos-latest
-            build_args: --ci --target universal-apple-darwin --bundles dmg
+      matrix: ${{ fromJSON(needs.validate.outputs.matrix) }}
 
     steps:
       - name: Check out repository
@@ -197,14 +306,50 @@ jobs:
         run: ./scripts/prepare-windows-signing.ps1
         working-directory: StatuslineDesktop
 
+      - name: Prepare App Store Connect API key
+        if: runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$APPLE_API_PRIVATE_KEY" ]]; then
+            exit 0
+          fi
+          api_key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY}.p8"
+          printf '%s' "$APPLE_API_PRIVATE_KEY" > "$api_key_path"
+          chmod 600 "$api_key_path"
+          echo "APPLE_API_KEY_PATH=$api_key_path" >> "$GITHUB_ENV"
+
+      - name: Prepare macOS Developer ID identities
+        id: macos-signing
+        if: runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_INSTALLER_CERTIFICATE: ${{ secrets.APPLE_INSTALLER_CERTIFICATE }}
+          APPLE_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
+          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ vars.APPLE_INSTALLER_SIGNING_IDENTITY }}
+        run: bash ./scripts/prepare-macos-signing.sh
+        working-directory: StatuslineDesktop
+
       - name: Build native installers
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # action-v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && vars.APPLE_SIGNING_IDENTITY || '' }}
+          APPLE_TEAM_ID: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && vars.APPLE_TEAM_ID || '' }}
+          APPLE_ID: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && secrets.APPLE_ID || '' }}
+          APPLE_PASSWORD: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && secrets.APPLE_PASSWORD || '' }}
+          APPLE_API_KEY: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && secrets.APPLE_API_KEY || '' }}
+          APPLE_API_ISSUER: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && secrets.APPLE_API_ISSUER || '' }}
         with:
           projectPath: StatuslineDesktop
           args: ${{ matrix.build_args }} ${{ steps.signing.outputs.args }}
-          tagName: ${{ env.IS_RELEASE == 'true' && github.ref_name || '' }}
+          tagName: ${{ env.IS_RELEASE == 'true' && runner.os != 'macOS' && github.ref_name || '' }}
           releaseName: ${{ env.IS_RELEASE == 'true' && 'Statusline Companion v__VERSION__' || '' }}
           releaseBody: ${{ env.IS_RELEASE == 'true' && 'Beta de Statusline Companion para Windows, Linux y macOS. Verifica los instaladores con SHA256SUMS.txt antes de usarlos.' || '' }}
           releaseDraft: ${{ env.IS_RELEASE == 'true' }}
@@ -212,8 +357,44 @@ jobs:
           retryAttempts: 0
           uploadUpdaterJson: false
           uploadUpdaterSignatures: false
-          uploadWorkflowArtifacts: true
+          uploadWorkflowArtifacts: ${{ runner.os != 'macOS' }}
           workflowArtifactNamePattern: statusline-[version]-[platform]-[arch]-[bundle]
+
+      - name: Create macOS PKG
+        id: macos-pkg
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ vars.APPLE_INSTALLER_SIGNING_IDENTITY }}
+          STATUSLINE_REQUIRE_MACOS_TRUST: ${{ env.MACOS_SIGNED_BUILD }}
+        run: |
+          set -euo pipefail
+          app_path="./src-tauri/target/universal-apple-darwin/release/bundle/macos/Statusline Companion.app"
+          pkg_directory="./src-tauri/target/universal-apple-darwin/release/bundle/pkg"
+          bash ./scripts/package-macos-pkg.sh "$app_path" "$pkg_directory" "$STATUSLINE_VERSION"
+          pkg_path=$(find "$pkg_directory" -type f -name '*.pkg' -print -quit)
+          echo "path=$pkg_path" >> "$GITHUB_OUTPUT"
+        working-directory: StatuslineDesktop
+
+      - name: Notarize and staple macOS artifacts
+        id: macos-artifacts
+        if: runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          set -euo pipefail
+          dmg_path=$(find ./src-tauri/target/universal-apple-darwin/release/bundle/dmg -type f -name '*.dmg' -print -quit)
+          pkg_path="${{ steps.macos-pkg.outputs.path }}"
+          bash ./scripts/notarize-macos-artifact.sh "$dmg_path"
+          bash ./scripts/notarize-macos-artifact.sh "$pkg_path"
+          echo "dmg-path=$dmg_path" >> "$GITHUB_OUTPUT"
+          echo "pkg-path=$pkg_path" >> "$GITHUB_OUTPUT"
+        working-directory: StatuslineDesktop
 
       - name: Diagnose WiX linker failure
         if: failure() && runner.os == 'Windows'
@@ -271,11 +452,41 @@ jobs:
         run: bash ./scripts/smoke-installers-linux.sh ./src-tauri/target/release/bundle
         working-directory: StatuslineDesktop
 
-      - name: Smoke test macOS DMG
+      - name: Smoke test macOS DMG and PKG
         if: runner.os == 'macOS'
         shell: bash
+        env:
+          STATUSLINE_REQUIRE_MACOS_TRUST: ${{ env.MACOS_SIGNED_BUILD }}
         run: bash ./scripts/smoke-installer-macos.sh ./src-tauri/target/universal-apple-darwin/release/bundle
         working-directory: StatuslineDesktop
+
+      - name: Upload macOS DMG artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-dmg
+          path: StatuslineDesktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload macOS PKG artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-pkg
+          path: StatuslineDesktop/src-tauri/target/universal-apple-darwin/release/bundle/pkg/*.pkg
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach notarized macOS installers to draft release
+        if: runner.os == 'macOS' && env.IS_RELEASE == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release upload "$GITHUB_REF_NAME"
+          "${{ steps.macos-artifacts.outputs.dmg-path }}"
+          "${{ steps.macos-artifacts.outputs.pkg-path }}"
+          --clobber
 
       - name: Remove temporary Windows signing material
         if: always() && runner.os == 'Windows' && env.IS_RELEASE == 'true'
@@ -285,6 +496,20 @@ jobs:
           -Thumbprint '${{ steps.signing.outputs.thumbprint }}'
           -PfxPath '${{ steps.signing.outputs.pfx-path }}'
           -ConfigPath '${{ steps.signing.outputs.config-path }}'
+        working-directory: StatuslineDesktop
+
+      - name: Remove temporary App Store Connect key
+        if: always() && runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        run: |
+          if [[ -n "${APPLE_API_KEY_PATH:-}" && -f "$APPLE_API_KEY_PATH" ]]; then
+            rm -f "$APPLE_API_KEY_PATH"
+          fi
+
+      - name: Remove temporary macOS signing keychain
+        if: always() && runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        run: bash ./scripts/cleanup-macos-signing.sh '${{ steps.macos-signing.outputs.keychain-path }}'
         working-directory: StatuslineDesktop
 
   checksums:

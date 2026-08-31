@@ -12,8 +12,9 @@ El companion se empaqueta de forma nativa en GitHub Actions. No se usa cross-com
 | Linux x64       | RPM .rpm    | Fedora, RHEL y derivadas                                     |
 | Linux x64       | .AppImage   | Distribución portátil; requiere chmod +x                     |
 | macOS universal | .dmg        | Apple Silicon e Intel; instalación mediante arrastrar a Apps |
+| macOS universal | .pkg        | Instalador guiado y despliegues administrados                |
 
-NSIS incorpora el bootstrapper Evergreen de WebView2. El AppImage no incluye GStreamer porque Statusline no reproduce multimedia. El DMG contiene un único binario universal con arquitecturas arm64 y x86_64.
+NSIS incorpora el bootstrapper Evergreen de WebView2. El AppImage no incluye GStreamer porque Statusline no reproduce multimedia. DMG y PKG contienen la misma app universal con arquitecturas arm64 y x86_64; no requieren una segunda compilación.
 
 MSI no inicia Statusline desde Windows Installer y NSIS deja desmarcada por defecto la opción de abrirlo al finalizar. El usuario debe hacer el primer arranque desde Inicio o el acceso directo; esto garantiza que la detección de Codex reciba el entorno de su sesión y que WebView2 complete su inicialización antes de mostrar la ventana.
 
@@ -59,8 +60,9 @@ La URL se incorpora al binario, pero no concede acceso a ningún canal. Cada ins
 
 [desktop-installers.yml](../../.github/workflows/desktop-installers.yml) admite:
 
-1. Actions → Desktop installers → Run workflow para artefactos temporales, sin firma, de beta privada.
-2. Un tag desktop-v<versión> para una GitHub Release duradera en estado borrador. Los tags exigen firma Authenticode de Windows.
+1. Actions → Desktop installers → Run workflow para elegir `all`, `windows`, `linux` o `macos` y crear sólo los artefactos necesarios.
+2. Un build manual de `macos` con `sign_macos` activado para validar Developer ID y notarización sin recompilar Windows/Linux ni crear una release.
+3. Un tag desktop-v<versión> para una GitHub Release duradera en estado borrador. Los tags exigen las credenciales de firma de Windows y macOS.
 
 Ejemplo:
 
@@ -75,11 +77,12 @@ Después de compilar, el pipeline:
 
 - instala, abre y desinstala NSIS y MSI en Windows;
 - inspecciona RPM/AppImage e instala y elimina Debian en Linux;
-- monta el DMG, verifica arm64 + x86_64, icono y detección de Codex en macOS;
+- monta el DMG, inspecciona el payload del PKG y verifica arm64 + x86_64, icono y detección de Codex en macOS;
+- para builds macOS firmados, verifica Developer ID, Hardened Runtime, timestamps, tickets grapados y aceptación de Gatekeeper en la app, el DMG y el PKG;
 - genera SHA256SUMS.txt;
 - adjunta los artefactos a una release borrador para builds por tag.
 
-Si cambia sólo un smoke test, [desktop-installer-smoke.yml](../../.github/workflows/desktop-installer-smoke.yml) revalida artefactos existentes sin recompilar.
+Si cambia sólo un smoke test, [desktop-installer-smoke.yml](../../.github/workflows/desktop-installer-smoke.yml) revalida artefactos existentes sin recompilar. La opción `require_macos_trust` debe permanecer activada para releases públicas; sólo se desactiva al inspeccionar un build manual deliberadamente no firmado.
 
 ## Codex en el equipo del usuario
 
@@ -101,7 +104,36 @@ El runner importa temporalmente el certificado, firma aplicación/NSIS/MSI y val
 
 ## Firma de macOS
 
-El workflow ya construye y valida el DMG universal, pero todavía no configura Developer ID ni notarización. Un artefacto de prueba sin firma puede requerir clic secundario → Abrir. Antes de una beta pública se deben añadir credenciales de Apple, firmar la app y el DMG, enviarlos al servicio notarial y validar el ticket con stapler.
+Los builds públicos usan dos certificados: `Developer ID Application` para la app y el DMG, y `Developer ID Installer` para el PKG. Las claves privadas sólo se utilizan en CI para firmar; no se incluyen en la aplicación ni se entregan a los usuarios.
+
+Configura estas repository variables públicas:
+
+- `APPLE_SIGNING_IDENTITY`: nombre completo de la identidad Developer ID;
+- `APPLE_INSTALLER_SIGNING_IDENTITY`: nombre completo de la identidad Developer ID Installer;
+- `APPLE_TEAM_ID`: Team ID del Apple Developer Program.
+
+Configura estos repository secrets:
+
+- `APPLE_CERTIFICATE`: `.p12` de Developer ID codificado como base64 sin saltos de línea;
+- `APPLE_CERTIFICATE_PASSWORD`: contraseña con la que se exportó el `.p12`;
+- `APPLE_INSTALLER_CERTIFICATE`: `.p12` del certificado Installer codificado como base64;
+- `APPLE_INSTALLER_CERTIFICATE_PASSWORD`: contraseña del `.p12` Installer.
+
+Para autenticar la notarización elige uno de estos métodos:
+
+1. Apple ID: secrets `APPLE_ID` y `APPLE_PASSWORD`. `APPLE_PASSWORD` debe ser una contraseña específica para apps, nunca la contraseña normal de la cuenta.
+2. App Store Connect API: una **Team Key** con rol `Developer` y los secrets `APPLE_API_KEY`, `APPLE_API_ISSUER` y `APPLE_API_PRIVATE_KEY`. No uses una Individual Key porque `notarytool` no las admite. El último secret contiene el texto completo del archivo `AuthKey_<KEY_ID>.p8`, que Apple permite descargar una sola vez.
+
+El workflow importa ambos `.p12` en una keychain efímera. Tauri firma la app con Hardened Runtime, la envía al servicio notarial y grapa su ticket antes de crear el DMG. `productbuild` crea el PKG desde esa misma app y lo firma con Developer ID Installer. Finalmente, DMG y PKG se notarizan y grapan de forma independiente, y se validan con `codesign`, `pkgutil`, `stapler` y `spctl`. La keychain y los archivos decodificados se eliminan incluso si el job falla.
+
+Para comprobar las credenciales sin crear una release, ejecuta Actions → Desktop installers con:
+
+```text
+platform: macos
+sign_macos: true
+```
+
+Los runs manuales con `sign_macos: false` permanecen sin firma y sólo sirven como artefactos privados. Ningún `.p12`, `.p8` o archivo decodificado debe añadirse al repositorio.
 
 ## Publicación
 

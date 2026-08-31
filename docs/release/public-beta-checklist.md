@@ -36,18 +36,19 @@ Tagged builds fail before compilation when any required signing value is missing
 
 ## macOS signing and notarization
 
-- [ ] Acquire a Developer ID Application certificate for the publishing team.
-- [ ] Configure CI signing without exporting long-lived plaintext credentials.
-- [ ] Notarize the universal app and DMG, staple the ticket and validate with spctl.
+- [x] Acquire a Developer ID Application certificate for the publishing team.
+- [x] Acquire a Developer ID Installer certificate for the publishing team.
+- [x] Configure CI signing with encrypted repository secrets and an App Store Connect Team Key.
+- [ ] Notarize the universal app, DMG and PKG, staple their tickets and validate with Gatekeeper.
 - [ ] Install on clean Apple Silicon and Intel Macs without bypassing Gatekeeper.
 
-Until these checks pass, the generated DMG is a private unsigned test artifact, not a public macOS release.
+Until these checks pass, the generated DMG and PKG are private test artifacts, not a public macOS release.
 
 ## Distribution integrity
 
-- [ ] Confirm all six installers are attached to one draft GitHub Release.
+- [ ] Confirm all seven installers are attached to one draft GitHub Release.
 - [ ] Verify every asset against SHA256SUMS.txt after downloading it.
-- [ ] Review the automated NSIS, MSI, Debian, RPM, AppImage and universal DMG smoke-test logs.
+- [ ] Review the automated NSIS, MSI, Debian, RPM, AppImage, universal DMG and PKG smoke-test logs.
 - [ ] Install and uninstall each package manually on a clean target system.
 
 ## Policy and support

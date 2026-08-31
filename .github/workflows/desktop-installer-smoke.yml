@@ -17,6 +17,11 @@ on:
           - linux
           - macos
           - all
+      require_macos_trust:
+        description: Require Developer ID, notarization and Gatekeeper acceptance
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   actions: read
@@ -116,16 +121,18 @@ jobs:
         shell: bash
         run: bash -n StatuslineDesktop/scripts/smoke-installer-macos.sh
 
-      - name: Download macOS installer
+      - name: Download macOS installers
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: statusline-*-darwin-universal-dmg
+          pattern: statusline-*-darwin-universal-*
           path: downloaded-installers
           merge-multiple: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ inputs.artifacts_run_id }}
 
-      - name: Smoke test macOS DMG
+      - name: Smoke test macOS DMG and PKG
         shell: bash
+        env:
+          STATUSLINE_REQUIRE_MACOS_TRUST: ${{ inputs.require_macos_trust }}
         run: bash ./scripts/smoke-installer-macos.sh ../downloaded-installers
         working-directory: StatuslineDesktop

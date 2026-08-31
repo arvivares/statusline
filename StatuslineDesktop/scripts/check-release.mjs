@@ -78,6 +78,10 @@ const smokeWorkflow = readText(
 );
 const windowsSmokeScript = readText("scripts/smoke-installers-windows.ps1");
 const macosSmokeScript = readText("scripts/smoke-installer-macos.sh");
+const macosSigningScript = readText("scripts/prepare-macos-signing.sh");
+const macosPackageScript = readText("scripts/package-macos-pkg.sh");
+const macosNotarizationScript = readText("scripts/notarize-macos-artifact.sh");
+const macosSigningCleanupScript = readText("scripts/cleanup-macos-signing.sh");
 const windowsMsiTemplate = readText(
   "src-tauri/windows/statusline-per-user.wxs",
 );
@@ -214,6 +218,10 @@ for (const relativePath of [
   "scripts/smoke-installers-windows.ps1",
   "scripts/smoke-installers-linux.sh",
   "scripts/smoke-installer-macos.sh",
+  "scripts/prepare-macos-signing.sh",
+  "scripts/package-macos-pkg.sh",
+  "scripts/notarize-macos-artifact.sh",
+  "scripts/cleanup-macos-signing.sh",
   "scripts/prepare-windows-signing.ps1",
   "scripts/cleanup-windows-signing.ps1",
   "src-tauri/windows/statusline-per-user.wxs",
@@ -240,8 +248,25 @@ assert(
   macosSmokeScript.includes("lipo -archs") &&
     macosSmokeScript.includes("arm64") &&
     macosSmokeScript.includes("x86_64") &&
-    macosSmokeScript.includes("--statusline-codex-diagnostic"),
-  "macOS smoke tests must verify the universal DMG and Codex discovery",
+    macosSmokeScript.includes("--statusline-codex-diagnostic") &&
+    macosSmokeScript.includes("pkgutil --payload-files") &&
+    macosSmokeScript.includes("Developer ID Installer:"),
+  "macOS smoke tests must verify the universal DMG, PKG and Codex discovery",
+);
+assert(
+  macosSigningScript.includes("APPLE_CERTIFICATE") &&
+    macosSigningScript.includes("APPLE_INSTALLER_CERTIFICATE") &&
+    macosSigningScript.includes("security create-keychain") &&
+    macosSigningCleanupScript.includes("security delete-keychain"),
+  "macOS signing must use an ephemeral keychain containing both Developer ID identities",
+);
+assert(
+  macosPackageScript.includes("productbuild") &&
+    macosPackageScript.includes("APPLE_INSTALLER_SIGNING_IDENTITY") &&
+    macosNotarizationScript.includes("notarytool submit") &&
+    macosNotarizationScript.includes("stapler staple") &&
+    macosNotarizationScript.includes("--type install"),
+  "macOS packaging must sign and notarize both distributable formats",
 );
 
 const actionReferences = [workflow, smokeWorkflow].flatMap((contents) =>
@@ -259,6 +284,9 @@ for (const requiredWorkflowToken of [
   "WINDOWS_CERTIFICATE",
   "WINDOWS_CERTIFICATE_PASSWORD",
   "WINDOWS_TIMESTAMP_URL",
+  "APPLE_CERTIFICATE",
+  "APPLE_INSTALLER_CERTIFICATE",
+  "APPLE_INSTALLER_SIGNING_IDENTITY",
   "STATUSLINE_RELAY_BASE_URL",
   "Validate universal relay service",
   "db:migrate:local",
@@ -268,6 +296,8 @@ for (const requiredWorkflowToken of [
   "smoke-installers-windows.ps1",
   "smoke-installers-linux.sh",
   "smoke-installer-macos.sh",
+  "package-macos-pkg.sh",
+  "notarize-macos-artifact.sh",
   "universal-apple-darwin",
   "generate-checksums.mjs",
   "SHA256SUMS.txt",
@@ -326,5 +356,5 @@ if (releaseTag) {
 }
 
 console.log(
-  `Release preflight passed: ${expectedProductName} ${version} (Windows + Linux + macOS).`,
+  `Release preflight passed: ${expectedProductName} ${version} (Windows + Linux + macOS DMG/PKG).`,
 );
