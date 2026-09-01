@@ -68,7 +68,7 @@ Un futuro companion Android también podría implementar publisher sin cambiar e
 
 ## Relay
 
-StatuslineRelay separa el núcleo de protocolo y la persistencia. El adaptador desplegado actualmente es un Worker con D1; un contenedor Linux con almacenamiento intercambiable está planificado:
+El relay de `services/relay` separa el núcleo de protocolo y la persistencia. El adaptador desplegado actualmente es un Worker con D1; un contenedor Linux con almacenamiento intercambiable está planificado:
 
 - no mantiene cuentas de usuario;
 - almacena un único ciphertext por canal;

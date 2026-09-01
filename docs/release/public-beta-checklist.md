@@ -16,7 +16,7 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 ## Universal relay
 
 - [ ] Choose a supported production adapter. The current release supports Cloudflare Workers + D1; do not select Linux until its container is implemented and validated.
-- [ ] Deploy StatuslineRelay with a public HTTPS hostname and verify GET /health.
+- [ ] Deploy `services/relay` with a public HTTPS hostname and verify GET /health.
 - [ ] For Cloudflare, apply all remote D1 migrations and inspect both Worker requests and D1 row metrics.
 - [ ] Set the STATUSLINE_RELAY_BASE_URL repository variable and the matching Xcode Release build setting.
 - [ ] Verify QR expiry, single-use credential rotation, replay rejection, channel expiry and publisher deletion.
@@ -94,8 +94,8 @@ Until these checks pass, the generated DMG and PKG are private test artifacts, n
 - [x] Publish the current policy and support documents as tracker-free HTTPS pages.
 - [x] Confirm [SUPPORT.md](../../SUPPORT.md) and the public support page use founder@inmerzion.io.
 - [ ] Decide whether background mobile updates are required for beta; document foreground-only refresh if APNs/FCM is deferred.
-- [ ] Choose the source-code and binary distribution license. The repository currently grants no explicit open-source license.
-- [ ] Add the chosen license or EULA to package metadata and release notes.
+- [x] License the source code and binaries under MIT.
+- [x] Add the MIT license to the repository and package metadata.
 
 ## Publish
 

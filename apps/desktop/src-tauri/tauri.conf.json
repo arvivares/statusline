@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Statusline Companion",
+  "version": "0.1.6",
+  "identifier": "inmerzion.statusline.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "Statusline Companion",
+        "width": 400,
+        "height": 600,
+        "minWidth": 400,
+        "minHeight": 600,
+        "maxWidth": 400,
+        "maxHeight": 600,
+        "visible": false,
+        "focus": false,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "publisher": "Inmerzion",
+    "homepage": "https://github.com/arvivares/statusline",
+    "copyright": "Copyright © 2026 Inmerzion",
+    "category": "Utility",
+    "shortDescription": "Consulta tu cuota semanal de Codex con Statusline.",
+    "longDescription": "Statusline Companion consulta la sesión local de Codex y presenta la cuota semanal, el reinicio y el estado de la cuenta con la interfaz Data Plane.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

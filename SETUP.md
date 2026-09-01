@@ -18,13 +18,13 @@ La especificación estable está en [protocol/statusline-relay-v1.md](protocol/s
 
 | Componente                 | Plataformas              | Función                                            |
 | -------------------------- | ------------------------ | -------------------------------------------------- |
-| StatuslineDesktop          | Windows, Linux, macOS    | Lector local de Codex y publisher Rust             |
+| Desktop (`apps/desktop`)   | Windows, Linux, macOS    | Lector local de Codex y publisher Rust             |
 | StatuslineCompanion        | macOS                    | Lector local de Codex y publisher Swift            |
 | statusline                 | iOS                      | Reader Swift, emparejamiento y caché del widget    |
 | CodexStatusWidgetExtension | iOS                      | Presenta la última muestra validada del App Group  |
-| StatuslineAndroid          | Android 6.0 o posterior  | Reader Kotlin, pairing y caché privada             |
+| Android (`apps/android`)   | Android 6.0 o posterior  | Reader Kotlin, pairing y caché privada             |
 | Codex Data Plane           | Widget Android           | Presenta la última muestra validada por la app     |
-| StatuslineRelay            | HTTPS; proveedor neutral | Transporta blobs cifrados y aplica TTL/rate limits |
+| Relay (`services/relay`)   | HTTPS; proveedor neutral | Transporta blobs cifrados y aplica TTL/rate limits |
 
 Los widgets no realizan networking por su cuenta. En esta versión las apps móviles actualizan al abrirse o al pulsar actualizar; APNs/FCM queda como una mejora posterior para sincronización en segundo plano.
 
@@ -34,7 +34,7 @@ El adaptador disponible actualmente es Cloudflare Workers + D1. La arquitectura 
 
 ### Opción A: Cloudflare Workers + D1
 
-Desde StatuslineRelay:
+Desde `services/relay`:
 
 ```shell
 npm ci
@@ -43,7 +43,7 @@ npm run check
 npx wrangler d1 create statusline-relay
 ```
 
-1. Copia el identificador de D1 devuelto por Wrangler en database_id dentro de StatuslineRelay/wrangler.jsonc.
+1. Copia el identificador de D1 devuelto por Wrangler en `services/relay/wrangler.jsonc`.
 2. Si tu cuenta ya usa los namespace_id 41001, 41002 o 41003, reemplázalos por valores libres.
 3. Aplica la migración y despliega:
 
@@ -99,7 +99,7 @@ La URL no es un secreto. Los secretos por dispositivo se generan después de ins
 
 En Android, `VIEW DEMO` carga una muestra local marcada como `DEMO` tanto en la app como en el widget. No crea canales, no usa red y no requiere una cuenta de Codex; sirve para revisión y capturas de tienda.
 
-Desde StatuslineDesktop, las comprobaciones rápidas son:
+Desde `apps/desktop`, las comprobaciones rápidas son:
 
 ```shell
 npm ci
@@ -108,7 +108,7 @@ npm run check
 npm run release:check
 ```
 
-Desde StatuslineRelay:
+Desde `services/relay`:
 
 ```shell
 npm ci
@@ -116,13 +116,13 @@ npm test
 npm run check
 ```
 
-Desde StatuslineAndroid:
+Desde `apps/android`:
 
 ```shell
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-GitHub Actions repite esas validaciones para cada cambio relevante y conserva el APK debug como artefacto. Los tags `android-v*` generan además el APK y AAB de publicación cuando están configurados la upload key y sus cuatro secretos; consulta [StatuslineAndroid/README.md](StatuslineAndroid/README.md#artefactos-de-github-actions).
+GitHub Actions repite esas validaciones para cada cambio relevante y conserva el APK debug como artefacto. Los tags `android-v*` generan además el APK y AAB de publicación cuando están configurados la upload key y sus cuatro secretos; consulta [apps/android/README.md](apps/android/README.md#artefactos-de-github-actions).
 
 ## Antes de publicar
 

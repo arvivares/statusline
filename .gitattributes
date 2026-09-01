@@ -1,2 +1,2 @@
-StatuslineAndroid/gradlew text eol=lf
-StatuslineAndroid/gradlew.bat text eol=crlf
+apps/android/gradlew text eol=lf
+apps/android/gradlew.bat text eol=crlf

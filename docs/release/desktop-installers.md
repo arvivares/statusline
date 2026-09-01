@@ -20,7 +20,7 @@ MSI no inicia Statusline desde Windows Installer y NSIS deja desmarcada por defe
 
 ## Validación local económica
 
-Desde StatuslineDesktop:
+Desde `apps/desktop`:
 
 ```shell
 npm ci
@@ -28,7 +28,7 @@ npm run release:check
 cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 ```
 
-Desde StatuslineRelay:
+Desde `services/relay`:
 
 ```shell
 npm ci

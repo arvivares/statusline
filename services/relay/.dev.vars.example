@@ -1,0 +1,4 @@
+# Copy this file to .dev.vars only when the Worker needs local runtime secrets.
+# Statusline Relay currently has no runtime secret variables: D1 and rate-limit
+# bindings are configured in wrangler.jsonc, while Wrangler authentication stays
+# in its own user profile or in CLOUDFLARE_* shell variables.

@@ -13,7 +13,7 @@ on:
       - main
     paths:
       - ".github/workflows/android.yml"
-      - "StatuslineAndroid/**"
+      - "apps/android/**"
       - "protocol/**"
   push:
     branches:
@@ -22,7 +22,7 @@ on:
       - "android-v*"
     paths:
       - ".github/workflows/android.yml"
-      - "StatuslineAndroid/**"
+      - "apps/android/**"
       - "protocol/**"
 
 permissions:
@@ -71,7 +71,7 @@ jobs:
         shell: bash
         env:
           REPOSITORY_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
-        working-directory: StatuslineAndroid
+        working-directory: apps/android
         run: |
           set -euo pipefail
           relay_args=()
@@ -92,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: statusline-android-debug-${{ github.run_number }}-${{ github.sha }}
-          path: StatuslineAndroid/app/build/outputs/apk/debug/app-debug.apk
+          path: apps/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
@@ -176,7 +176,7 @@ jobs:
           STATUSLINE_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
           STATUSLINE_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           STATUSLINE_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
-        working-directory: StatuslineAndroid
+        working-directory: apps/android
         run: |
           set -euo pipefail
           ./gradlew --no-daemon \
@@ -190,13 +190,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          apk="StatuslineAndroid/app/build/outputs/apk/release/app-release.apk"
-          aab="StatuslineAndroid/app/build/outputs/bundle/release/app-release.aab"
-          mapping="StatuslineAndroid/app/build/outputs/mapping/release/mapping.txt"
+          apk="apps/android/app/build/outputs/apk/release/app-release.apk"
+          aab="apps/android/app/build/outputs/bundle/release/app-release.aab"
+          mapping="apps/android/app/build/outputs/mapping/release/mapping.txt"
           artifact_dir="$RUNNER_TEMP/statusline-android-release"
 
           [[ -s "$apk" && -s "$aab" && -s "$mapping" ]]
-          bash StatuslineAndroid/scripts/verify-r8-registrars.sh "$mapping"
+          bash apps/android/scripts/verify-r8-registrars.sh "$mapping"
           "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign" -c -P 16 -v 4 "$apk"
           "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" \
             verify --verbose --print-certs "$apk"

@@ -17,14 +17,14 @@ Statusline Relay Protocol v1 no depende del proveedor. Los clientes sólo necesi
 Es el adaptador incluido y validado actualmente. Puede desplegarse con el plan gratuito de Cloudflare:
 
 ```shell
-cd StatuslineRelay
+cd services/relay
 npm ci
 npm test
 npm run check
 npx wrangler d1 create statusline-relay
 ```
 
-1. Copia el `database_id` devuelto en `StatuslineRelay/wrangler.jsonc`.
+1. Copia el `database_id` devuelto en `services/relay/wrangler.jsonc`.
 2. Sustituye los tres `namespace_id` de rate limiting si `41001`, `41002` o `41003` ya están ocupados en la cuenta.
 3. Aplica la migración y publica el Worker:
 
@@ -120,7 +120,7 @@ Los `0` eventos de observabilidad de esa captura son esperables: el despliegue m
 
 ## Opción B: relay autohospedado en Linux
 
-El núcleo HTTP ya está separado del proveedor en `StatuslineRelay/src/app.ts` mediante la interfaz `RelayStore`. Falta publicar y validar el adaptador ejecutable para Linux; por eso esta opción todavía no debe anunciarse como instalable.
+El núcleo HTTP ya está separado del proveedor en `services/relay/src/app.ts` mediante la interfaz `RelayStore`. Falta publicar y validar el adaptador ejecutable para Linux; por eso esta opción todavía no debe anunciarse como instalable.
 
 La implementación prevista conserva exactamente el mismo protocolo y cifrado:
 

@@ -53,12 +53,12 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          bash -n StatuslineDesktop/scripts/smoke-installers-linux.sh
-          bash -n StatuslineDesktop/scripts/smoke-installer-macos.sh
-          bash -n StatuslineDesktop/scripts/prepare-macos-signing.sh
-          bash -n StatuslineDesktop/scripts/package-macos-pkg.sh
-          bash -n StatuslineDesktop/scripts/notarize-macos-artifact.sh
-          bash -n StatuslineDesktop/scripts/cleanup-macos-signing.sh
+          bash -n apps/desktop/scripts/smoke-installers-linux.sh
+          bash -n apps/desktop/scripts/smoke-installer-macos.sh
+          bash -n apps/desktop/scripts/prepare-macos-signing.sh
+          bash -n apps/desktop/scripts/package-macos-pkg.sh
+          bash -n apps/desktop/scripts/notarize-macos-artifact.sh
+          bash -n apps/desktop/scripts/cleanup-macos-signing.sh
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -66,20 +66,20 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: |
-            StatuslineDesktop/package-lock.json
-            StatuslineRelay/package-lock.json
+            apps/desktop/package-lock.json
+            services/relay/package-lock.json
 
       - name: Install frontend dependencies
         run: npm ci
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Install relay dependencies
         run: npm ci
-        working-directory: StatuslineRelay
+        working-directory: services/relay
 
       - name: Validate universal relay service
         run: npm run db:migrate:local && npm test && npm run check
-        working-directory: StatuslineRelay
+        working-directory: services/relay
 
       - name: Install pinned Rust formatter
         run: |
@@ -88,10 +88,10 @@ jobs:
 
       - name: Validate release metadata and frontend
         run: npm run release:check
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Check Rust formatting
-        run: cargo fmt --manifest-path StatuslineDesktop/src-tauri/Cargo.toml --all -- --check
+        run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
 
       - name: Read release metadata
         id: metadata
@@ -101,7 +101,7 @@ jobs:
           DISPATCH_SIGN_MACOS: ${{ inputs.sign_macos || false }}
         run: |
           set -euo pipefail
-          version=$(node -p "require('./StatuslineDesktop/package.json').version")
+          version=$(node -p "require('./apps/desktop/package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
           case "$DISPATCH_PLATFORM" in
@@ -240,7 +240,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $scripts = Get-ChildItem "StatuslineDesktop/scripts" -Filter "*.ps1" -File
+          $scripts = Get-ChildItem "apps/desktop/scripts" -Filter "*.ps1" -File
           foreach ($script in $scripts) {
             $tokens = $null
             $errors = $null
@@ -259,7 +259,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: StatuslineDesktop/package-lock.json
+          cache-dependency-path: apps/desktop/package-lock.json
 
       - name: Install pinned Rust toolchain
         run: |
@@ -293,7 +293,7 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Prepare Windows Authenticode signing
         id: signing
@@ -304,7 +304,7 @@ jobs:
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
           WINDOWS_TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL }}
         run: ./scripts/prepare-windows-signing.ps1
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Prepare macOS notarization credentials
         if: runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
@@ -353,7 +353,7 @@ jobs:
           APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
           APPLE_INSTALLER_SIGNING_IDENTITY: ${{ vars.APPLE_INSTALLER_SIGNING_IDENTITY }}
         run: bash ./scripts/prepare-macos-signing.sh
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Build native installers
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # action-v1.0.0
@@ -362,7 +362,7 @@ jobs:
           APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && vars.APPLE_SIGNING_IDENTITY || '' }}
           APPLE_TEAM_ID: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && vars.APPLE_TEAM_ID || '' }}
         with:
-          projectPath: StatuslineDesktop
+          projectPath: apps/desktop
           args: ${{ matrix.build_args }} ${{ steps.signing.outputs.args }}
           tagName: ${{ env.IS_RELEASE == 'true' && runner.os != 'macOS' && github.ref_name || '' }}
           releaseName: ${{ env.IS_RELEASE == 'true' && 'Statusline Companion v__VERSION__' || '' }}
@@ -389,7 +389,7 @@ jobs:
           bash ./scripts/package-macos-pkg.sh "$dmg_path" "$pkg_directory" "$STATUSLINE_VERSION"
           pkg_path=$(find "$pkg_directory" -type f -name '*.pkg' -print -quit)
           echo "path=$pkg_path" >> "$GITHUB_OUTPUT"
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Notarize and staple macOS artifacts
         id: macos-artifacts
@@ -405,14 +405,14 @@ jobs:
           bash ./scripts/notarize-macos-artifact.sh "$pkg_path"
           echo "dmg-path=$dmg_path" >> "$GITHUB_OUTPUT"
           echo "pkg-path=$pkg_path" >> "$GITHUB_OUTPUT"
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Diagnose WiX linker failure
         if: failure() && runner.os == 'Windows'
         continue-on-error: true
         shell: pwsh
         run: |
-          $buildPath = Resolve-Path "StatuslineDesktop/src-tauri/target/release/wix/x64"
+          $buildPath = Resolve-Path "apps/desktop/src-tauri/target/release/wix/x64"
           $wixPath = Join-Path $env:LOCALAPPDATA "tauri/WixTools314"
           $light = Join-Path $wixPath "light.exe"
           if (-not (Test-Path -LiteralPath $light -PathType Leaf)) {
@@ -438,8 +438,8 @@ jobs:
         shell: pwsh
         run: |
           $files = @(
-            Get-Item "StatuslineDesktop/src-tauri/target/release/statusline-desktop.exe"
-            Get-ChildItem "StatuslineDesktop/src-tauri/target/release/bundle" -Recurse -File -Include *.exe,*.msi
+            Get-Item "apps/desktop/src-tauri/target/release/statusline-desktop.exe"
+            Get-ChildItem "apps/desktop/src-tauri/target/release/bundle" -Recurse -File -Include *.exe,*.msi
           )
           if ($files.Count -lt 3) {
             throw "Expected the application, NSIS installer and MSI for signature verification."
@@ -455,13 +455,13 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/smoke-installers-windows.ps1 -BundleRoot ./src-tauri/target/release/bundle
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Smoke test Linux packages
         if: runner.os == 'Linux'
         shell: bash
         run: bash ./scripts/smoke-installers-linux.sh ./src-tauri/target/release/bundle
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Smoke test macOS DMG and PKG
         if: runner.os == 'macOS'
@@ -469,14 +469,14 @@ jobs:
         env:
           STATUSLINE_REQUIRE_MACOS_TRUST: ${{ env.MACOS_SIGNED_BUILD }}
         run: bash ./scripts/smoke-installer-macos.sh ./src-tauri/target/universal-apple-darwin/release/bundle
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Upload macOS DMG artifact
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-dmg
-          path: StatuslineDesktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          path: apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
           if-no-files-found: error
           retention-days: 30
 
@@ -485,7 +485,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-pkg
-          path: StatuslineDesktop/src-tauri/target/universal-apple-darwin/release/bundle/pkg/*.pkg
+          path: apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/pkg/*.pkg
           if-no-files-found: error
           retention-days: 30
 
@@ -507,7 +507,7 @@ jobs:
           -Thumbprint '${{ steps.signing.outputs.thumbprint }}'
           -PfxPath '${{ steps.signing.outputs.pfx-path }}'
           -ConfigPath '${{ steps.signing.outputs.config-path }}'
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
       - name: Remove temporary App Store Connect key
         if: always() && runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
@@ -521,7 +521,7 @@ jobs:
         if: always() && runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
         shell: bash
         run: bash ./scripts/cleanup-macos-signing.sh '${{ steps.macos-signing.outputs.keychain-path }}'
-        working-directory: StatuslineDesktop
+        working-directory: apps/desktop
 
   checksums:
     name: Release checksums
@@ -546,7 +546,7 @@ jobs:
           merge-multiple: true
 
       - name: Generate SHA-256 manifest
-        run: node StatuslineDesktop/scripts/generate-checksums.mjs release-assets SHA256SUMS.txt
+        run: node apps/desktop/scripts/generate-checksums.mjs release-assets SHA256SUMS.txt
 
       - name: Upload checksum artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
