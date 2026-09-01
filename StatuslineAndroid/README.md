@@ -73,6 +73,8 @@ Con las cuatro configuradas, genera el artefacto para Play App Signing:
 
 `bundleRelease` y `assembleRelease` fallan si la firma no está completa. Sólo para comprobar localmente R8 y recursos sin producir un artefacto publicable puede usarse `-PSTATUSLINE_ALLOW_UNSIGNED_RELEASE=true`.
 
+Release también ejecuta `scripts/verify-r8-registrars.sh` sobre `mapping.txt`. Este gate exige conservar los constructores públicos sin argumentos de los registrars de ML Kit que Firebase descubre por reflexión; evita que una optimización R8 vuelva a romper el escáner únicamente en builds distribuidos por Google Play.
+
 ## Flujo de uso
 
 1. En Statusline Companion crea un pairing nuevo.

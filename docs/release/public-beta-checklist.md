@@ -40,6 +40,8 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 
 The stable upload key is stored outside the repository and its four required values are protected as GitHub Actions secrets. Signed APK/AAB generation, checksums, APK alignment, artifact signature and temporary-key cleanup passed in workflow run [33498280582](https://github.com/arvivares/statusline/actions/runs/33498280582). The upload certificate SHA-256 fingerprint is `A7:8E:0D:AE:32:F8:63:02:D5:7D:D7:5F:13:7D:20:AD:BE:DE:2A:F7:03:EC:28:CF:26:A9:6B:2B:68:E4:15:6C`.
 
+Internal testing release `0.1.9` (`versionCode 5`) passed signed-artifact and R8 registrar verification in workflow run [33512410921](https://github.com/arvivares/statusline/actions/runs/33512410921). A physical SM-G950F upgraded from Google Play, opened the bundled camera reader without the previous ML Kit registrar crash and accepted a real Companion QR. The broader QR checklist remains open until deep-link, manual paste, permission denial/revocation and no-Play-services cases are also covered.
+
 ## iOS / App Store
 
 - [x] Build the app and widget with deployment target iOS 17 using the current SDK.

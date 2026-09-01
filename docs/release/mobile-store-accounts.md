@@ -34,7 +34,9 @@ The canonical Android application ID is `inmerzion.statusline`. Do not create a 
 
 As of 1 September 2026, the Personal developer account owned by `founder@inmerzion.io` is registered and its one-time fee has been paid. The Play Console application **Statusline** has been created with package name `inmerzion.statusline`.
 
-The first signed upload bundle is version `0.1.8` (`versionCode 4`). It was produced by workflow run [33498280582](https://github.com/arvivares/statusline/actions/runs/33498280582) with the stable upload key documented in the release checklist. Upload the `.aab`, not the debug APK, when creating the first Play testing release.
+The first signed upload bundle was version `0.1.8` (`versionCode 4`). It was produced by workflow run [33498280582](https://github.com/arvivares/statusline/actions/runs/33498280582) with the stable upload key documented in the release checklist.
+
+The current Internal testing release is `0.1.9` (`versionCode 5`). Workflow run [33512410921](https://github.com/arvivares/statusline/actions/runs/33512410921) produced the signed AAB/APK, checksums, R8 mapping and an automated ML Kit registrar-constructor check. Google Play made it available to internal testers on 1 September 2026. Upload the `.aab`, not the APK, to Play Console; keep the APK only for direct artifact validation.
 
 ## Apple App Store
 
