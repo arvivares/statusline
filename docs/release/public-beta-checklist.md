@@ -35,8 +35,10 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 - [ ] Test bundled QR, deep-link and manual-paste pairing on a physical device; cover camera permission acceptance, denial and later revocation.
 - [ ] Test bundled QR and manual pairing on a device without Google Play services, and manual fallback on a device without a camera.
 - [ ] Verify the Android widget starts at 4×1 Compact, then test Small and Medium by resizing across the 110 dp height and 270 dp width boundaries; recheck after process/device restart.
-- [ ] Create an upload keystore, protect it in CI and build a signed release AAB/APK.
+- [x] Create an upload keystore, protect it in CI and build a signed release AAB/APK.
 - [ ] Complete Play Console Data safety, store listing and closed-track testing.
+
+The stable upload key is stored outside the repository and its four required values are protected as GitHub Actions secrets. Signed APK/AAB generation, checksums, APK alignment, artifact signature and temporary-key cleanup passed in workflow run [33498280582](https://github.com/arvivares/statusline/actions/runs/33498280582). The upload certificate SHA-256 fingerprint is `A7:8E:0D:AE:32:F8:63:02:D5:7D:D7:5F:13:7D:20:AD:BE:DE:2A:F7:03:EC:28:CF:26:A9:6B:2B:68:E4:15:6C`.
 
 ## iOS / App Store
 

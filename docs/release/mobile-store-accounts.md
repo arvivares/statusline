@@ -30,6 +30,12 @@ Official references:
 
 The canonical Android application ID is `inmerzion.statusline`. Do not create a different Play Console package unless the product is intentionally being forked: package IDs cannot be casually renamed after publication.
 
+### Current account and app state
+
+As of 1 September 2026, the Personal developer account owned by `founder@inmerzion.io` is registered and its one-time fee has been paid. The Play Console application **Statusline** has been created with package name `inmerzion.statusline`.
+
+The first signed upload bundle is version `0.1.8` (`versionCode 4`). It was produced by workflow run [33498280582](https://github.com/arvivares/statusline/actions/runs/33498280582) with the stable upload key documented in the release checklist. Upload the `.aab`, not the debug APK, when creating the first Play testing release.
+
 ## Apple App Store
 
 The first release is **iPhone only**, including its widget. iPad remains a later product decision. The public contact and policy URLs above will be used in App Store Connect.
