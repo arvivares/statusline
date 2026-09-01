@@ -18,6 +18,7 @@ const pages: Readonly<Record<string, PublicPage>> = {
       <nav class="action-grid" aria-label="Public information">
         <a class="action" href="/privacy"><span>PRIVACY</span><strong>How data is handled</strong></a>
         <a class="action" href="/support"><span>SUPPORT</span><strong>Setup and troubleshooting</strong></a>
+        <a class="action" href="/delete-data"><span>DATA CONTROL</span><strong>Delete Statusline data</strong></a>
       </nav>
     `,
   },
@@ -50,6 +51,7 @@ const pages: Readonly<Record<string, PublicPage>> = {
         <h2>Retention and deletion</h2>
         <p>Pairing links expire after ten minutes. Channels expire after thirty days without a successful publication, and a daily task removes expired rows. Rate-limit state is scoped to 60-second windows and is not stored in the relay database.</p>
         <p>Disconnecting the desktop attempts to delete the remote channel and removes its local credential. Disconnecting the mobile reader removes its local credential and encryption key.</p>
+        <p>See <a href="/delete-data">Delete Statusline data</a> for step-by-step instructions and the complete retention details.</p>
       </section>
       <section>
         <h2>Questions</h2>
@@ -89,6 +91,44 @@ const pages: Readonly<Record<string, PublicPage>> = {
           <li>Codex Source origin, version and state.</li>
           <li>Relay hostname and state, never the full pairing URL.</li>
         </ul>
+      </section>
+      <section>
+        <h2>Delete your data</h2>
+        <p>Statusline has no user account. Follow the steps on the <a href="/delete-data">Statusline data deletion page</a> to remove local credentials and encrypted relay data, or email support for a deletion request.</p>
+      </section>
+    `,
+  },
+  "/delete-data": {
+    title: "Delete Statusline Data",
+    eyebrow: "STL / DATA CONTROL",
+    summary: "Remove local credentials and encrypted relay data",
+    content: `
+      <section>
+        <h2>No Statusline account</h2>
+        <p>Statusline does not create a user account and does not receive your Codex credentials, email address, prompts, source code or conversation history. A paired device stores only local relay credentials, an encryption key and the latest decrypted quota snapshot.</p>
+      </section>
+      <section>
+        <h2>Delete data from Android</h2>
+        <ol>
+          <li>Open Statusline and scroll to <strong>Relay Control</strong>.</li>
+          <li>Select <strong>Disconnect</strong> and confirm.</li>
+          <li>Statusline removes the reader credential, encryption key and cached quota snapshot from the device. You can also clear the local demo with <strong>Clear Demo</strong>.</li>
+        </ol>
+        <p>Uninstalling Statusline removes its normal local application data according to Android's application-storage behavior.</p>
+      </section>
+      <section>
+        <h2>Delete the encrypted relay channel</h2>
+        <ol>
+          <li>Open Statusline Companion on the paired Windows, Linux or macOS computer.</li>
+          <li>Open <strong>Universal Relay</strong> and select <strong>Disconnect</strong>.</li>
+          <li>The Companion attempts to delete the remote channel immediately, then removes its local publisher credential.</li>
+        </ol>
+        <p>If the publisher is unavailable, stop using the channel. Pairing links expire after ten minutes and channels are automatically deleted after thirty days without a successful publication.</p>
+      </section>
+      <section>
+        <h2>Request deletion or assistance</h2>
+        <p>Email <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> with the subject <strong>Statusline data deletion</strong>. State which device or relay channel you can no longer disconnect, but never send a pairing link, QR code, API key, access token, encryption key or Codex authentication file.</p>
+        <p>Statusline support can explain local removal and retention. Because the relay stores only random identifiers, hashed random credentials and opaque ciphertext, support cannot identify a channel from your name or email and cannot decrypt its contents. Inactive channel data is retained for no longer than thirty days after its last successful publication.</p>
       </section>
     `,
   },

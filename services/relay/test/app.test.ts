@@ -48,7 +48,7 @@ describe("Statusline universal relay", () => {
       channel: mustNotRun,
     });
 
-    for (const path of ["/", "/privacy", "/support"]) {
+    for (const path of ["/", "/privacy", "/support", "/delete-data"]) {
       const response = await app(new Request(`https://relay.test${path}`));
       expect(response.status).toBe(200);
       expect(response.headers.get("Content-Type")).toContain("text/html");

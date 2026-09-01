@@ -190,6 +190,8 @@ Para usar otro relay compatible:
 
 `VIEW DEMO` crea una muestra local claramente identificada y actualiza app + widget sin red, cuenta de Codex ni desktop.
 
+El [kit versionado de Google Play](apps/android/store/README.md) contiene la ficha, declaraciones, acceso para revisión y recursos gráficos. La versión `0.1.10` (`versionCode 6`) está enviada a revisión como prueba cerrada Alpha; el siguiente gate es mantener al menos 12 testers inscritos durante 14 días.
+
 ### iOS y macOS SwiftUI
 
 Abre [apps/apple/statusline.xcodeproj](apps/apple/statusline.xcodeproj) en Xcode. Configura `STATUSLINE_RELAY_BASE_URL` en Build Settings con el mismo origen usado por desktop y Android. La primera distribución de iOS está limitada a iPhone y requiere archive, firma y subida manual a TestFlight/App Store.
@@ -249,6 +251,8 @@ Consulta [Instaladores de Statusline Companion](docs/release/desktop-installers.
 
 [Android artifacts](.github/workflows/android.yml) ejecuta unit tests, Lint y genera un APK Debug. Un tag `android-v*` o un dispatch explícito de release añade APK y AAB firmados, mapping de R8 y checksums. El material de firma vive únicamente en GitHub Actions secrets.
 
+Google Play recibe el AAB; el APK firmado queda como artefacto de QA. El estado de cuenta, revisión y producción se mantiene en [Mobile store account decisions](docs/release/mobile-store-accounts.md).
+
 ### iOS
 
 iOS no se compila desde el pipeline actual. Archive, firma, TestFlight y App Store se realizan desde Xcode hasta incorporar una estrategia segura de firma en CI.
@@ -260,7 +264,7 @@ La [checklist de beta pública](docs/release/public-beta-checklist.md) concentra
 | Ruta                                  | Contenido                                                                                   |
 | ------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `apps/desktop/`                       | Companion Tauri para Windows, Linux y macOS                                                 |
-| `apps/android/`                       | App, QR scanner y widget nativos de Android                                                 |
+| `apps/android/`                       | App, QR scanner, widget y kit versionado de Google Play                                     |
 | [`apps/apple/`](apps/apple/README.md) | Proyecto Xcode y targets de iPhone, WidgetKit y macOS                                       |
 | `services/relay/`                     | Worker, D1, rate limits y páginas públicas                                                  |
 | `protocol/`                           | Especificación v1, fixtures y ejemplos interoperables                                       |

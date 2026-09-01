@@ -2,6 +2,8 @@
 
 Public support page: https://statusline-relay.inmerzion.workers.dev/support
 
+Public data deletion page: https://statusline-relay.inmerzion.workers.dev/delete-data
+
 Email [founder@inmerzion.io](mailto:founder@inmerzion.io) for reproducible bugs, installation problems and privacy questions. Before sending a report, remove account identifiers, pairing links, QR codes, API keys, access tokens and private paths.
 
 ## Codex CLI not found on Windows
@@ -50,6 +52,12 @@ The same flow works regardless of whether the publisher runs on Windows, Linux o
 ## Review or explore Android without a desktop
 
 Use `VIEW DEMO` in Relay Control. Statusline creates a clearly labeled local sample for the app and widget without contacting the relay or using a Codex account. Use `CLEAR DEMO` to remove it; pairing a real device replaces it automatically.
+
+## Delete Statusline data
+
+Statusline has no user account. On Android, use **Relay Control → Disconnect** to remove the reader credential, encryption key and cached quota snapshot. On the paired desktop Companion, use **Universal Relay → Disconnect** to request immediate deletion of the encrypted remote channel and remove the publisher credential.
+
+If the publisher is unavailable, inactive relay channels are automatically deleted after 30 days. The complete steps, retained data and support path are published at https://statusline-relay.inmerzion.workers.dev/delete-data.
 
 ## Useful diagnostic details
 

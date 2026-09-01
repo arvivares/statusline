@@ -38,7 +38,10 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 - [x] Record the unavailable no-camera hardware case as a beta waiver; retain the optional camera manifest declarations, `FEATURE_CAMERA_ANY` guard and tested manual fallback.
 - [ ] Verify the Android widget starts at 4×1 Compact, then test Small and Medium by resizing across the 110 dp height and 270 dp width boundaries; recheck after process/device restart.
 - [x] Create an upload keystore, protect it in CI and build a signed release AAB/APK.
-- [ ] Complete Play Console Data safety, store listing and closed-track testing.
+- [x] Complete Play Console Data safety, Advertising ID, app-content forms and the default `en-US` store listing.
+- [x] Submit signed `0.1.10` (`versionCode 6`) as closed Alpha release `0.1.10-alpha.1` in all available countries and regions.
+- [ ] Investigate and, when available, upload native debug symbols for bundled native code before production.
+- [ ] Have at least 12 testers opt in to Alpha continuously for 14 days, collect feedback, then apply for production access.
 
 The stable upload key is stored outside the repository and its four required values are protected as GitHub Actions secrets. Signed APK/AAB generation, checksums, APK alignment, artifact signature and temporary-key cleanup passed in workflow run [33498280582](https://github.com/arvivares/statusline/actions/runs/33498280582). The upload certificate SHA-256 fingerprint is `A7:8E:0D:AE:32:F8:63:02:D5:7D:D7:5F:13:7D:20:AD:BE:DE:2A:F7:03:EC:28:CF:26:A9:6B:2B:68:E4:15:6C`.
 
@@ -47,6 +50,8 @@ Internal testing release `0.1.9` (`versionCode 5`) passed signed-artifact and R8
 Deep-link and manual-paste routing were exercised with a syntactically valid, nonexistent QA channel. Both reached the claim endpoint and returned the expected channel-unavailable response without replacing live credentials. With `com.google.android.gms` in Android's `disabled-user` state, the bundled scanner opened CameraX, loaded `libbarhopper_v3.so` from the APK and decoded the same fake pairing QR; manual claim routing also reached the relay. The only GMS-related log was the expected `SERVICE_DISABLED` warning, with no fatal exception, registrar failure or bundled-recognition error. Google Play services was re-enabled and verified after each pass.
 
 No physical Android device reporting no camera hardware was available for beta QA. This is an accepted beta waiver, not a claimed physical pass: both camera features are declared optional, the app checks `FEATURE_CAMERA_ANY` before requesting permission, and the manual link fallback remains visible and was validated through the other permission and service-isolation cases.
+
+Google Play submission on 2 September 2026 included the versioned kit in `apps/android/store`, the public deletion URL, all 177 available countries/regions, the existing private tester list and release `0.1.10-alpha.1`. The submission entered review after the mandatory Advertising ID declaration was completed as **No**. Play's only bundle warning concerns optional native debug symbols; there are no blocking release errors.
 
 ## iOS / App Store
 

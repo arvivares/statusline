@@ -36,6 +36,8 @@ Cada runner crea su propia debug key temporal. Por eso un APK debug descargado d
 
 Un tag `android-v*` —o una ejecución manual con **release** activado— añade un APK y un AAB firmados, `mapping.txt` y `SHA256SUMS.txt`. Google Play recibe el AAB; el APK queda como artefacto instalable para validación directa.
 
+Los textos, declaraciones, instrucciones para revisión y recursos gráficos de Google Play están versionados en [`store/`](store/README.md). El kit actual corresponde a `0.1.10` (`versionCode 6`), enviado a la pista cerrada Alpha como `0.1.10-alpha.1` el 2 de septiembre de 2026.
+
 ## Firma de publicación
 
 Genera una upload key fuera del repositorio. `keytool` solicitará las contraseñas de forma interactiva para que no queden en el historial del shell:

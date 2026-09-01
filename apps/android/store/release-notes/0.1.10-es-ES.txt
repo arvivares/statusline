@@ -1,0 +1,1 @@
+Primera versión de prueba cerrada de Data Plane. Empareja con Statusline Companion mediante QR o enlace manual, consulta el límite semanal y su reinicio, prueba la demo local sin cuenta y añade el widget compacto 4 × 1. Incluye escaneo QR integrado y mejoras de fiabilidad para las builds de Play.
