@@ -196,6 +196,7 @@ jobs:
           artifact_dir="$RUNNER_TEMP/statusline-android-release"
 
           [[ -s "$apk" && -s "$aab" && -s "$mapping" ]]
+          bash StatuslineAndroid/scripts/verify-r8-registrars.sh "$mapping"
           "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign" -c -P 16 -v 4 "$apk"
           "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" \
             verify --verbose --print-certs "$apk"

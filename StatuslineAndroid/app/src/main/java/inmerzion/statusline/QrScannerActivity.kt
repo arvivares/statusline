@@ -63,11 +63,7 @@ class QrScannerActivity : ComponentActivity() {
     private val processingFrame = AtomicBoolean(false)
     private val resultDelivered = AtomicBoolean(false)
     private val scannerHint = mutableStateOf(DEFAULT_HINT)
-    private val barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(
-        BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .build(),
-    )
+    private var barcodeScanner: BarcodeScanner? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private var consecutiveScannerFailures = 0
 
@@ -82,6 +78,8 @@ class QrScannerActivity : ComponentActivity() {
             return
         }
 
+        if (!initializeBarcodeScanner()) return
+
         setContent {
             StatuslineTheme {
                 QrScannerScreen(
@@ -95,9 +93,33 @@ class QrScannerActivity : ComponentActivity() {
 
     override fun onDestroy() {
         cameraProvider?.unbindAll()
-        barcodeScanner.close()
+        barcodeScanner?.close()
+        barcodeScanner = null
         cameraExecutor.shutdown()
         super.onDestroy()
+    }
+
+    private fun initializeBarcodeScanner(): Boolean {
+        return runCatching {
+            BarcodeScanning.getClient(
+                BarcodeScannerOptions.Builder()
+                    .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+                    .build(),
+            )
+        }.fold(
+            onSuccess = { scanner ->
+                barcodeScanner = scanner
+                true
+            },
+            onFailure = { error ->
+                finishWithError(
+                    "No se pudo iniciar el lector QR. " +
+                        "Puedes pegar el vínculo manualmente.",
+                    error,
+                )
+                false
+            },
+        )
     }
 
     private fun bindCamera(previewView: PreviewView) {
@@ -155,7 +177,13 @@ class QrScannerActivity : ComponentActivity() {
             mediaImage,
             imageProxy.imageInfo.rotationDegrees,
         )
-        barcodeScanner.process(image)
+        val scanner = barcodeScanner
+        if (scanner == null) {
+            processingFrame.set(false)
+            imageProxy.close()
+            return
+        }
+        scanner.process(image)
             .addOnSuccessListener { barcodes ->
                 consecutiveScannerFailures = 0
                 val pairingValue = barcodes
