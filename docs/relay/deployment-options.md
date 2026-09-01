@@ -2,7 +2,7 @@
 
 **Estado:** Cloudflare Workers + D1 está implementado; el adaptador Linux autohospedado está diseñado pero todavía no se distribuye
 
-**Revisión de cuotas:** 2026-08-30
+**Revisión de cuotas y telemetría:** 2026-09-01
 
 Statusline Relay Protocol v1 no depende del proveedor. Los clientes sólo necesitan un origen HTTPS que implemente el [contrato v1](../../protocol/statusline-relay-v1.md). El QR no contiene el origen: todos los clientes emparejados deben haber sido compilados o configurados con el mismo `STATUSLINE_RELAY_BASE_URL`.
 
@@ -92,25 +92,31 @@ solicitudes/día ≈ publishers × horas activas × 24
 
 Para una beta gratuita, 138 publishers permanentemente activos es un techo de planificación razonable, no una promesa de capacidad. Configura alertas antes del 80 % y decide entre reducir la frecuencia, pasar a Workers Paid o desplegar el adaptador Linux antes de alcanzarlo.
 
-### Interpretación de 100 solicitudes en dos horas
+### Telemetría observada y sondeo de emparejamiento
 
-Tomando “dos horas” literalmente:
-
-```text
-100 / 2 = 50 solicitudes/hora
-50 × 24 = 1.200 solicitudes/día
-1.200 / 100.000 = 1,2 % del límite diario
-100.000 / 1.200 = 83,33 días equivalentes si el cupo fuera acumulativo
-```
-
-El último valor sólo ayuda a visualizar la tasa: el cupo no es una bolsa acumulativa. A ese ritmo, el proyecto puede funcionar indefinidamente dentro del plan gratuito porque cada día usaría aproximadamente 1.200 solicitudes y dejaría 98.800 disponibles. El tráfico podría crecer unas 83 veces antes de llegar a 100.000 en un solo día. Para agotar el cupo diario haría falta sostener unas 4.167 solicitudes/hora, o 69,4 por minuto, durante 24 horas.
-
-Si el intervalo observado no fue exactamente de dos horas, sustituye los valores en esta fórmula:
+El 1 de septiembre de 2026, una captura parcial del día realizada aproximadamente a las 17:27 UTC mostró:
 
 ```text
-proyección diaria = solicitudes observadas / horas observadas × 24
-porcentaje diario = proyección diaria / 100.000 × 100
+Solicitudes:       3.099 / 100.000 = 3,099 % de la cuota diaria
+Tiempo de CPU:     5.626 ms
+CPU media:         5.626 / 3.099 = 1,82 ms por solicitud
+Proyección lineal: 3.099 / 17,45 h × 24 h ≈ 4.262 solicitudes/día
+Margen proyectado: 100.000 / 4.262 ≈ 23,5 veces
 ```
+
+La cuota no es una bolsa acumulativa: se reinicia cada día. Si esa tasa diaria se mantuviera, el relay podría operar indefinidamente dentro del límite gratuito de solicitudes. La CPU media observada también está por debajo del [límite de 10 ms por invocación de Workers Free](https://developers.cloudflare.com/workers/platform/limits/#cpu-time), aunque el promedio no descarta invocaciones individuales excedidas; hay que revisar `Errors > Invocation Statuses` para detectar `exceededCpu`.
+
+La mayor parte de esa captura era coherente con las pruebas prolongadas del QR. La versión anterior consultaba el estado cada tres segundos mientras la pantalla de emparejamiento permaneciera abierta y no se detenía al vencer:
+
+```text
+20 solicitudes/minuto = 1.200 solicitudes/hora
+3.099 / 1.200 = 2,58 horas equivalentes de sondeo continuo
+1.200 × 24 = 28.800 solicitudes/día por una pantalla abierta
+```
+
+El publisher ahora consulta cada tres segundos durante los primeros 30 segundos, después cada 15 segundos, fusiona intentos simultáneos y se detiene localmente al vencer el QR. Para una ventana completa de diez minutos son como máximo 47 lecturas automáticas, frente a 200 anteriormente: una reducción del 76,5 %, además de eliminar el sondeo indefinido. Cerrar el panel o cambiar de pestaña pausa el temporizador; volver a la pestaña hace una única comprobación actualizada.
+
+Los `0` eventos de observabilidad de esa captura son esperables: el despliegue mantenido tiene `observability.enabled: false` para no persistir invocation logs. Las métricas agregadas de solicitudes y CPU siguen disponibles.
 
 ## Opción B: relay autohospedado en Linux
 

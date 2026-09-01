@@ -243,6 +243,7 @@ impl UniversalRelayState {
             Ok(None) => return RelayStatus::NotConfigured,
             Err(error) => return error_status(None, &error, false),
         };
+        let _guard = self.operation_lock.lock().await;
         match self.status_with_configuration(&configuration).await {
             Ok(status) => status,
             Err(error) => {

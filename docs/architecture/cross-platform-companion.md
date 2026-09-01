@@ -53,16 +53,16 @@ La credencial pairing sólo puede reclamarse una vez; reader sólo puede leer. L
 
 ## Cobertura por plataforma
 
-| Plataforma    | Codex local | Publisher |             Reader | Estado                                   |
-| ------------- | ----------: | --------: | -----------------: | ---------------------------------------- |
-| macOS SwiftUI |          Sí |     Swift |                  — | Implementado                             |
-| macOS Tauri   |          Sí |      Rust |                  — | Implementado                             |
-| Windows Tauri |          Sí |      Rust |                  — | Implementado                             |
-| Linux Tauri   |          Sí |      Rust |                  — | Implementado                             |
-| iOS           |           — |         — |              Swift | Implementado                             |
-| Widget iOS    |           — |         — |       Caché de iOS | Implementado                             |
-| Android       |           — |         — |             Kotlin | Implementado                             |
-| Widget Android|           — |         — | Caché de Android   | Implementado                             |
+| Plataforma     | Codex local | Publisher |           Reader | Estado       |
+| -------------- | ----------: | --------: | ---------------: | ------------ |
+| macOS SwiftUI  |          Sí |     Swift |                — | Implementado |
+| macOS Tauri    |          Sí |      Rust |                — | Implementado |
+| Windows Tauri  |          Sí |      Rust |                — | Implementado |
+| Linux Tauri    |          Sí |      Rust |                — | Implementado |
+| iOS            |           — |         — |            Swift | Implementado |
+| Widget iOS     |           — |         — |     Caché de iOS | Implementado |
+| Android        |           — |         — |           Kotlin | Implementado |
+| Widget Android |           — |         — | Caché de Android | Implementado |
 
 Un futuro companion Android también podría implementar publisher sin cambiar el servidor ni el formato del QR.
 

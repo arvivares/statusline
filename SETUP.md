@@ -22,8 +22,8 @@ La especificación estable está en [protocol/statusline-relay-v1.md](protocol/s
 | StatuslineCompanion        | macOS                    | Lector local de Codex y publisher Swift            |
 | statusline                 | iOS                      | Reader Swift, emparejamiento y caché del widget    |
 | CodexStatusWidgetExtension | iOS                      | Presenta la última muestra validada del App Group  |
-| StatuslineAndroid          | Android 6.0 o posterior | Reader Kotlin, pairing y caché privada              |
-| Codex Data Plane           | Widget Android           | Presenta la última muestra validada por la app      |
+| StatuslineAndroid          | Android 6.0 o posterior  | Reader Kotlin, pairing y caché privada             |
+| Codex Data Plane           | Widget Android           | Presenta la última muestra validada por la app     |
 | StatuslineRelay            | HTTPS; proveedor neutral | Transporta blobs cifrados y aplica TTL/rate limits |
 
 Los widgets no realizan networking por su cuenta. En esta versión las apps móviles actualizan al abrirse o al pulsar actualizar; APNs/FCM queda como una mejora posterior para sincronización en segundo plano.

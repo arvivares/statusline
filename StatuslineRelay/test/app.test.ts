@@ -14,10 +14,7 @@ interface TestLimiters {
   readonly channel?: RateLimitBinding;
 }
 
-function makeApp(
-  store = new MemoryRelayStore(),
-  limiters: TestLimiters = {},
-) {
+function makeApp(store = new MemoryRelayStore(), limiters: TestLimiters = {}) {
   let fill = 0;
   return {
     store,

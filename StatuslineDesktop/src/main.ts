@@ -4,6 +4,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import QRCode from "qrcode";
 
 import { parseRelayStatus, type RelayStatus } from "./relay";
+import { RelayStatusController, nextPairingPollAction } from "./relay-refresh";
 import {
   labelForCodexSource,
   parseCodexDiagnostic,
@@ -14,7 +15,6 @@ import { copyForState, type UsageState } from "./usage";
 
 const AUTO_REFRESH_MS = 5 * 60 * 1_000;
 const FOCUS_REFRESH_AGE_MS = 60 * 1_000;
-const PAIRING_POLL_MS = 3 * 1_000;
 const SEGMENT_COUNT = 20;
 
 const shell = requireElement("meter-shell", HTMLElement);
@@ -79,7 +79,6 @@ type SourceRuntime = Readonly<{
 }>;
 
 type RelayRuntime = Readonly<{
-  status: () => Promise<unknown>;
   create: () => Promise<unknown>;
   disconnect: () => Promise<unknown>;
   refreshUsage: () => Promise<void>;
@@ -87,11 +86,16 @@ type RelayRuntime = Readonly<{
 
 let sourceRuntime: SourceRuntime | null = null;
 let relayRuntime: RelayRuntime | null = null;
+let relayStatusController: RelayStatusController | null = null;
 let sourceActionPending = false;
 let relayActionPending = false;
 let sourceAutoOpened = false;
 let focusBeforeSourcePanel: HTMLElement | null = null;
 let currentPairingURI: string | null = null;
+let pairingPollTimer: number | null = null;
+let pairingPollURI: string | null = null;
+let pairingPollObservedAtMs: number | null = null;
+let pairingPollExpiresAt: number | null = null;
 
 const meterSegments = Array.from({ length: SEGMENT_COUNT }, () => {
   const segment = document.createElement("span");
@@ -126,11 +130,18 @@ function startTauriRuntime(): void {
     refreshUsage: () => controller.refresh(),
   };
   relayRuntime = {
-    status: () => invoke<unknown>("relay_status"),
     create: () => invoke<unknown>("create_relay_pairing"),
     disconnect: () => invoke<unknown>("disconnect_relay"),
     refreshUsage: () => controller.refresh(),
   };
+  relayStatusController = new RelayStatusController(
+    () => invoke<unknown>("relay_status"),
+    renderRelayStatus,
+    (error) => {
+      renderRelayFailure(errorMessage(error));
+      schedulePairingPoll();
+    },
+  );
   bindSourcePanel();
   void refreshSourceDiagnostic();
   void refreshRelayStatus();
@@ -148,16 +159,6 @@ function startTauriRuntime(): void {
   window.setInterval(() => {
     void controller.refresh();
   }, AUTO_REFRESH_MS);
-
-  window.setInterval(() => {
-    if (
-      !sourcePanel.hidden &&
-      !relaySettingsView.hidden &&
-      !relayPairing.hidden
-    ) {
-      void refreshRelayStatus();
-    }
-  }, PAIRING_POLL_MS);
 
   void listen("usage-refresh-requested", () => {
     void controller.refresh();
@@ -356,6 +357,7 @@ function closeSourcePanel(): void {
   if (sourcePanel.hidden) {
     return;
   }
+  pausePairingPoll();
   sourcePanel.hidden = true;
   settingsButton.setAttribute("aria-expanded", "false");
   focusBeforeSourcePanel?.focus();
@@ -375,6 +377,7 @@ function selectSettingsView(view: "source" | "relay", moveFocus = false): void {
     selectedTab.focus();
   }
   if (showSource) {
+    pausePairingPoll();
     void refreshSourceDiagnostic();
   } else {
     void refreshRelayStatus();
@@ -507,15 +510,11 @@ function setSourceControlsDisabled(disabled: boolean): void {
   sourceReset.disabled = disabled;
 }
 
-async function refreshRelayStatus(): Promise<void> {
-  if (relayRuntime === null || relayActionPending) {
-    return;
+function refreshRelayStatus(): Promise<void> {
+  if (relayStatusController === null || relayActionPending) {
+    return Promise.resolve();
   }
-  try {
-    renderRelayStatus(parseRelayStatus(await relayRuntime.status()));
-  } catch (error: unknown) {
-    renderRelayFailure(errorMessage(error));
-  }
+  return relayStatusController.refresh();
 }
 
 async function createRelayPairing(): Promise<void> {
@@ -554,6 +553,7 @@ async function disconnectRelay(): Promise<void> {
 }
 
 function renderRelayStatus(state: RelayStatus): void {
+  pausePairingPoll();
   const endpoint = state.status === "notConfigured" ? null : state.endpoint;
   relayEndpoint.textContent =
     endpoint === null ? "—" : compactEndpoint(endpoint);
@@ -608,6 +608,7 @@ function renderRelayStatus(state: RelayStatus): void {
       relayFeedback.textContent =
         "Scan this QR inside Statusline. Treat it like a password until the mobile device confirms pairing.";
       void renderPairingQRCode(state.pairingUri);
+      updatePairingPoll(state.pairingUri, state.pairingExpiresAt, Date.now());
       break;
     case "connected":
       relaySummary.dataset.status = "ready";
@@ -636,6 +637,11 @@ function renderRelayStatus(state: RelayStatus): void {
       relayFeedback.textContent = state.message;
       break;
   }
+  if (state.status !== "pairing") {
+    clearPairingPoll();
+    relayPairingLink.textContent = "";
+    relayQRCode.removeAttribute("src");
+  }
   relayStorageLabel();
   if (relayRuntime === null) {
     relayConnect.disabled = true;
@@ -644,6 +650,11 @@ function renderRelayStatus(state: RelayStatus): void {
 }
 
 function setRelayBusy(message: string): void {
+  clearPairingPoll();
+  currentPairingURI = null;
+  relayPairing.hidden = true;
+  relayPairingLink.textContent = "";
+  relayQRCode.removeAttribute("src");
   relaySummary.dataset.status = "reading";
   relayStatus.textContent = "WORKING";
   relayValue.textContent = "PAIRING";
@@ -665,6 +676,107 @@ function renderRelayFailure(message: string): void {
   relayDisconnect.hidden = true;
   relayConnect.disabled = relayRuntime === null;
   relayDisconnect.disabled = relayRuntime === null;
+}
+
+function updatePairingPoll(
+  pairingURI: string,
+  expiresAt: number,
+  observedAtMs: number,
+): void {
+  if (pairingPollURI !== pairingURI) {
+    pairingPollObservedAtMs = observedAtMs;
+  }
+  pairingPollURI = pairingURI;
+  pairingPollExpiresAt = expiresAt;
+  schedulePairingPoll();
+}
+
+function schedulePairingPoll(): void {
+  pausePairingPoll();
+  if (
+    !isPairingPollVisible() ||
+    pairingPollURI === null ||
+    pairingPollObservedAtMs === null ||
+    pairingPollExpiresAt === null
+  ) {
+    return;
+  }
+
+  const pairingURI = pairingPollURI;
+  const expiresAt = pairingPollExpiresAt;
+  const action = nextPairingPollAction(
+    Date.now(),
+    pairingPollObservedAtMs,
+    expiresAt,
+  );
+  if (action.kind === "expire" && action.delayMs === 0) {
+    renderExpiredPairing(pairingURI, expiresAt);
+    return;
+  }
+
+  pairingPollTimer = window.setTimeout(() => {
+    pairingPollTimer = null;
+    if (
+      pairingPollURI !== pairingURI ||
+      pairingPollExpiresAt !== expiresAt ||
+      !isPairingPollVisible()
+    ) {
+      return;
+    }
+    if (action.kind === "expire" || Date.now() >= expiresAt * 1_000) {
+      renderExpiredPairing(pairingURI, expiresAt);
+      return;
+    }
+    void refreshRelayStatus();
+  }, action.delayMs);
+}
+
+function isPairingPollVisible(): boolean {
+  return (
+    relayRuntime !== null &&
+    !relayActionPending &&
+    !sourcePanel.hidden &&
+    !relaySettingsView.hidden &&
+    !relayPairing.hidden &&
+    currentPairingURI === pairingPollURI
+  );
+}
+
+function pausePairingPoll(): void {
+  if (pairingPollTimer !== null) {
+    window.clearTimeout(pairingPollTimer);
+    pairingPollTimer = null;
+  }
+}
+
+function clearPairingPoll(): void {
+  pausePairingPoll();
+  pairingPollURI = null;
+  pairingPollObservedAtMs = null;
+  pairingPollExpiresAt = null;
+}
+
+function renderExpiredPairing(pairingURI: string, expiresAt: number): void {
+  if (pairingPollURI !== pairingURI || pairingPollExpiresAt !== expiresAt) {
+    return;
+  }
+  clearPairingPoll();
+  currentPairingURI = null;
+  relayPairing.hidden = true;
+  relayPairingLink.textContent = "";
+  relayQRCode.removeAttribute("src");
+  relaySummary.dataset.status = "offline";
+  relayStatus.textContent = "QR EXPIRED";
+  relayValue.textContent = "OFFLINE";
+  relayDetail.textContent = "PAIRING WINDOW CLOSED";
+  relayPublished.textContent = "NO ACTIVE QR";
+  relayConnect.textContent = "CREATE NEW PAIRING";
+  relayConnect.hidden = false;
+  relayConnect.disabled = relayRuntime === null || relayActionPending;
+  relayDisconnect.hidden = false;
+  relayDisconnect.disabled = relayRuntime === null || relayActionPending;
+  relayFeedback.textContent =
+    "This private QR has expired. Create a new pairing when the mobile device is ready.";
 }
 
 async function renderPairingQRCode(pairingURI: string): Promise<void> {

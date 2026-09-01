@@ -39,10 +39,7 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
         return publicPage;
       }
 
-      if (
-        request.method === "GET" &&
-        url.pathname === "/health"
-      ) {
+      if (request.method === "GET" && url.pathname === "/health") {
         return json({ status: "ok", protocolVersion: PROTOCOL_VERSION });
       }
 

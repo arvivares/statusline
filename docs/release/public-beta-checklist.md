@@ -23,6 +23,7 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 - [ ] Confirm publisher tokens, reader tokens, encryption keys and full pairing links never appear in logs or frontend IPC.
 - [ ] Review provider observability, edge protection, rate limits, backups and retention against PRIVACY.md.
 - [ ] Review the [relay capacity calculation](../relay/deployment-options.md#cálculo-para-la-versión-actual), reserve at least 20%, and configure usage alerts.
+- [x] Bound desktop pairing polling: 3 seconds for the first 30 seconds, 15 seconds afterwards, no overlapping status reads, pause while hidden and stop locally at QR expiry.
 - [ ] Run the shared AES-GCM fixture against Rust, Swift and the Android client before shipping Android.
 
 ## Android
@@ -34,7 +35,7 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 - [x] Version the native Android project and produce a debug APK artifact in GitHub Actions.
 - [x] Test bundled QR, deep-link and manual-paste pairing on a physical device; cover camera permission acceptance, denial and later revocation.
 - [x] Test bundled QR and manual pairing on a physical device while Google Play services is disabled.
-- [ ] Test the manual fallback on a device that reports no camera hardware.
+- [x] Record the unavailable no-camera hardware case as a beta waiver; retain the optional camera manifest declarations, `FEATURE_CAMERA_ANY` guard and tested manual fallback.
 - [ ] Verify the Android widget starts at 4×1 Compact, then test Small and Medium by resizing across the 110 dp height and 270 dp width boundaries; recheck after process/device restart.
 - [x] Create an upload keystore, protect it in CI and build a signed release AAB/APK.
 - [ ] Complete Play Console Data safety, store listing and closed-track testing.
@@ -43,7 +44,9 @@ The stable upload key is stored outside the repository and its four required val
 
 Internal testing release `0.1.9` (`versionCode 5`) passed signed-artifact and R8 registrar verification in workflow run [33512410921](https://github.com/arvivares/statusline/actions/runs/33512410921). Physical QA on 1 September 2026 used an SM-G950F running LineageOS, the Google Play build and a side-by-side `inmerzion.statusline.debug` install from the same workflow. The Play build accepted a real Companion QR. The isolated debug install covered camera acceptance, denial and revocation while the scanner was active; denial kept `OR PASTE` available, revocation stopped the scanner cleanly, and the next attempt requested permission again.
 
-Deep-link and manual-paste routing were exercised with a syntactically valid, nonexistent QA channel. Both reached the claim endpoint and returned the expected channel-unavailable response without replacing live credentials. With `com.google.android.gms` in Android's `disabled-user` state, the bundled scanner opened CameraX, loaded `libbarhopper_v3.so` from the APK and decoded the same fake pairing QR; manual claim routing also reached the relay. The only GMS-related log was the expected `SERVICE_DISABLED` warning, with no fatal exception, registrar failure or bundled-recognition error. Google Play services was re-enabled and verified after each pass. Hardware with no camera remains a separate open case.
+Deep-link and manual-paste routing were exercised with a syntactically valid, nonexistent QA channel. Both reached the claim endpoint and returned the expected channel-unavailable response without replacing live credentials. With `com.google.android.gms` in Android's `disabled-user` state, the bundled scanner opened CameraX, loaded `libbarhopper_v3.so` from the APK and decoded the same fake pairing QR; manual claim routing also reached the relay. The only GMS-related log was the expected `SERVICE_DISABLED` warning, with no fatal exception, registrar failure or bundled-recognition error. Google Play services was re-enabled and verified after each pass.
+
+No physical Android device reporting no camera hardware was available for beta QA. This is an accepted beta waiver, not a claimed physical pass: both camera features are declared optional, the app checks `FEATURE_CAMERA_ANY` before requesting permission, and the manual link fallback remains visible and was validated through the other permission and service-isolation cases.
 
 ## iOS / App Store
 
