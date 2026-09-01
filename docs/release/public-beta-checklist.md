@@ -32,15 +32,18 @@ This checklist is the release gate for a tagged desktop-v<version> build. Manual
 - [x] Run Android unit tests and Lint, including the shared AES-GCM fixture.
 - [x] Provide a clearly labeled local demo that updates both the app and widget without network access.
 - [x] Version the native Android project and produce a debug APK artifact in GitHub Actions.
-- [ ] Test bundled QR, deep-link and manual-paste pairing on a physical device; cover camera permission acceptance, denial and later revocation.
-- [ ] Test bundled QR and manual pairing on a device without Google Play services, and manual fallback on a device without a camera.
+- [x] Test bundled QR, deep-link and manual-paste pairing on a physical device; cover camera permission acceptance, denial and later revocation.
+- [x] Test bundled QR and manual pairing on a physical device while Google Play services is disabled.
+- [ ] Test the manual fallback on a device that reports no camera hardware.
 - [ ] Verify the Android widget starts at 4×1 Compact, then test Small and Medium by resizing across the 110 dp height and 270 dp width boundaries; recheck after process/device restart.
 - [x] Create an upload keystore, protect it in CI and build a signed release AAB/APK.
 - [ ] Complete Play Console Data safety, store listing and closed-track testing.
 
 The stable upload key is stored outside the repository and its four required values are protected as GitHub Actions secrets. Signed APK/AAB generation, checksums, APK alignment, artifact signature and temporary-key cleanup passed in workflow run [33498280582](https://github.com/arvivares/statusline/actions/runs/33498280582). The upload certificate SHA-256 fingerprint is `A7:8E:0D:AE:32:F8:63:02:D5:7D:D7:5F:13:7D:20:AD:BE:DE:2A:F7:03:EC:28:CF:26:A9:6B:2B:68:E4:15:6C`.
 
-Internal testing release `0.1.9` (`versionCode 5`) passed signed-artifact and R8 registrar verification in workflow run [33512410921](https://github.com/arvivares/statusline/actions/runs/33512410921). A physical SM-G950F upgraded from Google Play, opened the bundled camera reader without the previous ML Kit registrar crash and accepted a real Companion QR. The broader QR checklist remains open until deep-link, manual paste, permission denial/revocation and no-Play-services cases are also covered.
+Internal testing release `0.1.9` (`versionCode 5`) passed signed-artifact and R8 registrar verification in workflow run [33512410921](https://github.com/arvivares/statusline/actions/runs/33512410921). Physical QA on 1 September 2026 used an SM-G950F running LineageOS, the Google Play build and a side-by-side `inmerzion.statusline.debug` install from the same workflow. The Play build accepted a real Companion QR. The isolated debug install covered camera acceptance, denial and revocation while the scanner was active; denial kept `OR PASTE` available, revocation stopped the scanner cleanly, and the next attempt requested permission again.
+
+Deep-link and manual-paste routing were exercised with a syntactically valid, nonexistent QA channel. Both reached the claim endpoint and returned the expected channel-unavailable response without replacing live credentials. With `com.google.android.gms` in Android's `disabled-user` state, the bundled scanner opened CameraX, loaded `libbarhopper_v3.so` from the APK and decoded the same fake pairing QR; manual claim routing also reached the relay. The only GMS-related log was the expected `SERVICE_DISABLED` warning, with no fatal exception, registrar failure or bundled-recognition error. Google Play services was re-enabled and verified after each pass. Hardware with no camera remains a separate open case.
 
 ## iOS / App Store
 
