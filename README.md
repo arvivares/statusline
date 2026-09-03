@@ -5,6 +5,25 @@ Statusline muestra el estado de la cuota de Codex en Windows, Linux, macOS, iPho
 [![Desktop installers](https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml/badge.svg)](https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml)
 [![Android artifacts](https://github.com/arvivares/statusline/actions/workflows/android.yml/badge.svg)](https://github.com/arvivares/statusline/actions/workflows/android.yml)
 
+## Interfaz
+
+<table>
+  <tr>
+    <td align="center" width="64%">
+      <img src="docs/assets/readme/companion-data-plane.png" alt="Statusline Companion mostrando la cuota semanal, el reinicio y el estado del relay" width="420">
+    </td>
+    <td align="center" width="36%">
+      <img src="apps/apple/store/assets/phone/01-weekly-quota.png" alt="Statusline para iPhone mostrando la cuota semanal con la interfaz Data Plane" width="233">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Companion</strong><br><sub>Windows · Linux · macOS</sub></td>
+    <td align="center"><strong>Mobile</strong><br><sub>iPhone · Android</sub></td>
+  </tr>
+</table>
+
+La misma interfaz Data Plane mantiene cuota, reinicio y estado de sincronización consistentes entre escritorio, móvil y widgets nativos.
+
 El companion consulta la sesión local de Codex; no requiere una API key de OpenAI ni una cuenta compartida entre el ordenador y el teléfono. Cuando el usuario activa la sincronización, publica únicamente un snapshot mínimo cifrado que el relay no puede descifrar.
 
 ## Qué incluye
