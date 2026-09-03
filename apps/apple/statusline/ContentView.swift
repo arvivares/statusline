@@ -18,7 +18,10 @@ struct ContentView: View {
                             syncState: viewModel.relaySyncState
                         )
                     } else {
-                        WaitingForDesktopPanel(syncState: viewModel.relaySyncState)
+                        WaitingForDesktopPanel(
+                            syncState: viewModel.relaySyncState,
+                            onLoadDemo: loadLocalDemo
+                        )
                     }
 
                     UniversalRelayPanel(
@@ -79,9 +82,11 @@ struct ContentView: View {
     }
 
     private func updateStatus() {
-        Task {
-            await viewModel.updateStatus()
-        }
+        viewModel.updateStatus()
+    }
+
+    private func loadLocalDemo() {
+        viewModel.loadLocalDemo()
     }
 
     private func handleScenePhaseChange(_ oldPhase: ScenePhase, _ newPhase: ScenePhase) {
@@ -310,7 +315,10 @@ private struct DataPlaneQuotaValue: View {
         }
         .lineLimit(1)
         .minimumScaleFactor(0.7)
-        .accessibilityHidden(true)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Cuota semanal")
+        .accessibilityValue("\(status.remainingPercentage) por ciento restante")
+        .accessibilityIdentifier("weeklyQuotaValue")
     }
 }
 
@@ -339,6 +347,7 @@ private struct DataPlaneQuotaContext: View {
 
 private struct WaitingForDesktopPanel: View {
     let syncState: CodexRelaySyncState
+    let onLoadDemo: () -> Void
 
     var body: some View {
         DataPlaneSurface(cornerRadius: 20) {
@@ -368,6 +377,10 @@ private struct WaitingForDesktopPanel: View {
                     Text("Abre Statusline Companion en Windows, Linux o macOS, crea un vínculo y escanea su QR para recibir la primera muestra cifrada.")
                         .font(.subheadline)
                         .foregroundStyle(DataPlaneTheme.muted)
+
+                    Button("Ver demo local", systemImage: "play.rectangle.fill", action: onLoadDemo)
+                        .buttonStyle(DataPlaneSecondaryButtonStyle())
+                        .accessibilityHint("Carga una muestra local y actualiza el widget sin usar una cuenta, un ordenador ni la red.")
                 }
                 .padding(18)
 

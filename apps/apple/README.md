@@ -21,6 +21,9 @@ La distribución de iOS es manual en esta etapa: selecciona un Team válido, arc
 - `CodexStatusWidget/`: extensión WidgetKit.
 - `StatuslineCompanion/`: publisher nativo de macOS.
 - `Shared/`: protocolo, repositorio y tokens visuales compartidos.
+- `store/`: metadatos, respuestas de cumplimiento, instrucciones de revisión y capturas para App Store Connect.
 - `statusline.xcodeproj/`: configuración de targets, firma y builds.
 
 Consulta la [configuración universal](../../SETUP.md), la [arquitectura](../../docs/architecture/cross-platform-companion.md) y la [política de privacidad](../../PRIVACY.md).
+
+La fuente de verdad de la primera publicación iOS está en [`store/README.md`](store/README.md). Antes de cada envío deben actualizarse allí la versión, Review Notes, App Privacy, clasificación por edades, decisión DSA, capturas y resultados de TestFlight.

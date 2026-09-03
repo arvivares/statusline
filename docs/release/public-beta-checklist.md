@@ -59,9 +59,24 @@ Google Play submission on 2 September 2026 included the versioned kit in `apps/a
 - [x] Bundle `PrivacyInfo.xcprivacy` in both executables with the App Group UserDefaults reason.
 - [x] Provide public Privacy and Support links inside the app.
 - [x] Limit the first release, widget and test targets to iPhone only.
-- [ ] Create or allow Xcode to manage an Apple Distribution identity and App Store profiles.
-- [ ] Archive a signed Release build and upload it to TestFlight.
-- [ ] Complete App Privacy, age rating, DSA trader status, screenshots and Review Notes.
+- [x] Create or allow Xcode to manage an Apple Distribution identity and App Store profiles.
+- [x] Archive and locally export a signed App Store Release build.
+- [x] Prepare versioned App Privacy, age-rating, screenshots, listing copy and Review Notes.
+- [x] Create the App Store Connect app record, upload Release `1.0` (`1`) and complete physical TestFlight QA.
+- [x] Publish the Spanish listing, three iPhone screenshots, 4+ age rating and conservative App Privacy label; configure Free public distribution in all 175 countries or regions.
+- [x] Create the `Internal QA` TestFlight group, enable automatic distribution and add the account holder.
+- [x] Save the private TestFlight/App Review contact, no-login answer and review notes without versioning personal contact data.
+- [x] Create `External Beta`, add one external tester and submit build `1` to Beta App Review.
+- [x] Record and verify the account holder's **Non-trader under the DSA** declaration as Active for all 27 EU countries or regions.
+- [x] Reset the stale internal tester enrollment and verify that the account holder changes from `No Builds Available` to `Invited`.
+- [ ] Wait for Beta App Review approval and confirm that the external tester receives access.
+- [x] Complete physical TestFlight QA for real camera pairing, app/widget synchronization and persistence after reopening the app.
+- [x] Normalize the iOS icon with Android's Data Plane artwork, upload valid build `1.0` (`2`) and attach it to the App Store version.
+- [x] Install build `1.0` (`2`) on the physical iPhone and confirm normal operation.
+- [x] Submit version `1.0` (`2`) to App Review and verify **Waiting for Review**.
+- [ ] After approval, explicitly release the version from its current manual-release state.
+
+On 2 September 2026, all 11 unit tests passed on an iPhone 17 Pro running iOS 27 beta. The local-demo UI test passed on that device while preserving its real 71% paired snapshot; simulator UI tests also passed for the 70% local demo, scanner fallback and manual editor. Release `1.0` (`1`) was archived for `inmerzion.statusline`, exported with Apple Distribution profiles for the app and widget, installed on the same iPhone and launched successfully. App Store Connect processed it as Validated and assigned it to `Internal QA`. The private TestFlight and App Review contacts and review notes are saved. The account holder's Non-trader under the DSA declaration is Active for all 27 EU countries or regions. `External Beta` contains one tester, and build `1` remains Waiting for Review after submission to Beta App Review. On 3 September, removing the redundant individual assignment and re-adding the account holder to `Internal QA` changed the internal tester immediately from `No Builds Available` to `Invited`; the invitation was received, and real QR pairing, widget synchronization and persistence passed on the physical iPhone. The iOS icon was then normalized to the Android Data Plane artwork in icon-only build `1.0` (`2`). That archive and exported IPA passed local version, signature, profile, entitlement and icon checks; App Store Connect processed it as Valid and App Store Eligible. Build `2` was installed and confirmed operational on the physical iPhone, replaced build `1` on the product version, and submission `82a8811b-67a9-48b4-bd43-1cff4b741f7f` entered **Waiting for Review** on 3 September. Manual release remains selected.
 
 ## Windows signing
 

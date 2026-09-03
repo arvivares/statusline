@@ -1,0 +1,1 @@
+Test a clean iPhone install: open the local demo and confirm 70% in both the app and widget; paste a `/status` line; pair a real Companion by QR and manual link; refresh from the relay; deny and later grant camera access; disconnect; restart the app and phone; verify no-sample, waiting, synced and error states. Never include QR codes, pairing links or credentials in feedback.

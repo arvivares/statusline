@@ -336,10 +336,10 @@
 				};
 			};
 			buildConfigurationList = EF6DA023303FA260007F6F4C /* Build configuration list for PBXProject "statusline" */;
-			developmentRegion = en;
+			developmentRegion = es;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
+				es,
 				Base,
 			);
 			mainGroup = EF6DA01F303FA260007F6F4C;
@@ -459,11 +459,11 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = CodexStatusWidget/CodexStatusWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = F3HRL896HJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CodexStatusWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Codex Status";
+				INFOPLIST_KEY_CFBundleDisplayName = Statusline;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -490,11 +490,11 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = CodexStatusWidget/CodexStatusWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = F3HRL896HJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CodexStatusWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Codex Status";
+				INFOPLIST_KEY_CFBundleDisplayName = Statusline;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -590,11 +590,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = statusline/statusline.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = F3HRL896HJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = statusline/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Statusline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_StatuslineRelayBaseURL = "$(STATUSLINE_RELAY_BASE_URL)";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -627,11 +628,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = statusline/statusline.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = F3HRL896HJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = statusline/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Statusline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_StatuslineRelayBaseURL = "$(STATUSLINE_RELAY_BASE_URL)";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

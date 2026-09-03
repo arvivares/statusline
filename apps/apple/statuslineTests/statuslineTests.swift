@@ -5,6 +5,27 @@ import Testing
 @Suite("Codex status parser")
 @MainActor
 struct CodexStatusParserTests {
+    @Test("Loads the account-free local demo")
+    func loadsLocalDemo() throws {
+        let suiteName = "statusline.tests.local-demo.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = CodexStatusStore(defaults: defaults)
+        let viewModel = CodexStatusViewModel(
+            parser: CodexStatusParser(),
+            store: store,
+            relayRepository: CodexRelayReaderRepository(configuration: nil)
+        )
+
+        viewModel.loadLocalDemo()
+
+        #expect(viewModel.status?.remainingPercentage == 70)
+        #expect(store.loadSaved()?.remainingPercentage == 70)
+        #expect(viewModel.feedback?.isError == false)
+    }
+
     @Test("Parses the weekly percentage and reset date")
     func parsesWeeklyStatus() throws {
         let calendar = makeCalendar()

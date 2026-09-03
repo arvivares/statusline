@@ -212,7 +212,7 @@ final class CodexStatusViewModel {
         }
     }
 
-    func updateStatus() async {
+    func updateStatus() {
         guard !sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             feedback = .error("Pega primero la línea de estado de Codex.")
             return
@@ -243,5 +243,14 @@ final class CodexStatusViewModel {
     func restoreExample() {
         sourceText = CodexStatusConstants.exampleLine
         feedback = nil
+    }
+
+    func loadLocalDemo() {
+        sourceText = CodexStatusConstants.exampleLine
+        updateStatus()
+
+        if status != nil {
+            feedback = .success("Demo local activada. La app y el widget muestran una muestra de ejemplo.")
+        }
     }
 }
