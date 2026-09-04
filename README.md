@@ -247,6 +247,17 @@ El relay no puede descifrarlo. La secuencia monotónica impide reproducir snapsh
 
 Consulta la [política de privacidad](PRIVACY.md), la [revisión de seguridad](docs/security/security-review.md) y el [modelo de arquitectura](docs/architecture/cross-platform-companion.md). Nunca añadas una API key de OpenAI, certificados, keystores o vínculos de pairing al repositorio.
 
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+
+Statusline ha seleccionado SignPath Foundation para las releases públicas de Windows. La incorporación todavía está en curso: hasta que la integración y la verificación independiente estén completas, los artefactos Windows son builds de QA sin firma y no se presentan como releases oficiales firmadas.
+
+- Committer y reviewer: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
+- Release y signing approver: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
+- Privacidad: [Statusline Privacy Policy](PRIVACY.md)
+- Proceso completo: [Statusline Code Signing Policy](docs/security/code-signing-policy.md)
+
 ## Builds y distribución
 
 ### Escritorio
@@ -300,7 +311,7 @@ Las dependencias y salidas de build (`node_modules`, `target`, `dist`, `.gradle`
 - Las apps móviles refrescan al abrirse o por acción del usuario. APNs/FCM todavía no señalizan snapshots en segundo plano.
 - El relay autohospedado para Linux está diseñado, pero su imagen y adaptador persistente aún no están publicados.
 - El updater integrado de Tauri todavía no está habilitado.
-- Los binarios Windows públicos necesitan un certificado Authenticode; los builds manuales sin firma son sólo para pruebas.
+- La firma Authenticode de Windows está en proceso de incorporación con SignPath Foundation; los builds manuales sin firma son sólo para pruebas.
 - iOS requiere un proceso de distribución manual desde Xcode.
 
 ## Soporte

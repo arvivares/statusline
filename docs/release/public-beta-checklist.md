@@ -80,14 +80,18 @@ On 2 September 2026, all 11 unit tests passed on an iPhone 17 Pro running iOS 27
 
 ## Windows signing
 
-- [ ] Acquire a current Windows code-signing certificate from a supported provider.
-- [ ] Add the base64-encoded PFX as the WINDOWS_CERTIFICATE repository secret.
-- [ ] Add its password as the WINDOWS_CERTIFICATE_PASSWORD repository secret.
-- [ ] Add the certificate provider's timestamp endpoint as the WINDOWS_TIMESTAMP_URL repository variable.
-- [ ] Confirm the tagged workflow reports Valid Authenticode signatures for the application, NSIS installer and MSI.
+- [x] Select SignPath Foundation as the public Windows signing provider.
+- [x] Publish the required code-signing policy, privacy link, project roles and repository ownership rules.
+- [x] Scan the current tree and complete Git history for credentials before changing repository visibility.
+- [ ] Rotate every credential that has previously been shared outside its intended secret store.
+- [ ] Make the repository public, verify GitHub multi-factor authentication and publish an initial documented prerelease.
+- [ ] Apply for and receive a free SignPath Foundation open-source subscription.
+- [ ] Install the SignPath GitHub App and configure the API token, organization, project, artifact configurations and release-signing policy.
+- [ ] Replace the legacy PFX path with a fail-closed two-stage SignPath build that signs the application before packaging and signs NSIS/MSI afterwards.
+- [ ] Confirm the tagged workflow reports valid Authenticode signatures and timestamps for the application, NSIS installer and MSI.
 - [ ] Download both installers in a browser on a clean Windows machine and record the SmartScreen result.
 
-Tagged builds fail before compilation when any required signing value is missing. The temporary PFX, generated Tauri signing configuration and imported runner certificate are removed after the build.
+Gitleaks 8.30.1 found no secrets in the current tree or 34-commit history on 4 September 2026. SignPath onboarding remains incomplete, and tagged desktop releases remain blocked until the provider integration replaces the temporary legacy PFX workflow. SignPath's private key will remain in its HSM; only a scoped API token may be stored in GitHub Actions.
 
 ## macOS signing and notarization
 

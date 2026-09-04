@@ -104,6 +104,11 @@ const desktopMainSource = readText("src/main.ts");
 const desktopEntrySource = readText("src-tauri/src/main.rs");
 const universalRelaySource = readText("src-tauri/src/universal_relay.rs");
 const relayProtocolSource = readText("src-tauri/src/relay_protocol.rs");
+const rootReadme = readText("../../README.md");
+const codeOwners = readText("../../.github/CODEOWNERS");
+const codeSigningPolicy = readText(
+  "../../docs/security/code-signing-policy.md",
+);
 
 const expectedName = "statusline-desktop";
 const expectedProductName = "Statusline Companion";
@@ -265,6 +270,8 @@ for (const relativePath of [
   "../../LICENSE",
   "../../PRIVACY.md",
   "../../SUPPORT.md",
+  "../../.github/CODEOWNERS",
+  "../../docs/security/code-signing-policy.md",
   "../../docs/release/public-beta-checklist.md",
 ]) {
   assert(
@@ -272,6 +279,18 @@ for (const relativePath of [
     `${relativePath} is required`,
   );
 }
+assert(
+  rootReadme.includes("## Code signing policy") &&
+    rootReadme.includes("Free code signing provided by [SignPath.io]") &&
+    rootReadme.includes("certificate by [SignPath Foundation]") &&
+    codeSigningPolicy.includes("## Required release process") &&
+    codeSigningPolicy.includes("manual approval") &&
+    codeSigningPolicy.includes("fail-closed") &&
+    codeSigningPolicy.includes("## Project roles") &&
+    codeSigningPolicy.includes("../../PRIVACY.md") &&
+    codeOwners.includes("@arvivares"),
+  "SignPath onboarding requires a public code-signing policy, named roles, privacy link and CODEOWNERS",
+);
 assert(
   windowsSmokeScript.includes("--statusline-codex-diagnostic") &&
     windowsSmokeScript.includes("--statusline-window-smoke") &&

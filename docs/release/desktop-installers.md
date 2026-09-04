@@ -136,13 +136,15 @@ La salida de `gpg --fingerprint` debe coincidir exactamente con el fingerprint p
 
 ## Firma de Windows
 
-Las releases por tag requieren:
+Statusline ha seleccionado SignPath Foundation para la firma Authenticode pública de Windows. La política y los responsables están documentados en [Statusline Code Signing Policy](../security/code-signing-policy.md). La incorporación del proyecto todavía está pendiente; hasta completarla, los artefactos de Windows generados manualmente son exclusivamente builds de QA sin firma.
+
+El workflow conserva temporalmente el backend PFX anterior, por lo que las releases por tag siguen requiriendo:
 
 - secret WINDOWS_CERTIFICATE: PFX de code signing codificado en base64;
 - secret WINDOWS_CERTIFICATE_PASSWORD;
 - variable WINDOWS_TIMESTAMP_URL.
 
-El runner importa temporalmente el certificado, firma aplicación/NSIS/MSI y valida cada archivo con Get-AuthenticodeSignature. El material temporal se elimina incluso si falla un paso posterior. Los runs manuales permanecen sin firma.
+Ese backend no es la arquitectura pública definitiva. Después de la aceptación de SignPath se reemplazará por un flujo en dos etapas: firmar primero la aplicación, empaquetar NSIS/MSI desde ese ejecutable sin recompilar y firmar después ambos instaladores mediante el trusted build system de GitHub. Cada release requerirá aprobación manual y validación con `Get-AuthenticodeSignature`; ningún tag podrá publicar un fallback sin firma.
 
 ## Firma de macOS
 
