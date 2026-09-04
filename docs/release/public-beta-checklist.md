@@ -106,10 +106,10 @@ Until these checks pass, the generated DMG and PKG are private test artifacts, n
 - [x] Create a dedicated RSA-4096 OpenPGP release-signing key.
 - [x] Commit only the public key and publish its full fingerprint.
 - [x] Store the encrypted private-key export and passphrase as separate GitHub Actions secrets.
-- [ ] Generate signed DEB, RPM and AppImage artifacts in CI and verify every detached signature independently.
-- [ ] Verify the signed installers after downloading them from GitHub Actions on a clean Linux machine.
+- [x] Generate signed DEB, RPM and AppImage artifacts in CI and verify every detached signature independently.
+- [x] Verify the signed installers after downloading them from GitHub Actions on a clean Linux machine.
 
-The official signing-key fingerprint is `7076 AFAF 1090 C370 9D1F 080C 5D77 9E12 FC11 30DB`. The private key is never stored in the repository or uploaded as an artifact.
+The official signing-key fingerprint is `7076 AFAF 1090 C370 9D1F 080C 5D77 9E12 FC11 30DB`. The private key is never stored in the repository or uploaded as an artifact. Signed DEB, RPM and AppImage generation, installer smoke tests, detached-signature verification, signed checksum generation and temporary-key cleanup passed in workflow run [33848864895](https://github.com/arvivares/statusline/actions/runs/33848864895). A separate clean Ubuntu runner downloaded those artifacts, repeated all three installer smoke tests and verified every OpenPGP signature in run [33851403191](https://github.com/arvivares/statusline/actions/runs/33851403191).
 
 ## Distribution integrity
 
