@@ -4,10 +4,17 @@
   "private": true,
   "license": "MIT",
   "description": "Provider-neutral encrypted relay for Statusline clients.",
+  "author": "Inmerzion",
+  "homepage": "https://github.com/arvivares/statusline",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arvivares/statusline.git"
+  },
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
   },
+  "packageManager": "npm@11.17.0",
   "scripts": {
     "check": "tsc --noEmit",
     "test": "vitest run",

@@ -1,0 +1,70 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /apps/desktop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /services/relay
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:15"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: cargo
+    directory: /apps/desktop/src-tauri
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:30"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: gradle
+    directory: /apps/android
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:45"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - "*"

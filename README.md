@@ -1,19 +1,39 @@
-# Statusline
+<div align="center">
+  <img src="apps/desktop/src-tauri/icons/app-icon.svg" alt="Statusline app icon" width="112">
+  <h1>Statusline</h1>
+  <p><strong>Your Codex usage, visible everywhere.</strong></p>
+  <p>Cross-platform desktop companion, encrypted mobile sync and native widgets for iPhone and Android.</p>
+  <p><strong>English</strong> · <a href="README.es.md">Español</a></p>
+</div>
 
-Statusline muestra el estado de la cuota de Codex en Windows, Linux, macOS, iPhone y Android, con widgets nativos y sincronización cifrada de extremo a extremo.
+<div align="center">
+  <a href="https://github.com/arvivares/statusline/actions/workflows/repository-quality.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/repository-quality.yml/badge.svg" alt="Repository quality"></a>
+  <a href="https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml/badge.svg" alt="Desktop installers"></a>
+  <a href="https://github.com/arvivares/statusline/actions/workflows/android.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/android.yml/badge.svg" alt="Android artifacts"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/arvivares/statusline?color=efc65a" alt="MIT license"></a>
+</div>
 
-[![Desktop installers](https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml/badge.svg)](https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml)
-[![Android artifacts](https://github.com/arvivares/statusline/actions/workflows/android.yml/badge.svg)](https://github.com/arvivares/statusline/actions/workflows/android.yml)
+Statusline shows the remaining Codex quota and reset time on Windows, Linux, macOS,
+iPhone and Android. The desktop companion reads usage metadata from the user's local
+Codex session, then optionally sends an end-to-end encrypted snapshot to the mobile
+apps and widgets.
 
-## Interfaz
+No OpenAI API key is required. Statusline never asks for or transports Codex account
+credentials, prompts, conversations or source code.
+
+> [!NOTE]
+> Statusline is an independent open-source project. It is not affiliated with,
+> sponsored by or endorsed by OpenAI.
+
+## Product
 
 <table>
   <tr>
     <td align="center" width="64%">
-      <img src="docs/assets/readme/companion-data-plane.png" alt="Statusline Companion mostrando la cuota semanal, el reinicio y el estado del relay" width="420">
+      <img src="docs/assets/readme/companion-data-plane.png" alt="Statusline Companion displaying weekly quota, reset time and relay status" width="420">
     </td>
     <td align="center" width="36%">
-      <img src="apps/apple/store/assets/phone/01-weekly-quota.png" alt="Statusline para iPhone mostrando la cuota semanal con la interfaz Data Plane" width="233">
+      <img src="apps/apple/store/assets/phone/01-weekly-quota.png" alt="Statusline for iPhone displaying weekly quota in the Data Plane interface" width="233">
     </td>
   </tr>
   <tr>
@@ -22,129 +42,131 @@ Statusline muestra el estado de la cuota de Codex en Windows, Linux, macOS, iPho
   </tr>
 </table>
 
-La misma interfaz Data Plane mantiene cuota, reinicio y estado de sincronización consistentes entre escritorio, móvil y widgets nativos.
+The Data Plane interface keeps quota, reset and sync state consistent across desktop,
+mobile and native widgets.
 
-El companion consulta la sesión local de Codex; no requiere una API key de OpenAI ni una cuenta compartida entre el ordenador y el teléfono. Cuando el usuario activa la sincronización, publica únicamente un snapshot mínimo cifrado que el relay no puede descifrar.
+### Highlights
 
-## Qué incluye
+- Weekly and short-window usage, percentage remaining, reset time and account plan.
+- Menu-bar and system-tray companion built with Tauri, Rust and TypeScript.
+- Native SwiftUI and Kotlin applications with QR or private-link pairing.
+- Native WidgetKit and Android App Widget extensions backed by a private local cache.
+- Provider-neutral relay protocol with separate publisher, pairing and reader credentials.
+- AES-256-GCM encryption interoperable across Rust, Swift and Kotlin.
+- Reproducible installers, checksums, signing gates and automated validation.
 
-- Estado semanal de Codex, porcentaje restante, fecha de reinicio, ventana corta y plan.
-- Companion de bandeja/barra de menú para Windows, Linux y macOS, construido con Tauri, Rust y TypeScript.
-- Aplicaciones nativas para iPhone y Android con emparejamiento mediante QR o vínculo privado.
-- Widgets Data Plane para iOS y Android alimentados desde caché local.
-- Relay universal con credenciales separadas de publicación, emparejamiento y lectura.
-- Cifrado AES-256-GCM interoperable entre Rust, Swift y Kotlin.
-- Instaladores reproducibles y verificaciones automáticas en GitHub Actions.
+### Project status
 
-## Plataformas
+Statusline is in beta. The product flow has been tested on physical mobile devices and
+desktop installers are generated for all supported operating systems. Store review and
+public code-signing onboarding are tracked in the
+[public beta checklist](docs/release/public-beta-checklist.md).
 
-| Plataforma                  | Rol          | Implementación   | Distribución                               |
-| --------------------------- | ------------ | ---------------- | ------------------------------------------ |
-| Windows x64                 | Publisher    | Tauri + Rust     | NSIS `.exe` y MSI                          |
-| Linux x64                   | Publisher    | Tauri + Rust     | DEB, RPM y AppImage + firmas OpenPGP       |
-| macOS Apple Silicon + Intel | Publisher    | Tauri + Rust     | DMG y PKG universales                      |
-| macOS nativo                | Publisher    | SwiftUI          | Target `StatuslineCompanion` de Xcode      |
-| iPhone, iOS 17 o posterior  | Reader       | SwiftUI          | Xcode/TestFlight/App Store, proceso manual |
-| Widget de iOS               | Presentación | WidgetKit        | Incluido con la app de iPhone              |
-| Android 6.0 o posterior     | Reader       | Kotlin + Compose | APK y AAB firmados                         |
-| Widget de Android           | Presentación | App Widget       | Incluido con la app Android                |
-| Cloudflare Workers + D1     | Relay        | TypeScript       | Despliegue con Wrangler                    |
+| Surface                     | Status                | Distribution                                             |
+| --------------------------- | --------------------- | -------------------------------------------------------- |
+| Windows x64                 | Beta                  | NSIS and MSI; public Authenticode onboarding in progress |
+| Linux x64                   | Beta                  | DEB, RPM and AppImage with OpenPGP signatures            |
+| macOS Apple Silicon + Intel | Beta                  | Universal DMG and PKG, Developer ID and notarization     |
+| iPhone, iOS 17+             | Beta                  | TestFlight and App Store process                         |
+| Android 6.0+                | Beta                  | Signed APK/AAB and Google Play closed testing            |
+| Cloudflare Workers + D1     | Operational reference | Public encrypted relay                                   |
 
-`apps/desktop` contiene el companion multiplataforma que genera los instaladores públicos de escritorio. El target SwiftUI `StatuslineCompanion`, dentro de `apps/apple`, se conserva como implementación nativa de macOS; no es necesario para compilar Tauri.
-
-## Cómo funciona
+## How it works
 
 ```mermaid
 flowchart LR
-    Codex[Codex CLI / App Server] -->|JSONL local| Desktop[Statusline Companion]
-    Desktop -->|Snapshot mínimo| Crypto[Cifrado AES-256-GCM]
-    Crypto -->|Ciphertext opaco| Relay[Statusline Relay]
-    Desktop -.->|QR: token efímero + clave| Mobile[iOS / Android]
-    Relay -->|Ciphertext| Mobile
-    Mobile --> Cache[Caché privada validada]
-    Cache --> Widget[Widget nativo]
+    Codex[Codex CLI / App Server] -->|local JSONL| Desktop[Statusline Companion]
+    Desktop -->|minimal snapshot| Crypto[AES-256-GCM]
+    Crypto -->|opaque ciphertext| Relay[Statusline Relay]
+    Desktop -.->|QR: ephemeral token + key| Mobile[iOS / Android]
+    Relay -->|ciphertext| Mobile
+    Mobile --> Cache[private local cache]
+    Cache --> Widget[native widget]
 ```
 
-1. El companion inicia `codex app-server` mediante entrada/salida estándar y normaliza sólo los metadatos de cuota.
-2. Al crear un canal, el relay entrega credenciales aleatorias de publisher y pairing; el companion genera localmente una clave AES-256.
-3. El QR contiene el identificador del canal, un token de un solo uso que vence en diez minutos y la clave. No contiene la credencial publisher ni la URL del relay.
-4. La app móvil cambia el token efímero por una credencial reader y conserva reader + clave en el almacén seguro del sistema.
-5. El relay almacena hashes de credenciales, timestamps operativos y un solo ciphertext por canal. Nunca recibe la clave de cifrado.
-6. La app móvil autentica y descifra el snapshot, lo guarda localmente y actualiza su widget.
+1. The companion starts the locally installed `codex app-server` process and normalizes
+   only quota metadata.
+2. When a channel is created, the relay returns independent publisher and pairing
+   credentials. The companion generates a 256-bit encryption key locally.
+3. The QR contains the channel ID, a single-use pairing token that expires after ten
+   minutes and the encryption key. It never contains the publisher credential.
+4. The mobile app exchanges the ephemeral token for a reader credential and stores the
+   reader plus encryption key in the operating system's secure store.
+5. The relay stores credential hashes, operational timestamps and one ciphertext per
+   channel. It never receives the encryption key.
+6. Mobile validates and decrypts the snapshot locally, updates its private cache and
+   refreshes the widget.
 
-El contrato normativo está en [Statusline Relay Protocol v1](protocol/statusline-relay-v1.md), acompañado por un [vector AES-GCM compartido](protocol/fixtures/aes-gcm-v1.json).
+The normative contract is [Statusline Relay Protocol v1](protocol/statusline-relay-v1.md),
+with a shared [AES-GCM interoperability vector](protocol/fixtures/aes-gcm-v1.json).
 
-## Uso
+## Use Statusline
 
-### 1. Preparar Codex
+### 1. Prepare Codex
 
-Instala Codex CLI en el ordenador, ejecútalo y completa **Sign in with ChatGPT**:
+Install Codex CLI on the desktop, launch it and complete **Sign in with ChatGPT**:
 
 ```shell
 codex --version
 codex
 ```
 
-Statusline detecta instalaciones standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y `PATH`. También permite seleccionar manualmente un ejecutable y lo verifica con `codex --version` antes de guardarlo.
+Statusline discovers standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise and `PATH`
+installations. A manually selected executable is validated with `codex --version` before
+it is stored.
 
-### 2. Instalar el companion
+### 2. Install the companion
 
-Descarga el formato correspondiente desde los artefactos o releases del proyecto:
+Download the appropriate package from
+[GitHub Releases](https://github.com/arvivares/statusline/releases) when a public beta is
+available, or build it from source:
 
-- Windows: NSIS para instalación normal; MSI para despliegues administrados.
-- Linux: DEB, RPM o AppImage.
-- macOS: DMG para arrastrar a Aplicaciones; PKG para instalación guiada.
+- Windows: NSIS for normal installation, MSI for managed deployment.
+- Linux: DEB, RPM or AppImage.
+- macOS: DMG for drag-and-drop installation, PKG for guided installation.
 
-Los instaladores no incluyen Codex ni credenciales de usuario.
+The installers do not bundle Codex or user credentials.
 
-### 3. Emparejar el móvil
+### 3. Pair a mobile device
 
-1. Abre **Connections → Codex Source** y confirma que la CLI esté verificada.
-2. En **Universal Relay**, selecciona **Create pairing**.
-3. En iOS o Android, abre **Pair device** y escanea el QR o pega el vínculo privado.
-4. Actualiza el companion y después la app móvil.
-5. Añade el widget desde el selector del sistema.
+1. Open **Connections → Codex Source** and verify the detected CLI.
+2. Under **Universal Relay**, select **Create pairing**.
+3. On iPhone or Android, open **Pair device** and scan the QR or paste its private link.
+4. Refresh the companion and then the mobile app.
+5. Add Statusline from the operating system's widget gallery.
 
-El QR debe tratarse como una contraseña durante sus diez minutos de vigencia. No lo compartas en logs, capturas o solicitudes de soporte.
+Treat the QR as a password during its ten-minute lifetime. Never share it in logs,
+screenshots or support requests.
 
-## Desarrollo
+## Development
 
-### Requisitos generales
+### Requirements
 
-- Node.js 24 o posterior y npm 11.
-- Rust 1.98 mediante rustup para el companion Tauri.
-- Codex CLI instalado y autenticado para probar datos reales.
-- Requisitos nativos de [Tauri 2](https://v2.tauri.app/start/prerequisites/) para cada escritorio.
-- Xcode actual para iOS, WidgetKit y el companion SwiftUI de macOS.
-- JDK 17, Android SDK Platform 36 y Build Tools 36.0.0 para Android.
-- Una cuenta de Cloudflare sólo si se desplegará una instancia propia del relay.
+- Node.js 24 and npm 11.
+- Rust 1.98 through rustup.
+- Codex CLI installed and authenticated for real-data testing.
+- Native [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/) for the host OS.
+- Xcode for the iPhone, WidgetKit and native macOS targets.
+- JDK 17, Android SDK Platform 36 and Build Tools 36.0.0 for Android.
+- A Cloudflare account only when deploying a separate relay instance.
 
-### Variables de entorno
+The repository pins its primary development versions in `.node-version`,
+`.java-version` and `rust-toolchain.toml`.
 
-El repositorio incluye una plantilla sin secretos. Para desarrollo local, cópiala y carga sus valores en la terminal desde la raíz:
+### Environment
+
+Copy the documented, secret-free template when local overrides are needed:
 
 ```shell
 cp .env.example .env
-set -a
-. ./.env
-set +a
 ```
 
-En PowerShell:
+No project automatically loads the root `.env`. Never add OpenAI keys, pairing links,
+certificates, keystores or real credentials to a tracked file. The complete deployment
+flow is documented in the [universal setup guide](SETUP.md), currently maintained in
+Spanish.
 
-```powershell
-Copy-Item .env.example .env
-Get-Content .env | Where-Object { $_ -match '^\s*[^#\s][^=]*=' } | ForEach-Object {
-  $name, $value = $_ -split '=', 2
-  Set-Item -Path "Env:$($name.Trim())" -Value $value.Trim()
-}
-```
-
-Ninguna herramienta del monorepo carga automáticamente el `.env` de la raíz.
-
-`.env` está excluido de Git. La plantilla cubre el origen del relay, el override opcional de Codex, la firma local de Android y la autenticación no interactiva de Wrangler. El relay también incluye [`services/relay/.dev.vars.example`](services/relay/.dev.vars.example); actualmente no necesita secretos de runtime. Nunca copies API keys de OpenAI, tokens de pairing, certificados ni credenciales reales a un archivo versionado.
-
-### Companion desktop
+### Desktop companion
 
 ```shell
 cd apps/desktop
@@ -154,22 +176,8 @@ npm run check
 npm run release:check
 ```
 
-Para desarrollo visual sin iniciar Rust:
-
-```shell
-npm run dev
-```
-
-Vite expone previews con `?preview=ready`, `loading`, `empty` o `error`; `&panel=source` y `&panel=relay` abren las superficies de configuración.
-
-Para ejecutar Tauri contra un relay local:
-
-```shell
-export STATUSLINE_RELAY_BASE_URL="http://127.0.0.1:8787"
-npm run tauri dev
-```
-
-HTTP sólo se acepta para loopback en Debug. Los builds de producción requieren un origen HTTPS.
+Run `npm run dev` for browser-based interface previews, or `npm run tauri dev` for the
+native companion.
 
 ### Relay
 
@@ -179,19 +187,10 @@ npm ci
 npm run db:migrate:local
 npm test
 npm run check
-npm run dev
 ```
 
-El adaptador operativo usa Cloudflare Workers + D1. Para desplegar una instancia:
-
-```shell
-npx wrangler d1 create statusline-relay
-# Copiar database_id a wrangler.jsonc
-npm run db:migrate:remote
-npm run deploy
-```
-
-La guía [Opciones de despliegue y capacidad](docs/relay/deployment-options.md) documenta límites, consumo observado y la futura alternativa autohospedada en Linux. Esa alternativa todavía no se distribuye como contenedor listo para producción.
+The production adapter uses Cloudflare Workers + D1. Its provider-neutral HTTP core and
+`RelayStore` boundary are designed to support an independently hosted Linux adapter.
 
 ### Android
 
@@ -200,124 +199,90 @@ cd apps/android
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-Para usar otro relay compatible:
+`VIEW DEMO` creates a clearly marked local sample for app and widget review without a
+network connection, Codex account or desktop companion.
 
-```shell
-./gradlew assembleDebug \
-  -PSTATUSLINE_RELAY_BASE_URL=https://relay.example.com
-```
+### Apple platforms
 
-`VIEW DEMO` crea una muestra local claramente identificada y actualiza app + widget sin red, cuenta de Codex ni desktop.
+Open [apps/apple/statusline.xcodeproj](apps/apple/statusline.xcodeproj) in Xcode. Set
+`STATUSLINE_RELAY_BASE_URL` for both the iPhone and native companion Release
+configurations. App Store archives are currently signed and uploaded manually.
 
-El [kit versionado de Google Play](apps/android/store/README.md) contiene la ficha, declaraciones, acceso para revisión y recursos gráficos. La versión `0.1.10` (`versionCode 6`) está enviada a revisión como prueba cerrada Alpha; el siguiente gate es mantener al menos 12 testers inscritos durante 14 días.
+## Security and privacy
 
-### iOS y macOS SwiftUI
+Statusline does not read or transmit API keys, Codex access tokens, account email,
+prompts, conversations or source code. An encrypted snapshot contains only:
 
-Abre [apps/apple/statusline.xcodeproj](apps/apple/statusline.xcodeproj) en Xcode. Configura `STATUSLINE_RELAY_BASE_URL` en Build Settings con el mismo origen usado por desktop y Android. La primera distribución de iOS está limitada a iPhone y requiere archive, firma y subida manual a TestFlight/App Store.
+- schema version;
+- weekly percentage remaining;
+- reset timestamp;
+- sample timestamp.
 
-## Configuración del relay
+Publisher, pairing and reader credentials have separate capabilities. Pairing is
+single-use, channels expire after inactivity and monotonically increasing sequence
+numbers prevent replaying an older snapshot.
 
-Todos los clientes de una instalación deben confiar en el mismo origen:
-
-```text
-STATUSLINE_RELAY_BASE_URL=https://statusline-relay.inmerzion.workers.dev
-```
-
-La URL es pública y no concede acceso a ningún canal. Los secretos se generan después de la instalación y permanecen en Keychain, Windows Credential Manager, Secret Service o Android Keystore.
-
-El despliegue de referencia aplica:
-
-- 60 solicitudes por minuto y origen antes de consultar D1;
-- 10 canales nuevos por minuto y origen;
-- 120 operaciones por minuto y credencial;
-- 10 minutos de vigencia para pairing;
-- 30 días de vigencia del canal desde la creación o última publicación;
-- purga diaria de canales vencidos.
-
-## Seguridad y privacidad
-
-Statusline no lee ni transmite API keys, access tokens de Codex, correo, prompts, conversaciones o código fuente. El snapshot cifrado contiene únicamente:
-
-- versión del esquema;
-- porcentaje semanal restante;
-- fecha de reinicio;
-- fecha de actualización.
-
-El relay no puede descifrarlo. La secuencia monotónica impide reproducir snapshots anteriores y las credenciales de publisher, pairing y reader tienen capacidades separadas.
-
-Consulta la [política de privacidad](PRIVACY.md), la [revisión de seguridad](docs/security/security-review.md) y el [modelo de arquitectura](docs/architecture/cross-platform-companion.md). Nunca añadas una API key de OpenAI, certificados, keystores o vínculos de pairing al repositorio.
+Read the [privacy policy](PRIVACY.md), [security policy](SECURITY.md),
+[security review](docs/security/security-review.md) and
+[architecture](docs/architecture/cross-platform-companion.md). Please report suspected
+vulnerabilities privately rather than opening a public issue.
 
 ## Code signing policy
 
 Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 
-Statusline ha seleccionado SignPath Foundation para las releases públicas de Windows. La incorporación todavía está en curso: hasta que la integración y la verificación independiente estén completas, los artefactos Windows son builds de QA sin firma y no se presentan como releases oficiales firmadas.
+Statusline has selected SignPath Foundation for public Windows releases. Onboarding is
+still in progress. Until the integration and independent verification are complete,
+Windows artifacts are unsigned QA builds and are not represented as official signed
+releases.
 
-- Committer y reviewer: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
-- Release y signing approver: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
-- Privacidad: [Statusline Privacy Policy](PRIVACY.md)
-- Proceso completo: [Statusline Code Signing Policy](docs/security/code-signing-policy.md)
+- Committer and reviewer: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
+- Release and signing approver: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
+- Privacy: [Statusline Privacy Policy](PRIVACY.md)
+- Full process: [Statusline Code Signing Policy](docs/security/code-signing-policy.md)
 
-## Builds y distribución
+Public desktop tags fail closed unless Windows Authenticode, Linux OpenPGP and macOS
+Developer ID/notarization requirements are satisfied. Manual workflows may generate
+explicitly unsigned artifacts for private QA only.
 
-### Escritorio
+## Repository map
 
-[Desktop installers](.github/workflows/desktop-installers.yml) genera de forma nativa:
+| Path                                  | Purpose                                                    |
+| ------------------------------------- | ---------------------------------------------------------- |
+| `apps/desktop/`                       | Tauri companion for Windows, Linux and macOS               |
+| `apps/android/`                       | Android app, QR scanner, widget and Play Store kit         |
+| [`apps/apple/`](apps/apple/README.md) | Xcode project for iPhone, WidgetKit and native macOS       |
+| `services/relay/`                     | Worker, D1 adapter, rate limiting and public pages         |
+| `protocol/`                           | Versioned protocol, fixtures and interoperability examples |
+| `packaging/`                          | Public verification material for distributed packages      |
+| [`docs/`](docs/README.md)             | Architecture, operations, release and security records     |
+| `.github/workflows/`                  | Validation and distribution pipelines                      |
 
-1. Windows NSIS `.exe`.
-2. Windows MSI.
-3. Linux DEB.
-4. Linux RPM.
-5. Linux AppImage.
-6. macOS DMG universal.
-7. macOS PKG universal.
-8. `SHA256SUMS.txt` para verificar el conjunto.
-9. Firmas OpenPGP `.asc` para los tres instaladores Linux y el manifiesto de checksums.
+Dependencies and build outputs such as `node_modules`, `target`, `dist`, `.gradle`,
+`build` and `.wrangler` are reproducible and intentionally excluded from Git.
 
-El pipeline instala, abre y desinstala ambos formatos de Windows; valida paquetes Linux y sus firmas OpenPGP; inspecciona arquitecturas, firma, notarización, tickets grapados y Gatekeeper en macOS. Las releases públicas por tag requieren Authenticode para Windows, OpenPGP para Linux y Developer ID + notarización para macOS. Los runs manuales pueden producir artefactos deliberadamente sin firma para QA privado.
+## Documentation
 
-Consulta [Instaladores de Statusline Companion](docs/release/desktop-installers.md) para variables, secretos y smoke tests.
+- [Documentation index](docs/README.md)
+- [Universal setup (Spanish)](SETUP.md)
+- [Architecture](docs/architecture/cross-platform-companion.md)
+- [Relay deployment and capacity](docs/relay/deployment-options.md)
+- [Desktop installers](docs/release/desktop-installers.md)
+- [Support and troubleshooting](SUPPORT.md)
+- [Contributing](CONTRIBUTING.md)
 
-### Android
+## Contributing
 
-[Android artifacts](.github/workflows/android.yml) ejecuta unit tests, Lint y genera un APK Debug. Un tag `android-v*` o un dispatch explícito de release añade APK y AAB firmados, mapping de R8 y checksums. El material de firma vive únicamente en GitHub Actions secrets.
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and
+the [Code of Conduct](CODE_OF_CONDUCT.md) first. Security reports must follow
+[SECURITY.md](SECURITY.md).
 
-Google Play recibe el AAB; el APK firmado queda como artefacto de QA. El estado de cuenta, revisión y producción se mantiene en [Mobile store account decisions](docs/release/mobile-store-accounts.md).
+## Trademark notice
 
-### iOS
+OpenAI, ChatGPT and Codex are trademarks or registered trademarks of their respective
+owners. Their use here identifies interoperability with the locally installed Codex
+software and does not imply affiliation or endorsement.
 
-iOS no se compila desde el pipeline actual. Archive, firma, TestFlight y App Store se realizan desde Xcode hasta incorporar una estrategia segura de firma en CI.
+## License
 
-La [checklist de beta pública](docs/release/public-beta-checklist.md) concentra los gates de producto, tiendas, firma, integridad y soporte.
-
-## Estructura del repositorio
-
-| Ruta                                  | Contenido                                                                                   |
-| ------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `apps/desktop/`                       | Companion Tauri para Windows, Linux y macOS                                                 |
-| `apps/android/`                       | App, QR scanner, widget y kit versionado de Google Play                                     |
-| [`apps/apple/`](apps/apple/README.md) | Proyecto Xcode y targets de iPhone, WidgetKit y macOS                                       |
-| `services/relay/`                     | Worker, D1, rate limits y páginas públicas                                                  |
-| `protocol/`                           | Especificación v1, fixtures y ejemplos interoperables                                       |
-| `packaging/`                          | Claves públicas y recursos de verificación para los instaladores                            |
-| `docs/`                               | Arquitectura, despliegue, releases, seguridad y [archivo de diseño](docs/archive/README.md) |
-| `.github/workflows/`                  | Pipelines desktop y Android                                                                 |
-
-Las dependencias y salidas de build (`node_modules`, `target`, `dist`, `.gradle`, `build`, `.wrangler`) no forman parte del repositorio y pueden regenerarse desde sus manifests y lockfiles.
-
-## Estado y limitaciones conocidas
-
-- Codex App Server sigue siendo experimental; un cambio incompatible puede requerir actualizar el companion.
-- Las apps móviles refrescan al abrirse o por acción del usuario. APNs/FCM todavía no señalizan snapshots en segundo plano.
-- El relay autohospedado para Linux está diseñado, pero su imagen y adaptador persistente aún no están publicados.
-- El updater integrado de Tauri todavía no está habilitado.
-- La firma Authenticode de Windows está en proceso de incorporación con SignPath Foundation; los builds manuales sin firma son sólo para pruebas.
-- iOS requiere un proceso de distribución manual desde Xcode.
-
-## Soporte
-
-Consulta [SUPPORT.md](SUPPORT.md), visita la [página pública de soporte](https://statusline-relay.inmerzion.workers.dev/support) o escribe a [founder@inmerzion.io](mailto:founder@inmerzion.io). Elimina identificadores, rutas privadas, QR, pairing links y credenciales antes de enviar un diagnóstico.
-
-## Licencia
-
-Statusline es software open source distribuido bajo la [licencia MIT](LICENSE).
+Copyright © 2026 Inmerzion. Released under the [MIT License](LICENSE).

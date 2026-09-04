@@ -2,7 +2,7 @@
 //  statuslineUITestsLaunchTests.swift
 //  statuslineUITests
 //
-//  Created by cuquito on 27/8/26.
+//  Created by Inmerzion on 27/8/26.
 //
 
 import XCTest

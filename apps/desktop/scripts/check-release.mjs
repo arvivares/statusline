@@ -105,7 +105,9 @@ const desktopEntrySource = readText("src-tauri/src/main.rs");
 const universalRelaySource = readText("src-tauri/src/universal_relay.rs");
 const relayProtocolSource = readText("src-tauri/src/relay_protocol.rs");
 const rootReadme = readText("../../README.md");
+const spanishReadme = readText("../../README.es.md");
 const codeOwners = readText("../../.github/CODEOWNERS");
+const securityPolicy = readText("../../SECURITY.md");
 const codeSigningPolicy = readText(
   "../../docs/security/code-signing-policy.md",
 );
@@ -268,11 +270,23 @@ for (const relativePath of [
   "../../.github/workflows/desktop-installer-smoke.yml",
   "../../packaging/linux/statusline-release-signing-key.asc",
   "../../LICENSE",
+  "../../CODE_OF_CONDUCT.md",
+  "../../CONTRIBUTING.md",
   "../../PRIVACY.md",
+  "../../README.es.md",
+  "../../SECURITY.md",
   "../../SUPPORT.md",
   "../../.github/CODEOWNERS",
+  "../../.github/dependabot.yml",
+  "../../.github/ISSUE_TEMPLATE/bug-report.yml",
+  "../../.github/ISSUE_TEMPLATE/feature-request.yml",
+  "../../.github/pull_request_template.md",
+  "../../.github/release.yml",
+  "../../.github/workflows/repository-quality.yml",
+  "../../docs/README.md",
   "../../docs/security/code-signing-policy.md",
   "../../docs/release/public-beta-checklist.md",
+  "../../scripts/check-markdown-links.mjs",
 ]) {
   assert(
     existsSync(join(projectRoot, relativePath)),
@@ -281,8 +295,11 @@ for (const relativePath of [
 }
 assert(
   rootReadme.includes("## Code signing policy") &&
+    rootReadme.includes("README.es.md") &&
     rootReadme.includes("Free code signing provided by [SignPath.io]") &&
     rootReadme.includes("certificate by [SignPath Foundation]") &&
+    spanishReadme.includes("## Code signing policy") &&
+    securityPolicy.includes("## Report a vulnerability") &&
     codeSigningPolicy.includes("## Required release process") &&
     codeSigningPolicy.includes("manual approval") &&
     codeSigningPolicy.includes("fail-closed") &&

@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose a focused improvement to Statusline.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the user problem before the preferred implementation. Security-sensitive proposals may be redirected to private discussion.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Cross-platform
+        - Desktop companion
+        - iPhone or WidgetKit
+        - Android or App Widget
+        - Relay or protocol
+        - Packaging or distribution
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Who has this problem and what prevents them from succeeding today?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe the result without requiring a specific implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add mockups or examples, but never include private pairing data or credentials.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched for an existing request.
+          required: true
+        - label: I described any security or privacy implications of this request.
+          required: true

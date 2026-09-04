@@ -1,6 +1,11 @@
 # macOS
 .DS_Store
 
+# Editor and IDE state
+.idea/
+.vscode/
+*.iml
+
 # Xcode user and build state
 **/xcuserdata/
 *.xcuserstate
@@ -43,6 +48,3 @@ apps/android/local.properties
 apps/android/app/build/
 apps/android/build/
 apps/android/.android-sdk/
-
-# Original Windows companion import (the maintained source is apps/desktop)
-statustlinecompanionwin/

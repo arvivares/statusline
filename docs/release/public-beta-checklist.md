@@ -83,7 +83,7 @@ On 2 September 2026, all 11 unit tests passed on an iPhone 17 Pro running iOS 27
 - [x] Select SignPath Foundation as the public Windows signing provider.
 - [x] Publish the required code-signing policy, privacy link, project roles and repository ownership rules.
 - [x] Scan the current tree and complete Git history for credentials before changing repository visibility.
-- [ ] Rotate every credential that has previously been shared outside its intended secret store.
+- [x] Rotate every credential that has previously been shared outside its intended secret store.
 - [ ] Make the repository public, verify GitHub multi-factor authentication and publish an initial documented prerelease.
 - [ ] Apply for and receive a free SignPath Foundation open-source subscription.
 - [ ] Install the SignPath GitHub App and configure the API token, organization, project, artifact configurations and release-signing policy.
@@ -91,7 +91,7 @@ On 2 September 2026, all 11 unit tests passed on an iPhone 17 Pro running iOS 27
 - [ ] Confirm the tagged workflow reports valid Authenticode signatures and timestamps for the application, NSIS installer and MSI.
 - [ ] Download both installers in a browser on a clean Windows machine and record the SmartScreen result.
 
-Gitleaks 8.30.1 found no secrets in the current tree or 35-commit history on 4 September 2026. It also scanned the archived logs from all 35 historical GitHub Actions runs: the nine generic matches were manually reviewed and were public signing fingerprints or certificate digests, not credentials. SignPath onboarding remains incomplete, and tagged desktop releases remain blocked until the provider integration replaces the temporary legacy PFX workflow. SignPath's private key will remain in its HSM; only a scoped API token may be stored in GitHub Actions.
+Gitleaks 8.30.1 found no secrets in the current tree or complete Git history during the pre-publication audit on 4 September 2026. It also scanned the archived logs from all 35 GitHub Actions runs that existed at that point: the nine generic matches were manually reviewed and were public signing fingerprints or certificate digests, not credentials. The OpenAI key previously shared outside its intended secret store was confirmed revoked on 4 September 2026; no key value or identifier is retained here. SignPath onboarding remains incomplete, and tagged desktop releases remain blocked until the provider integration replaces the temporary legacy PFX workflow. SignPath's private key will remain in its HSM; only a scoped API token may be stored in GitHub Actions.
 
 ## macOS signing and notarization
 
