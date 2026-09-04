@@ -125,7 +125,7 @@ android {
 
 dependencies {
     // 2026.03.00 is the latest stable BOM that remains compatible with API 36.
-    val composeBOM = platform("androidx.compose:compose-bom:2026.03.00")
+    val composeBOM = platform("androidx.compose:compose-bom:2026.08.00")
 
     implementation(composeBOM)
     androidTestImplementation(composeBOM)
