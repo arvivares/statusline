@@ -71,7 +71,7 @@ jobs:
 
       - name: Smoke test Windows installers
         shell: pwsh
-        run: ./scripts/smoke-installers-windows.ps1 -BundleRoot ../downloaded-installers
+        run: ./scripts/smoke-installers-windows.ps1 -BundleRoot ../../downloaded-installers
         working-directory: apps/desktop
 
   linux:
@@ -112,7 +112,7 @@ jobs:
 
       - name: Smoke test Linux installers
         shell: bash
-        run: bash ./scripts/smoke-installers-linux.sh ../downloaded-installers
+        run: bash ./scripts/smoke-installers-linux.sh ../../downloaded-installers
         working-directory: apps/desktop
 
       - name: Verify Linux OpenPGP signatures
@@ -120,7 +120,7 @@ jobs:
         shell: bash
         run: >-
           bash ./scripts/verify-linux-signatures.sh
-          ../downloaded-installers
+          ../../downloaded-installers
           ../../packaging/linux/statusline-release-signing-key.asc
         working-directory: apps/desktop
 
@@ -151,7 +151,7 @@ jobs:
         shell: bash
         env:
           STATUSLINE_REQUIRE_MACOS_TRUST: ${{ inputs.require_macos_trust }}
-        run: bash ./scripts/smoke-installer-macos.sh ../downloaded-installers
+        run: bash ./scripts/smoke-installer-macos.sh ../../downloaded-installers
         working-directory: apps/desktop
 
   checksums:
