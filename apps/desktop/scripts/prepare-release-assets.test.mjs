@@ -15,17 +15,17 @@ import { prepareReleaseAssets } from "./prepare-release-assets.mjs";
 
 const version = "0.1.10";
 const fixtureNames = [
-  `Statusline_${version}_amd64.deb`,
-  `Statusline-${version}-1.x86_64.rpm`,
-  `Statusline_${version}_amd64.AppImage`,
-  `Statusline_${version}_universal.dmg`,
-  `Statusline_${version}_universal.pkg`,
+  `Statusline Companion_${version}_amd64.deb`,
+  `Statusline Companion-${version}-1.x86_64.rpm`,
+  `Statusline Companion_${version}_amd64.AppImage`,
+  `Statusline Companion_${version}_universal.dmg`,
+  `Statusline Companion_${version}_universal.pkg`,
   `Statusline_${version}_android.apk`,
   `Statusline_${version}_android.aab`,
 ];
 const windowsFixtureNames = [
-  `Statusline_${version}_x64-setup.exe`,
-  `Statusline_${version}_x64.msi`,
+  `Statusline Companion_${version}_x64-setup.exe`,
+  `Statusline Companion_${version}_x64.msi`,
 ];
 
 let testRoot;
@@ -92,11 +92,17 @@ describe("prepareReleaseAssets", () => {
       "macos",
       "android",
     ]);
+    expect(manifest.assets.every((asset) => !asset.name.includes(" "))).toBe(
+      true,
+    );
+    expect(manifest.assets.map((asset) => asset.name)).toContain(
+      `Statusline.Companion_${version}_universal.dmg`,
+    );
   });
 
   it("fails closed when a required installer is absent", async () => {
     const { input, output } = await makeFixture();
-    await rm(join(input, `Statusline_${version}_universal.pkg`));
+    await rm(join(input, `Statusline Companion_${version}_universal.pkg`));
 
     await expect(
       prepareReleaseAssets({
@@ -123,6 +129,22 @@ describe("prepareReleaseAssets", () => {
     ).rejects.toThrow("does not include product version");
   });
 
+  it("rejects filenames that a release host could rewrite", async () => {
+    const { input, output } = await makeFixture();
+    const originalName = `Statusline_${version}_android.apk`;
+    const unsafeName = `Statusline_${version}_android(backup).apk`;
+    await writeFile(join(input, unsafeName), "unsafe");
+    await rm(join(input, originalName));
+
+    await expect(
+      prepareReleaseAssets({
+        inputDirectory: input,
+        outputDirectory: output,
+        context: context(),
+      }),
+    ).rejects.toThrow("filename is not portable across release hosts");
+  });
+
   it("rejects a tag that does not match the release manifest", async () => {
     const { input, output } = await makeFixture();
 
@@ -137,7 +159,7 @@ describe("prepareReleaseAssets", () => {
 
   it("rejects an incomplete Linux signature set", async () => {
     const { input, output } = await makeFixture();
-    await rm(join(input, `Statusline_${version}_amd64.AppImage.asc`));
+    await rm(join(input, `Statusline Companion_${version}_amd64.AppImage.asc`));
 
     await expect(
       prepareReleaseAssets({
