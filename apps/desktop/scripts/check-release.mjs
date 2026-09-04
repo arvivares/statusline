@@ -648,6 +648,10 @@ assert(
     !androidWorkflow.includes("gh release upload"),
   "only the unified release workflow may populate a GitHub Release",
 );
+assert(
+  !workflow.includes("contents: write"),
+  "the reusable desktop workflow must not elevate content permissions above its caller",
+);
 const nativeBuildStep = workflow.match(
   /\n      - name: Build native installers\n([\s\S]*?)(?=\n      - name: )/u,
 )?.[1];
