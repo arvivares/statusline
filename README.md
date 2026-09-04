@@ -8,6 +8,7 @@
 
 <div align="center">
   <a href="https://github.com/arvivares/statusline/actions/workflows/repository-quality.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/repository-quality.yml/badge.svg" alt="Repository quality"></a>
+  <a href="https://github.com/arvivares/statusline/actions/workflows/release.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/release.yml/badge.svg" alt="Release pipeline"></a>
   <a href="https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml/badge.svg" alt="Desktop installers"></a>
   <a href="https://github.com/arvivares/statusline/actions/workflows/android.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/android.yml/badge.svg" alt="Android artifacts"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/arvivares/statusline?color=efc65a" alt="MIT license"></a>
@@ -70,6 +71,23 @@ public code-signing onboarding are tracked in the
 | iPhone, iOS 17+             | Beta                  | TestFlight and App Store process                         |
 | Android 6.0+                | Beta                  | Signed APK/AAB and Google Play closed testing            |
 | Cloudflare Workers + D1     | Operational reference | Public encrypted relay                                   |
+
+## Releases
+
+Permanent downloads are published on [GitHub Releases](https://github.com/arvivares/statusline/releases).
+The current `windows-bootstrap-v0.1.6` entry is an explicitly unsigned Windows onboarding
+preview for SignPath Foundation, not the public beta intended for end users.
+
+The signed `v0.1.10` tag publishes the first tester prerelease with Linux
+DEB/RPM/AppImage, universal macOS DMG/PKG and signed Android APK/AAB. Automated inventory,
+checksums, platform trust checks and GitHub build provenance must all pass before it
+becomes public. Windows remains in its separate unsigned onboarding preview until
+SignPath Foundation approval; it will join the unified release only after Authenticode
+signing is operational. Action artifacts are temporary QA outputs and are never presented
+as releases.
+
+See the [public release runbook](docs/release/release-runbook.md) for the exact asset list,
+SignPath configuration and verification commands.
 
 ## Roadmap
 
@@ -279,18 +297,20 @@ vulnerabilities privately rather than opening a public issue.
 Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 
 Statusline has selected SignPath Foundation for public Windows releases. Onboarding is
-still in progress. Until the integration and independent verification are complete,
-Windows artifacts are unsigned QA builds and are not represented as official signed
-releases.
+still in progress. The repository-side two-stage workflow is ready and waits for the real
+SignPath project identifiers and token. Until the integration and independent verification
+are complete, Windows artifacts are unsigned QA builds and are not represented as official
+signed releases.
 
 - Committer and reviewer: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
 - Release and signing approver: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
 - Privacy: [Statusline Privacy Policy](PRIVACY.md)
 - Full process: [Statusline Code Signing Policy](docs/security/code-signing-policy.md)
 
-Public desktop tags fail closed unless Windows Authenticode, Linux OpenPGP and macOS
-Developer ID/notarization requirements are satisfied. Manual workflows may generate
-explicitly unsigned artifacts for private QA only.
+The unified `v<version>` release tag fails closed unless every platform enabled in
+`release.json` satisfies its signing, trust, inventory, checksum and provenance gates.
+Windows cannot enter that profile until Authenticode is operational. Manual component
+workflows may generate explicitly unsigned artifacts for private QA only.
 
 ## Repository map
 
@@ -303,6 +323,7 @@ explicitly unsigned artifacts for private QA only.
 | `protocol/`                           | Versioned protocol, fixtures and interoperability examples |
 | `packaging/`                          | Public verification material for distributed packages      |
 | [`docs/`](docs/README.md)             | Architecture, operations, release and security records     |
+| [`release.json`](release.json)        | Canonical product and component release versions           |
 | `.github/workflows/`                  | Validation and distribution pipelines                      |
 
 Dependencies and build outputs such as `node_modules`, `target`, `dist`, `.gradle`,
@@ -316,6 +337,7 @@ Dependencies and build outputs such as `node_modules`, `target`, `dist`, `.gradl
 - [Architecture](docs/architecture/cross-platform-companion.md)
 - [Relay deployment and capacity](docs/relay/deployment-options.md)
 - [Desktop installers](docs/release/desktop-installers.md)
+- [Public release runbook](docs/release/release-runbook.md)
 - [Public repository launch checklist](docs/release/public-repository-checklist.md)
 - [Support and troubleshooting](SUPPORT.md)
 - [Contributing](CONTRIBUTING.md)

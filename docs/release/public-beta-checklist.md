@@ -1,6 +1,7 @@
-# Public desktop beta checklist
+# Public beta checklist
 
-This checklist is the release gate for a tagged desktop-v<version> build. Manual workflow runs remain private, unsigned test artifacts.
+This checklist is the release gate for the unified signed `v<version>` Desktop + Android
+build. Manual workflow runs remain temporary QA artifacts and are never GitHub Releases.
 
 ## Product
 
@@ -85,14 +86,15 @@ On 2 September 2026, all 11 unit tests passed on an iPhone 17 Pro running iOS 27
 - [x] Scan the current tree and complete Git history for credentials before changing repository visibility.
 - [x] Rotate every credential that has previously been shared outside its intended secret store.
 - [x] Make the repository public and verify GitHub multi-factor authentication.
-- [ ] Publish an initial documented prerelease.
-- [ ] Apply for and receive a free SignPath Foundation open-source subscription.
+- [x] Publish an initial documented unsigned onboarding prerelease.
+- [x] Apply for a free SignPath Foundation open-source subscription.
+- [ ] Receive SignPath Foundation approval.
 - [ ] Install the SignPath GitHub App and configure the API token, organization, project, artifact configurations and release-signing policy.
-- [ ] Replace the legacy PFX path with a fail-closed two-stage SignPath build that signs the application before packaging and signs NSIS/MSI afterwards.
+- [x] Replace the legacy PFX path with a fail-closed two-stage SignPath build that signs the application before packaging and signs NSIS/MSI afterwards.
 - [ ] Confirm the tagged workflow reports valid Authenticode signatures and timestamps for the application, NSIS installer and MSI.
 - [ ] Download both installers in a browser on a clean Windows machine and record the SmartScreen result.
 
-Gitleaks 8.30.1 found no secrets in the current tree or complete Git history during the pre-publication audit on 4 September 2026. It also scanned the archived logs from all 35 GitHub Actions runs that existed at that point: the nine generic matches were manually reviewed and were public signing fingerprints or certificate digests, not credentials. The OpenAI key previously shared outside its intended secret store was confirmed revoked on 4 September 2026; no key value or identifier is retained here. SignPath onboarding remains incomplete, and tagged desktop releases remain blocked until the provider integration replaces the temporary legacy PFX workflow. SignPath's private key will remain in its HSM; only a scoped API token may be stored in GitHub Actions.
+Gitleaks 8.30.1 found no secrets in the current tree or complete Git history during the pre-publication audit on 4 September 2026. It also scanned the archived logs from all 35 GitHub Actions runs that existed at that point: the nine generic matches were manually reviewed and were public signing fingerprints or certificate digests, not credentials. The OpenAI key previously shared outside its intended secret store was confirmed revoked on 4 September 2026; no key value or identifier is retained here. SignPath onboarding remains incomplete, but the legacy PFX workflow has been removed and the two-stage trusted-build integration is fail-closed while it waits for the provider-assigned configuration. SignPath's private key will remain in its HSM; only a scoped API token may be stored in GitHub Actions.
 
 ## macOS signing and notarization
 
@@ -118,11 +120,14 @@ The official signing-key fingerprint is `7076 AFAF 1090 C370 9D1F 080C 5D77 9E12
 
 ## Distribution integrity
 
-- [ ] Confirm all seven installers are attached to one draft GitHub Release.
+- [x] Define and automatically enforce a platform-profile release inventory, versioned
+      manifest, global checksums and GitHub provenance attestations.
+- [ ] Confirm the three Linux installers, two macOS installers and Android APK/AAB are
+      attached to the public `v0.1.10` prerelease.
 - [ ] Verify every asset against SHA256SUMS.txt after downloading it.
 - [ ] Verify `SHA256SUMS.txt.asc` and all three Linux installer signatures against the published OpenPGP fingerprint.
-- [ ] Review the automated NSIS, MSI, Debian, RPM, AppImage, universal DMG and PKG smoke-test logs.
-- [ ] Install and uninstall each package manually on a clean target system.
+- [ ] Review the automated Debian, RPM, AppImage, universal DMG and PKG smoke-test logs.
+- [ ] Install and uninstall each enabled desktop package manually on a clean target system.
 
 ## Policy and support
 
@@ -135,6 +140,6 @@ The official signing-key fingerprint is `7076 AFAF 1090 C370 9D1F 080C 5D77 9E12
 
 ## Publish
 
-- [ ] Review generated release notes and known limitations.
-- [ ] Keep the GitHub Release as a draft until clean-machine testing is complete.
-- [ ] Mark the release as a prerelease for the beta and publish it manually.
+- [x] Review generated release notes and document the temporary absence of Windows.
+- [ ] Confirm the signed tag publishes `v0.1.10` automatically with the **Pre-release** flag.
+- [ ] Announce the tester release only after downloading and independently verifying its assets.

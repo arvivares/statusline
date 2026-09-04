@@ -1,6 +1,25 @@
 name: Android artifacts
 
 on:
+  workflow_call:
+    inputs:
+      release:
+        description: Build the signed Android release artifacts
+        required: true
+        type: boolean
+      release_version:
+        description: Product version expected by the calling release workflow
+        required: true
+        type: string
+    secrets:
+      ANDROID_UPLOAD_KEYSTORE_BASE64:
+        required: false
+      ANDROID_UPLOAD_KEYSTORE_PASSWORD:
+        required: false
+      ANDROID_UPLOAD_KEY_ALIAS:
+        required: false
+      ANDROID_UPLOAD_KEY_PASSWORD:
+        required: false
   workflow_dispatch:
     inputs:
       release:
@@ -14,8 +33,6 @@ on:
   push:
     branches:
       - main
-    tags:
-      - "android-v*"
     paths:
       - ".github/workflows/android.yml"
       - "apps/android/**"
@@ -117,10 +134,15 @@ jobs:
       - name: Test, lint and build debug APK
         shell: bash
         env:
+          RELEASE_BUILD: ${{ inputs.release || false }}
           REPOSITORY_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
         working-directory: apps/android
         run: |
           set -euo pipefail
+          gradle_tasks=(testDebugUnitTest lintRelease)
+          if [[ "$RELEASE_BUILD" != true ]]; then
+            gradle_tasks+=(assembleDebug)
+          fi
           relay_args=()
           if [[ -n "$REPOSITORY_RELAY_BASE_URL" ]]; then
             if [[ ! "$REPOSITORY_RELAY_BASE_URL" =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$ ]]; then
@@ -130,15 +152,14 @@ jobs:
             relay_args+=("-PSTATUSLINE_RELAY_BASE_URL=$REPOSITORY_RELAY_BASE_URL")
           fi
           ./gradlew --no-daemon \
-            testDebugUnitTest \
-            lintRelease \
-            assembleDebug \
+            "${gradle_tasks[@]}" \
             "${relay_args[@]}"
 
       - name: Upload debug APK
+        if: inputs.release != true
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: statusline-android-debug-${{ github.run_number }}-${{ github.sha }}
+          name: statusline-android-debug-${{ github.run_number }}-${{ github.sha }}-attempt-${{ github.run_attempt }}
           path: apps/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           compression-level: 0
@@ -147,9 +168,7 @@ jobs:
   release:
     name: Signed release APK and AAB
     needs: validate
-    if: >-
-      startsWith(github.ref, 'refs/tags/android-v') ||
-      (github.event_name == 'workflow_dispatch' && inputs.release)
+    if: inputs.release == true
     runs-on: ubuntu-22.04
     timeout-minutes: 35
 
@@ -164,6 +183,11 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
 
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
@@ -229,20 +253,28 @@ jobs:
         run: |
           set -euo pipefail
           ./gradlew --no-daemon \
-            testDebugUnitTest \
-            lintRelease \
             assembleRelease \
             bundleRelease \
             "-PSTATUSLINE_RELAY_BASE_URL=$REPOSITORY_RELAY_BASE_URL"
 
       - name: Verify and collect release artifacts
+        id: release-metadata
         shell: bash
+        env:
+          REQUESTED_RELEASE_VERSION: ${{ inputs.release_version || '' }}
         run: |
           set -euo pipefail
+          release_version=$(node -p "require('./release.json').components.android.versionName")
+          if [[ -n "$REQUESTED_RELEASE_VERSION" && "$REQUESTED_RELEASE_VERSION" != "$release_version" ]]; then
+            echo "Requested release version $REQUESTED_RELEASE_VERSION does not match Android $release_version." >&2
+            exit 1
+          fi
+          echo "version=$release_version" >> "$GITHUB_OUTPUT"
           apk="apps/android/app/build/outputs/apk/release/app-release.apk"
           aab="apps/android/app/build/outputs/bundle/release/app-release.aab"
           mapping="apps/android/app/build/outputs/mapping/release/mapping.txt"
           artifact_dir="$RUNNER_TEMP/statusline-android-release"
+          diagnostics_dir="$RUNNER_TEMP/statusline-android-diagnostics"
 
           [[ -s "$apk" && -s "$aab" && -s "$mapping" ]]
           bash apps/android/scripts/verify-r8-registrars.sh "$mapping"
@@ -252,19 +284,32 @@ jobs:
           jarsigner -verify -verbose -certs "$aab"
 
           mkdir -p "$artifact_dir"
-          cp "$apk" "$artifact_dir/statusline-release.apk"
-          cp "$aab" "$artifact_dir/statusline-release.aab"
-          cp "$mapping" "$artifact_dir/mapping.txt"
+          mkdir -p "$diagnostics_dir"
+          cp "$apk" "$artifact_dir/Statusline_${release_version}_android.apk"
+          cp "$aab" "$artifact_dir/Statusline_${release_version}_android.aab"
+          cp "$mapping" "$diagnostics_dir/Statusline_${release_version}_mapping.txt"
           cd "$artifact_dir"
-          sha256sum statusline-release.apk statusline-release.aab mapping.txt > SHA256SUMS.txt
+          sha256sum \
+            "Statusline_${release_version}_android.apk" \
+            "Statusline_${release_version}_android.aab" \
+            > ANDROID-SHA256SUMS.txt
 
       - name: Upload signed release artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: statusline-android-release-${{ github.run_number }}-${{ github.sha }}
+          name: statusline-${{ steps.release-metadata.outputs.version }}-android-release-attempt-${{ github.run_attempt }}
           path: ${{ runner.temp }}/statusline-android-release
           if-no-files-found: error
           compression-level: 0
+          retention-days: 30
+
+      - name: Upload private R8 mapping
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: android-r8-mapping-${{ github.run_number }}-${{ github.sha }}-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/statusline-android-diagnostics
+          if-no-files-found: error
+          compression-level: 9
           retention-days: 30
 
       - name: Remove temporary upload keystore

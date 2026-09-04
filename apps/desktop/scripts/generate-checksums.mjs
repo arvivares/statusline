@@ -7,7 +7,9 @@ import { basename, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const installerExtensions = new Set([
+  ".aab",
   ".appimage",
+  ".apk",
   ".deb",
   ".dmg",
   ".exe",
@@ -15,6 +17,8 @@ const installerExtensions = new Set([
   ".pkg",
   ".rpm",
 ]);
+
+const releaseMetadataFiles = new Set(["RELEASE-MANIFEST.json"]);
 
 export async function generateChecksums(inputDirectory) {
   const files = await collectInstallerFiles(resolve(inputDirectory));
@@ -44,7 +48,8 @@ async function collectInstallerFiles(directory) {
       files.push(...(await collectInstallerFiles(path)));
     } else if (
       entry.isFile() &&
-      installerExtensions.has(extension(entry.name).toLowerCase())
+      (installerExtensions.has(extension(entry.name).toLowerCase()) ||
+        releaseMetadataFiles.has(entry.name))
     ) {
       files.push(path);
     }

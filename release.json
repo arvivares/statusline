@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "product": "Statusline",
+  "version": "0.1.10",
+  "channel": "beta",
+  "tag": "v0.1.10",
+  "notes": "docs/release/notes/v0.1.10.md",
+  "distribution": {
+    "githubReleasePlatforms": ["linux", "macos", "android"],
+    "publishPrerelease": true,
+    "deferred": {
+      "windows": "awaiting-signpath-foundation"
+    }
+  },
+  "components": {
+    "desktop": {
+      "version": "0.1.10"
+    },
+    "android": {
+      "versionName": "0.1.10",
+      "versionCode": 6
+    },
+    "ios": {
+      "version": "1.0",
+      "build": 2,
+      "distribution": "app-store-manual"
+    }
+  }
+}

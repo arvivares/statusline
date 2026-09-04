@@ -1,6 +1,53 @@
-name: Desktop installers
+name: Desktop artifacts
 
 on:
+  workflow_call:
+    inputs:
+      platform:
+        description: Desktop platforms to build (windows, linux, macos, unix or all)
+        required: true
+        type: string
+      sign_windows:
+        description: Sign the Windows executable, NSIS and MSI through SignPath
+        required: true
+        type: boolean
+      sign_macos:
+        description: Sign and notarize the macOS DMG and PKG
+        required: true
+        type: boolean
+      sign_linux:
+        description: Sign Linux packages and checksums with OpenPGP
+        required: true
+        type: boolean
+      release:
+        description: Enforce the complete public-release policy
+        required: true
+        type: boolean
+    secrets:
+      SIGNPATH_API_TOKEN:
+        required: false
+      LINUX_GPG_PRIVATE_KEY_BASE64:
+        required: false
+      LINUX_GPG_PASSPHRASE:
+        required: false
+      APPLE_CERTIFICATE:
+        required: false
+      APPLE_CERTIFICATE_PASSWORD:
+        required: false
+      APPLE_INSTALLER_CERTIFICATE:
+        required: false
+      APPLE_INSTALLER_CERTIFICATE_PASSWORD:
+        required: false
+      APPLE_ID:
+        required: false
+      APPLE_PASSWORD:
+        required: false
+      APPLE_API_KEY:
+        required: false
+      APPLE_API_ISSUER:
+        required: false
+      APPLE_API_PRIVATE_KEY:
+        required: false
   workflow_dispatch:
     inputs:
       platform:
@@ -13,6 +60,12 @@ on:
           - windows
           - linux
           - macos
+          - unix
+      sign_windows:
+        description: Firmar EXE, NSIS y MSI mediante SignPath
+        required: true
+        default: false
+        type: boolean
       sign_macos:
         description: Firmar y notarizar el DMG y PKG de macOS
         required: true
@@ -23,15 +76,13 @@ on:
         required: true
         default: false
         type: boolean
-  push:
-    tags:
-      - "desktop-v*"
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
-  group: desktop-installers-${{ github.ref }}
+  group: desktop-artifacts-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -48,6 +99,7 @@ jobs:
     outputs:
       version: ${{ steps.metadata.outputs.version }}
       matrix: ${{ steps.metadata.outputs.matrix }}
+      signed_windows: ${{ steps.metadata.outputs.signed_windows }}
       signed_macos: ${{ steps.metadata.outputs.signed_macos }}
       signed_linux: ${{ steps.metadata.outputs.signed_linux }}
 
@@ -71,6 +123,7 @@ jobs:
           bash -n apps/desktop/scripts/package-macos-pkg.sh
           bash -n apps/desktop/scripts/notarize-macos-artifact.sh
           bash -n apps/desktop/scripts/cleanup-macos-signing.sh
+          bash -n apps/desktop/scripts/verify-detached-signature.sh
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -110,24 +163,40 @@ jobs:
         shell: bash
         env:
           DISPATCH_PLATFORM: ${{ inputs.platform || 'all' }}
+          DISPATCH_SIGN_WINDOWS: ${{ inputs.sign_windows || false }}
           DISPATCH_SIGN_MACOS: ${{ inputs.sign_macos || false }}
           DISPATCH_SIGN_LINUX: ${{ inputs.sign_linux || false }}
+          RELEASE_BUILD: ${{ inputs.release || false }}
         run: |
           set -euo pipefail
           version=$(node -p "require('./apps/desktop/package.json').version")
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+          includes_windows=false
+          includes_linux=false
+          includes_macos=false
           case "$DISPATCH_PLATFORM" in
             windows)
+              includes_windows=true
               matrix='{"include":[{"name":"Windows x64","runner":"windows-latest","build_args":"--ci --bundles nsis,msi"}]}'
               ;;
             linux)
+              includes_linux=true
               matrix='{"include":[{"name":"Linux x64","runner":"ubuntu-22.04","build_args":"--ci --bundles deb,rpm,appimage"}]}'
               ;;
             macos)
+              includes_macos=true
               matrix='{"include":[{"name":"macOS universal","runner":"macos-latest","build_args":"--ci --target universal-apple-darwin --bundles dmg"}]}'
               ;;
+            unix)
+              includes_linux=true
+              includes_macos=true
+              matrix='{"include":[{"name":"Linux x64","runner":"ubuntu-22.04","build_args":"--ci --bundles deb,rpm,appimage"},{"name":"macOS universal","runner":"macos-latest","build_args":"--ci --target universal-apple-darwin --bundles dmg"}]}'
+              ;;
             all)
+              includes_windows=true
+              includes_linux=true
+              includes_macos=true
               matrix='{"include":[{"name":"Windows x64","runner":"windows-latest","build_args":"--ci --bundles nsis,msi"},{"name":"Linux x64","runner":"ubuntu-22.04","build_args":"--ci --bundles deb,rpm,appimage"},{"name":"macOS universal","runner":"macos-latest","build_args":"--ci --target universal-apple-darwin --bundles dmg"}]}'
               ;;
             *)
@@ -137,25 +206,39 @@ jobs:
           esac
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
+          signed_windows=false
+          if [[ "$includes_windows" == true ]]; then
+            if [[ "$RELEASE_BUILD" == true || "$DISPATCH_SIGN_WINDOWS" == true ]]; then
+              signed_windows=true
+            fi
+          fi
+          echo "signed_windows=$signed_windows" >> "$GITHUB_OUTPUT"
+
           signed_macos=false
-          if [[ "$GITHUB_REF" == refs/tags/desktop-v* ]]; then
-            signed_macos=true
-          elif [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$DISPATCH_SIGN_MACOS" == true ]]; then
-            if [[ "$DISPATCH_PLATFORM" == macos || "$DISPATCH_PLATFORM" == all ]]; then
+          if [[ "$includes_macos" == true ]]; then
+            if [[ "$RELEASE_BUILD" == true || "$DISPATCH_SIGN_MACOS" == true ]]; then
               signed_macos=true
             fi
           fi
           echo "signed_macos=$signed_macos" >> "$GITHUB_OUTPUT"
 
           signed_linux=false
-          if [[ "$GITHUB_REF" == refs/tags/desktop-v* ]]; then
-            signed_linux=true
-          elif [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$DISPATCH_SIGN_LINUX" == true ]]; then
-            if [[ "$DISPATCH_PLATFORM" == linux || "$DISPATCH_PLATFORM" == all ]]; then
+          if [[ "$includes_linux" == true ]]; then
+            if [[ "$RELEASE_BUILD" == true || "$DISPATCH_SIGN_LINUX" == true ]]; then
               signed_linux=true
             fi
           fi
           echo "signed_linux=$signed_linux" >> "$GITHUB_OUTPUT"
+
+          if [[ "$RELEASE_BUILD" == true ]]; then
+            case "$DISPATCH_PLATFORM" in
+              all | unix) ;;
+              *)
+                echo "Public releases must use the complete or Unix preview desktop profile." >&2
+                exit 1
+                ;;
+            esac
+          fi
 
       - name: Validate universal relay endpoint
         shell: bash
@@ -166,17 +249,29 @@ jobs:
             exit 1
           fi
 
-      - name: Require signing credentials for tagged releases
-        if: startsWith(github.ref, 'refs/tags/desktop-v')
+      - name: Require SignPath configuration for signed Windows builds
+        if: steps.metadata.outputs.signed_windows == 'true'
         shell: bash
         env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-          WINDOWS_TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL }}
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+          SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          SIGNPATH_SIGNING_POLICY_SLUG: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG }}
+          SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG }}
+          SIGNPATH_EXPECTED_SIGNER_SUBJECT: ${{ vars.SIGNPATH_EXPECTED_SIGNER_SUBJECT }}
         run: |
           set -euo pipefail
-          if [[ -z "$WINDOWS_CERTIFICATE" || -z "$WINDOWS_CERTIFICATE_PASSWORD" || -z "$WINDOWS_TIMESTAMP_URL" ]]; then
-            echo "Tagged desktop releases require the Windows signing configuration." >&2
+          missing=()
+          [[ -n "$SIGNPATH_API_TOKEN" ]] || missing+=(SIGNPATH_API_TOKEN)
+          [[ -n "$SIGNPATH_ORGANIZATION_ID" ]] || missing+=(SIGNPATH_ORGANIZATION_ID)
+          [[ -n "$SIGNPATH_PROJECT_SLUG" ]] || missing+=(SIGNPATH_PROJECT_SLUG)
+          [[ -n "$SIGNPATH_SIGNING_POLICY_SLUG" ]] || missing+=(SIGNPATH_SIGNING_POLICY_SLUG)
+          [[ -n "$SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG" ]] || missing+=(SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG)
+          [[ -n "$SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG" ]] || missing+=(SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG)
+          [[ -n "$SIGNPATH_EXPECTED_SIGNER_SUBJECT" ]] || missing+=(SIGNPATH_EXPECTED_SIGNER_SUBJECT)
+          if (( ${#missing[@]} > 0 )); then
+            printf 'Signed Windows builds require SignPath configuration: %s\n' "${missing[*]}" >&2
             exit 1
           fi
 
@@ -236,41 +331,17 @@ jobs:
             exit 1
           fi
 
-  prepare-release:
-    name: Prepare draft release
-    needs: validate
-    runs-on: ubuntu-22.04
-    timeout-minutes: 5
-    permissions:
-      contents: write
-
-    steps:
-      - name: Create draft release for a tagged build
-        if: startsWith(github.ref, 'refs/tags/desktop-v')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          STATUSLINE_VERSION: ${{ needs.validate.outputs.version }}
-        run: |
-          set -euo pipefail
-          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            exit 0
-          fi
-          gh release create "$GITHUB_REF_NAME" \
-            --repo "$GITHUB_REPOSITORY" \
-            --verify-tag \
-            --draft \
-            --generate-notes \
-            --title "Statusline Companion v$STATUSLINE_VERSION"
-
   installers:
     name: ${{ matrix.name }}
-    needs: [validate, prepare-release]
+    needs: validate
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 75
+    timeout-minutes: 90
     permissions:
-      contents: write
+      actions: read
+      contents: read
     env:
-      IS_RELEASE: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/desktop-v') }}
+      RELEASE_BUILD: ${{ inputs.release || false }}
+      WINDOWS_SIGNED_BUILD: ${{ needs.validate.outputs.signed_windows }}
       MACOS_SIGNED_BUILD: ${{ needs.validate.outputs.signed_macos }}
       LINUX_SIGNED_BUILD: ${{ needs.validate.outputs.signed_linux }}
       STATUSLINE_VERSION: ${{ needs.validate.outputs.version }}
@@ -344,17 +415,6 @@ jobs:
         run: npm ci
         working-directory: apps/desktop
 
-      - name: Prepare Windows Authenticode signing
-        id: signing
-        if: runner.os == 'Windows' && env.IS_RELEASE == 'true'
-        shell: pwsh
-        env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-          WINDOWS_TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL }}
-        run: ./scripts/prepare-windows-signing.ps1
-        working-directory: apps/desktop
-
       - name: Prepare macOS notarization credentials
         if: runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
         shell: bash
@@ -417,6 +477,7 @@ jobs:
         working-directory: apps/desktop
 
       - name: Build native installers
+        if: runner.os != 'Windows' || env.WINDOWS_SIGNED_BUILD != 'true'
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # action-v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -424,17 +485,104 @@ jobs:
           APPLE_TEAM_ID: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && vars.APPLE_TEAM_ID || '' }}
         with:
           projectPath: apps/desktop
-          args: ${{ matrix.build_args }} ${{ steps.signing.outputs.args }}
-          tagName: ${{ env.IS_RELEASE == 'true' && runner.os != 'macOS' && github.ref_name || '' }}
-          releaseName: ${{ env.IS_RELEASE == 'true' && 'Statusline Companion v__VERSION__' || '' }}
-          releaseBody: ${{ env.IS_RELEASE == 'true' && 'Beta de Statusline Companion para Windows, Linux y macOS. Verifica SHA256SUMS.txt y, en Linux, las firmas OpenPGP detached antes de instalar.' || '' }}
-          releaseDraft: ${{ env.IS_RELEASE == 'true' }}
-          generateReleaseNotes: ${{ env.IS_RELEASE == 'true' }}
+          args: ${{ matrix.build_args }}
           retryAttempts: 0
           uploadUpdaterJson: false
           uploadUpdaterSignatures: false
           uploadWorkflowArtifacts: ${{ runner.os != 'macOS' }}
-          workflowArtifactNamePattern: statusline-[version]-[platform]-[arch]-[bundle]
+          workflowArtifactNamePattern: statusline-[version]-[platform]-[arch]-[bundle]-attempt-${{ github.run_attempt }}
+
+      - name: Build Windows application without bundling
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        shell: pwsh
+        run: npm exec tauri -- build --ci --no-bundle
+        working-directory: apps/desktop
+
+      - name: Upload unsigned Windows application for SignPath
+        id: signpath-application-input
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: unsigned-signpath-input-application-${{ github.sha }}-attempt-${{ github.run_attempt }}
+          path: apps/desktop/src-tauri/target/release/statusline-desktop.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+      - name: Sign Windows application through SignPath
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.signpath-application-input.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: "3600"
+          output-artifact-directory: ${{ runner.temp }}/statusline-windows-application-signed
+
+      - name: Restore signed Windows application
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        shell: pwsh
+        run: >-
+          ./scripts/windows-signpath-artifacts.ps1
+          -Mode RestoreApplication
+          -InputPath '${{ runner.temp }}/statusline-windows-application-signed'
+          -OutputPath './src-tauri/target/release/statusline-desktop.exe'
+        working-directory: apps/desktop
+
+      - name: Bundle Windows installers without recompiling
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        shell: pwsh
+        run: npm exec tauri -- bundle --ci --bundles nsis,msi --no-sign
+        working-directory: apps/desktop
+
+      - name: Stage unsigned Windows installers for SignPath
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        shell: pwsh
+        run: >-
+          ./scripts/windows-signpath-artifacts.ps1
+          -Mode StageInstallers
+          -InputPath './src-tauri/target/release/bundle'
+          -OutputPath '${{ runner.temp }}/statusline-windows-installers-unsigned'
+        working-directory: apps/desktop
+
+      - name: Upload unsigned Windows installers for SignPath
+        id: signpath-installers-input
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: unsigned-signpath-input-installers-${{ github.sha }}-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/statusline-windows-installers-unsigned
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+      - name: Sign Windows installers through SignPath
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.signpath-installers-input.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: "3600"
+          output-artifact-directory: ${{ runner.temp }}/statusline-windows-installers-signpath
+
+      - name: Stage signed Windows installers
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        shell: pwsh
+        run: >-
+          ./scripts/windows-signpath-artifacts.ps1
+          -Mode StageInstallers
+          -InputPath '${{ runner.temp }}/statusline-windows-installers-signpath'
+          -OutputPath '${{ runner.temp }}/statusline-windows-installers-signed'
+        working-directory: apps/desktop
 
       - name: Create macOS PKG
         id: macos-pkg
@@ -495,28 +643,38 @@ jobs:
           }
 
       - name: Verify Windows Authenticode signatures
-        if: runner.os == 'Windows' && env.IS_RELEASE == 'true'
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
         shell: pwsh
-        run: |
-          $files = @(
-            Get-Item "apps/desktop/src-tauri/target/release/statusline-desktop.exe"
-            Get-ChildItem "apps/desktop/src-tauri/target/release/bundle" -Recurse -File -Include *.exe,*.msi
-          )
-          if ($files.Count -lt 3) {
-            throw "Expected the application, NSIS installer and MSI for signature verification."
-          }
-          foreach ($file in $files) {
-            $signature = Get-AuthenticodeSignature -LiteralPath $file.FullName
-            if ($signature.Status -ne "Valid") {
-              throw "Invalid Authenticode signature on $($file.Name): $($signature.Status)"
-            }
-          }
+        run: >-
+          ./scripts/verify-windows-signatures.ps1
+          -ApplicationPath './src-tauri/target/release/statusline-desktop.exe'
+          -InstallerRoot '${{ runner.temp }}/statusline-windows-installers-signed'
+          -ExpectedSignerSubject '${{ vars.SIGNPATH_EXPECTED_SIGNER_SUBJECT }}'
+        working-directory: apps/desktop
 
-      - name: Smoke test Windows install and uninstall
-        if: runner.os == 'Windows'
+      - name: Smoke test unsigned Windows QA installers
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD != 'true'
         shell: pwsh
         run: ./scripts/smoke-installers-windows.ps1 -BundleRoot ./src-tauri/target/release/bundle
         working-directory: apps/desktop
+
+      - name: Smoke test signed Windows install and uninstall
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        shell: pwsh
+        run: >-
+          ./scripts/smoke-installers-windows.ps1
+          -BundleRoot '${{ runner.temp }}/statusline-windows-installers-signed'
+        working-directory: apps/desktop
+
+      - name: Upload signed Windows release installers
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ env.STATUSLINE_VERSION }}-windows-x64-signed-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/statusline-windows-installers-signed
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
 
       - name: Smoke test Linux packages
         if: runner.os == 'Linux'
@@ -576,20 +734,10 @@ jobs:
         if: runner.os == 'Linux' && env.LINUX_SIGNED_BUILD == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: statusline-${{ env.STATUSLINE_VERSION }}-linux-x64-signatures
+          name: statusline-${{ env.STATUSLINE_VERSION }}-linux-x64-signatures-attempt-${{ github.run_attempt }}
           path: apps/desktop/src-tauri/target/linux-signatures/*
           if-no-files-found: error
           retention-days: 30
-
-      - name: Attach Linux signatures to draft release
-        if: runner.os == 'Linux' && env.IS_RELEASE == 'true'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          gh release upload "$GITHUB_REF_NAME"
-          apps/desktop/src-tauri/target/linux-signatures/*.asc
-          --clobber
 
       - name: Smoke test macOS DMG and PKG
         if: runner.os == 'macOS'
@@ -603,7 +751,7 @@ jobs:
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-dmg
+          name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-dmg-attempt-${{ github.run_attempt }}
           path: apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
           if-no-files-found: error
           retention-days: 30
@@ -612,30 +760,10 @@ jobs:
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-pkg
+          name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-pkg-attempt-${{ github.run_attempt }}
           path: apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/pkg/*.pkg
           if-no-files-found: error
           retention-days: 30
-
-      - name: Attach notarized macOS installers to draft release
-        if: runner.os == 'macOS' && env.IS_RELEASE == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          gh release upload "$GITHUB_REF_NAME"
-          "${{ steps.macos-artifacts.outputs.dmg-path }}"
-          "${{ steps.macos-artifacts.outputs.pkg-path }}"
-          --clobber
-
-      - name: Remove temporary Windows signing material
-        if: always() && runner.os == 'Windows' && env.IS_RELEASE == 'true'
-        shell: pwsh
-        run: >-
-          ./scripts/cleanup-windows-signing.ps1
-          -Thumbprint '${{ steps.signing.outputs.thumbprint }}'
-          -PfxPath '${{ steps.signing.outputs.pfx-path }}'
-          -ConfigPath '${{ steps.signing.outputs.config-path }}'
-        working-directory: apps/desktop
 
       - name: Remove temporary Linux signing keyring
         if: always() && runner.os == 'Linux' && env.LINUX_SIGNED_BUILD == 'true'
@@ -660,8 +788,9 @@ jobs:
         working-directory: apps/desktop
 
   checksums:
-    name: Release checksums
+    name: Manual desktop checksums
     needs: [validate, installers]
+    if: inputs.release != true
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     permissions:
@@ -681,7 +810,7 @@ jobs:
       - name: Download installer artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: statusline-${{ needs.validate.outputs.version }}-*
+          pattern: statusline-${{ needs.validate.outputs.version }}-*-attempt-${{ github.run_attempt }}
           path: release-assets
           merge-multiple: true
 
@@ -709,21 +838,10 @@ jobs:
       - name: Upload checksum artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: statusline-${{ needs.validate.outputs.version }}-checksums
+          name: statusline-${{ needs.validate.outputs.version }}-checksums-attempt-${{ github.run_attempt }}
           path: SHA256SUMS.txt*
           if-no-files-found: error
           retention-days: 30
-
-      - name: Attach checksums to draft release
-        if: startsWith(github.ref, 'refs/tags/desktop-v')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          gh release upload "$GITHUB_REF_NAME"
-          SHA256SUMS.txt
-          SHA256SUMS.txt.asc
-          packaging/linux/statusline-release-signing-key.asc
-          --clobber
 
       - name: Remove checksum signing keyring
         if: always() && needs.validate.outputs.signed_linux == 'true'

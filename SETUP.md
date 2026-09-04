@@ -122,7 +122,12 @@ Desde `apps/android`:
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-GitHub Actions repite esas validaciones para cada cambio relevante y conserva el APK debug como artefacto. Los tags `android-v*` generan además el APK y AAB de publicación cuando están configurados la upload key y sus cuatro secretos; consulta [apps/android/README.md](apps/android/README.md#artefactos-de-github-actions).
+GitHub Actions repite esas validaciones para cada cambio relevante y conserva el APK debug
+como artefacto. Una ejecución manual de Android puede producir APK/AAB firmados para QA;
+el tag unificado `v<versión>` genera la release duradera de Android y escritorio cuando
+están configuradas todas las credenciales. Consulta
+[apps/android/README.md](apps/android/README.md#artefactos-de-github-actions) y el
+[runbook de release](docs/release/release-runbook.md).
 
 ## Antes de publicar
 

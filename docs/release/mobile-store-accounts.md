@@ -1,6 +1,7 @@
 # Mobile store account decisions
 
-Validated on 2 September 2026. Recheck the linked store requirements immediately before submission because platform policies can change.
+Last reviewed on 4 September 2026. Recheck the linked store requirements immediately
+before submission because platform policies can change.
 
 ## Shared product contact
 
@@ -37,7 +38,12 @@ As of 2 September 2026, the Personal developer account owned by `founder@inmerzi
 
 The first signed upload bundle was version `0.1.8` (`versionCode 4`). It was produced by workflow run [33498280582](https://github.com/arvivares/statusline/actions/runs/33498280582) with the stable upload key documented in the release checklist.
 
-The current Internal testing release is `0.1.9` (`versionCode 5`). Workflow run [33512410921](https://github.com/arvivares/statusline/actions/runs/33512410921) produced the signed AAB/APK, checksums, R8 mapping and an automated ML Kit registrar-constructor check. Google Play made it available to internal testers on 1 September 2026. Upload the `.aab`, not the APK, to Play Console; keep the APK only for direct artifact validation.
+The last Internal testing release before the closed test was `0.1.9` (`versionCode 5`).
+Workflow run [33512410921](https://github.com/arvivares/statusline/actions/runs/33512410921)
+produced the signed AAB/APK, checksums, R8 mapping and an automated ML Kit
+registrar-constructor check. Google Play made it available to internal testers on 1
+September 2026. Upload the `.aab`, not the APK, to Play Console; keep the APK only for
+direct artifact validation.
 
 The current closed-testing submission is `0.1.10-alpha.1`, backed by bundle `0.1.10` (`versionCode 6`) from workflow run [33545843193](https://github.com/arvivares/statusline/actions/runs/33545843193). On 2 September 2026 it was submitted to Google together with:
 
