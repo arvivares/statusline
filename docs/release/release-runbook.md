@@ -105,6 +105,30 @@ targets the exact workflow commit and matches `release.json`. The signed tag is 
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
 
+Release assets use portable ASCII filenames. Whitespace emitted by native packagers is
+normalized to `.` before checksums, provenance and upload are generated, so the names
+stored by GitHub remain byte-for-byte consistent with `SHA256SUMS.txt` and
+`RELEASE-MANIFEST.json`.
+
+## Recovering a verified draft without rebuilding
+
+Use [Recover draft release](../../.github/workflows/recover-release.yml) only when the
+main Release workflow has completed every enabled native-platform job successfully, wrote
+its release-candidate artifact, and then failed in the final draft verification. Supply
+the signed tag and failed source run ID. The recovery workflow fails closed unless:
+
+- the tag is annotated, verified by GitHub and matches `release.json`;
+- the source is a failed tag-triggered Release run for that exact tag commit;
+- every native job enabled by `release.json` succeeded exactly once;
+- one unexpired release-candidate artifact exists; and
+- the target release is still both draft and prerelease.
+
+Recovery downloads that candidate from GitHub Actions, without compiling any native
+code. It restages portable filenames, re-verifies Linux signatures, regenerates and signs
+checksums, emits a new provenance attestation, replaces the draft assets, compares the
+exact remote inventory and publishes only after every check passes. Never use recovery
+to combine artifacts from different runs, attempts, commits or tags.
+
 ## Independent verification
 
 Download the prerelease assets and verify them independently:

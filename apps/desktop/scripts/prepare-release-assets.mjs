@@ -57,6 +57,15 @@ function classify(path) {
   return extensionToKind.get(extname(path).toLowerCase());
 }
 
+function portableAssetName(name) {
+  const portableName = name.replace(/\s+/gu, ".");
+  assert(
+    /^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(portableName),
+    `filename is not portable across release hosts: ${name}`,
+  );
+  return portableName;
+}
+
 function platformFor(kind) {
   return kind.split("-", 1)[0];
 }
@@ -179,8 +188,12 @@ export async function prepareReleaseAssets({
   for (const source of [...distributables, ...signatures].sort((left, right) =>
     basename(left).localeCompare(basename(right), "en"),
   )) {
-    const name = basename(source);
-    assert(!stagedNames.has(name), `duplicate filename: ${name}`);
+    const sourceName = basename(source);
+    const name = portableAssetName(sourceName);
+    assert(
+      !stagedNames.has(name),
+      `duplicate portable filename after normalization: ${name}`,
+    );
     stagedNames.add(name);
     const destination = join(output, name);
     await copyFile(source, destination);
@@ -233,12 +246,23 @@ async function main() {
   }
 
   const context = {
-    repository: process.env.GITHUB_REPOSITORY ?? "",
-    commit: process.env.GITHUB_SHA ?? "",
-    tag: process.env.GITHUB_REF_NAME ?? "",
-    runId: process.env.GITHUB_RUN_ID ?? "",
-    runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? "1",
-    workflowUrl: `https://github.com/${process.env.GITHUB_REPOSITORY ?? ""}/actions/runs/${process.env.GITHUB_RUN_ID ?? ""}`,
+    repository:
+      process.env.STATUSLINE_RELEASE_REPOSITORY ??
+      process.env.GITHUB_REPOSITORY ??
+      "",
+    commit:
+      process.env.STATUSLINE_RELEASE_COMMIT ?? process.env.GITHUB_SHA ?? "",
+    tag:
+      process.env.STATUSLINE_RELEASE_TAG ?? process.env.GITHUB_REF_NAME ?? "",
+    runId:
+      process.env.STATUSLINE_RELEASE_RUN_ID ?? process.env.GITHUB_RUN_ID ?? "",
+    runAttempt:
+      process.env.STATUSLINE_RELEASE_RUN_ATTEMPT ??
+      process.env.GITHUB_RUN_ATTEMPT ??
+      "1",
+    workflowUrl:
+      process.env.STATUSLINE_RELEASE_WORKFLOW_URL ??
+      `https://github.com/${process.env.GITHUB_REPOSITORY ?? ""}/actions/runs/${process.env.GITHUB_RUN_ID ?? ""}`,
   };
   const manifest = await prepareReleaseAssets({
     inputDirectory,

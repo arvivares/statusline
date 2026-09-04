@@ -1,0 +1,280 @@
+name: Recover draft release
+
+run-name: Recover ${{ inputs.release_tag }} from run ${{ inputs.source_run_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Signed release tag whose draft must be recovered
+        required: true
+        type: string
+      source_run_id:
+        description: Failed Release workflow run containing the verified candidate artifact
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-refs/tags/${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
+  RELEASE_TAG: ${{ inputs.release_tag }}
+  SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+
+jobs:
+  recover:
+    name: Verify existing artifacts and publish prerelease
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      artifact-metadata: write
+      attestations: write
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Check out trusted recovery tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Validate signed tag, failed run and complete native builds
+        id: source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "source_run_id must be numeric." >&2
+            exit 1
+          fi
+
+          expected_tag=$(node -p "require('./release.json').tag")
+          version=$(node -p "require('./release.json').version")
+          release_platforms=$(node -p "require('./release.json').distribution.githubReleasePlatforms.join(',')")
+          if [[ "$RELEASE_TAG" != "$expected_tag" ]]; then
+            echo "release_tag must match release.json ($expected_tag)." >&2
+            exit 1
+          fi
+
+          tag_reference=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG")
+          if [[ $(jq -r '.object.type' <<< "$tag_reference") != tag ]]; then
+            echo "Recovery requires a signed annotated tag." >&2
+            exit 1
+          fi
+          tag_object_sha=$(jq -r '.object.sha' <<< "$tag_reference")
+          tag_object=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object_sha")
+          if [[ $(jq -r '.verification.verified' <<< "$tag_object") != true ]]; then
+            echo "GitHub did not verify the release tag signature." >&2
+            exit 1
+          fi
+          source_sha=$(jq -r '.object.sha' <<< "$tag_object")
+
+          source_run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID")
+          if [[ $(jq -r '.repository.full_name' <<< "$source_run") != "$GITHUB_REPOSITORY" ||
+                $(jq -r '.path' <<< "$source_run") != '.github/workflows/release.yml' ||
+                $(jq -r '.event' <<< "$source_run") != push ||
+                $(jq -r '.head_branch' <<< "$source_run") != "$RELEASE_TAG" ||
+                $(jq -r '.head_sha' <<< "$source_run") != "$source_sha" ||
+                $(jq -r '.conclusion' <<< "$source_run") != failure ]]; then
+            echo "The source run is not a failed Release run for the signed tag." >&2
+            exit 1
+          fi
+          source_run_attempt=$(jq -r '.run_attempt' <<< "$source_run")
+          source_workflow_url=$(jq -r '.html_url' <<< "$source_run")
+
+          jobs=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/jobs?per_page=100")
+          required_jobs=()
+          IFS=',' read -ra enabled_platforms <<< "$release_platforms"
+          for platform in "${enabled_platforms[@]}"; do
+            case "$platform" in
+              windows) required_jobs+=('Desktop release artifacts / Windows x64') ;;
+              linux) required_jobs+=('Desktop release artifacts / Linux x64') ;;
+              macos) required_jobs+=('Desktop release artifacts / macOS universal') ;;
+              android) required_jobs+=('Android release artifacts / Signed release APK and AAB') ;;
+              *)
+                echo "Unsupported recovery platform: $platform" >&2
+                exit 1
+                ;;
+            esac
+          done
+          for job_name in "${required_jobs[@]}"; do
+            if ! jq -e --arg name "$job_name" \
+              '[.jobs[] | select(.name == $name and .conclusion == "success")] | length == 1' \
+              <<< "$jobs" >/dev/null; then
+              echo "Required source job did not succeed exactly once: $job_name" >&2
+              exit 1
+            fi
+          done
+
+          artifact_name="statusline-$version-release-candidate-attempt-$source_run_attempt"
+          artifacts=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100")
+          if ! jq -e --arg name "$artifact_name" \
+            '[.artifacts[] | select(.name == $name and .expired == false)] | length == 1' \
+            <<< "$artifacts" >/dev/null; then
+            echo "The source run does not contain exactly one live release candidate artifact." >&2
+            exit 1
+          fi
+
+          release_state=$(gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isPrerelease \
+            --jq '[.isDraft, .isPrerelease] | @tsv')
+          if [[ "$release_state" != $'true\ttrue' ]]; then
+            echo "Recovery is only allowed for an existing draft prerelease." >&2
+            exit 1
+          fi
+
+          {
+            echo "artifact_name=$artifact_name"
+            echo "source_run_attempt=$source_run_attempt"
+            echo "source_sha=$source_sha"
+            echo "source_workflow_url=$source_workflow_url"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download verified release candidate without rebuilding
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ steps.source.outputs.artifact_name }}
+          path: candidate-assets
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.SOURCE_RUN_ID }}
+
+      - name: Normalize filenames and regenerate provenance manifest
+        env:
+          STATUSLINE_RELEASE_REPOSITORY: ${{ github.repository }}
+          STATUSLINE_RELEASE_COMMIT: ${{ steps.source.outputs.source_sha }}
+          STATUSLINE_RELEASE_TAG: ${{ env.RELEASE_TAG }}
+          STATUSLINE_RELEASE_RUN_ID: ${{ env.SOURCE_RUN_ID }}
+          STATUSLINE_RELEASE_RUN_ATTEMPT: ${{ steps.source.outputs.source_run_attempt }}
+          STATUSLINE_RELEASE_WORKFLOW_URL: ${{ steps.source.outputs.source_workflow_url }}
+        run: >-
+          node apps/desktop/scripts/prepare-release-assets.mjs
+          candidate-assets
+          public-release
+
+      - name: Verify Linux package signatures independently
+        run: >-
+          bash apps/desktop/scripts/verify-linux-signatures.sh
+          public-release
+          packaging/linux/statusline-release-signing-key.asc
+
+      - name: Generate portable SHA-256 manifest
+        run: >-
+          node apps/desktop/scripts/generate-checksums.mjs
+          public-release
+          public-release/SHA256SUMS.txt
+
+      - name: Prepare checksum signing key
+        id: checksum-signing
+        env:
+          LINUX_GPG_PRIVATE_KEY_BASE64: ${{ secrets.LINUX_GPG_PRIVATE_KEY_BASE64 }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: >-
+          bash apps/desktop/scripts/prepare-linux-signing.sh
+          packaging/linux/statusline-release-signing-key.asc
+
+      - name: Sign checksum manifest
+        env:
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: >-
+          bash apps/desktop/scripts/sign-linux-files.sh
+          public-release/SHA256SUMS.txt
+
+      - name: Verify checksum signature with public key
+        run: >-
+          bash apps/desktop/scripts/verify-detached-signature.sh
+          public-release/SHA256SUMS.txt
+          public-release/SHA256SUMS.txt.asc
+          packaging/linux/statusline-release-signing-key.asc
+
+      - name: Verify every checksum
+        run: sha256sum --check SHA256SUMS.txt
+        working-directory: public-release
+
+      - name: Add public verification key
+        run: cp packaging/linux/statusline-release-signing-key.asc public-release/
+
+      - name: Attest recovered build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-checksums: public-release/SHA256SUMS.txt
+
+      - name: Upload recovered release candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ steps.source.outputs.version }}-release-recovery-attempt-${{ github.run_attempt }}
+          path: public-release
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Remove checksum signing keyring
+        if: always()
+        run: >-
+          bash apps/desktop/scripts/cleanup-linux-signing.sh
+          '${{ steps.checksum-signing.outputs.gnupg-home }}'
+
+      - name: Replace draft assets with normalized verified assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$RELEASE_TAG" public-release/* --clobber
+
+      - name: Verify exact draft inventory
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          find public-release -maxdepth 1 -type f -exec basename {} \; | sort > expected-assets.txt
+          gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json assets \
+            --jq '.assets[].name' \
+            | sort > attached-assets.txt
+          diff -u expected-assets.txt attached-assets.txt
+          release_state=$(gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isPrerelease \
+            --jq '[.isDraft, .isPrerelease] | @tsv')
+          if [[ "$release_state" != $'true\ttrue' ]]; then
+            echo "Release must remain a draft prerelease until verification completes." >&2
+            exit 1
+          fi
+
+      - name: Publish recovered prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release edit "$RELEASE_TAG"
+          --repo "$GITHUB_REPOSITORY"
+          --draft=false
+          --prerelease
+          --latest=false
+
+      - name: Verify published prerelease state
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          release_state=$(gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isPrerelease \
+            --jq '[.isDraft, .isPrerelease] | @tsv')
+          if [[ "$release_state" != $'false\ttrue' ]]; then
+            echo "Recovered assets were not published as a prerelease." >&2
+            exit 1
+          fi

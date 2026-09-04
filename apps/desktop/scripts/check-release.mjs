@@ -105,6 +105,9 @@ const capabilities = readJson("src-tauri/capabilities/default.json");
 const releaseMetadata = readJson("../../release.json");
 const workflow = readText("../../.github/workflows/desktop-installers.yml");
 const releaseWorkflow = readText("../../.github/workflows/release.yml");
+const recoveryWorkflow = readText(
+  "../../.github/workflows/recover-release.yml",
+);
 const androidWorkflow = readText("../../.github/workflows/android.yml");
 const smokeWorkflow = readText(
   "../../.github/workflows/desktop-installer-smoke.yml",
@@ -634,6 +637,27 @@ for (const requiredReleaseWorkflowToken of [
     `unified release workflow is missing ${requiredReleaseWorkflowToken}`,
   );
 }
+for (const requiredRecoveryWorkflowToken of [
+  "source_run_id:",
+  "Recovery requires a signed annotated tag",
+  "Required source job did not succeed exactly once",
+  "Download verified release candidate without rebuilding",
+  "Normalize filenames and regenerate provenance manifest",
+  "STATUSLINE_RELEASE_COMMIT",
+  "Replace draft assets with normalized verified assets",
+  "Verify exact draft inventory",
+  "Publish recovered prerelease",
+]) {
+  assert(
+    recoveryWorkflow.includes(requiredRecoveryWorkflowToken),
+    `release recovery workflow is missing ${requiredRecoveryWorkflowToken}`,
+  );
+}
+assert(
+  releaseAssetScript.includes('name.replace(/\\s+/gu, ".")') &&
+    releaseAssetScript.includes("STATUSLINE_RELEASE_WORKFLOW_URL"),
+  "release assets must use portable names and support verified recovery provenance",
+);
 assert(
   androidWorkflow.includes("workflow_call:") &&
     androidWorkflow.includes("Signed release APK and AAB") &&
