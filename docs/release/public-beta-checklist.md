@@ -101,10 +101,21 @@ Automated and local trust validation passed for installer run [33370463028](http
 
 Until these checks pass, the generated DMG and PKG are private test artifacts, not a public macOS release.
 
+## Linux signing
+
+- [x] Create a dedicated RSA-4096 OpenPGP release-signing key.
+- [x] Commit only the public key and publish its full fingerprint.
+- [x] Store the encrypted private-key export and passphrase as separate GitHub Actions secrets.
+- [ ] Generate signed DEB, RPM and AppImage artifacts in CI and verify every detached signature independently.
+- [ ] Verify the signed installers after downloading them from GitHub Actions on a clean Linux machine.
+
+The official signing-key fingerprint is `7076 AFAF 1090 C370 9D1F 080C 5D77 9E12 FC11 30DB`. The private key is never stored in the repository or uploaded as an artifact.
+
 ## Distribution integrity
 
 - [ ] Confirm all seven installers are attached to one draft GitHub Release.
 - [ ] Verify every asset against SHA256SUMS.txt after downloading it.
+- [ ] Verify `SHA256SUMS.txt.asc` and all three Linux installer signatures against the published OpenPGP fingerprint.
 - [ ] Review the automated NSIS, MSI, Debian, RPM, AppImage, universal DMG and PKG smoke-test logs.
 - [ ] Install and uninstall each package manually on a clean target system.
 

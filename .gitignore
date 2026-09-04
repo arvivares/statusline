@@ -20,6 +20,8 @@ DerivedData/
 *.jks
 *.keystore
 keystore.properties
+**/*private-key*.asc
+**/*revocation-certificate*.rev
 
 # Desktop frontend and Rust build output
 apps/desktop/node_modules/

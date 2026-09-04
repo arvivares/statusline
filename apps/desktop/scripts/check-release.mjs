@@ -78,6 +78,17 @@ const smokeWorkflow = readText(
   "../../.github/workflows/desktop-installer-smoke.yml",
 );
 const windowsSmokeScript = readText("scripts/smoke-installers-windows.ps1");
+const linuxSigningPreparationScript = readText(
+  "scripts/prepare-linux-signing.sh",
+);
+const linuxSigningScript = readText("scripts/sign-linux-files.sh");
+const linuxSignatureVerificationScript = readText(
+  "scripts/verify-linux-signatures.sh",
+);
+const linuxSigningCleanupScript = readText("scripts/cleanup-linux-signing.sh");
+const linuxPublicKey = readText(
+  "../../packaging/linux/statusline-release-signing-key.asc",
+);
 const macosSmokeScript = readText("scripts/smoke-installer-macos.sh");
 const macosSigningScript = readText("scripts/prepare-macos-signing.sh");
 const macosPackageScript = readText("scripts/package-macos-pkg.sh");
@@ -235,6 +246,10 @@ for (const relativePath of [
   "scripts/generate-checksums.mjs",
   "scripts/smoke-installers-windows.ps1",
   "scripts/smoke-installers-linux.sh",
+  "scripts/prepare-linux-signing.sh",
+  "scripts/sign-linux-files.sh",
+  "scripts/verify-linux-signatures.sh",
+  "scripts/cleanup-linux-signing.sh",
   "scripts/smoke-installer-macos.sh",
   "scripts/prepare-macos-signing.sh",
   "scripts/package-macos-pkg.sh",
@@ -246,6 +261,7 @@ for (const relativePath of [
   "src-tauri/windows/nsis-hooks.nsh",
   "src-tauri/Info.macos.plist",
   "../../.github/workflows/desktop-installer-smoke.yml",
+  "../../packaging/linux/statusline-release-signing-key.asc",
   "../../LICENSE",
   "../../PRIVACY.md",
   "../../SUPPORT.md",
@@ -280,6 +296,19 @@ assert(
     desktopLibSource.includes("window.hide()") &&
     desktopLibSource.includes('"quit" => app.exit(0)'),
   "the companion window must close to the tray and exit only from its explicit menu command",
+);
+assert(
+  linuxSigningPreparationScript.includes("LINUX_GPG_PRIVATE_KEY_BASE64") &&
+    linuxSigningPreparationScript.includes("LINUX_GPG_PASSPHRASE") &&
+    linuxSigningPreparationScript.includes("signing-probe") &&
+    linuxSigningPreparationScript.includes("public_fingerprint") &&
+    linuxSigningScript.includes("--detach-sign") &&
+    linuxSignatureVerificationScript.includes("VALIDSIG") &&
+    linuxSignatureVerificationScript.includes("Expected exactly one DEB") &&
+    linuxSigningCleanupScript.includes("statusline-gnupg.") &&
+    linuxPublicKey.includes("BEGIN PGP PUBLIC KEY BLOCK") &&
+    !linuxPublicKey.includes("BEGIN PGP PRIVATE KEY BLOCK"),
+  "Linux signing must use a pinned public key, ephemeral keyring and detached OpenPGP signatures",
 );
 assert(
   macosSigningScript.includes("APPLE_CERTIFICATE") &&
@@ -318,6 +347,12 @@ for (const requiredWorkflowToken of [
   "WINDOWS_CERTIFICATE",
   "WINDOWS_CERTIFICATE_PASSWORD",
   "WINDOWS_TIMESTAMP_URL",
+  "LINUX_GPG_PRIVATE_KEY_BASE64",
+  "LINUX_GPG_PASSPHRASE",
+  "sign_linux",
+  "Sign Linux installers with OpenPGP",
+  "Sign SHA-256 manifest with OpenPGP",
+  "verify-linux-signatures.sh",
   "APPLE_CERTIFICATE",
   "APPLE_INSTALLER_CERTIFICATE",
   "APPLE_INSTALLER_SIGNING_IDENTITY",
@@ -367,6 +402,8 @@ for (const requiredSmokeToken of [
   "merge-multiple: true",
   "timeout-minutes: 10",
   "Installer checksum manifest",
+  "require_linux_signatures",
+  "Verify Linux OpenPGP signatures",
   "generate-checksums.mjs",
 ]) {
   assert(

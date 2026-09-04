@@ -81,7 +81,7 @@ npm run bundle:linux
 npm run bundle:macos
 ```
 
-Windows produce NSIS y MSI; Linux produce DEB, RPM y AppImage; macOS produce un DMG universal para Apple Silicon e Intel. Consulta [docs/release/desktop-installers.md](../../docs/release/desktop-installers.md).
+Windows produce NSIS y MSI; Linux produce DEB, RPM y AppImage con firmas OpenPGP detached en builds públicos; macOS produce un DMG universal para Apple Silicon e Intel. Consulta [docs/release/desktop-installers.md](../../docs/release/desktop-installers.md).
 
 ## Estructura
 

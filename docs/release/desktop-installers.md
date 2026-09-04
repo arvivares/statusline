@@ -62,7 +62,8 @@ La URL se incorpora al binario, pero no concede acceso a ningún canal. Cada ins
 
 1. Actions → Desktop installers → Run workflow para elegir `all`, `windows`, `linux` o `macos` y crear sólo los artefactos necesarios.
 2. Un build manual de `macos` con `sign_macos` activado para validar Developer ID y notarización sin recompilar Windows/Linux ni crear una release.
-3. Un tag desktop-v<versión> para una GitHub Release duradera en estado borrador. Los tags exigen las credenciales de firma de Windows y macOS.
+3. Un build manual de `linux` con `sign_linux` activado para generar y validar firmas OpenPGP sin recompilar Windows/macOS ni crear una release.
+4. Un tag desktop-v<versión> para una GitHub Release duradera en estado borrador. Los tags exigen las credenciales de firma de Windows, Linux y macOS.
 
 Ejemplo:
 
@@ -76,10 +77,10 @@ El preflight comprueba que el tag coincide con npm, Cargo y Tauri, valida fronte
 Después de compilar, el pipeline:
 
 - instala, abre y desinstala NSIS y MSI en Windows;
-- inspecciona RPM/AppImage e instala y elimina Debian en Linux;
+- inspecciona RPM/AppImage, instala y elimina Debian, y verifica las firmas OpenPGP detached de los tres instaladores Linux;
 - monta el DMG, inspecciona el payload del PKG y verifica arm64 + x86_64, icono y detección de Codex en macOS;
 - para builds macOS firmados, verifica Developer ID, Hardened Runtime, timestamps, tickets grapados y aceptación de Gatekeeper en la app, el DMG y el PKG;
-- genera SHA256SUMS.txt;
+- genera SHA256SUMS.txt y, cuando Linux está firmado, también SHA256SUMS.txt.asc;
 - adjunta los artefactos a una release borrador para builds por tag.
 
 Si cambia sólo un smoke test, [desktop-installer-smoke.yml](../../.github/workflows/desktop-installer-smoke.yml) revalida artefactos existentes sin recompilar. La opción `require_macos_trust` debe permanecer activada para releases públicas; sólo se desactiva al inspeccionar un build manual deliberadamente no firmado.
@@ -91,6 +92,47 @@ Los instaladores no incluyen Codex ni credenciales. Cada usuario instala la CLI 
 Source Settings detecta standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y PATH. En Windows también inspecciona ubicaciones relativas a LOCALAPPDATA y APPDATA; ninguna ruta de usuario está hardcodeada.
 
 En una instalación por usuario de Windows, Statusline también recupera LOCALAPPDATA a partir de la ubicación de su propio ejecutable. Esto mantiene la detección estable aunque MSI, el shell o una herramienta corporativa entreguen variables o PATH incompletos.
+
+## Firma de Linux
+
+Las distribuciones públicas incluyen firmas OpenPGP detached ASCII-armored para DEB, RPM y AppImage, más una firma para `SHA256SUMS.txt`. Este esquema autentica exactamente los archivos descargados sin modificarlos y funciona de la misma manera para los tres formatos. La firma de metadatos de un futuro repositorio APT o RPM sería una capa adicional y no se reemplaza con estas firmas detached.
+
+La clave pública oficial está versionada en [`packaging/linux/statusline-release-signing-key.asc`](../../packaging/linux/statusline-release-signing-key.asc). Su fingerprint es:
+
+```text
+7076 AFAF 1090 C370 9D1F 080C 5D77 9E12 FC11 30DB
+```
+
+GitHub Actions usa exclusivamente:
+
+- secret `LINUX_GPG_PRIVATE_KEY_BASE64`: exportación ASCII-armored de la clave privada, codificada completa en base64;
+- secret `LINUX_GPG_PASSPHRASE`: contraseña de la clave privada.
+
+La clave privada se importa en un keyring efímero, se comprueba contra la clave pública versionada y se prueba antes de comenzar la compilación. Después de firmar, el pipeline verifica las firmas desde un segundo keyring que sólo contiene la clave pública y elimina el material privado temporal. Los tags fallan en preflight si falta cualquiera de los dos secrets. Los runs manuales sólo se firman al activar `sign_linux`.
+
+Para configurar otra identidad en un fork:
+
+```shell
+gpg --quick-generate-key "Statusline Release Signing <release@example.com>" rsa4096 sign 3y
+gpg --armor --export <FINGERPRINT> > packaging/linux/statusline-release-signing-key.asc
+gpg --armor --export-secret-keys <FINGERPRINT> \
+  | base64 \
+  | tr -d '\n' \
+  | gh secret set LINUX_GPG_PRIVATE_KEY_BASE64
+gh secret set LINUX_GPG_PASSPHRASE
+```
+
+Conserva además una copia cifrada de la clave privada fuera del repositorio. Para verificar una descarga oficial:
+
+```shell
+gpg --import statusline-release-signing-key.asc
+gpg --fingerprint founder@inmerzion.io
+gpg --verify "Statusline Companion.deb.asc" "Statusline Companion.deb"
+gpg --verify SHA256SUMS.txt.asc SHA256SUMS.txt
+sha256sum --check --ignore-missing SHA256SUMS.txt
+```
+
+La salida de `gpg --fingerprint` debe coincidir exactamente con el fingerprint publicado arriba. Sustituye el nombre del DEB por el archivo RPM o AppImage para validar esos formatos.
 
 ## Firma de Windows
 

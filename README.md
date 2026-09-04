@@ -41,7 +41,7 @@ El companion consulta la sesión local de Codex; no requiere una API key de Open
 | Plataforma                  | Rol          | Implementación   | Distribución                               |
 | --------------------------- | ------------ | ---------------- | ------------------------------------------ |
 | Windows x64                 | Publisher    | Tauri + Rust     | NSIS `.exe` y MSI                          |
-| Linux x64                   | Publisher    | Tauri + Rust     | DEB, RPM y AppImage                        |
+| Linux x64                   | Publisher    | Tauri + Rust     | DEB, RPM y AppImage + firmas OpenPGP       |
 | macOS Apple Silicon + Intel | Publisher    | Tauri + Rust     | DMG y PKG universales                      |
 | macOS nativo                | Publisher    | SwiftUI          | Target `StatuslineCompanion` de Xcode      |
 | iPhone, iOS 17 o posterior  | Reader       | SwiftUI          | Xcode/TestFlight/App Store, proceso manual |
@@ -261,8 +261,9 @@ Consulta la [política de privacidad](PRIVACY.md), la [revisión de seguridad](d
 6. macOS DMG universal.
 7. macOS PKG universal.
 8. `SHA256SUMS.txt` para verificar el conjunto.
+9. Firmas OpenPGP `.asc` para los tres instaladores Linux y el manifiesto de checksums.
 
-El pipeline instala, abre y desinstala ambos formatos de Windows; valida paquetes Linux; inspecciona arquitecturas, firma, notarización, tickets grapados y Gatekeeper en macOS. Las releases públicas por tag requieren Authenticode para Windows y Developer ID + notarización para macOS. Los runs manuales pueden producir Windows sin firma para QA privado.
+El pipeline instala, abre y desinstala ambos formatos de Windows; valida paquetes Linux y sus firmas OpenPGP; inspecciona arquitecturas, firma, notarización, tickets grapados y Gatekeeper en macOS. Las releases públicas por tag requieren Authenticode para Windows, OpenPGP para Linux y Developer ID + notarización para macOS. Los runs manuales pueden producir artefactos deliberadamente sin firma para QA privado.
 
 Consulta [Instaladores de Statusline Companion](docs/release/desktop-installers.md) para variables, secretos y smoke tests.
 
@@ -287,6 +288,7 @@ La [checklist de beta pública](docs/release/public-beta-checklist.md) concentra
 | [`apps/apple/`](apps/apple/README.md) | Proyecto Xcode y targets de iPhone, WidgetKit y macOS                                       |
 | `services/relay/`                     | Worker, D1, rate limits y páginas públicas                                                  |
 | `protocol/`                           | Especificación v1, fixtures y ejemplos interoperables                                       |
+| `packaging/`                          | Claves públicas y recursos de verificación para los instaladores                            |
 | `docs/`                               | Arquitectura, despliegue, releases, seguridad y [archivo de diseño](docs/archive/README.md) |
 | `.github/workflows/`                  | Pipelines desktop y Android                                                                 |
 

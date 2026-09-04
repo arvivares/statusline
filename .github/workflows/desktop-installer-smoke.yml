@@ -22,6 +22,11 @@ on:
         required: true
         default: true
         type: boolean
+      require_linux_signatures:
+        description: Require valid OpenPGP signatures on all Linux installers
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   actions: read
@@ -81,7 +86,9 @@ jobs:
 
       - name: Parse Linux release scripts
         shell: bash
-        run: bash -n apps/desktop/scripts/smoke-installers-linux.sh
+        run: |
+          bash -n apps/desktop/scripts/smoke-installers-linux.sh
+          bash -n apps/desktop/scripts/verify-linux-signatures.sh
 
       - name: Install Linux smoke-test dependencies
         run: |
@@ -90,6 +97,7 @@ jobs:
             dbus-x11 \
             file \
             libfuse2 \
+            gnupg \
             rpm \
             xvfb
 
@@ -105,6 +113,15 @@ jobs:
       - name: Smoke test Linux installers
         shell: bash
         run: bash ./scripts/smoke-installers-linux.sh ../downloaded-installers
+        working-directory: apps/desktop
+
+      - name: Verify Linux OpenPGP signatures
+        if: inputs.require_linux_signatures
+        shell: bash
+        run: >-
+          bash ./scripts/verify-linux-signatures.sh
+          ../downloaded-installers
+          ../../packaging/linux/statusline-release-signing-key.asc
         working-directory: apps/desktop
 
   macos:
