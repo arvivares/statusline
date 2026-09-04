@@ -1,0 +1,423 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
+  RUST_VERSION: "1.98.0"
+  STATUSLINE_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
+
+jobs:
+  preflight:
+    name: Release policy preflight
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      desktop_platform: ${{ steps.metadata.outputs.desktop_platform }}
+      include_windows: ${{ steps.metadata.outputs.include_windows }}
+      version: ${{ steps.metadata.outputs.version }}
+
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            apps/desktop/package-lock.json
+            services/relay/package-lock.json
+
+      - name: Install validation dependencies
+        run: npm ci
+        working-directory: apps/desktop
+
+      - name: Install relay dependencies
+        run: npm ci
+        working-directory: services/relay
+
+      - name: Validate release metadata, tests and documentation
+        run: npm run release:check
+        working-directory: apps/desktop
+
+      - name: Validate universal relay
+        run: npm run db:migrate:local && npm test && npm run check
+        working-directory: services/relay
+
+      - name: Install pinned Rust formatter
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt
+          rustup default "$RUST_VERSION"
+
+      - name: Check Rust formatting
+        run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+
+      - name: Read and validate product version
+        id: metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./release.json').version")
+          expected_tag=$(node -p "require('./release.json').tag")
+          release_platforms=$(node -p "require('./release.json').distribution.githubReleasePlatforms.join(',')")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$expected_tag" != "v$version" ]]; then
+            echo "release.json tag must be v$version." >&2
+            exit 1
+          fi
+          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_REF_NAME" != "$expected_tag" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not match release.json ($expected_tag)." >&2
+            exit 1
+          fi
+          case "$release_platforms" in
+            linux,macos,android)
+              echo "desktop_platform=unix" >> "$GITHUB_OUTPUT"
+              echo "include_windows=false" >> "$GITHUB_OUTPUT"
+              ;;
+            windows,linux,macos,android)
+              echo "desktop_platform=all" >> "$GITHUB_OUTPUT"
+              echo "include_windows=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported GitHub Release platform profile: $release_platforms" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Verify signed annotated release tag
+        if: github.ref_type == 'tag'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag_reference=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME")
+          if [[ $(jq -r '.object.type' <<< "$tag_reference") != tag ]]; then
+            echo "Release tags must be signed annotated tags, not lightweight tags." >&2
+            exit 1
+          fi
+          tag_object_sha=$(jq -r '.object.sha' <<< "$tag_reference")
+          tag_object=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object_sha")
+          if [[ $(jq -r '.verification.verified' <<< "$tag_object") != true ]]; then
+            echo "GitHub did not verify the release tag signature." >&2
+            exit 1
+          fi
+          if [[ $(jq -r '.object.sha' <<< "$tag_object") != "$GITHUB_SHA" ]]; then
+            echo "Release tag does not target the workflow commit." >&2
+            exit 1
+          fi
+
+      - name: Require enabled-platform signing configuration
+        shell: bash
+        env:
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+          SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          SIGNPATH_SIGNING_POLICY_SLUG: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG }}
+          SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG }}
+          SIGNPATH_EXPECTED_SIGNER_SUBJECT: ${{ vars.SIGNPATH_EXPECTED_SIGNER_SUBJECT }}
+          LINUX_GPG_PRIVATE_KEY_BASE64: ${{ secrets.LINUX_GPG_PRIVATE_KEY_BASE64 }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_INSTALLER_CERTIFICATE: ${{ secrets.APPLE_INSTALLER_CERTIFICATE }}
+          APPLE_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
+          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ vars.APPLE_INSTALLER_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+          ANDROID_UPLOAD_KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          ANDROID_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+          ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+          INCLUDE_WINDOWS: ${{ steps.metadata.outputs.include_windows }}
+        run: |
+          set -euo pipefail
+          missing=()
+          required_values=(
+            STATUSLINE_RELAY_BASE_URL
+            LINUX_GPG_PRIVATE_KEY_BASE64
+            LINUX_GPG_PASSPHRASE
+            APPLE_CERTIFICATE
+            APPLE_CERTIFICATE_PASSWORD
+            APPLE_INSTALLER_CERTIFICATE
+            APPLE_INSTALLER_CERTIFICATE_PASSWORD
+            APPLE_SIGNING_IDENTITY
+            APPLE_INSTALLER_SIGNING_IDENTITY
+            APPLE_TEAM_ID
+            ANDROID_UPLOAD_KEYSTORE_BASE64
+            ANDROID_UPLOAD_KEYSTORE_PASSWORD
+            ANDROID_UPLOAD_KEY_ALIAS
+            ANDROID_UPLOAD_KEY_PASSWORD
+          )
+          if [[ "$INCLUDE_WINDOWS" == true ]]; then
+            required_values+=(
+              SIGNPATH_API_TOKEN
+              SIGNPATH_ORGANIZATION_ID
+              SIGNPATH_PROJECT_SLUG
+              SIGNPATH_SIGNING_POLICY_SLUG
+              SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG
+              SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG
+              SIGNPATH_EXPECTED_SIGNER_SUBJECT
+            )
+          fi
+          for variable_name in "${required_values[@]}"; do
+            [[ -n "${!variable_name:-}" ]] || missing+=("$variable_name")
+          done
+
+          has_apple_id=false
+          [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" ]] && has_apple_id=true
+          has_api_key=false
+          [[ -n "$APPLE_API_KEY" && -n "$APPLE_API_ISSUER" && -n "$APPLE_API_PRIVATE_KEY" ]] && has_api_key=true
+          if [[ "$has_apple_id" != true && "$has_api_key" != true ]]; then
+            missing+=(APPLE_NOTARIZATION_CREDENTIAL_SET)
+          fi
+
+          if (( ${#missing[@]} > 0 )); then
+            printf 'Release configuration is incomplete: %s\n' "${missing[*]}" >&2
+            exit 1
+          fi
+
+  prepare-release:
+    name: Create draft prerelease
+    needs: preflight
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out release notes
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Create or refresh draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STATUSLINE_VERSION: ${{ needs.preflight.outputs.version }}
+        run: |
+          set -euo pipefail
+          notes_path=$(node -p "require('./release.json').notes")
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            is_draft=$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft')
+            if [[ "$is_draft" != true ]]; then
+              echo "Refusing to replace an already published release." >&2
+              exit 1
+            fi
+            gh release edit "$GITHUB_REF_NAME" \
+              --repo "$GITHUB_REPOSITORY" \
+              --draft \
+              --prerelease \
+              --notes-file "$notes_path" \
+              --title "Statusline $STATUSLINE_VERSION Beta"
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --repo "$GITHUB_REPOSITORY" \
+              --verify-tag \
+              --draft \
+              --prerelease \
+              --notes-file "$notes_path" \
+              --title "Statusline $STATUSLINE_VERSION Beta"
+          fi
+
+  desktop:
+    name: Desktop release artifacts
+    needs: [preflight, prepare-release]
+    if: github.ref_type == 'tag'
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/desktop-installers.yml
+    with:
+      platform: ${{ needs.preflight.outputs.desktop_platform }}
+      sign_windows: ${{ needs.preflight.outputs.include_windows == 'true' }}
+      sign_macos: true
+      sign_linux: true
+      release: true
+    secrets: inherit
+
+  android:
+    name: Android release artifacts
+    needs: [preflight, prepare-release]
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/android.yml
+    with:
+      release: true
+      release_version: ${{ needs.preflight.outputs.version }}
+    secrets: inherit
+
+  finalize:
+    name: Verify and publish prerelease
+    needs: [preflight, desktop, android]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      artifact-metadata: write
+      attestations: write
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Check out release tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download all public candidate artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: statusline-${{ needs.preflight.outputs.version }}-*-attempt-${{ github.run_attempt }}
+          path: candidate-assets
+          merge-multiple: true
+
+      - name: Enforce release inventory and write provenance manifest
+        run: >-
+          node apps/desktop/scripts/prepare-release-assets.mjs
+          candidate-assets
+          public-release
+
+      - name: Verify Linux package signatures independently
+        run: >-
+          bash apps/desktop/scripts/verify-linux-signatures.sh
+          public-release
+          packaging/linux/statusline-release-signing-key.asc
+
+      - name: Generate complete SHA-256 manifest
+        run: >-
+          node apps/desktop/scripts/generate-checksums.mjs
+          public-release
+          public-release/SHA256SUMS.txt
+
+      - name: Prepare checksum signing key
+        id: checksum-signing
+        env:
+          LINUX_GPG_PRIVATE_KEY_BASE64: ${{ secrets.LINUX_GPG_PRIVATE_KEY_BASE64 }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: >-
+          bash apps/desktop/scripts/prepare-linux-signing.sh
+          packaging/linux/statusline-release-signing-key.asc
+
+      - name: Sign checksum manifest
+        env:
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: >-
+          bash apps/desktop/scripts/sign-linux-files.sh
+          public-release/SHA256SUMS.txt
+
+      - name: Verify checksum signature with public key
+        run: >-
+          bash apps/desktop/scripts/verify-detached-signature.sh
+          public-release/SHA256SUMS.txt
+          public-release/SHA256SUMS.txt.asc
+          packaging/linux/statusline-release-signing-key.asc
+
+      - name: Verify every checksum
+        run: sha256sum --check SHA256SUMS.txt
+        working-directory: public-release
+
+      - name: Add public verification key
+        run: cp packaging/linux/statusline-release-signing-key.asc public-release/
+
+      - name: Attest build provenance for every checksummed subject
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-checksums: public-release/SHA256SUMS.txt
+
+      - name: Upload complete release candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ needs.preflight.outputs.version }}-release-candidate-attempt-${{ github.run_attempt }}
+          path: public-release
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Remove checksum signing keyring
+        if: always()
+        run: >-
+          bash apps/desktop/scripts/cleanup-linux-signing.sh
+          '${{ steps.checksum-signing.outputs.gnupg-home }}'
+
+      - name: Attach verified assets to draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" public-release/* --clobber
+
+      - name: Verify draft release inventory
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          find public-release -maxdepth 1 -type f -exec basename {} \; | sort > expected-assets.txt
+          gh release view "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json assets \
+            --jq '.assets[].name' \
+            | sort > attached-assets.txt
+          diff -u expected-assets.txt attached-assets.txt
+          release_state=$(gh release view "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isPrerelease \
+            --jq '[.isDraft, .isPrerelease] | @tsv')
+          if [[ "$release_state" != $'true\ttrue' ]]; then
+            echo "Release must remain a draft prerelease until verification completes." >&2
+            exit 1
+          fi
+
+      - name: Publish verified prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release edit "$GITHUB_REF_NAME"
+          --repo "$GITHUB_REPOSITORY"
+          --draft=false
+          --prerelease
+          --latest=false
+
+      - name: Verify published prerelease state
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          release_state=$(gh release view "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isPrerelease \
+            --jq '[.isDraft, .isPrerelease] | @tsv')
+          if [[ "$release_state" != $'false\ttrue' ]]; then
+            echo "Verified assets were not published as a prerelease." >&2
+            exit 1
+          fi

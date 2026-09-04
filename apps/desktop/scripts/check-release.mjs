@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -102,7 +102,10 @@ const macosInfoPlist = readText("src-tauri/Info.macos.plist");
 const cargoToml = readText("src-tauri/Cargo.toml");
 const cargoLock = readText("src-tauri/Cargo.lock");
 const capabilities = readJson("src-tauri/capabilities/default.json");
+const releaseMetadata = readJson("../../release.json");
 const workflow = readText("../../.github/workflows/desktop-installers.yml");
+const releaseWorkflow = readText("../../.github/workflows/release.yml");
+const androidWorkflow = readText("../../.github/workflows/android.yml");
 const smokeWorkflow = readText(
   "../../.github/workflows/desktop-installer-smoke.yml",
 );
@@ -124,6 +127,16 @@ const macosPackageScript = readText("scripts/package-macos-pkg.sh");
 const macosNotarizationScript = readText("scripts/notarize-macos-artifact.sh");
 const macosSigningCleanupScript = readText("scripts/cleanup-macos-signing.sh");
 const checksumScript = readText("scripts/generate-checksums.mjs");
+const releaseAssetScript = readText("scripts/prepare-release-assets.mjs");
+const windowsSignPathScript = readText(
+  "scripts/windows-signpath-artifacts.ps1",
+);
+const windowsSignatureVerificationScript = readText(
+  "scripts/verify-windows-signatures.ps1",
+);
+const detachedSignatureVerificationScript = readText(
+  "scripts/verify-detached-signature.sh",
+);
 const windowsMsiTemplate = readText(
   "src-tauri/windows/statusline-per-user.wxs",
 );
@@ -141,6 +154,10 @@ const securityPolicy = readText("../../SECURITY.md");
 const codeSigningPolicy = readText(
   "../../docs/security/code-signing-policy.md",
 );
+const releaseRunbook = readText("../../docs/release/release-runbook.md");
+const releaseNotes = readText(`../../${releaseMetadata.notes}`);
+const androidGradle = readText("../android/app/build.gradle.kts");
+const appleProject = readText("../apple/statusline.xcodeproj/project.pbxproj");
 
 const expectedName = "statusline-desktop";
 const expectedProductName = "Statusline Companion";
@@ -156,6 +173,8 @@ const dialogCargoVersion = exactCargoDependencyVersion(
 );
 const base64Spec = cargoDependencySpec(cargoToml, "base64");
 const versions = {
+  "release.json": releaseMetadata.version,
+  "release.json desktop": releaseMetadata.components?.desktop?.version,
   "package.json": packageJson.version,
   "package-lock.json": packageLock.version,
   "package-lock root package": packageLock.packages?.[""]?.version,
@@ -163,6 +182,24 @@ const versions = {
   "Cargo.toml": cargoVersion,
   "Cargo.lock": lockedPackageVersion(cargoLock, expectedName),
 };
+
+const androidVersionName = androidGradle.match(
+  /^\s*versionName\s*=\s*"([^"]+)"/mu,
+)?.[1];
+const androidVersionCode = Number(
+  androidGradle.match(/^\s*versionCode\s*=\s*(\d+)/mu)?.[1],
+);
+const iosApplicationBuildSettings = [
+  ...appleProject.matchAll(/buildSettings = \{([\s\S]*?)^\s*\};/gmu),
+]
+  .map((match) => match[1])
+  .filter((settings) =>
+    /^\s*PRODUCT_BUNDLE_IDENTIFIER = inmerzion\.statusline;$/mu.test(settings),
+  )
+  .map((settings) => ({
+    build: settings.match(/^\s*CURRENT_PROJECT_VERSION = (\d+);$/mu)?.[1],
+    version: settings.match(/^\s*MARKETING_VERSION = ([^;]+);$/mu)?.[1],
+  }));
 
 assert(
   packageJson.name === expectedName,
@@ -240,11 +277,58 @@ assert(
 );
 
 const uniqueVersions = new Set(Object.values(versions));
+const githubReleasePlatforms =
+  releaseMetadata.distribution?.githubReleasePlatforms;
+const releasePlatformProfile = Array.isArray(githubReleasePlatforms)
+  ? githubReleasePlatforms.join(",")
+  : "";
+const isUnixPreviewProfile = releasePlatformProfile === "linux,macos,android";
+const isCompleteProfile =
+  releasePlatformProfile === "windows,linux,macos,android";
 assert(
   uniqueVersions.size === 1 && !uniqueVersions.has(undefined),
   `versions differ: ${Object.entries(versions)
     .map(([source, version]) => `${source}=${version}`)
     .join(", ")}`,
+);
+assert(
+  releaseMetadata.schemaVersion === 1 &&
+    releaseMetadata.product === "Statusline" &&
+    releaseMetadata.channel === "beta" &&
+    releaseMetadata.tag === `v${releaseMetadata.version}` &&
+    releaseMetadata.notes ===
+      `docs/release/notes/v${releaseMetadata.version}.md` &&
+    releaseMetadata.distribution?.publishPrerelease === true &&
+    (isUnixPreviewProfile || isCompleteProfile) &&
+    (isCompleteProfile
+      ? releaseMetadata.distribution?.deferred?.windows === undefined
+      : releaseMetadata.distribution?.deferred?.windows ===
+        "awaiting-signpath-foundation"),
+  "release.json must define the canonical beta version, tag and curated notes",
+);
+assert(
+  androidVersionName === releaseMetadata.components?.android?.versionName &&
+    androidVersionName === releaseMetadata.version &&
+    androidVersionCode === releaseMetadata.components?.android?.versionCode,
+  "Android versionName/versionCode must match release.json",
+);
+assert(
+  iosApplicationBuildSettings.length >= 2 &&
+    iosApplicationBuildSettings.every(
+      (settings) =>
+        settings.build === String(releaseMetadata.components?.ios?.build) &&
+        settings.version === releaseMetadata.components?.ios?.version,
+    ) &&
+    releaseMetadata.components?.ios?.distribution === "app-store-manual",
+  "release.json must record the submitted iPhone app version and manual delivery",
+);
+assert(
+  releaseNotes.includes(`Statusline ${releaseMetadata.version} Beta`) &&
+    releaseNotes.includes("## Verify before installing") &&
+    releaseNotes.includes("## Known beta limitations") &&
+    (!isUnixPreviewProfile ||
+      releaseNotes.includes("Windows is not included in this prerelease")),
+  "the current release needs curated notes with verification and limitations",
 );
 
 assertExactTargets(windowsConfig.bundle?.targets, ["nsis", "msi"], "Windows");
@@ -294,6 +378,8 @@ assert(
 
 for (const relativePath of [
   "scripts/generate-checksums.mjs",
+  "scripts/prepare-release-assets.mjs",
+  "scripts/prepare-release-assets.test.mjs",
   "scripts/smoke-installers-windows.ps1",
   "scripts/smoke-installers-linux.sh",
   "scripts/prepare-linux-signing.sh",
@@ -305,8 +391,9 @@ for (const relativePath of [
   "scripts/package-macos-pkg.sh",
   "scripts/notarize-macos-artifact.sh",
   "scripts/cleanup-macos-signing.sh",
-  "scripts/prepare-windows-signing.ps1",
-  "scripts/cleanup-windows-signing.ps1",
+  "scripts/windows-signpath-artifacts.ps1",
+  "scripts/verify-windows-signatures.ps1",
+  "scripts/verify-detached-signature.sh",
   "src-tauri/windows/statusline-per-user.wxs",
   "src-tauri/windows/nsis-hooks.nsh",
   "src-tauri/Info.macos.plist",
@@ -326,8 +413,11 @@ for (const relativePath of [
   "../../.github/ISSUE_TEMPLATE/feature-request.yml",
   "../../.github/pull_request_template.md",
   "../../.github/release.yml",
+  "../../.github/workflows/release.yml",
   "../../.github/workflows/repository-quality.yml",
+  "../../release.json",
   "../../docs/README.md",
+  "../../docs/release/release-runbook.md",
   "../../docs/security/code-signing-policy.md",
   "../../docs/release/public-beta-checklist.md",
   "../../scripts/check-markdown-links.mjs",
@@ -342,13 +432,18 @@ assert(
     rootReadme.includes("README.es.md") &&
     rootReadme.includes("Free code signing provided by [SignPath.io]") &&
     rootReadme.includes("certificate by [SignPath Foundation]") &&
+    rootReadme.includes("## Releases") &&
     spanishReadme.includes("## Code signing policy") &&
+    spanishReadme.includes("## Releases") &&
     securityPolicy.includes("## Report a vulnerability") &&
     codeSigningPolicy.includes("## Required release process") &&
     codeSigningPolicy.includes("manual approval") &&
     codeSigningPolicy.includes("fail-closed") &&
     codeSigningPolicy.includes("## Project roles") &&
+    codeSigningPolicy.includes("SignPath's GitHub trusted-build-system") &&
     codeSigningPolicy.includes("../../PRIVACY.md") &&
+    releaseRunbook.includes("## One release pipeline") &&
+    releaseRunbook.includes("## Required release inventory") &&
     codeOwners.includes("@arvivares"),
   "SignPath onboarding requires a public code-signing policy, named roles, privacy link and CODEOWNERS",
 );
@@ -418,30 +513,82 @@ assert(
   "macOS packaging must reuse the stapled app from the DMG, then sign and notarize both distributable formats",
 );
 assert(
-  checksumScript.includes('".pkg"') && !workflow.includes("archive: false"),
-  "checksum artifacts must include PKG installers and remain downloadable as standard archives",
-);
-
-const actionReferences = [workflow, smokeWorkflow].flatMap((contents) =>
-  [...contents.matchAll(/^\s*uses:\s*([^\s#]+)/gmu)].map((match) => match[1]),
+  checksumScript.includes('".pkg"') &&
+    checksumScript.includes('".apk"') &&
+    checksumScript.includes('".aab"') &&
+    checksumScript.includes('"RELEASE-MANIFEST.json"') &&
+    !workflow.includes("archive: false"),
+  "checksums must cover desktop, Android and release provenance artifacts",
 );
 assert(
-  actionReferences.length >= 12,
+  releaseAssetScript.includes('["windows-nsis", ".exe"]') &&
+    releaseAssetScript.includes('["linux-appimage", ".appimage"]') &&
+    releaseAssetScript.includes('["android-aab", ".aab"]') &&
+    releaseAssetScript.includes("githubReleasePlatforms") &&
+    releaseAssetScript.includes("symbolic links are not allowed") &&
+    releaseAssetScript.includes("GITHUB_RUN_ATTEMPT") &&
+    releaseAssetScript.includes("RELEASE-MANIFEST.json"),
+  "release inventory must fail closed and bind selected platforms to workflow provenance",
+);
+assert(
+  windowsSignPathScript.includes("RestoreApplication") &&
+    windowsSignPathScript.includes("StageInstallers") &&
+    windowsSignatureVerificationScript.includes("Get-AuthenticodeSignature") &&
+    windowsSignatureVerificationScript.includes("ExpectedSignerSubject") &&
+    windowsSignatureVerificationScript.includes("TimeStamperCertificate") &&
+    detachedSignatureVerificationScript.includes("VALIDSIG"),
+  "release tooling must restore SignPath output and verify signer, timestamp and detached signatures",
+);
+assert(
+  !existsSync(join(projectRoot, "scripts/prepare-windows-signing.ps1")) &&
+    !existsSync(join(projectRoot, "scripts/cleanup-windows-signing.ps1")) &&
+    !workflow.includes("WINDOWS_CERTIFICATE") &&
+    !workflow.includes("WINDOWS_CERTIFICATE_PASSWORD") &&
+    !workflow.includes("WINDOWS_TIMESTAMP_URL"),
+  "the legacy Windows PFX signing path must stay removed",
+);
+
+const workflowDirectory = join(projectRoot, "../../.github/workflows");
+const actionReferences = readdirSync(workflowDirectory)
+  .filter((name) => /\.ya?ml$/u.test(name))
+  .map((name) => readFileSync(join(workflowDirectory, name), "utf8"))
+  .flatMap((contents) =>
+    [...contents.matchAll(/^\s*uses:\s*([^\s#]+)/gmu)].map((match) => match[1]),
+  );
+const externalActionReferences = actionReferences.filter(
+  (reference) => !reference.startsWith("./"),
+);
+assert(
+  actionReferences.length >= 24,
   "release workflow action references are missing",
 );
 assert(
-  actionReferences.every((reference) => /@[0-9a-f]{40}$/u.test(reference)),
-  "every release action must be pinned to an immutable commit SHA",
+  externalActionReferences.every((reference) =>
+    /@[0-9a-f]{40}$/u.test(reference),
+  ),
+  "every external release action must be pinned to an immutable commit SHA",
 );
 for (const requiredWorkflowToken of [
-  "WINDOWS_CERTIFICATE",
-  "WINDOWS_CERTIFICATE_PASSWORD",
-  "WINDOWS_TIMESTAMP_URL",
+  "workflow_call:",
+  "SIGNPATH_API_TOKEN",
+  "SIGNPATH_ORGANIZATION_ID",
+  "SIGNPATH_PROJECT_SLUG",
+  "SIGNPATH_SIGNING_POLICY_SLUG",
+  "SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG",
+  "SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG",
+  "SIGNPATH_EXPECTED_SIGNER_SUBJECT",
+  "unix",
+  "signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627",
+  "Build Windows application without bundling",
+  "--no-bundle",
+  "Bundle Windows installers without recompiling",
+  "tauri -- bundle",
+  "windows-signpath-artifacts.ps1",
+  "verify-windows-signatures.ps1",
   "LINUX_GPG_PRIVATE_KEY_BASE64",
   "LINUX_GPG_PASSPHRASE",
   "sign_linux",
   "Sign Linux installers with OpenPGP",
-  "Sign SHA-256 manifest with OpenPGP",
   "verify-linux-signatures.sh",
   "APPLE_CERTIFICATE",
   "APPLE_INSTALLER_CERTIFICATE",
@@ -449,7 +596,6 @@ for (const requiredWorkflowToken of [
   "STATUSLINE_RELAY_BASE_URL",
   "Validate universal relay service",
   "db:migrate:local",
-  "Get-AuthenticodeSignature",
   "Diagnose WiX linker failure",
   "retryAttempts: 0",
   "smoke-installers-windows.ps1",
@@ -466,6 +612,42 @@ for (const requiredWorkflowToken of [
     `release workflow is missing ${requiredWorkflowToken}`,
   );
 }
+for (const requiredReleaseWorkflowToken of [
+  'tags:\n      - "v*"',
+  "./.github/workflows/desktop-installers.yml",
+  "./.github/workflows/android.yml",
+  "Create draft prerelease",
+  "desktop_platform",
+  "Verify signed annotated release tag",
+  "prepare-release-assets.mjs",
+  "Verify Linux package signatures independently",
+  "Verify checksum signature with public key",
+  "actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6",
+  "subject-checksums:",
+  "attempt-${{ github.run_attempt }}",
+  "Verify draft release inventory",
+  "Publish verified prerelease",
+  "Verified assets were not published as a prerelease",
+]) {
+  assert(
+    releaseWorkflow.includes(requiredReleaseWorkflowToken),
+    `unified release workflow is missing ${requiredReleaseWorkflowToken}`,
+  );
+}
+assert(
+  androidWorkflow.includes("workflow_call:") &&
+    androidWorkflow.includes("Signed release APK and AAB") &&
+    androidWorkflow.includes("Statusline_${release_version}_android.apk") &&
+    androidWorkflow.includes("Statusline_${release_version}_android.aab") &&
+    !androidWorkflow.includes("android-v*"),
+  "Android must contribute versioned signed artifacts only through the unified release tag",
+);
+assert(
+  !workflow.includes("desktop-v*") &&
+    !workflow.includes("gh release upload") &&
+    !androidWorkflow.includes("gh release upload"),
+  "only the unified release workflow may populate a GitHub Release",
+);
 const nativeBuildStep = workflow.match(
   /\n      - name: Build native installers\n([\s\S]*?)(?=\n      - name: )/u,
 )?.[1];
@@ -488,11 +670,14 @@ for (const selectedCredentialExport of [
 }
 for (const requiredSmokeToken of [
   "artifacts_run_id",
+  "artifacts_run_attempt",
+  "require_windows_trust",
   "run-id:",
   "merge-multiple: true",
   "timeout-minutes: 10",
   "Installer checksum manifest",
   "require_linux_signatures",
+  "Verify Windows Authenticode signatures",
   "Verify Linux OpenPGP signatures",
   "generate-checksums.mjs",
 ]) {
@@ -533,11 +718,11 @@ const releaseTag =
     : process.env.STATUSLINE_RELEASE_TAG;
 if (releaseTag) {
   assert(
-    releaseTag === `desktop-v${version}`,
-    `tag ${releaseTag} must match desktop-v${version}`,
+    releaseTag === releaseMetadata.tag,
+    `tag ${releaseTag} must match ${releaseMetadata.tag}`,
   );
 }
 
 console.log(
-  `Release preflight passed: ${expectedProductName} ${version} (Windows + Linux + macOS DMG/PKG).`,
+  `Release preflight passed: Statusline ${version} (GitHub: ${githubReleasePlatforms.join(" + ")}${isUnixPreviewProfile ? "; Windows deferred" : ""}; iOS ${releaseMetadata.components.ios.version} (${releaseMetadata.components.ios.build}) recorded separately).`,
 );

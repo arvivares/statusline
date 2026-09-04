@@ -10,9 +10,13 @@ on:
       - main
     paths:
       - ".github/**"
+      - "apps/android/**"
+      - "apps/apple/**"
       - "apps/desktop/**"
       - "docs/**"
+      - "packaging/**"
       - "protocol/**"
+      - "release.json"
       - "scripts/**"
       - "services/relay/**"
       - "*.md"
@@ -85,3 +89,20 @@ jobs:
           fi
           find apps/desktop/scripts -type f -name '*.sh' -print0 \
             | xargs -0 shellcheck --severity=warning
+
+      - name: Parse maintained PowerShell scripts
+        shell: pwsh
+        run: |
+          $scripts = Get-ChildItem "apps/desktop/scripts" -Filter "*.ps1" -File
+          foreach ($script in $scripts) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $script.FullName,
+              [ref]$tokens,
+              [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) {
+              throw "PowerShell parse failure in $($script.Name): $($errors[0].Message)"
+            }
+          }

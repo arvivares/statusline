@@ -56,34 +56,47 @@ El workflow rechaza valores vacíos, con espacios o que no comiencen con https:/
 
 La URL se incorpora al binario, pero no concede acceso a ningún canal. Cada instalación obtiene credenciales aleatorias durante el emparejamiento y las conserva en el almacén seguro del sistema operativo.
 
-## Workflow y retención
+## Workflows y retención
 
-[desktop-installers.yml](../../.github/workflows/desktop-installers.yml) admite:
+[desktop-installers.yml](../../.github/workflows/desktop-installers.yml) es un workflow
+reutilizable y de QA dirigido. Admite:
 
-1. Actions → Desktop installers → Run workflow para elegir `all`, `windows`, `linux` o `macos` y crear sólo los artefactos necesarios.
-2. Un build manual de `macos` con `sign_macos` activado para validar Developer ID y notarización sin recompilar Windows/Linux ni crear una release.
-3. Un build manual de `linux` con `sign_linux` activado para generar y validar firmas OpenPGP sin recompilar Windows/macOS ni crear una release.
-4. Un tag desktop-v<versión> para una GitHub Release duradera en estado borrador. Los tags exigen las credenciales de firma de Windows, Linux y macOS.
+1. Actions → Desktop artifacts → Run workflow para elegir `all`, `unix`, `windows`, `linux` o `macos` y crear sólo los artefactos necesarios.
+2. Un build manual de `windows` con `sign_windows` para probar el flujo SignPath sin compilar Linux, macOS o Android ni crear una release.
+3. Un build manual de `macos` con `sign_macos` para validar Developer ID y notarización sin recompilar las demás plataformas.
+4. Un build manual de `linux` con `sign_linux` para generar y validar firmas OpenPGP sin recompilar las demás plataformas.
 
-Ejemplo:
+Los artefactos manuales caducan y nunca se publican como GitHub Releases. El único flujo
+de distribución es [release.yml](../../.github/workflows/release.yml), activado por un tag
+firmado `v<versión>` que debe coincidir con [`release.json`](../../release.json):
 
 ```shell
-git tag desktop-v0.1.4
-git push origin desktop-v0.1.4
+git tag -s v0.1.10 -m "Statusline 0.1.10 beta"
+git push origin v0.1.10
 ```
 
-El preflight comprueba que el tag coincide con npm, Cargo y Tauri, valida frontend, contrato Rust y servicio relay, y falla antes del bundle si falta el endpoint universal.
+El preflight comprueba que el tag anotado está verificado y coincide con npm, Cargo,
+Tauri y Gradle; también registra la versión de App Store de iOS. Valida frontend,
+contrato Rust, servicio relay y las configuraciones de firma exigidas por el perfil de
+plataformas antes de reservar runners nativos.
 
 Después de compilar, el pipeline:
 
-- instala, abre y desinstala NSIS y MSI en Windows;
+- cuando Windows está habilitado, instala, abre y desinstala NSIS y MSI;
 - inspecciona RPM/AppImage, instala y elimina Debian, y verifica las firmas OpenPGP detached de los tres instaladores Linux;
 - monta el DMG, inspecciona el payload del PKG y verifica arm64 + x86_64, icono y detección de Codex en macOS;
 - para builds macOS firmados, verifica Developer ID, Hardened Runtime, timestamps, tickets grapados y aceptación de Gatekeeper en la app, el DMG y el PKG;
-- genera SHA256SUMS.txt y, cuando Linux está firmado, también SHA256SUMS.txt.asc;
-- adjunta los artefactos a una release borrador para builds por tag.
+- reúne también el APK y AAB firmados por Android;
+- para `v0.1.10`, exige exactamente siete binarios públicos —tres Linux, dos macOS y dos Android— más las tres firmas Linux;
+- genera `RELEASE-MANIFEST.json`, `SHA256SUMS.txt` y `SHA256SUMS.txt.asc`;
+- crea una attestation de procedencia firmada por GitHub para cada binario y el manifest;
+- adjunta el conjunto completo y publica automáticamente la entrada con la marca **Pre-release**.
 
-Si cambia sólo un smoke test, [desktop-installer-smoke.yml](../../.github/workflows/desktop-installer-smoke.yml) revalida artefactos existentes sin recompilar. La opción `require_macos_trust` debe permanecer activada para releases públicas; sólo se desactiva al inspeccionar un build manual deliberadamente no firmado.
+Windows está diferido explícitamente en `release.json` mientras termina el onboarding de
+SignPath. Al habilitarlo en una versión posterior, el mismo inventario pasará a exigir
+nueve binarios y el flujo fallará si NSIS o MSI no están firmados.
+
+Si cambia sólo un smoke test, [desktop-installer-smoke.yml](../../.github/workflows/desktop-installer-smoke.yml) revalida artefactos existentes sin recompilar. Indica tanto el run ID como el número de intento exitoso para no mezclar artefactos de una reejecución. `require_windows_trust`, `require_linux_signatures` y `require_macos_trust` deben permanecer activadas para releases públicas; sólo se desactivan al inspeccionar un build manual deliberadamente no firmado.
 
 ## Codex en el equipo del usuario
 
@@ -138,13 +151,26 @@ La salida de `gpg --fingerprint` debe coincidir exactamente con el fingerprint p
 
 Statusline ha seleccionado SignPath Foundation para la firma Authenticode pública de Windows. La política y los responsables están documentados en [Statusline Code Signing Policy](../security/code-signing-policy.md). La incorporación del proyecto todavía está pendiente; hasta completarla, los artefactos de Windows generados manualmente son exclusivamente builds de QA sin firma.
 
-El workflow conserva temporalmente el backend PFX anterior, por lo que las releases por tag siguen requiriendo:
+El backend PFX anterior fue retirado. Después de la aprobación, copia desde el proyecto
+real de SignPath un secret:
 
-- secret WINDOWS_CERTIFICATE: PFX de code signing codificado en base64;
-- secret WINDOWS_CERTIFICATE_PASSWORD;
-- variable WINDOWS_TIMESTAMP_URL.
+- `SIGNPATH_API_TOKEN`
 
-Ese backend no es la arquitectura pública definitiva. Después de la aceptación de SignPath se reemplazará por un flujo en dos etapas: firmar primero la aplicación, empaquetar NSIS/MSI desde ese ejecutable sin recompilar y firmar después ambos instaladores mediante el trusted build system de GitHub. Cada release requerirá aprobación manual y validación con `Get-AuthenticodeSignature`; ningún tag podrá publicar un fallback sin firma.
+Y seis repository variables:
+
+- `SIGNPATH_ORGANIZATION_ID`
+- `SIGNPATH_PROJECT_SLUG`
+- `SIGNPATH_SIGNING_POLICY_SLUG`
+- `SIGNPATH_EXECUTABLE_ARTIFACT_CONFIGURATION_SLUG`
+- `SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG`
+- `SIGNPATH_EXPECTED_SIGNER_SUBJECT`
+
+No inventes estos valores: deben proceder de la página CI integration y de los
+certificados del proyecto aprobado. El workflow construye primero la aplicación con
+`--no-bundle`, sube ese ejecutable a SignPath, restaura el resultado firmado y ejecuta
+`tauri bundle` sin recompilar. Después envía NSIS y MSI a una segunda configuración de
+artefacto. Cada release requiere aprobación y validación de Authenticode, identidad del
+firmante y timestamp en los tres archivos; no existe fallback sin firma.
 
 ## Firma de macOS
 
@@ -180,7 +206,7 @@ Statusline Companion guarda un único registro del publisher del relay en la key
 
 Al sustituir una build de desarrollo sin firma por la primera build Developer ID, macOS puede considerar que cambió la identidad autorizada para el registro existente. Una autorización administrativa al instalar el PKG es normal; varios avisos de Keychain no lo son. Para conservar el pairing, selecciona **Permitir siempre** una vez. Para reiniciar el estado, usa **Disconnect**; si la build anterior no puede borrar el registro, cierra la app, elimínalo desde Keychain Access y vuelve a emparejar. Este caso de migración debe probarse por separado de una instalación limpia antes de publicar.
 
-Para comprobar las credenciales sin crear una release, ejecuta Actions → Desktop installers con:
+Para comprobar las credenciales sin crear una release, ejecuta Actions → Desktop artifacts con:
 
 ```text
 platform: macos
@@ -191,4 +217,7 @@ Los runs manuales con `sign_macos: false` permanecen sin firma y sólo sirven co
 
 ## Publicación
 
-La [checklist de beta pública](public-beta-checklist.md) cubre máquinas limpias, relay, SmartScreen, checksums, privacidad, soporte y licencia. El updater de Tauri todavía no está integrado.
+El [runbook de release pública](release-runbook.md) describe el tag único, inventario,
+attestations y comandos de verificación. La [checklist de beta pública](public-beta-checklist.md)
+cubre máquinas limpias, relay, SmartScreen, checksums, privacidad, soporte y licencia.
+El updater de Tauri todavía no está integrado.

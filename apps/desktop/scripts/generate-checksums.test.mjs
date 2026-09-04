@@ -22,12 +22,18 @@ describe("generateChecksums", () => {
     await writeFile(join(testDirectory, "Statusline.exe"), "abc");
     await writeFile(join(testDirectory, "Statusline.dmg"), "abc");
     await writeFile(join(testDirectory, "Statusline.pkg"), "abc");
+    await writeFile(join(testDirectory, "Statusline.apk"), "abc");
+    await writeFile(join(testDirectory, "Statusline.aab"), "abc");
+    await writeFile(join(testDirectory, "RELEASE-MANIFEST.json"), "abc");
     await writeFile(join(testDirectory, "notes.txt"), "not an installer");
 
     const output = await generateChecksums(testDirectory);
 
     expect(output).toBe(
-      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.dmg\n" +
+      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  RELEASE-MANIFEST.json\n" +
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.aab\n" +
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.apk\n" +
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.dmg\n" +
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.exe\n" +
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.msi\n" +
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  Statusline.pkg\n",

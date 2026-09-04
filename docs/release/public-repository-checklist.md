@@ -53,12 +53,16 @@ pre-public item above is incomplete.
 
 ## First public release
 
-- [ ] Complete SignPath Foundation onboarding and replace the temporary Windows PFX path
-      before representing Windows artifacts as signed public releases.
-- [ ] Generate all desktop artifacts from one signed `desktop-v*` tag; independently
-      verify signatures, notarization, checksums and clean-machine installation.
-- [ ] Publish the GitHub Release as a prerelease only after every required artifact is
-      attached and the [public beta checklist](public-beta-checklist.md) passes.
+- [x] Define `release.json`, the single signed `v<version>` tag and a fail-closed workflow
+      that combines the enabled Desktop platforms and Android in one prerelease.
+- [x] Replace the legacy Windows PFX path with a two-stage SignPath integration that has
+      no unsigned fallback.
+- [ ] Complete SignPath Foundation onboarding before representing Windows artifacts as
+      signed public releases.
+- [ ] Publish signed Linux, notarized macOS and signed Android artifacts from the
+      `v0.1.10` tag; independently verify signatures, checksums and provenance.
+- [ ] After SignPath approval, configure its real identifiers/token and enable Windows in
+      a new version only after NSIS/MSI Authenticode and clean-machine validation pass.
 - [ ] Publish a concise security and privacy summary with the announcement; never include
       QR links, tokens, account identifiers or diagnostic logs containing user paths.
 

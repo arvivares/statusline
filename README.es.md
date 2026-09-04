@@ -8,6 +8,7 @@
 
 <div align="center">
   <a href="https://github.com/arvivares/statusline/actions/workflows/repository-quality.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/repository-quality.yml/badge.svg" alt="Calidad del repositorio"></a>
+  <a href="https://github.com/arvivares/statusline/actions/workflows/release.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/release.yml/badge.svg" alt="Pipeline de release"></a>
   <a href="https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/desktop-installers.yml/badge.svg" alt="Instaladores de escritorio"></a>
   <a href="https://github.com/arvivares/statusline/actions/workflows/android.yml"><img src="https://github.com/arvivares/statusline/actions/workflows/android.yml/badge.svg" alt="Artefactos Android"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/arvivares/statusline?color=efc65a" alt="Licencia MIT"></a>
@@ -64,6 +65,22 @@ El companion consulta la sesión local de Codex; no requiere una API key de Open
 | Cloudflare Workers + D1     | Relay        | TypeScript       | Despliegue con Wrangler                    |
 
 `apps/desktop` contiene el companion multiplataforma que genera los instaladores públicos de escritorio. El target SwiftUI `StatuslineCompanion`, dentro de `apps/apple`, se conserva como implementación nativa de macOS; no es necesario para compilar Tauri.
+
+## Releases
+
+Las descargas permanentes se publican en [GitHub Releases](https://github.com/arvivares/statusline/releases).
+La entrada actual `windows-bootstrap-v0.1.6` es una preview de Windows explícitamente sin
+firma para el onboarding de SignPath Foundation; no es la beta pública para usuarios.
+
+El tag firmado `v0.1.10` publica la primera prerelease para testers con
+DEB/RPM/AppImage, DMG/PKG universal y APK/AAB firmados. El inventario, checksums, controles
+de confianza y attestations de procedencia deben aprobarse antes de hacerla pública.
+Windows permanece en su preview de onboarding sin firma hasta la aprobación de SignPath
+Foundation; se incorporará a la release unificada cuando Authenticode esté operativo. Los
+artefactos de Actions son resultados temporales de QA y nunca se presentan como releases.
+
+Consulta el [runbook de release pública](docs/release/release-runbook.md) para ver el
+inventario exacto, la configuración SignPath y los comandos de verificación.
 
 ## Roadmap
 
@@ -305,6 +322,9 @@ Free code signing provided by [SignPath.io](https://signpath.io/), certificate b
 
 Statusline ha seleccionado SignPath Foundation para las releases públicas de Windows. La incorporación todavía está en curso: hasta que la integración y la verificación independiente estén completas, los artefactos Windows son builds de QA sin firma y no se presentan como releases oficiales firmadas.
 
+El flujo de dos etapas del repositorio ya está preparado y espera únicamente los valores
+reales del proyecto y el token que proporcionará SignPath.
+
 - Committer y reviewer: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
 - Release y signing approver: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
 - Privacidad: [Statusline Privacy Policy](PRIVACY.md)
@@ -314,7 +334,7 @@ Statusline ha seleccionado SignPath Foundation para las releases públicas de Wi
 
 ### Escritorio
 
-[Desktop installers](.github/workflows/desktop-installers.yml) genera de forma nativa:
+[Desktop artifacts](.github/workflows/desktop-installers.yml) genera de forma nativa:
 
 1. Windows NSIS `.exe`.
 2. Windows MSI.
@@ -326,13 +346,23 @@ Statusline ha seleccionado SignPath Foundation para las releases públicas de Wi
 8. `SHA256SUMS.txt` para verificar el conjunto.
 9. Firmas OpenPGP `.asc` para los tres instaladores Linux y el manifiesto de checksums.
 
-El pipeline instala, abre y desinstala ambos formatos de Windows; valida paquetes Linux y sus firmas OpenPGP; inspecciona arquitecturas, firma, notarización, tickets grapados y Gatekeeper en macOS. Las releases públicas por tag requieren Authenticode para Windows, OpenPGP para Linux y Developer ID + notarización para macOS. Los runs manuales pueden producir artefactos deliberadamente sin firma para QA privado.
+El [pipeline unificado de release](.github/workflows/release.yml) llama a Desktop y Android,
+valida los paquetes Linux y sus firmas OpenPGP; inspecciona arquitecturas, firma,
+notarización, tickets grapados y Gatekeeper en macOS; y reúne el APK/AAB firmado. Cuando
+Windows esté habilitado también comprobará Authenticode e instalará y eliminará NSIS/MSI.
+Un tag `v<versión>` exige los controles del perfil declarado en `release.json` y publica el
+conjunto verificado como **Pre-release**. Los runs manuales sólo producen artefactos
+temporales de QA.
 
 Consulta [Instaladores de Statusline Companion](docs/release/desktop-installers.md) para variables, secretos y smoke tests.
 
 ### Android
 
-[Android artifacts](.github/workflows/android.yml) ejecuta unit tests, Lint y genera un APK Debug. Un tag `android-v*` o un dispatch explícito de release añade APK y AAB firmados, mapping de R8 y checksums. El material de firma vive únicamente en GitHub Actions secrets.
+[Android artifacts](.github/workflows/android.yml) ejecuta unit tests, Lint y genera un APK
+Debug. Un dispatch explícito puede generar APK/AAB firmados para QA; la distribución
+duradera se incorpora exclusivamente desde el tag unificado `v<versión>`. El mapping de
+R8 queda como artefacto diagnóstico privado y el material de firma vive únicamente en
+GitHub Actions secrets.
 
 Google Play recibe el AAB; el APK firmado queda como artefacto de QA. El estado de cuenta, revisión y producción se mantiene en [Mobile store account decisions](docs/release/mobile-store-accounts.md).
 
@@ -353,7 +383,8 @@ La [checklist de publicación del repositorio](docs/release/public-repository-ch
 | `protocol/`                           | Especificación v1, fixtures y ejemplos interoperables                                       |
 | `packaging/`                          | Claves públicas y recursos de verificación para los instaladores                            |
 | [`docs/`](docs/README.md)             | Arquitectura, despliegue, releases, seguridad y [archivo de diseño](docs/archive/README.md) |
-| `.github/workflows/`                  | Pipelines desktop y Android                                                                 |
+| [`release.json`](release.json)        | Versiones canónicas del producto y sus componentes                                          |
+| `.github/workflows/`                  | Pipelines de validación, componentes y release unificada                                    |
 
 Las dependencias y salidas de build (`node_modules`, `target`, `dist`, `.gradle`, `build`, `.wrangler`) no forman parte del repositorio y pueden regenerarse desde sus manifests y lockfiles.
 

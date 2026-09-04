@@ -36,9 +36,17 @@ El APK instalable queda en `app/build/outputs/apk/debug/app-debug.apk`. Es un bu
 
 El workflow `.github/workflows/android.yml` ejecuta tests, Lint y `assembleDebug` en cada push o pull request que modifica Android, el protocolo compartido o el propio workflow. El APK queda disponible durante 14 días en la sección **Actions → Android artifacts → Artifacts**.
 
-Cada runner crea su propia debug key temporal. Por eso un APK debug descargado de una ejecución puede requerir desinstalar el de otra ejecución antes de instalarlo. Los artefactos de publicación usan siempre la upload key estable y sí admiten actualizaciones.
+Cada runner crea su propia debug key temporal. Por eso un APK debug descargado de una ejecución puede requerir desinstalar el de otra ejecución antes de instalarlo. Los APK de publicación directa usan siempre la upload key estable y admiten actualizaciones dentro de ese mismo canal. Google Play vuelve a firmar el AAB con su app-signing key: para cambiar entre una instalación directa y una de Play hay que desinstalar primero la existente.
 
-Un tag `android-v*` —o una ejecución manual con **release** activado— añade un APK y un AAB firmados, `mapping.txt` y `SHA256SUMS.txt`. Google Play recibe el AAB; el APK queda como artefacto instalable para validación directa.
+Una ejecución manual con **release** activado genera APK y AAB firmados más el mapping de
+R8 para QA. La distribución permanente usa exclusivamente el tag unificado `v<versión>`
+de [release.yml](../../.github/workflows/release.yml), que combina Android con los
+instaladores de escritorio habilitados, checksums y procedencia verificable en una sola
+prerelease. `v0.1.10` incluye Linux y macOS; Windows se incorporará después de completar
+SignPath.
+Google Play recibe el AAB; el APK queda como instalador verificable para distribución
+directa. El mapping de R8 se conserva como artefacto diagnóstico y no se publica en la
+GitHub Release.
 
 Los textos, declaraciones, instrucciones para revisión y recursos gráficos de Google Play están versionados en [`store/`](store/README.md). El kit actual corresponde a `0.1.10` (`versionCode 6`), enviado a la pista cerrada Alpha como `0.1.10-alpha.1` el 2 de septiembre de 2026.
 

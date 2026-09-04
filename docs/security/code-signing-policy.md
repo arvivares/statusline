@@ -1,6 +1,6 @@
 # Code signing policy
 
-Statusline has selected SignPath Foundation as the trust provider for public Windows releases. SignPath onboarding is still in progress. Until the integration has been accepted and independently validated, Windows artifacts are unsigned QA builds and must not be represented as officially signed releases.
+Statusline has selected SignPath Foundation as the trust provider for public Windows releases. SignPath onboarding is still in progress. The repository-side two-stage integration is prepared, but no public Windows release can run until SignPath assigns and validates the real organization, project, policy and artifact-configuration identifiers. Until the integration has been accepted and independently validated, Windows artifacts are unsigned QA builds and must not be represented as officially signed releases.
 
 Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 
@@ -18,15 +18,15 @@ Android, Apple, Linux, relay, test and third-party upstream artifacts are outsid
 
 Once onboarding is complete, every signed Windows release must follow this process:
 
-1. A `desktop-v<version>` tag identifies the exact source revision.
+1. A signed annotated `v<version>` tag identifies the exact source revision for the enabled desktop platforms and Android.
 2. The release workflow checks out that revision and builds on a fresh GitHub-hosted Windows runner.
 3. Locked Rust and npm dependencies, tests, formatting, release metadata and the production HTTPS relay endpoint are validated before signing.
-4. The unsigned application executable is uploaded as a GitHub Actions artifact and submitted through SignPath's GitHub trusted-build-system integration.
+4. The unsigned application executable is uploaded as a short-lived GitHub Actions artifact and submitted through SignPath's GitHub trusted-build-system integration.
 5. A project approver manually approves the release signing request.
 6. The signed application executable is used to produce the NSIS and MSI installers without recompiling the application.
 7. Both installers are uploaded through the same trusted workflow and submitted for final Authenticode signing.
 8. CI verifies the signer, SHA-256 Authenticode signature and trusted timestamp on the application, NSIS installer and MSI before running installation smoke tests.
-9. Only verified artifacts are attached to a draft GitHub Release. Publishing the release remains a separate manual decision.
+9. The unified release finalizer verifies the complete platform profile, creates signed checksums and GitHub build-provenance attestations, then publishes only verified artifacts as a prerelease. Windows cannot be enabled in that profile until every preceding SignPath gate succeeds.
 
 A signing failure is fail-closed: the workflow must not publish or silently substitute an unsigned Windows artifact.
 
@@ -39,6 +39,7 @@ A signing failure is fail-closed: the workflow must not publish or silently subs
 - Release signing requires manual approval for every version.
 - Workflow, signing-policy and packaging changes remain reviewable in the public Git history.
 - Product name and version metadata must match the release tag and the restrictions configured in SignPath.
+- The legacy repository-managed PFX backend is not permitted in the public release workflow.
 
 ## Project roles
 
