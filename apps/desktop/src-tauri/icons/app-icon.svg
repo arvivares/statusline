@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <clipPath id="canvas-clip">
+      <rect width="1024" height="1024" rx="220" />
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#canvas-clip)">
+    <rect width="1024" height="1024" fill="#0D0E0B" />
+
+    <g fill="none" stroke="#EFC65A" stroke-opacity="0.08" stroke-width="4">
+      <path d="M0 128h1024M0 256h1024M0 384h1024M0 512h1024M0 640h1024M0 768h1024M0 896h1024" />
+      <path d="M128 0v1024M256 0v1024M384 0v1024M512 0v1024M640 0v1024M768 0v1024M896 0v1024" />
+    </g>
+
+    <rect
+      x="150"
+      y="150"
+      width="724"
+      height="724"
+      rx="154"
+      fill="#14150F"
+      stroke="#3B3929"
+      stroke-width="18"
+    />
+
+    <g fill="#3B3929">
+      <rect x="364" y="396" width="88" height="64" />
+      <rect x="468" y="396" width="88" height="64" />
+      <rect x="572" y="396" width="88" height="64" />
+      <rect x="260" y="604" width="88" height="64" />
+      <rect x="364" y="604" width="88" height="64" />
+      <rect x="468" y="604" width="88" height="64" />
+      <rect x="572" y="604" width="88" height="64" />
+    </g>
+
+    <g fill="#EFC65A">
+      <rect x="260" y="292" width="88" height="64" />
+      <rect x="364" y="292" width="88" height="64" />
+      <rect x="468" y="292" width="88" height="64" />
+      <rect x="572" y="292" width="88" height="64" />
+      <rect x="676" y="292" width="88" height="64" />
+      <rect x="260" y="396" width="88" height="64" />
+      <rect x="260" y="500" width="88" height="64" />
+      <rect x="364" y="500" width="88" height="64" />
+      <rect x="468" y="500" width="88" height="64" />
+      <rect x="572" y="500" width="88" height="64" />
+      <rect x="676" y="500" width="88" height="64" />
+      <rect x="676" y="604" width="88" height="64" />
+      <rect x="260" y="708" width="88" height="64" />
+      <rect x="364" y="708" width="88" height="64" />
+      <rect x="468" y="708" width="88" height="64" />
+      <rect x="572" y="708" width="88" height="64" />
+      <rect x="676" y="708" width="88" height="64" />
+    </g>
+  </g>
+</svg>

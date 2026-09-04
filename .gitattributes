@@ -1,0 +1,16 @@
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.aab binary
+*.apk binary
+*.gif binary
+*.icns binary
+*.ico binary
+*.jar binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+
+apps/android/gradlew text eol=lf

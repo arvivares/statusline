@@ -1,0 +1,16 @@
+{
+  "protocolVersion": 1,
+  "channelId": "018f47a0-7b52-4c15-9e55-5f0f266b7440",
+  "sequence": 42,
+  "key": "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc",
+  "nonce": "AwMDAwMDAwMDAwMD",
+  "aad": "statusline.snapshot.v1|018f47a0-7b52-4c15-9e55-5f0f266b7440",
+  "plaintext": {
+    "schemaVersion": 1,
+    "remainingPercentage": 53,
+    "resetAt": 2000500000,
+    "updatedAt": 1900000000
+  },
+  "plaintextUtf8": "{\"schemaVersion\":1,\"remainingPercentage\":53,\"resetAt\":2000500000,\"updatedAt\":1900000000}",
+  "ciphertextAndTag": "XtzQYDJNMyMsJTEvgjiRLtcNzM3G8PkRRrDu34S1JcrSwhNW-pzAYvS9eCmvvII2QlBSsKu4D0ccGBuTDhy4WNvBTgjLxwB0LafDpe6m_QPNmvlFOlN-ULB4xKEyQdYIufoRJhKAKfU"
+}

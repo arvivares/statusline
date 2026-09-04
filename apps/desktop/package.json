@@ -1,0 +1,49 @@
+{
+  "name": "statusline-desktop",
+  "private": true,
+  "version": "0.1.6",
+  "license": "MIT",
+  "description": "Cross-platform companion with end-to-end encrypted Codex usage sync.",
+  "author": "Inmerzion",
+  "homepage": "https://github.com/arvivares/statusline",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arvivares/statusline.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "npm@11.17.0",
+  "scripts": {
+    "dev": "vite",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write \"src/**/*.{ts,css}\" \"scripts/**/*.mjs\" \"src-tauri/tauri*.json\" \"../../scripts/**/*.mjs\" \"../../services/relay/{src,test}/**/*.ts\" \"../../services/relay/{package.json,tsconfig.json,vitest.config.ts,wrangler.jsonc,README.md}\" \"../../protocol/**/*.{json,md}\" \"../../.github/ISSUE_TEMPLATE/*.{yml,yaml}\" ../../.github/dependabot.yml ../../.github/pull_request_template.md ../../.github/release.yml ../../.github/workflows/desktop-installers.yml ../../.github/workflows/desktop-installer-smoke.yml ../../.github/workflows/android.yml ../../.github/workflows/repository-quality.yml ../../CODE_OF_CONDUCT.md ../../CONTRIBUTING.md ../../docs/README.md ../../docs/architecture/cross-platform-companion.md ../../docs/relay/deployment-options.md ../../docs/release/desktop-installers.md ../../docs/release/public-beta-checklist.md ../../docs/release/public-repository-checklist.md ../../docs/security/code-signing-policy.md ../../docs/security/security-review.md ../../PRIVACY.md ../../README.md ../../README.es.md ../../ROADMAP.md ../../SECURITY.md ../../SETUP.md ../../SUPPORT.md index.html package.json tsconfig.json vite.config.ts README.md",
+    "format:check": "prettier --check \"src/**/*.{ts,css}\" \"scripts/**/*.mjs\" \"src-tauri/tauri*.json\" \"../../scripts/**/*.mjs\" \"../../services/relay/{src,test}/**/*.ts\" \"../../services/relay/{package.json,tsconfig.json,vitest.config.ts,wrangler.jsonc,README.md}\" \"../../protocol/**/*.{json,md}\" \"../../.github/ISSUE_TEMPLATE/*.{yml,yaml}\" ../../.github/dependabot.yml ../../.github/pull_request_template.md ../../.github/release.yml ../../.github/workflows/desktop-installers.yml ../../.github/workflows/desktop-installer-smoke.yml ../../.github/workflows/android.yml ../../.github/workflows/repository-quality.yml ../../CODE_OF_CONDUCT.md ../../CONTRIBUTING.md ../../docs/README.md ../../docs/architecture/cross-platform-companion.md ../../docs/relay/deployment-options.md ../../docs/release/desktop-installers.md ../../docs/release/public-beta-checklist.md ../../docs/release/public-repository-checklist.md ../../docs/security/code-signing-policy.md ../../docs/security/security-review.md ../../PRIVACY.md ../../README.md ../../README.es.md ../../ROADMAP.md ../../SECURITY.md ../../SETUP.md ../../SUPPORT.md index.html package.json tsconfig.json vite.config.ts README.md",
+    "build": "npm run check && vite build",
+    "release:preflight": "node scripts/check-release.mjs",
+    "docs:check": "node ../../scripts/check-markdown-links.mjs",
+    "release:check": "npm run release:preflight && npm run format:check && npm run docs:check && npm test && npm run check",
+    "checksums": "node scripts/generate-checksums.mjs",
+    "bundle:windows": "tauri build --ci --bundles nsis,msi",
+    "bundle:linux": "tauri build --ci --bundles deb,rpm,appimage",
+    "bundle:macos": "tauri build --ci --target universal-apple-darwin --bundles dmg && bash scripts/package-macos-pkg.sh \"src-tauri/target/universal-apple-darwin/release/bundle/dmg/Statusline Companion_${npm_package_version}_universal.dmg\" src-tauri/target/universal-apple-darwin/release/bundle/pkg \"$npm_package_version\"",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.11.1",
+    "@tauri-apps/plugin-dialog": "2.7.3",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.11.4",
+    "@types/qrcode": "^1.5.6",
+    "prettier": "3.9.6",
+    "typescript": "7.0.2",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,0 +1,87 @@
+name: Repository quality
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/**"
+      - "apps/desktop/**"
+      - "docs/**"
+      - "protocol/**"
+      - "scripts/**"
+      - "services/relay/**"
+      - "*.md"
+      - ".editorconfig"
+      - ".gitignore"
+      - ".node-version"
+      - "rust-toolchain.toml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repository-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  RUST_VERSION: "1.98.0"
+
+jobs:
+  validate:
+    name: Docs, frontend, relay and release policy
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            apps/desktop/package-lock.json
+            services/relay/package-lock.json
+
+      - name: Install desktop dependencies
+        run: npm ci
+        working-directory: apps/desktop
+
+      - name: Install relay dependencies
+        run: npm ci
+        working-directory: services/relay
+
+      - name: Validate documentation and desktop release policy
+        run: npm run release:check
+        working-directory: apps/desktop
+
+      - name: Validate relay
+        run: npm run db:migrate:local && npm test && npm run check
+        working-directory: services/relay
+
+      - name: Install pinned Rust formatter
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt
+          rustup default "$RUST_VERSION"
+
+      - name: Check Rust formatting
+        run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+
+      - name: Check maintained shell scripts
+        run: |
+          if ! command -v shellcheck >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends shellcheck
+          fi
+          find apps/desktop/scripts -type f -name '*.sh' -print0 \
+            | xargs -0 shellcheck --severity=warning

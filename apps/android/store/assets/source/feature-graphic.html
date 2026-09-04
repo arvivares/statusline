@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1024, initial-scale=1">
+  <title>Statusline Data Plane feature graphic</title>
+  <style>
+    :root {
+      --canvas: #0d0e0b;
+      --surface: #14150f;
+      --ink: #ece9dc;
+      --muted: #9d9b89;
+      --line: #3b3929;
+      --signal: #efc65a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 1024px;
+      height: 500px;
+      margin: 0;
+      overflow: hidden;
+      background: var(--canvas);
+    }
+
+    body {
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      padding: 42px 48px;
+      background:
+        linear-gradient(rgba(239, 198, 90, .055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(239, 198, 90, .055) 1px, transparent 1px),
+        radial-gradient(circle at 83% 15%, rgba(239, 198, 90, .15), transparent 27%),
+        var(--canvas);
+      background-size: 32px 32px, 32px 32px, auto, auto;
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 15px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .brand { color: var(--signal); }
+    .status { color: var(--muted); }
+    .status::before { content: "●"; color: var(--signal); margin-right: 10px; }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1.12fr .88fr;
+      gap: 62px;
+      height: 354px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 560px;
+      font-size: 63px;
+      font-weight: 610;
+      line-height: .98;
+      letter-spacing: -.045em;
+    }
+
+    h1 span { color: var(--signal); }
+
+    .sub {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.35;
+    }
+
+    .panel {
+      position: relative;
+      padding: 27px 28px 25px;
+      border: 1px solid var(--line);
+      background: rgba(20, 21, 15, .93);
+      box-shadow: 14px 14px 0 rgba(239, 198, 90, .08);
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: -1px auto auto -1px;
+      width: 92px;
+      height: 2px;
+      background: var(--signal);
+    }
+
+    .metric-label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .value {
+      margin: 17px 0 12px;
+      color: var(--signal);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 72px;
+      font-weight: 680;
+      line-height: 1;
+      letter-spacing: -.06em;
+    }
+
+    .value small {
+      font-size: 18px;
+      letter-spacing: .02em;
+      color: var(--muted);
+    }
+
+    .rail {
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 4px;
+      margin: 18px 0 22px;
+    }
+
+    .rail i { height: 13px; background: var(--line); }
+    .rail i:nth-child(-n+11) { background: var(--signal); }
+
+    .reset {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 17px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .reset strong { color: var(--ink); font-weight: 500; }
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <header class="topline">
+      <div class="brand">STL / DATA PLANE</div>
+      <div class="status">private sync online</div>
+    </header>
+    <section class="content">
+      <div>
+        <div class="eyebrow">Codex usage telemetry</div>
+        <h1>Your weekly limit. <span>At a glance.</span></h1>
+        <div class="sub">A focused mobile dashboard and home-screen widget.</div>
+      </div>
+      <div class="panel">
+        <div class="metric-label"><span>Weekly limit</span><span>Current</span></div>
+        <div class="value">53% <small>LEFT</small></div>
+        <div class="rail" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="reset"><span>Reset</span><strong>09:02 · 02 SEP</strong></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

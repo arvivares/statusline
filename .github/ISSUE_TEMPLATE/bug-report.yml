@@ -1,0 +1,80 @@
+name: Bug report
+description: Report a reproducible problem in Statusline.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Search existing issues first and remove API keys, access tokens, pairing links, QR codes and private paths from every field.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Desktop companion
+        - Windows installer
+        - Linux package
+        - macOS package
+        - iPhone app or widget
+        - Android app or widget
+        - Relay or pairing
+        - Documentation
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Statusline version
+      description: Include the release, TestFlight or build version when known.
+      placeholder: "For example: Desktop 0.1.6"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, version, architecture and installation format.
+      placeholder: "For example: Windows 11 24H2 x64, NSIS"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe what happened and its impact.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Select …
+        3. Observe …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      description: Add relevant logs or screenshots only after removing sensitive values.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checklist
+      options:
+        - label: I searched for an existing report.
+          required: true
+        - label: I removed credentials, pairing data and personal information.
+          required: true
+        - label: This is not a security vulnerability; those are reported privately through SECURITY.md.
+          required: true

@@ -1,0 +1,733 @@
+name: Desktop installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platformas que se deben compilar
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - windows
+          - linux
+          - macos
+      sign_macos:
+        description: Firmar y notarizar el DMG y PKG de macOS
+        required: true
+        default: false
+        type: boolean
+      sign_linux:
+        description: Firmar DEB, RPM, AppImage y checksums con OpenPGP
+        required: true
+        default: false
+        type: boolean
+  push:
+    tags:
+      - "desktop-v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-installers-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  NODE_VERSION: "24"
+  RUST_VERSION: "1.98.0"
+  STATUSLINE_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
+
+jobs:
+  validate:
+    name: Release preflight
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      matrix: ${{ steps.metadata.outputs.matrix }}
+      signed_macos: ${{ steps.metadata.outputs.signed_macos }}
+      signed_linux: ${{ steps.metadata.outputs.signed_linux }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Parse Unix release scripts
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          bash -n apps/desktop/scripts/smoke-installers-linux.sh
+          bash -n apps/desktop/scripts/prepare-linux-signing.sh
+          bash -n apps/desktop/scripts/sign-linux-files.sh
+          bash -n apps/desktop/scripts/verify-linux-signatures.sh
+          bash -n apps/desktop/scripts/cleanup-linux-signing.sh
+          bash -n apps/desktop/scripts/smoke-installer-macos.sh
+          bash -n apps/desktop/scripts/prepare-macos-signing.sh
+          bash -n apps/desktop/scripts/package-macos-pkg.sh
+          bash -n apps/desktop/scripts/notarize-macos-artifact.sh
+          bash -n apps/desktop/scripts/cleanup-macos-signing.sh
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            apps/desktop/package-lock.json
+            services/relay/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: apps/desktop
+
+      - name: Install relay dependencies
+        run: npm ci
+        working-directory: services/relay
+
+      - name: Validate universal relay service
+        run: npm run db:migrate:local && npm test && npm run check
+        working-directory: services/relay
+
+      - name: Install pinned Rust formatter
+        run: |
+          rustup toolchain install ${{ env.RUST_VERSION }} --profile minimal --component rustfmt
+          rustup default ${{ env.RUST_VERSION }}
+
+      - name: Validate release metadata and frontend
+        run: npm run release:check
+        working-directory: apps/desktop
+
+      - name: Check Rust formatting
+        run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+
+      - name: Read release metadata
+        id: metadata
+        shell: bash
+        env:
+          DISPATCH_PLATFORM: ${{ inputs.platform || 'all' }}
+          DISPATCH_SIGN_MACOS: ${{ inputs.sign_macos || false }}
+          DISPATCH_SIGN_LINUX: ${{ inputs.sign_linux || false }}
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./apps/desktop/package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          case "$DISPATCH_PLATFORM" in
+            windows)
+              matrix='{"include":[{"name":"Windows x64","runner":"windows-latest","build_args":"--ci --bundles nsis,msi"}]}'
+              ;;
+            linux)
+              matrix='{"include":[{"name":"Linux x64","runner":"ubuntu-22.04","build_args":"--ci --bundles deb,rpm,appimage"}]}'
+              ;;
+            macos)
+              matrix='{"include":[{"name":"macOS universal","runner":"macos-latest","build_args":"--ci --target universal-apple-darwin --bundles dmg"}]}'
+              ;;
+            all)
+              matrix='{"include":[{"name":"Windows x64","runner":"windows-latest","build_args":"--ci --bundles nsis,msi"},{"name":"Linux x64","runner":"ubuntu-22.04","build_args":"--ci --bundles deb,rpm,appimage"},{"name":"macOS universal","runner":"macos-latest","build_args":"--ci --target universal-apple-darwin --bundles dmg"}]}'
+              ;;
+            *)
+              echo "Unsupported workflow platform: $DISPATCH_PLATFORM" >&2
+              exit 1
+              ;;
+          esac
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+          signed_macos=false
+          if [[ "$GITHUB_REF" == refs/tags/desktop-v* ]]; then
+            signed_macos=true
+          elif [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$DISPATCH_SIGN_MACOS" == true ]]; then
+            if [[ "$DISPATCH_PLATFORM" == macos || "$DISPATCH_PLATFORM" == all ]]; then
+              signed_macos=true
+            fi
+          fi
+          echo "signed_macos=$signed_macos" >> "$GITHUB_OUTPUT"
+
+          signed_linux=false
+          if [[ "$GITHUB_REF" == refs/tags/desktop-v* ]]; then
+            signed_linux=true
+          elif [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$DISPATCH_SIGN_LINUX" == true ]]; then
+            if [[ "$DISPATCH_PLATFORM" == linux || "$DISPATCH_PLATFORM" == all ]]; then
+              signed_linux=true
+            fi
+          fi
+          echo "signed_linux=$signed_linux" >> "$GITHUB_OUTPUT"
+
+      - name: Validate universal relay endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$STATUSLINE_RELAY_BASE_URL" =~ ^https://[^[:space:]]+$ ]]; then
+            echo "Set the STATUSLINE_RELAY_BASE_URL repository variable to the public HTTPS relay origin." >&2
+            exit 1
+          fi
+
+      - name: Require signing credentials for tagged releases
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        shell: bash
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          WINDOWS_TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$WINDOWS_CERTIFICATE" || -z "$WINDOWS_CERTIFICATE_PASSWORD" || -z "$WINDOWS_TIMESTAMP_URL" ]]; then
+            echo "Tagged desktop releases require the Windows signing configuration." >&2
+            exit 1
+          fi
+
+      - name: Verify Linux OpenPGP signing credentials
+        id: linux-signing-preflight
+        if: steps.metadata.outputs.signed_linux == 'true'
+        shell: bash
+        env:
+          LINUX_GPG_PRIVATE_KEY_BASE64: ${{ secrets.LINUX_GPG_PRIVATE_KEY_BASE64 }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: >-
+          bash apps/desktop/scripts/prepare-linux-signing.sh
+          packaging/linux/statusline-release-signing-key.asc
+
+      - name: Remove preflight Linux signing keyring
+        if: always() && steps.metadata.outputs.signed_linux == 'true'
+        shell: bash
+        run: >-
+          bash apps/desktop/scripts/cleanup-linux-signing.sh
+          '${{ steps.linux-signing-preflight.outputs.gnupg-home }}'
+
+      - name: Require macOS signing and notarization credentials
+        if: steps.metadata.outputs.signed_macos == 'true'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_INSTALLER_CERTIFICATE: ${{ secrets.APPLE_INSTALLER_CERTIFICATE }}
+          APPLE_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
+          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ vars.APPLE_INSTALLER_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$APPLE_CERTIFICATE" || -z "$APPLE_CERTIFICATE_PASSWORD" || -z "$APPLE_INSTALLER_CERTIFICATE" || -z "$APPLE_INSTALLER_CERTIFICATE_PASSWORD" || -z "$APPLE_SIGNING_IDENTITY" || -z "$APPLE_INSTALLER_SIGNING_IDENTITY" || -z "$APPLE_TEAM_ID" ]]; then
+            echo "Signed macOS builds require both Developer ID certificates, their passwords, both identities and the team ID." >&2
+            exit 1
+          fi
+
+          has_apple_id=false
+          if [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" ]]; then
+            has_apple_id=true
+          fi
+
+          has_api_key=false
+          if [[ -n "$APPLE_API_KEY" && -n "$APPLE_API_ISSUER" && -n "$APPLE_API_PRIVATE_KEY" ]]; then
+            has_api_key=true
+          fi
+
+          if [[ "$has_apple_id" != true && "$has_api_key" != true ]]; then
+            echo "Configure either APPLE_ID + APPLE_PASSWORD or the three App Store Connect API key secrets." >&2
+            exit 1
+          fi
+
+  prepare-release:
+    name: Prepare draft release
+    needs: validate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create draft release for a tagged build
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STATUSLINE_VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --draft \
+            --generate-notes \
+            --title "Statusline Companion v$STATUSLINE_VERSION"
+
+  installers:
+    name: ${{ matrix.name }}
+    needs: [validate, prepare-release]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 75
+    permissions:
+      contents: write
+    env:
+      IS_RELEASE: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/desktop-v') }}
+      MACOS_SIGNED_BUILD: ${{ needs.validate.outputs.signed_macos }}
+      LINUX_SIGNED_BUILD: ${{ needs.validate.outputs.signed_linux }}
+      STATUSLINE_VERSION: ${{ needs.validate.outputs.version }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.validate.outputs.matrix) }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Parse Windows release scripts
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $scripts = Get-ChildItem "apps/desktop/scripts" -Filter "*.ps1" -File
+          foreach ($script in $scripts) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $script.FullName,
+              [ref]$tokens,
+              [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) {
+              throw "PowerShell parse failure in $($script.Name): $($errors[0].Message)"
+            }
+          }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install ${{ env.RUST_VERSION }} --profile minimal
+          rustup default ${{ env.RUST_VERSION }}
+
+      - name: Add universal macOS Rust targets
+        if: runner.os == 'macOS'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            curl \
+            dbus-x11 \
+            file \
+            libayatana-appindicator3-dev \
+            libfuse2 \
+            librsvg2-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libxdo-dev \
+            gnupg \
+            patchelf \
+            rpm \
+            wget \
+            xvfb \
+            xdg-utils
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: apps/desktop
+
+      - name: Prepare Windows Authenticode signing
+        id: signing
+        if: runner.os == 'Windows' && env.IS_RELEASE == 'true'
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          WINDOWS_TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL }}
+        run: ./scripts/prepare-windows-signing.ps1
+        working-directory: apps/desktop
+
+      - name: Prepare macOS notarization credentials
+        if: runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [[ -n "$APPLE_API_KEY" && -n "$APPLE_API_ISSUER" && -n "$APPLE_API_PRIVATE_KEY" ]]; then
+            api_key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY}.p8"
+            printf '%s' "$APPLE_API_PRIVATE_KEY" > "$api_key_path"
+            chmod 600 "$api_key_path"
+            {
+              echo "APPLE_API_KEY=$APPLE_API_KEY"
+              echo "APPLE_API_ISSUER=$APPLE_API_ISSUER"
+              echo "APPLE_API_KEY_PATH=$api_key_path"
+            } >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          if [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" ]]; then
+            {
+              echo "APPLE_ID=$APPLE_ID"
+              echo "APPLE_PASSWORD=$APPLE_PASSWORD"
+            } >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          echo "No complete macOS notarization credential set is available." >&2
+          exit 1
+
+      - name: Prepare macOS Developer ID identities
+        id: macos-signing
+        if: runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_INSTALLER_CERTIFICATE: ${{ secrets.APPLE_INSTALLER_CERTIFICATE }}
+          APPLE_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_INSTALLER_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
+          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ vars.APPLE_INSTALLER_SIGNING_IDENTITY }}
+        run: bash ./scripts/prepare-macos-signing.sh
+        working-directory: apps/desktop
+
+      - name: Prepare Linux OpenPGP signing key
+        id: linux-signing
+        if: runner.os == 'Linux' && env.LINUX_SIGNED_BUILD == 'true'
+        shell: bash
+        env:
+          LINUX_GPG_PRIVATE_KEY_BASE64: ${{ secrets.LINUX_GPG_PRIVATE_KEY_BASE64 }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: >-
+          bash ./scripts/prepare-linux-signing.sh
+          ../../packaging/linux/statusline-release-signing-key.asc
+        working-directory: apps/desktop
+
+      - name: Build native installers
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # action-v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && vars.APPLE_SIGNING_IDENTITY || '' }}
+          APPLE_TEAM_ID: ${{ runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true' && vars.APPLE_TEAM_ID || '' }}
+        with:
+          projectPath: apps/desktop
+          args: ${{ matrix.build_args }} ${{ steps.signing.outputs.args }}
+          tagName: ${{ env.IS_RELEASE == 'true' && runner.os != 'macOS' && github.ref_name || '' }}
+          releaseName: ${{ env.IS_RELEASE == 'true' && 'Statusline Companion v__VERSION__' || '' }}
+          releaseBody: ${{ env.IS_RELEASE == 'true' && 'Beta de Statusline Companion para Windows, Linux y macOS. Verifica SHA256SUMS.txt y, en Linux, las firmas OpenPGP detached antes de instalar.' || '' }}
+          releaseDraft: ${{ env.IS_RELEASE == 'true' }}
+          generateReleaseNotes: ${{ env.IS_RELEASE == 'true' }}
+          retryAttempts: 0
+          uploadUpdaterJson: false
+          uploadUpdaterSignatures: false
+          uploadWorkflowArtifacts: ${{ runner.os != 'macOS' }}
+          workflowArtifactNamePattern: statusline-[version]-[platform]-[arch]-[bundle]
+
+      - name: Create macOS PKG
+        id: macos-pkg
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_INSTALLER_SIGNING_IDENTITY: ${{ vars.APPLE_INSTALLER_SIGNING_IDENTITY }}
+          STATUSLINE_REQUIRE_MACOS_TRUST: ${{ env.MACOS_SIGNED_BUILD }}
+        run: |
+          set -euo pipefail
+          dmg_path=$(find ./src-tauri/target/universal-apple-darwin/release/bundle/dmg -type f -name '*.dmg' -print -quit)
+          pkg_directory="./src-tauri/target/universal-apple-darwin/release/bundle/pkg"
+          bash ./scripts/package-macos-pkg.sh "$dmg_path" "$pkg_directory" "$STATUSLINE_VERSION"
+          pkg_path=$(find "$pkg_directory" -type f -name '*.pkg' -print -quit)
+          echo "path=$pkg_path" >> "$GITHUB_OUTPUT"
+        working-directory: apps/desktop
+
+      - name: Notarize and staple macOS artifacts
+        id: macos-artifacts
+        if: runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          dmg_path=$(find ./src-tauri/target/universal-apple-darwin/release/bundle/dmg -type f -name '*.dmg' -print -quit)
+          pkg_path="${{ steps.macos-pkg.outputs.path }}"
+          bash ./scripts/notarize-macos-artifact.sh "$dmg_path"
+          bash ./scripts/notarize-macos-artifact.sh "$pkg_path"
+          echo "dmg-path=$dmg_path" >> "$GITHUB_OUTPUT"
+          echo "pkg-path=$pkg_path" >> "$GITHUB_OUTPUT"
+        working-directory: apps/desktop
+
+      - name: Diagnose WiX linker failure
+        if: failure() && runner.os == 'Windows'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $buildPath = Resolve-Path "apps/desktop/src-tauri/target/release/wix/x64"
+          $wixPath = Join-Path $env:LOCALAPPDATA "tauri/WixTools314"
+          $light = Join-Path $wixPath "light.exe"
+          if (-not (Test-Path -LiteralPath $light -PathType Leaf)) {
+            throw "WiX light.exe was not found at $light"
+          }
+          Push-Location $buildPath
+          try {
+            & $light `
+              -ext (Join-Path $wixPath "WixUIExtension.dll") `
+              -ext (Join-Path $wixPath "WixUtilExtension.dll") `
+              -o "diagnostic-output.msi" `
+              "-cultures:es-es;en-US" `
+              -loc "locale.wxl" `
+              "*.wixobj"
+            exit $LASTEXITCODE
+          }
+          finally {
+            Pop-Location
+          }
+
+      - name: Verify Windows Authenticode signatures
+        if: runner.os == 'Windows' && env.IS_RELEASE == 'true'
+        shell: pwsh
+        run: |
+          $files = @(
+            Get-Item "apps/desktop/src-tauri/target/release/statusline-desktop.exe"
+            Get-ChildItem "apps/desktop/src-tauri/target/release/bundle" -Recurse -File -Include *.exe,*.msi
+          )
+          if ($files.Count -lt 3) {
+            throw "Expected the application, NSIS installer and MSI for signature verification."
+          }
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $file.FullName
+            if ($signature.Status -ne "Valid") {
+              throw "Invalid Authenticode signature on $($file.Name): $($signature.Status)"
+            }
+          }
+
+      - name: Smoke test Windows install and uninstall
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/smoke-installers-windows.ps1 -BundleRoot ./src-tauri/target/release/bundle
+        working-directory: apps/desktop
+
+      - name: Smoke test Linux packages
+        if: runner.os == 'Linux'
+        shell: bash
+        run: bash ./scripts/smoke-installers-linux.sh ./src-tauri/target/release/bundle
+        working-directory: apps/desktop
+
+      - name: Sign Linux installers with OpenPGP
+        if: runner.os == 'Linux' && env.LINUX_SIGNED_BUILD == 'true'
+        shell: bash
+        env:
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' linux_installers < <(
+            find ./src-tauri/target/release/bundle -type f \( \
+              -iname '*.deb' -o \
+              -iname '*.rpm' -o \
+              -iname '*.appimage' \
+            \) -print0 | sort -z
+          )
+          if [[ ${#linux_installers[@]} -ne 3 ]]; then
+            echo "Expected exactly one DEB, one RPM and one AppImage." >&2
+            exit 1
+          fi
+          bash ./scripts/sign-linux-files.sh "${linux_installers[@]}"
+        working-directory: apps/desktop
+
+      - name: Verify Linux installer signatures independently
+        if: runner.os == 'Linux' && env.LINUX_SIGNED_BUILD == 'true'
+        shell: bash
+        run: >-
+          bash ./scripts/verify-linux-signatures.sh
+          ./src-tauri/target/release/bundle
+          ../../packaging/linux/statusline-release-signing-key.asc
+        working-directory: apps/desktop
+
+      - name: Stage Linux signature assets
+        if: runner.os == 'Linux' && env.LINUX_SIGNED_BUILD == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          signature_directory=./src-tauri/target/linux-signatures
+          mkdir -p "$signature_directory"
+          while IFS= read -r -d '' signature_path; do
+            cp "$signature_path" "$signature_directory/$(basename "$signature_path")"
+          done < <(find ./src-tauri/target/release/bundle -type f -name '*.asc' -print0)
+          cp ../../packaging/linux/statusline-release-signing-key.asc "$signature_directory/"
+          signature_count=$(find "$signature_directory" -maxdepth 1 -type f -name '*.asc' | wc -l)
+          if [[ "$signature_count" -ne 4 ]]; then
+            echo "Expected three installer signatures and the public key." >&2
+            exit 1
+          fi
+        working-directory: apps/desktop
+
+      - name: Upload Linux signature artifact
+        if: runner.os == 'Linux' && env.LINUX_SIGNED_BUILD == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ env.STATUSLINE_VERSION }}-linux-x64-signatures
+          path: apps/desktop/src-tauri/target/linux-signatures/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach Linux signatures to draft release
+        if: runner.os == 'Linux' && env.IS_RELEASE == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release upload "$GITHUB_REF_NAME"
+          apps/desktop/src-tauri/target/linux-signatures/*.asc
+          --clobber
+
+      - name: Smoke test macOS DMG and PKG
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          STATUSLINE_REQUIRE_MACOS_TRUST: ${{ env.MACOS_SIGNED_BUILD }}
+        run: bash ./scripts/smoke-installer-macos.sh ./src-tauri/target/universal-apple-darwin/release/bundle
+        working-directory: apps/desktop
+
+      - name: Upload macOS DMG artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-dmg
+          path: apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload macOS PKG artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-pkg
+          path: apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/pkg/*.pkg
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach notarized macOS installers to draft release
+        if: runner.os == 'macOS' && env.IS_RELEASE == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release upload "$GITHUB_REF_NAME"
+          "${{ steps.macos-artifacts.outputs.dmg-path }}"
+          "${{ steps.macos-artifacts.outputs.pkg-path }}"
+          --clobber
+
+      - name: Remove temporary Windows signing material
+        if: always() && runner.os == 'Windows' && env.IS_RELEASE == 'true'
+        shell: pwsh
+        run: >-
+          ./scripts/cleanup-windows-signing.ps1
+          -Thumbprint '${{ steps.signing.outputs.thumbprint }}'
+          -PfxPath '${{ steps.signing.outputs.pfx-path }}'
+          -ConfigPath '${{ steps.signing.outputs.config-path }}'
+        working-directory: apps/desktop
+
+      - name: Remove temporary Linux signing keyring
+        if: always() && runner.os == 'Linux' && env.LINUX_SIGNED_BUILD == 'true'
+        shell: bash
+        run: >-
+          bash ./scripts/cleanup-linux-signing.sh
+          '${{ steps.linux-signing.outputs.gnupg-home }}'
+        working-directory: apps/desktop
+
+      - name: Remove temporary App Store Connect key
+        if: always() && runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        run: |
+          if [[ -n "${APPLE_API_KEY_PATH:-}" && -f "$APPLE_API_KEY_PATH" ]]; then
+            rm -f "$APPLE_API_KEY_PATH"
+          fi
+
+      - name: Remove temporary macOS signing keychain
+        if: always() && runner.os == 'macOS' && env.MACOS_SIGNED_BUILD == 'true'
+        shell: bash
+        run: bash ./scripts/cleanup-macos-signing.sh '${{ steps.macos-signing.outputs.keychain-path }}'
+        working-directory: apps/desktop
+
+  checksums:
+    name: Release checksums
+    needs: [validate, installers]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download installer artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: statusline-${{ needs.validate.outputs.version }}-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Generate SHA-256 manifest
+        run: node apps/desktop/scripts/generate-checksums.mjs release-assets SHA256SUMS.txt
+
+      - name: Prepare Linux key for checksum signing
+        id: checksum-signing
+        if: needs.validate.outputs.signed_linux == 'true'
+        shell: bash
+        env:
+          LINUX_GPG_PRIVATE_KEY_BASE64: ${{ secrets.LINUX_GPG_PRIVATE_KEY_BASE64 }}
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: >-
+          bash apps/desktop/scripts/prepare-linux-signing.sh
+          packaging/linux/statusline-release-signing-key.asc
+
+      - name: Sign SHA-256 manifest with OpenPGP
+        if: needs.validate.outputs.signed_linux == 'true'
+        shell: bash
+        env:
+          LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+        run: bash apps/desktop/scripts/sign-linux-files.sh SHA256SUMS.txt
+
+      - name: Upload checksum artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ needs.validate.outputs.version }}-checksums
+          path: SHA256SUMS.txt*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach checksums to draft release
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release upload "$GITHUB_REF_NAME"
+          SHA256SUMS.txt
+          SHA256SUMS.txt.asc
+          packaging/linux/statusline-release-signing-key.asc
+          --clobber
+
+      - name: Remove checksum signing keyring
+        if: always() && needs.validate.outputs.signed_linux == 'true'
+        shell: bash
+        run: >-
+          bash apps/desktop/scripts/cleanup-linux-signing.sh
+          '${{ steps.checksum-signing.outputs.gnupg-home }}'

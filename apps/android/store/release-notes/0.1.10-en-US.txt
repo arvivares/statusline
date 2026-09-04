@@ -1,0 +1,1 @@
+Initial closed-test release of the Data Plane experience. Pair with Statusline Companion by QR or manual link, view your weekly limit and reset time, try the account-free local demo, and add the compact 4 × 1 home-screen widget. Includes bundled QR scanning and reliability improvements for Play release builds.

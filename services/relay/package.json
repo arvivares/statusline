@@ -1,0 +1,31 @@
+{
+  "name": "statusline-relay",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Provider-neutral encrypted relay for Statusline clients.",
+  "author": "Inmerzion",
+  "homepage": "https://github.com/arvivares/statusline",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arvivares/statusline.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "npm@11.17.0",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply statusline-relay --local",
+    "db:migrate:remote": "wrangler d1 migrations apply statusline-relay --remote"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "vitest": "4.1.11",
+    "wrangler": "4.127.1"
+  }
+}
