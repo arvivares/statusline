@@ -1,5 +1,9 @@
 package inmerzion.statusline
 
+import inmerzion.statusline.localization.L10n
+import inmerzion.statusline.localization.LocalizedContext
+import android.content.Context
+
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -58,6 +62,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
 class QrScannerActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocalizedContext.wrap(newBase))
+    }
     private val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val mainExecutor = Executor { command -> runOnUiThread(command) }
     private val processingFrame = AtomicBoolean(false)
@@ -72,8 +79,7 @@ class QrScannerActivity : ComponentActivity() {
 
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             finishWithError(
-                "El permiso de cámara ya no está disponible. " +
-                    "Puedes concederlo en Ajustes o pegar el vínculo manualmente.",
+                "Camera permission is no longer available. Enable it in Settings or paste the link manually.",
             )
             return
         }
@@ -113,8 +119,7 @@ class QrScannerActivity : ComponentActivity() {
             },
             onFailure = { error ->
                 finishWithError(
-                    "No se pudo iniciar el lector QR. " +
-                        "Puedes pegar el vínculo manualmente.",
+                    "Could not start the QR reader. You can paste the link manually.",
                     error,
                 )
                 false
@@ -150,8 +155,7 @@ class QrScannerActivity : ComponentActivity() {
                     provider.bindToLifecycle(this, selector, preview, analysis)
                 }.onFailure { error ->
                     finishWithError(
-                        "No se pudo iniciar la cámara. " +
-                            "Puedes pegar el vínculo manualmente.",
+                        "Could not start the camera. You can paste the link manually.",
                         error,
                     )
                 }
@@ -195,7 +199,7 @@ class QrScannerActivity : ComponentActivity() {
                     deliverResult(pairingValue)
                 } else if (barcodes.isNotEmpty()) {
                     scannerHint.value =
-                        "Ese QR no pertenece a Statusline. Mantén abierto el QR del companion."
+                        "That QR is not from Statusline. Keep the companion’s QR open."
                 }
             }
             .addOnFailureListener { error ->
@@ -203,8 +207,7 @@ class QrScannerActivity : ComponentActivity() {
                 Log.w(TAG, "Bundled QR recognition failed", error)
                 if (consecutiveScannerFailures >= MAX_SCANNER_FAILURES) {
                     finishWithError(
-                        "La cámara se abrió, pero el lector QR no pudo iniciarse. " +
-                            "Puedes pegar el vínculo manualmente.",
+                        "The camera opened, but the QR reader could not start. You can paste the link manually.",
                         error,
                     )
                 }
@@ -243,7 +246,7 @@ class QrScannerActivity : ComponentActivity() {
         private const val PAIRING_PREFIX = "statusline://pair?"
         private const val MAX_SCANNER_FAILURES = 3
         private const val DEFAULT_HINT =
-            "Centra el QR privado que muestra Statusline Companion."
+            "Center the private QR shown by Statusline Companion."
     }
 }
 
@@ -263,7 +266,7 @@ private fun QrScannerScreen(
                 PreviewView(context).apply {
                     implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                     scaleType = PreviewView.ScaleType.FILL_CENTER
-                    contentDescription = "Vista previa de la cámara para escanear el QR"
+                    contentDescription = L10n.text("Camera preview for scanning the QR")
                     onPreviewReady(this)
                 }
             },
@@ -296,12 +299,12 @@ private fun QrScannerScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = "STL / PAIR SCANNER",
+                            text = L10n.text("STL / PAIR SCANNER"),
                             style = MaterialTheme.typography.labelSmall,
                             color = DataPlaneColors.Ink,
                         )
                         Text(
-                            text = "LOCAL CAMERA · BUNDLED READER",
+                            text = L10n.text("LOCAL CAMERA · BUNDLED READER"),
                             style = MaterialTheme.typography.labelSmall,
                             color = DataPlaneColors.Signal,
                         )
@@ -309,7 +312,7 @@ private fun QrScannerScreen(
                     Spacer(Modifier.weight(1f))
                     TextButton(onClick = onClose) {
                         Text(
-                            text = "CLOSE",
+                            text = L10n.text("CLOSE"),
                             style = MaterialTheme.typography.labelLarge,
                             color = DataPlaneColors.Ink,
                         )
@@ -339,7 +342,7 @@ private fun QrScannerScreen(
                             .border(1.dp, DataPlaneColors.Signal),
                     )
                     Text(
-                        text = "QR / PAIR",
+                        text = L10n.text("QR / PAIR"),
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .background(DataPlaneColors.Signal)
@@ -361,17 +364,17 @@ private fun QrScannerScreen(
                     verticalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
                     Text(
-                        text = "READER.STATE / LIVE",
+                        text = L10n.text("READER.STATE / LIVE"),
                         style = MaterialTheme.typography.labelSmall,
                         color = DataPlaneColors.Signal,
                     )
                     Text(
-                        text = hint,
+                        text = L10n.text(hint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = DataPlaneColors.Ink,
                     )
                     Text(
-                        text = "La imagen se procesa sólo en este dispositivo.",
+                        text = L10n.text("The image is processed only on this device."),
                         style = MaterialTheme.typography.bodySmall,
                         color = DataPlaneColors.Muted,
                     )

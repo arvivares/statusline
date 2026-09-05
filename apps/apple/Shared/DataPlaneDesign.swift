@@ -81,6 +81,8 @@ struct DataPlaneLabel: View {
             .font(.caption2.monospaced().weight(.semibold))
             .tracking(1.1)
             .foregroundStyle(tint)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
     }
 }
 
@@ -142,7 +144,7 @@ struct DataPlaneMeter: View {
                 HStack {
                     Text("0")
                     Spacer()
-                    Text("\(normalizedPercentage) / LEFT")
+                    Text(L10n.text("{0} / LEFT", normalizedPercentage))
                     Spacer()
                     Text("100")
                 }
@@ -151,8 +153,8 @@ struct DataPlaneMeter: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Límite semanal de Codex")
-        .accessibilityValue("\(normalizedPercentage) por ciento restante")
+        .accessibilityLabel(L10n.text("Codex weekly limit"))
+        .accessibilityValue(L10n.text("{0} percent remaining", normalizedPercentage))
     }
 
     private func fillColor(for index: Int) -> Color {

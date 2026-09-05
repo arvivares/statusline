@@ -236,8 +236,11 @@ struct CodexRateLimitsResponseTests {
 
         let response = try JSONDecoder().decode(CodexRateLimitsResponse.self, from: payload)
 
-        #expect(throws: CodexRateLimitMappingError.missingWeeklyWindow) {
+        #expect {
             try response.weeklyStatus()
+        } throws: { error in
+            guard case CodexRateLimitMappingError.missingWeeklyWindow = error else { return false }
+            return true
         }
     }
 }

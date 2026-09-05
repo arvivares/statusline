@@ -1,3 +1,4 @@
+import { t } from "./localization";
 export type CodexDiagnosticStatus = "ready" | "missing" | "invalid";
 
 export type CodexSource =
@@ -35,21 +36,21 @@ export function parseCodexDiagnostic(input: unknown): CodexDiagnostic {
 export function labelForCodexSource(source: CodexSource | null): string {
   switch (source) {
     case "environment":
-      return "ENV OVERRIDE";
+      return t("ENV OVERRIDE");
     case "saved":
-      return "SAVED PATH";
+      return t("SAVED PATH");
     case "standalone":
-      return "STANDALONE";
+      return t("STANDALONE");
     case "npm":
-      return "NPM GLOBAL";
+      return t("NPM GLOBAL");
     case "volta":
-      return "VOLTA";
+      return t("VOLTA");
     case "versionManager":
-      return "VERSION MANAGER";
+      return t("VERSION MANAGER");
     case "path":
-      return "SYSTEM PATH";
+      return t("SYSTEM PATH");
     case null:
-      return "NOT DETECTED";
+      return t("NOT DETECTED");
   }
 }
 

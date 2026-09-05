@@ -52,12 +52,18 @@ pub enum UsageResponse {
 impl UsageResponse {
     #[must_use]
     pub fn tray_tooltip(&self) -> String {
+        self.tray_tooltip_for_language(crate::localization::language())
+    }
+
+    #[must_use]
+    pub fn tray_tooltip_for_language(&self, primary: &str) -> String {
         match self {
             Self::Ready { weekly, .. } => {
-                format!("Codex · {:.0}% disponible", weekly.remaining_percent)
+                crate::localization::text_for_language("Codex · {0}% left", primary)
+                    .replace("{0}", &format!("{:.0}", weekly.remaining_percent))
             }
             Self::Unavailable { .. } | Self::Error { .. } => {
-                "Statusline Companion · sin datos".to_owned()
+                crate::localization::text_for_language("Statusline Companion · no data", primary)
             }
         }
     }

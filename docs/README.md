@@ -17,6 +17,8 @@ requests are welcome.
 
 - [Cross-platform architecture](architecture/cross-platform-companion.md): component
   boundaries, data flow and platform coverage.
+- [Application localization](architecture/localization.md): system-language policy,
+  shared English/Spanish catalog, generated resources and validation.
 - [Statusline Relay Protocol v1](../protocol/statusline-relay-v1.md): normative wire and
   credential contract.
 - [AES-GCM fixture](../protocol/fixtures/aes-gcm-v1.json): shared interoperability vector.
@@ -32,7 +34,7 @@ requests are welcome.
 
 - [Public release runbook](release/release-runbook.md): canonical version, unified tag,
   required assets, SignPath inputs, provenance and publication procedure.
-- [Current beta release notes](release/notes/v0.1.10.md): curated user-facing notes and
+- [Current beta release notes](release/notes/v0.1.11.md): curated user-facing notes and
   known limitations for the next candidate.
 - [Desktop installers](release/desktop-installers.md): build matrix, signing, checksums and
   smoke tests.

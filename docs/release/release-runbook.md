@@ -8,12 +8,12 @@ by this workflow.
 ## Source of truth
 
 [`release.json`](../../release.json) owns the product version, release channel, tag,
-component versions and curated release-notes path. For the first public beta:
+component versions and curated release-notes path. For the current public beta:
 
-- product tag: `v0.1.10`;
-- desktop and Android code version: `0.1.10`;
-- Android store build: `versionCode 6`;
-- iOS store build: `1.0 (2)`, distributed manually through App Store Connect.
+- product tag: `v0.1.11`;
+- desktop and Android code version: `0.1.11`;
+- Android generated build: `versionCode 7` (Google Play submission is separate);
+- recorded iOS store build: `1.0 (2)`, distributed manually through App Store Connect.
 - GitHub prerelease platforms: Linux, macOS and Android. Windows is deferred until
   SignPath Foundation onboarding is complete.
 
@@ -39,7 +39,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.10`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.11`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                           |
@@ -96,8 +96,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.10 -m "Statusline 0.1.10 beta"
-git push origin v0.1.10
+git tag -s v0.1.11 -m "Statusline 0.1.11 beta"
+git push origin v0.1.11
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,

@@ -205,7 +205,18 @@ fn tray_tooltip_reports_rounded_weekly_remaining_percentage() {
         limit_count: 1,
     };
 
-    assert_eq!(response.tray_tooltip(), "Codex · 66% disponible");
+    assert_eq!(
+        response.tray_tooltip_for_language("en-US"),
+        "Codex · 66% left"
+    );
+    assert_eq!(
+        response.tray_tooltip_for_language("es-MX"),
+        "Codex · 66% libre"
+    );
+    assert_eq!(
+        response.tray_tooltip_for_language("fr-FR"),
+        "Codex · 66% left"
+    );
 }
 
 #[test]
@@ -216,5 +227,16 @@ fn tray_tooltip_does_not_expose_backend_error_details() {
         checked_at: 1_900_000_000,
     };
 
-    assert_eq!(response.tray_tooltip(), "Statusline Companion · sin datos");
+    assert_eq!(
+        response.tray_tooltip_for_language("en-US"),
+        "Statusline Companion · no data"
+    );
+    assert_eq!(
+        response.tray_tooltip_for_language("es-ES"),
+        "Statusline Companion · sin datos"
+    );
+    assert_eq!(
+        response.tray_tooltip_for_language("de-DE"),
+        "Statusline Companion · no data"
+    );
 }

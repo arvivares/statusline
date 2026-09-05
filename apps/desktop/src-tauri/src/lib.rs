@@ -1,5 +1,6 @@
 pub mod app_server;
 pub mod codex_installation;
+pub mod localization;
 pub mod relay_protocol;
 pub mod universal_relay;
 pub mod usage;
@@ -28,6 +29,20 @@ use universal_relay::{RelayStatus, UniversalRelayState};
 use usage::UsageResponse;
 
 const TRAY_ID: &str = "statusline-companion-tray";
+
+struct LocalizedMenu {
+    show: MenuItem<tauri::Wry>,
+    refresh: MenuItem<tauri::Wry>,
+    quit: MenuItem<tauri::Wry>,
+}
+
+#[tauri::command]
+fn system_language(menu: State<'_, LocalizedMenu>) -> &'static str {
+    let _ = menu.show.set_text(localization::text("Show"));
+    let _ = menu.refresh.set_text(localization::text("Refresh"));
+    let _ = menu.quit.set_text(localization::text("Quit"));
+    localization::language()
+}
 
 #[cfg(target_os = "windows")]
 static INITIAL_WINDOW_ACTIVATED: AtomicBool = AtomicBool::new(false);
@@ -187,14 +202,27 @@ pub fn run() {
             app.handle()
                 .set_activation_policy(tauri::ActivationPolicy::Accessory)?;
 
-            let show_item = MenuItem::with_id(app, "show", "Mostrar", true, None::<&str>)?;
-            let refresh_item = MenuItem::with_id(app, "refresh", "Actualizar", true, None::<&str>)?;
-            let quit_item = MenuItem::with_id(app, "quit", "Salir", true, None::<&str>)?;
+            let show_item =
+                MenuItem::with_id(app, "show", localization::text("Show"), true, None::<&str>)?;
+            let refresh_item = MenuItem::with_id(
+                app,
+                "refresh",
+                localization::text("Refresh"),
+                true,
+                None::<&str>,
+            )?;
+            let quit_item =
+                MenuItem::with_id(app, "quit", localization::text("Quit"), true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_item, &refresh_item, &quit_item])?;
+            app.manage(LocalizedMenu {
+                show: show_item,
+                refresh: refresh_item,
+                quit: quit_item,
+            });
             let mut tray_builder = TrayIconBuilder::with_id(TRAY_ID)
                 .menu(&menu)
                 .show_menu_on_left_click(false)
-                .tooltip("Statusline Companion · cargando…")
+                .tooltip(localization::text("Statusline Companion · loading…"))
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => show_main_window(app),
                     "refresh" => {
@@ -245,6 +273,7 @@ pub fn run() {
             inspect_codex,
             set_codex_path,
             clear_codex_path,
+            system_language,
             frontend_ready
         ])
         .run(tauri::generate_context!())

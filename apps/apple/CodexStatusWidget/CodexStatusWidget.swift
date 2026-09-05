@@ -60,6 +60,7 @@ struct CodexStatusWidgetEntryView: View {
             DataPlaneGridBackground(spacing: 18)
         }
         .preferredColorScheme(.dark)
+        .environment(\.locale, L10n.locale)
     }
 }
 
@@ -67,9 +68,9 @@ private struct EmptyDataPlaneWidget: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack {
-                DataPlaneLabel(text: "WEEKLY LIMIT", tint: DataPlaneTheme.signal)
+                DataPlaneLabel(text: L10n.text("WEEKLY LIMIT"), tint: DataPlaneTheme.signal)
                 Spacer()
-                DataPlaneLabel(text: "NO DATA")
+                DataPlaneLabel(text: L10n.text("NO DATA"))
             }
 
             Spacer(minLength: 0)
@@ -86,10 +87,10 @@ private struct EmptyDataPlaneWidget: View {
             DataPlaneMeter(remainingPercentage: 0, height: 6, showsScale: false)
                 .accessibilityHidden(true)
 
-            DataPlaneLabel(text: "CONNECT MAC COMPANION")
+            DataPlaneLabel(text: L10n.text("CONNECT COMPANION"))
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Sin datos de Codex. Abre Statusline Companion en tu Mac.")
+        .accessibilityLabel(L10n.text("No Codex data. Open Statusline Companion on your computer."))
     }
 }
 
@@ -99,9 +100,9 @@ private struct SmallDataPlaneWidget: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                DataPlaneLabel(text: "WEEKLY LIMIT", tint: DataPlaneTheme.signal)
+                DataPlaneLabel(text: L10n.text("WEEKLY LIMIT"), tint: DataPlaneTheme.signal)
                 Spacer()
-                DataPlaneStatusIndicator(label: "live")
+                DataPlaneStatusIndicator(label: L10n.text("LIVE"))
             }
 
             Spacer(minLength: 0)
@@ -127,7 +128,7 @@ private struct SmallDataPlaneWidget: View {
 
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 2) {
-                    DataPlaneLabel(text: "RESETS")
+                    DataPlaneLabel(text: L10n.text("RESETS"))
                     Text(status.resetDate, format: .dateTime.hour().minute())
                         .font(.caption.monospaced().weight(.bold))
                         .foregroundStyle(DataPlaneTheme.signal)
@@ -142,9 +143,10 @@ private struct SmallDataPlaneWidget: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Límite semanal de Codex")
+        .accessibilityLabel(L10n.text("Codex weekly limit"))
         .accessibilityValue(
-            "\(status.remainingPercentage) por ciento restante. Reinicio \(status.resetDate.formatted())"
+            L10n.text("{0} percent remaining. Resets {1}", status.remainingPercentage,
+                      status.resetDate.formatted(.dateTime.locale(L10n.locale)))
         )
     }
 }
@@ -155,7 +157,7 @@ private struct MediumDataPlaneWidget: View {
     var body: some View {
         HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 6) {
-                DataPlaneLabel(text: "REMAINING", tint: DataPlaneTheme.signal)
+                DataPlaneLabel(text: L10n.text("REMAINING"), tint: DataPlaneTheme.signal)
 
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text(status.remainingPercentage, format: .number)
@@ -173,9 +175,9 @@ private struct MediumDataPlaneWidget: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    DataPlaneLabel(text: "WEEKLY LIMIT")
+                    DataPlaneLabel(text: L10n.text("WEEKLY LIMIT"))
                     Spacer()
-                    DataPlaneStatusIndicator(label: "live")
+                    DataPlaneStatusIndicator(label: L10n.text("LIVE"))
                 }
 
                 DataPlaneMeter(
@@ -187,7 +189,7 @@ private struct MediumDataPlaneWidget: View {
                 HStack {
                     Text("0")
                     Spacer()
-                    Text("\(status.remainingPercentage) LEFT")
+                    Text(L10n.text("{0} LEFT", status.remainingPercentage))
                     Spacer()
                     Text("100")
                 }
@@ -201,7 +203,7 @@ private struct MediumDataPlaneWidget: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 5) {
-                DataPlaneLabel(text: "RESETS")
+                DataPlaneLabel(text: L10n.text("RESETS"))
                 Text(status.resetDate, format: .dateTime.hour().minute())
                     .font(.headline.monospaced().weight(.bold))
                     .foregroundStyle(DataPlaneTheme.signal)
@@ -213,9 +215,10 @@ private struct MediumDataPlaneWidget: View {
             .frame(minWidth: 62, alignment: .leading)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Límite semanal de Codex")
+        .accessibilityLabel(L10n.text("Codex weekly limit"))
         .accessibilityValue(
-            "\(status.remainingPercentage) por ciento restante. Reinicio \(status.resetDate.formatted())"
+            L10n.text("{0} percent remaining. Resets {1}", status.remainingPercentage,
+                      status.resetDate.formatted(.dateTime.locale(L10n.locale)))
         )
     }
 }
@@ -227,8 +230,8 @@ struct CodexStatusWidget: Widget {
         StaticConfiguration(kind: kind, provider: CodexStatusProvider()) { entry in
             CodexStatusWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Codex Data Plane")
-        .description("Consulta el límite semanal restante y su próximo reinicio.")
+        .configurationDisplayName(L10n.text("Codex usage"))
+        .description(L10n.text("See your remaining weekly quota and its next reset."))
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

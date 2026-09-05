@@ -1,15 +1,15 @@
 import Foundation
 
-enum CodexRateLimitMappingError: Error, LocalizedError, Sendable {
+enum CodexRateLimitMappingError: Error, StatuslineLocalizedError, Sendable {
     case missingWeeklyWindow
     case missingResetDate
 
     var errorDescription: String? {
         switch self {
         case .missingWeeklyWindow:
-            "Codex no devolvió una ventana de uso compatible."
+            L10n.text("Codex did not return a supported usage window.")
         case .missingResetDate:
-            "Codex no devolvió la fecha del próximo reinicio."
+            L10n.text("Codex did not return the next reset date.")
         }
     }
 }

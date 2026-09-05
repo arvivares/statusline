@@ -36,6 +36,8 @@ on:
     paths:
       - ".github/workflows/android.yml"
       - "apps/android/**"
+      - "localization/**"
+      - "scripts/generate-localizations.mjs"
       - "protocol/**"
 
 permissions:
@@ -89,7 +91,7 @@ jobs:
           should_run=false
           while IFS= read -r path; do
             case "$path" in
-              apps/android/* | protocol/* | .github/workflows/android.yml)
+              apps/android/* | localization/* | scripts/generate-localizations.mjs | protocol/* | .github/workflows/android.yml)
                 should_run=true
                 break
                 ;;
