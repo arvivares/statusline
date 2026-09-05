@@ -1,5 +1,7 @@
 package inmerzion.statusline.ui
 
+import inmerzion.statusline.localization.L10n
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -54,7 +56,6 @@ import inmerzion.statusline.SyncPhase
 import inmerzion.statusline.protocol.UsageStatus
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 import kotlin.math.max
 
 @Composable
@@ -103,7 +104,7 @@ fun StatuslineApp(
                 )
                 state.feedback?.let { feedback ->
                     FeedbackPanel(
-                        message = feedback.message,
+                        message = L10n.text(feedback.message),
                         isError = feedback.isError,
                         onDismiss = viewModel::clearFeedback,
                     )
@@ -142,17 +143,17 @@ private fun DataPlaneHeader(phase: SyncPhase) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            PlaneLabel("STL / DATA PLANE", tint = DataPlaneColors.Ink)
+            PlaneLabel(L10n.text("STL / DATA PLANE"), tint = DataPlaneColors.Ink)
             Spacer(Modifier.weight(1f))
             StatusIndicator(phase.indicator, phase.tint)
         }
         Text(
-            text = "Codex Status",
+            text = L10n.text("Codex Status"),
             style = MaterialTheme.typography.headlineLarge,
             color = DataPlaneColors.Ink,
         )
         Text(
-            text = "Cuota semanal, reinicio y relay privado en un solo plano de datos.",
+            text = L10n.text("Weekly quota, reset and private sync in one view."),
             style = MaterialTheme.typography.bodyMedium,
             color = DataPlaneColors.Muted,
         )
@@ -163,7 +164,7 @@ private fun DataPlaneHeader(phase: SyncPhase) {
 private fun QuotaPanel(status: UsageStatus, phase: SyncPhase) {
     DataPlaneSurface(cornerRadius = 20) {
         Column {
-            PanelHeader("CDX.WEEKLY.QUOTA", "PLANE / 010")
+            PanelHeader(L10n.text("CDX.WEEKLY.QUOTA"), L10n.text("PLANE / 010"))
             PlaneDivider()
             Column(
                 modifier = Modifier.padding(18.dp),
@@ -174,7 +175,7 @@ private fun QuotaPanel(status: UsageStatus, phase: SyncPhase) {
                         .fillMaxWidth()
                         .clearAndSetSemantics {
                             contentDescription =
-                                "${status.remainingPercentage} por ciento de cuota semanal restante"
+                                L10n.text("{0} percent remaining", status.remainingPercentage)
                         },
                     verticalAlignment = Alignment.Bottom,
                 ) {
@@ -196,7 +197,7 @@ private fun QuotaPanel(status: UsageStatus, phase: SyncPhase) {
                             modifier = Modifier.padding(bottom = 8.dp),
                         )
                         Text(
-                            text = " LEFT",
+                            text = " " + L10n.text("LEFT"),
                             style = MaterialTheme.typography.labelSmall,
                             color = DataPlaneColors.emphasis(status.remainingPercentage),
                             modifier = Modifier.padding(bottom = 13.dp),
@@ -207,8 +208,8 @@ private fun QuotaPanel(status: UsageStatus, phase: SyncPhase) {
                         modifier = Modifier.padding(bottom = 9.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        ContextValue("STATUS", if (status.isDemo) "DEMO SAMPLE" else "AVAILABLE")
-                        ContextValue("SAMPLE", relativeAge(status.updatedAtEpochSeconds))
+                        ContextValue(L10n.text("STATUS"), if (status.isDemo) L10n.text("DEMO SAMPLE") else L10n.text("AVAILABLE"))
+                        ContextValue(L10n.text("SAMPLE"), relativeAge(status.updatedAtEpochSeconds))
                     }
                 }
                 QuotaMeter(status.remainingPercentage)
@@ -222,12 +223,12 @@ private fun QuotaPanel(status: UsageStatus, phase: SyncPhase) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    PlaneLabel("STATUS.RECORD")
+                    PlaneLabel(L10n.text("STATUS.RECORD"))
                     Text(
                         text = if (status.isDemo) {
-                            "demo · local sample only"
+                            L10n.text("demo · local sample only")
                         } else {
-                            "available · quota metadata only"
+                            L10n.text("available · quota metadata only")
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = DataPlaneColors.Ink,
@@ -244,7 +245,7 @@ private fun QuotaPanel(status: UsageStatus, phase: SyncPhase) {
 private fun WaitingPanel(phase: SyncPhase) {
     DataPlaneSurface(cornerRadius = 20) {
         Column {
-            PanelHeader("CDX.WEEKLY.QUOTA", "NO SAMPLE", accent = false)
+            PanelHeader(L10n.text("CDX.WEEKLY.QUOTA"), L10n.text("NO SAMPLE"), accent = false)
             PlaneDivider()
             Column(
                 modifier = Modifier.padding(18.dp),
@@ -257,7 +258,7 @@ private fun WaitingPanel(phase: SyncPhase) {
                         color = DataPlaneColors.Ink,
                     )
                     Text(
-                        text = "% LEFT",
+                        text = L10n.text("% LEFT"),
                         style = MaterialTheme.typography.labelSmall,
                         color = DataPlaneColors.Muted,
                         modifier = Modifier.padding(start = 5.dp, bottom = 5.dp),
@@ -265,7 +266,7 @@ private fun WaitingPanel(phase: SyncPhase) {
                 }
                 QuotaMeter(0, empty = true)
                 Text(
-                    text = "Abre Statusline Companion en Windows, Linux o macOS, crea un vínculo y escanea su QR para recibir la primera muestra cifrada.",
+                    text = L10n.text("Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample."),
                     style = MaterialTheme.typography.bodyMedium,
                     color = DataPlaneColors.Muted,
                 )
@@ -277,7 +278,7 @@ private fun WaitingPanel(phase: SyncPhase) {
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                PlaneLabel("SOURCE.HOST")
+                PlaneLabel(L10n.text("SOURCE.HOST"))
                 Spacer(Modifier.weight(1f))
                 StatusIndicator(phase.indicator, phase.tint)
             }
@@ -290,14 +291,14 @@ private fun MetricsGrid(status: UsageStatus, phase: SyncPhase) {
     Column {
         Row(Modifier.fillMaxWidth()) {
             MetricCell(
-                label = "RESET.TIME",
+                label = L10n.text("RESET.TIME"),
                 value = formatDate(status.resetAtEpochSeconds, "HH:mm"),
-                detail = "LOCAL TIME",
+                detail = L10n.text("LOCAL TIME"),
                 accented = true,
                 modifier = Modifier.weight(1f),
             )
             MetricCell(
-                label = "RESET.DATE",
+                label = L10n.text("RESET.DATE"),
                 value = formatDate(status.resetAtEpochSeconds, "dd MMM").uppercase(),
                 detail = formatDate(status.resetAtEpochSeconds, "EEEE").uppercase(),
                 accented = true,
@@ -306,15 +307,15 @@ private fun MetricsGrid(status: UsageStatus, phase: SyncPhase) {
         }
         Row(Modifier.fillMaxWidth()) {
             MetricCell(
-                label = "SOURCE.HOST",
-                value = if (status.isDemo) "Review sample" else "Desktop companion",
-                detail = if (status.isDemo) "LOCAL · NO ACCOUNT" else "CODEX SESSION LOCAL",
+                label = L10n.text("SOURCE.HOST"),
+                value = if (status.isDemo) L10n.text("Review sample") else L10n.text("Desktop companion"),
+                detail = if (status.isDemo) L10n.text("LOCAL · NO ACCOUNT") else L10n.text("CODEX SESSION LOCAL"),
                 modifier = Modifier.weight(1f),
             )
             MetricCell(
-                label = "RELAY.STATE",
+                label = L10n.text("RELAY.STATE"),
                 value = phase.relayValue,
-                detail = if (status.isDemo) "NO NETWORK" else "E2E · UNIVERSAL",
+                detail = if (status.isDemo) L10n.text("NO NETWORK") else L10n.text("E2E · UNIVERSAL"),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -371,7 +372,7 @@ private fun RelayPanel(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                PlaneLabel("RELAY.CONTROL", tint = DataPlaneColors.Ink)
+                PlaneLabel(L10n.text("RELAY.CONTROL"), tint = DataPlaneColors.Ink)
                 Spacer(Modifier.weight(1f))
                 StatusIndicator(state.phase.indicator, state.phase.tint)
             }
@@ -386,7 +387,7 @@ private fun RelayPanel(
                 },
             )
             Text(
-                text = "El relay almacena únicamente un blob AES-256-GCM. Las credenciales de Codex y la clave de cifrado nunca salen de tus dispositivos.",
+                text = L10n.text("The relay stores only an AES-256-GCM encrypted snapshot. Codex credentials and the encryption key never leave your devices."),
                 style = MaterialTheme.typography.bodyMedium,
                 color = DataPlaneColors.Muted,
             )
@@ -405,13 +406,13 @@ private fun RelayPanel(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     PrimaryButton(
-                        label = if (state.phase == SyncPhase.SYNCING) "SYNCING…" else "REFRESH",
+                        label = if (state.phase == SyncPhase.SYNCING) L10n.text("SYNCING…") else L10n.text("REFRESH"),
                         enabled = !state.isBusy,
                         onClick = onRefresh,
                         modifier = Modifier.weight(1f),
                     )
                     SecondaryButton(
-                        label = "DISCONNECT",
+                        label = L10n.text("DISCONNECT"),
                         enabled = !state.isBusy,
                         onClick = onDisconnect,
                     )
@@ -420,16 +421,16 @@ private fun RelayPanel(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     PrimaryButton(
                         label = if (state.phase == SyncPhase.PAIRING) {
-                            "PAIRING…"
+                            L10n.text("PAIRING…")
                         } else {
-                            "PAIR DEVICE"
+                            L10n.text("PAIR DEVICE")
                         },
                         enabled = !state.isBusy,
                         onClick = onPair,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     SecondaryButton(
-                        label = if (state.isDemo) "CLEAR DEMO" else "VIEW DEMO",
+                        label = if (state.isDemo) L10n.text("CLEAR DEMO") else L10n.text("VIEW DEMO"),
                         enabled = !state.isBusy,
                         onClick = if (state.isDemo) onClearDemo else onShowDemo,
                         modifier = Modifier.fillMaxWidth(),
@@ -471,7 +472,7 @@ private fun FeedbackPanel(
                 .padding(horizontal = 10.dp),
         )
         TextButton(onClick = onDismiss) {
-            Text("CLOSE", style = MaterialTheme.typography.labelSmall)
+            Text(L10n.text("CLOSE"), style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -491,27 +492,27 @@ private fun PublicLinksFooter(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            PlaneLabel("PRIVACY / SUPPORT")
+            PlaneLabel(L10n.text("PRIVACY / SUPPORT"))
             Spacer(Modifier.weight(1f))
-            PlaneLabel("INDEPENDENT", tint = DataPlaneColors.Ink)
+            PlaneLabel(L10n.text("INDEPENDENT"), tint = DataPlaneColors.Ink)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             SecondaryButton(
-                label = "PRIVACY",
+                label = L10n.text("PRIVACY"),
                 onClick = onOpenPrivacy,
                 modifier = Modifier.weight(1f),
             )
             SecondaryButton(
-                label = "SUPPORT",
+                label = L10n.text("SUPPORT"),
                 onClick = onOpenSupport,
                 modifier = Modifier.weight(1f),
             )
         }
         Text(
-            text = "Statusline is independent and is not affiliated with or endorsed by OpenAI.",
+            text = L10n.text("Statusline is an independent app and is not affiliated with or endorsed by OpenAI."),
             style = MaterialTheme.typography.bodySmall,
             color = DataPlaneColors.Muted,
         )
@@ -538,25 +539,25 @@ private fun PairingDialog(
                 verticalArrangement = Arrangement.spacedBy(15.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    PlaneLabel("PAIR.READER", tint = DataPlaneColors.Ink)
+                    PlaneLabel(L10n.text("PAIR.READER"), tint = DataPlaneColors.Ink)
                     Spacer(Modifier.weight(1f))
-                    StatusIndicator(if (busy) "PAIRING" else "READY", DataPlaneColors.Signal)
+                    StatusIndicator(if (busy) L10n.text("PAIRING") else L10n.text("READY"), DataPlaneColors.Signal)
                 }
                 PlaneDivider()
                 Text(
-                    text = "Escanea el QR privado del companion. El código expira en diez minutos y sólo puede reclamarse una vez.",
+                    text = L10n.text("Scan the companion’s private QR. The code expires in ten minutes and can only be used once."),
                     style = MaterialTheme.typography.bodyMedium,
                     color = DataPlaneColors.Muted,
                 )
                 PrimaryButton(
-                    label = "SCAN QR",
+                    label = L10n.text("SCAN QR"),
                     enabled = !busy,
                     onClick = onScan,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     PlaneDivider(Modifier.weight(1f))
-                    PlaneLabel("OR PASTE", modifier = Modifier.padding(horizontal = 10.dp))
+                    PlaneLabel(L10n.text("OR PASTE"), modifier = Modifier.padding(horizontal = 10.dp))
                     PlaneDivider(Modifier.weight(1f))
                 }
                 OutlinedTextField(
@@ -586,13 +587,13 @@ private fun PairingDialog(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     SecondaryButton(
-                        label = "CANCEL",
+                        label = L10n.text("CANCEL"),
                         enabled = !busy,
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
                     )
                     PrimaryButton(
-                        label = if (busy) "CLAIMING…" else "CONNECT",
+                        label = if (busy) L10n.text("CLAIMING…") else L10n.text("CONNECT"),
                         enabled = !busy && pairingLink.isNotBlank(),
                         onClick = { onSubmit(pairingLink) },
                         modifier = Modifier.weight(1f),
@@ -619,10 +620,10 @@ private fun ConfirmDisconnectDialog(
                 modifier = Modifier.padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(15.dp),
             ) {
-                PlaneLabel("DISCONNECT.READER", tint = DataPlaneColors.Ink)
+                PlaneLabel(L10n.text("DISCONNECT.READER"), tint = DataPlaneColors.Ink)
                 PlaneDivider()
                 Text(
-                    text = "Se eliminarán de este dispositivo el reader token, la clave de cifrado y la última muestra. El companion conservará su canal.",
+                    text = L10n.text("The read token, encryption key and latest sample will be removed from this device. The companion will keep its channel."),
                     style = MaterialTheme.typography.bodyMedium,
                     color = DataPlaneColors.Muted,
                 )
@@ -631,12 +632,12 @@ private fun ConfirmDisconnectDialog(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     SecondaryButton(
-                        label = "CANCEL",
+                        label = L10n.text("CANCEL"),
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
                     )
                     PrimaryButton(
-                        label = "DISCONNECT",
+                        label = L10n.text("DISCONNECT"),
                         onClick = onConfirm,
                         modifier = Modifier.weight(1f),
                         color = DataPlaneColors.Critical,
@@ -731,9 +732,9 @@ private fun QuotaMeter(remainingPercentage: Int, empty: Boolean = false) {
     Column(
         modifier = Modifier.clearAndSetSemantics {
             contentDescription = if (empty) {
-                "Sin muestra de cuota"
+                L10n.text("No quota sample")
             } else {
-                "$normalized por ciento restante"
+                L10n.text("{0} percent remaining", normalized)
             }
         },
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -760,7 +761,7 @@ private fun QuotaMeter(remainingPercentage: Int, empty: Boolean = false) {
         Row(Modifier.fillMaxWidth()) {
             PlaneLabel("0")
             Spacer(Modifier.weight(1f))
-            PlaneLabel(if (empty) "NO SAMPLE" else "$normalized / LEFT")
+            PlaneLabel(if (empty) L10n.text("NO SAMPLE") else L10n.text("{0} / LEFT", normalized))
             Spacer(Modifier.weight(1f))
             PlaneLabel("100")
         }
@@ -821,24 +822,24 @@ private fun SecondaryButton(
 
 private val SyncPhase.indicator: String
     get() = when (this) {
-        SyncPhase.UNPAIRED -> "UNPAIRED"
-        SyncPhase.DEMO -> "DEMO"
-        SyncPhase.PAIRING -> "PAIRING"
-        SyncPhase.SYNCING -> "SYNCING"
-        SyncPhase.WAITING_FOR_DESKTOP -> "WAITING"
-        SyncPhase.SYNCED -> "CURRENT"
-        SyncPhase.ERROR -> "FAULT"
+        SyncPhase.UNPAIRED -> L10n.text("UNPAIRED")
+        SyncPhase.DEMO -> L10n.text("DEMO")
+        SyncPhase.PAIRING -> L10n.text("PAIRING")
+        SyncPhase.SYNCING -> L10n.text("SYNCING")
+        SyncPhase.WAITING_FOR_DESKTOP -> L10n.text("WAITING")
+        SyncPhase.SYNCED -> L10n.text("CURRENT")
+        SyncPhase.ERROR -> L10n.text("FAULT")
     }
 
 private val SyncPhase.relayValue: String
     get() = when (this) {
-        SyncPhase.UNPAIRED -> "UNPAIRED"
-        SyncPhase.DEMO -> "LOCAL DEMO"
-        SyncPhase.PAIRING -> "CLAIMING"
-        SyncPhase.SYNCING -> "READING"
-        SyncPhase.WAITING_FOR_DESKTOP -> "WAITING"
-        SyncPhase.SYNCED -> "CURRENT"
-        SyncPhase.ERROR -> "ERROR"
+        SyncPhase.UNPAIRED -> L10n.text("UNPAIRED")
+        SyncPhase.DEMO -> L10n.text("LOCAL DEMO")
+        SyncPhase.PAIRING -> L10n.text("CLAIMING")
+        SyncPhase.SYNCING -> L10n.text("READING")
+        SyncPhase.WAITING_FOR_DESKTOP -> L10n.text("WAITING")
+        SyncPhase.SYNCED -> L10n.text("CURRENT")
+        SyncPhase.ERROR -> L10n.text("FAULT")
     }
 
 private val SyncPhase.tint: Color
@@ -851,26 +852,26 @@ private val SyncPhase.tint: Color
 private val SyncPhase.message: String
     get() = when (this) {
         SyncPhase.UNPAIRED ->
-            "Escanea el QR que muestra Statusline Companion para conectar este dispositivo."
+            L10n.text("Scan the QR shown by Statusline Companion to connect this device.")
         SyncPhase.DEMO ->
-            "Muestra local para explorar la app y el widget. No usa red ni una cuenta de Codex."
-        SyncPhase.PAIRING -> "Validando el vínculo cifrado con el relay…"
-        SyncPhase.SYNCING -> "Buscando el último snapshot cifrado…"
+            L10n.text("Local sample to explore the app and widget. No network or Codex account is used.")
+        SyncPhase.PAIRING -> L10n.text("Validating the encrypted pairing with the relay…")
+        SyncPhase.SYNCING -> L10n.text("Looking for the latest encrypted snapshot…")
         SyncPhase.WAITING_FOR_DESKTOP ->
-            "Dispositivo conectado. Esperando la primera muestra del companion."
-        SyncPhase.SYNCED -> "Snapshot cifrado disponible en este dispositivo."
-        SyncPhase.ERROR -> "La última operación no pudo completarse."
+            L10n.text("Device connected. Waiting for the companion’s first sample.")
+        SyncPhase.SYNCED -> L10n.text("An encrypted snapshot is available on this device.")
+        SyncPhase.ERROR -> L10n.text("The last operation could not be completed.")
     }
 
 private fun formatDate(epochSeconds: Long, pattern: String): String =
-    SimpleDateFormat(pattern, Locale.getDefault()).format(Date(epochSeconds * 1_000))
+    SimpleDateFormat(pattern, L10n.locale).format(Date(epochSeconds * 1_000))
 
 private fun relativeAge(epochSeconds: Long): String {
     val elapsed = max(0, System.currentTimeMillis() / 1_000 - epochSeconds)
     return when {
-        elapsed < 60 -> "NOW"
-        elapsed < 3_600 -> "${elapsed / 60} MIN AGO"
-        elapsed < 86_400 -> "${elapsed / 3_600} H AGO"
-        else -> "${elapsed / 86_400} D AGO"
+        elapsed < 60 -> L10n.text("NOW")
+        elapsed < 3_600 -> L10n.text("{0} MIN AGO", elapsed / 60)
+        elapsed < 86_400 -> L10n.text("{0} H AGO", elapsed / 3_600)
+        else -> L10n.text("{0} D AGO", elapsed / 86_400)
     }
 }

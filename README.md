@@ -52,6 +52,7 @@ mobile and native widgets.
 - Menu-bar and system-tray companion built with Tauri, Rust and TypeScript.
 - Native SwiftUI and Kotlin applications with QR or private-link pairing.
 - Native WidgetKit and Android App Widget extensions backed by a private local cache.
+- System-language UI in English or Spanish, with English fallback for other languages.
 - Provider-neutral relay protocol with separate publisher, pairing and reader credentials.
 - AES-256-GCM encryption interoperable across Rust, Swift and Kotlin.
 - Reproducible installers, checksums, signing gates and automated validation.
@@ -78,7 +79,7 @@ Permanent downloads are published on [GitHub Releases](https://github.com/arviva
 The current `windows-bootstrap-v0.1.6` entry is an explicitly unsigned Windows onboarding
 preview for SignPath Foundation, not the public beta intended for end users.
 
-The signed `v0.1.10` tag publishes the first tester prerelease with Linux
+The signed `v0.1.11` tag publishes the English/Spanish tester prerelease with Linux
 DEB/RPM/AppImage, universal macOS DMG/PKG and signed Android APK/AAB. Automated inventory,
 checksums, platform trust checks and GitHub build provenance must all pass before it
 becomes public. Windows remains in its separate unsigned onboarding preview until
@@ -321,6 +322,7 @@ workflows may generate explicitly unsigned artifacts for private QA only.
 | [`apps/apple/`](apps/apple/README.md) | Xcode project for iPhone, WidgetKit and native macOS       |
 | `services/relay/`                     | Worker, D1 adapter, rate limiting and public pages         |
 | `protocol/`                           | Versioned protocol, fixtures and interoperability examples |
+| `localization/`                       | Shared English/Spanish messages and locale test cases      |
 | `packaging/`                          | Public verification material for distributed packages      |
 | [`docs/`](docs/README.md)             | Architecture, operations, release and security records     |
 | [`release.json`](release.json)        | Canonical product and component release versions           |

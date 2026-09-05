@@ -1,5 +1,7 @@
 package inmerzion.statusline.widget
 
+import inmerzion.statusline.localization.L10n
+
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -24,7 +26,6 @@ import inmerzion.statusline.protocol.UsageStatus
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 internal enum class WidgetSegmentFill {
     FULL,
@@ -63,6 +64,11 @@ internal object WidgetLayoutPolicy {
 }
 
 class StatuslineWidgetProvider : AppWidgetProvider() {
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        if (intent.action == Intent.ACTION_LOCALE_CHANGED) updateAll(context)
+    }
+
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -195,6 +201,17 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
             status: UsageStatus?,
         ) {
             val populated = status != null
+            // Set even the XML labels explicitly: an unsupported primary language
+            // must not select secondary Spanish from Android's resource fallback.
+            mapOf(
+                R.id.widget_weekly_limit_label to "WEEKLY LIMIT",
+                R.id.widget_weekly_limit_label_empty to "WEEKLY LIMIT",
+                R.id.widget_remaining_label to "REMAINING",
+                R.id.widget_no_data_label to "NO DATA",
+                R.id.widget_resets_label to "RESETS",
+                R.id.widget_connect_companion to "CONNECT COMPANION",
+            ).forEach { (id, key) -> views.setTextViewText(id, L10n.text(key)) }
+            views.setInt(R.id.widgetRoot, "setLayoutDirection", View.LAYOUT_DIRECTION_LTR)
             views.setViewVisibility(
                 R.id.widgetPopulated,
                 if (populated) View.VISIBLE else View.GONE,
@@ -208,7 +225,7 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
                 views.setImageViewBitmap(R.id.widgetEmptyMeter, meterBitmap(context, 0))
                 views.setContentDescription(
                     R.id.widgetRoot,
-                    "Statusline sin datos. Toca para abrir la aplicación y conectar un companion.",
+                    L10n.text("No Statusline data. Tap to open the app and connect a companion."),
                 )
                 return
             }
@@ -222,10 +239,10 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
                 },
             )
             views.setTextViewText(R.id.widgetQuotaNumber, normalized.toString())
-            views.setTextViewText(R.id.widgetState, if (status.isDemo) "DEMO" else "LIVE")
+            views.setTextViewText(R.id.widgetState, if (status.isDemo) L10n.text("DEMO") else L10n.text("LIVE"))
             views.setTextColor(R.id.widgetQuotaPercent, emphasisColor)
             views.setImageViewBitmap(R.id.widgetMeter, meterBitmap(context, normalized))
-            views.setTextViewText(R.id.widgetMeterScaleValue, "$normalized LEFT")
+            views.setTextViewText(R.id.widgetMeterScaleValue, L10n.text("{0} LEFT", normalized))
             views.setTextViewText(
                 R.id.widgetResetTime,
                 formatReset(status.resetAtEpochSeconds, "HH:mm"),
@@ -234,12 +251,10 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
                 R.id.widgetResetDate,
                 formatReset(status.resetAtEpochSeconds, "dd MMM"),
             )
-            views.setContentDescription(
-                R.id.widgetRoot,
-                (if (status.isDemo) "Muestra de demostración. " else "") +
-                    "Límite semanal de Codex: $normalized por ciento restante. " +
-                    "Reinicio ${formatAccessibleReset(status.resetAtEpochSeconds)}.",
-            )
+            val description = L10n.text("{0} percent remaining. Resets {1}", normalized,
+                formatAccessibleReset(status.resetAtEpochSeconds))
+            views.setContentDescription(R.id.widgetRoot,
+                if (status.isDemo) L10n.text("Demo sample. {0}", description) else description)
         }
 
         private fun meterBitmap(context: Context, remainingPercentage: Int): Bitmap {
@@ -296,15 +311,15 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
         }
 
         private fun formatReset(epochSeconds: Long, pattern: String): String =
-            SimpleDateFormat(pattern, Locale.getDefault())
+            SimpleDateFormat(pattern, L10n.locale)
                 .format(Date(epochSeconds * 1_000))
-                .uppercase(Locale.getDefault())
+                .uppercase(L10n.locale)
 
         private fun formatAccessibleReset(epochSeconds: Long): String =
             DateFormat.getDateTimeInstance(
                 DateFormat.MEDIUM,
                 DateFormat.SHORT,
-                Locale.getDefault(),
+                L10n.locale,
             ).format(Date(epochSeconds * 1_000))
     }
 }

@@ -1,3 +1,4 @@
+import { t } from "./localization";
 export type UsageWindow = Readonly<{
   usedPercent: number;
   remainingPercent: number;
@@ -88,15 +89,18 @@ export function copyForState(state: UsageState): StatusCopy {
   switch (state.status) {
     case "loading":
       return {
-        eyebrow: "SOURCE / CODEX LOCAL",
-        title: "Reading local session",
-        detail: "Consultando las ventanas de uso mediante Codex App Server.",
+        eyebrow: t("SOURCE / CODEX LOCAL"),
+        title: t("Reading local session"),
+        detail: t("Reading usage windows through Codex App Server."),
       };
     case "ready":
       return {
-        eyebrow: "STATUS / AVAILABLE",
-        title: "Weekly quota",
-        detail: `${Math.round(state.weekly.usedPercent)}% consumido en ${state.weekly.label}.`,
+        eyebrow: t("STATUS / AVAILABLE"),
+        title: t("Weekly quota"),
+        detail: t(
+          "{0}% of the weekly quota used.",
+          Math.round(state.weekly.usedPercent),
+        ),
       };
     case "unavailable":
       return copyForUnavailable(state.reason);
@@ -149,23 +153,21 @@ function copyForUnavailable(reason: UnavailableReason): StatusCopy {
   switch (reason) {
     case "noWeeklyWindow":
       return {
-        eyebrow: "STATUS / NO SAMPLE",
-        title: "Weekly window unavailable",
-        detail:
-          "Codex no ha publicado una ventana de 6 a 8 días para esta cuenta.",
+        eyebrow: t("STATUS / NO SAMPLE"),
+        title: t("Weekly window unavailable"),
+        detail: t("Codex has not published a 6–8 day window for this account."),
       };
     case "notSignedIn":
       return {
-        eyebrow: "AUTH / REQUIRED",
-        title: "Connect Codex",
-        detail: "Ejecuta codex login y vuelve a actualizar el medidor.",
+        eyebrow: t("AUTH / REQUIRED"),
+        title: t("Connect Codex"),
+        detail: t("Run codex login and refresh the meter."),
       };
     case "unknown":
       return {
-        eyebrow: "STATUS / UNSUPPORTED",
-        title: "Unsupported Codex state",
-        detail:
-          "Actualiza Statusline Companion para interpretar esta respuesta.",
+        eyebrow: t("STATUS / UNSUPPORTED"),
+        title: t("Unsupported Codex state"),
+        detail: t("Update Statusline Companion to read this response."),
       };
   }
 }
@@ -174,36 +176,34 @@ function copyForError(code: UsageErrorCode): StatusCopy {
   switch (code) {
     case "codexNotFound":
       return {
-        eyebrow: "SOURCE / MISSING",
-        title: "Codex CLI not found",
-        detail:
-          "Abre Source Settings para detectar o seleccionar la CLI local.",
+        eyebrow: t("SOURCE / MISSING"),
+        title: t("Codex CLI not found"),
+        detail: t("Open Source Settings to detect or select the local CLI."),
       };
     case "timeout":
       return {
-        eyebrow: "SOURCE / TIMEOUT",
-        title: "Codex response timed out",
-        detail: "Comprueba la conexión y vuelve a intentarlo en unos segundos.",
+        eyebrow: t("SOURCE / TIMEOUT"),
+        title: t("Codex response timed out"),
+        detail: t("Check your connection and try again in a few seconds."),
       };
     case "overloaded":
       return {
-        eyebrow: "SOURCE / BUSY",
-        title: "Codex is busy",
-        detail: "El servidor pidió reintentar más tarde.",
+        eyebrow: t("SOURCE / BUSY"),
+        title: t("Codex is busy"),
+        detail: t("The server asked to try again later."),
       };
     case "invalidData":
       return {
-        eyebrow: "CONTRACT / CHANGED",
-        title: "Unexpected quota format",
-        detail: "Actualiza Statusline Companion o revisa la versión de la CLI.",
+        eyebrow: t("CONTRACT / CHANGED"),
+        title: t("Unexpected quota format"),
+        detail: t("Update Statusline Companion or check your CLI version."),
       };
     case "appServer":
     case "unknown":
       return {
-        eyebrow: "SOURCE / OFFLINE",
-        title: "Codex query failed",
-        detail:
-          "Revisa que la CLI esté abierta a tu sesión y vuelve a actualizar.",
+        eyebrow: t("SOURCE / OFFLINE"),
+        title: t("Codex query failed"),
+        detail: t("Check that you are signed in to the CLI, then refresh."),
       };
   }
 }

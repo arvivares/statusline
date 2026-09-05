@@ -336,9 +336,10 @@
 				};
 			};
 			buildConfigurationList = EF6DA023303FA260007F6F4C /* Build configuration list for PBXProject "statusline" */;
-			developmentRegion = es;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				en,
 				es,
 				Base,
 			);

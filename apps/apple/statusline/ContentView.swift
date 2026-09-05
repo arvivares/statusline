@@ -118,20 +118,20 @@ private struct StatuslineLegalFooter: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                DataPlaneLabel(text: "PRIVACY / SUPPORT")
+                DataPlaneLabel(text: L10n.text("PRIVACY / SUPPORT"))
                 Spacer()
-                DataPlaneLabel(text: "INDEPENDENT", tint: DataPlaneTheme.ink)
+                DataPlaneLabel(text: L10n.text("INDEPENDENT"), tint: DataPlaneTheme.ink)
             }
 
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) {
                     DataPlaneExternalLink(
-                        title: "Privacidad",
+                        title: L10n.text("Privacy"),
                         systemImage: "hand.raised",
                         destination: privacyURL
                     )
                     DataPlaneExternalLink(
-                        title: "Soporte",
+                        title: L10n.text("Support"),
                         systemImage: "questionmark.circle",
                         destination: supportURL
                     )
@@ -139,19 +139,19 @@ private struct StatuslineLegalFooter: View {
 
                 VStack(spacing: 10) {
                     DataPlaneExternalLink(
-                        title: "Privacidad",
+                        title: L10n.text("Privacy"),
                         systemImage: "hand.raised",
                         destination: privacyURL
                     )
                     DataPlaneExternalLink(
-                        title: "Soporte",
+                        title: L10n.text("Support"),
                         systemImage: "questionmark.circle",
                         destination: supportURL
                     )
                 }
             }
 
-            Text("Statusline es una aplicación independiente y no está afiliada ni respaldada por OpenAI.")
+            Text(L10n.text("Statusline is an independent app and is not affiliated with or endorsed by OpenAI."))
                 .font(.caption)
                 .foregroundStyle(DataPlaneTheme.muted)
         }
@@ -170,7 +170,7 @@ private struct DataPlaneExternalLink: View {
             Label(title, systemImage: systemImage)
         }
         .buttonStyle(DataPlaneSecondaryButtonStyle())
-        .accessibilityHint("Abre una página web externa")
+        .accessibilityHint(L10n.text("Opens an external web page"))
     }
 }
 
@@ -180,7 +180,7 @@ private struct DataPlaneAppHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                DataPlaneLabel(text: "STL / DATA PLANE", tint: DataPlaneTheme.ink)
+                DataPlaneLabel(text: L10n.text("STL / DATA PLANE"), tint: DataPlaneTheme.ink)
                 Spacer()
                 DataPlaneStatusIndicator(
                     label: syncState.dataPlaneLabel,
@@ -188,12 +188,12 @@ private struct DataPlaneAppHeader: View {
                 )
             }
 
-            Text("Codex Status")
+            Text(L10n.text("Codex Status"))
                 .font(.largeTitle.bold())
                 .tracking(-1.4)
                 .foregroundStyle(DataPlaneTheme.ink)
 
-            Text("Cuota semanal, reinicio y relay privado en un solo plano de datos.")
+            Text(L10n.text("Weekly quota, reset and private sync in one view."))
                 .font(.subheadline)
                 .foregroundStyle(DataPlaneTheme.muted)
         }
@@ -215,9 +215,9 @@ private struct CodexDataPlanePanel: View {
         DataPlaneSurface(cornerRadius: 20) {
             VStack(spacing: 0) {
                 HStack {
-                    DataPlaneLabel(text: "CDX.WEEKLY.QUOTA")
+                    DataPlaneLabel(text: L10n.text("CDX.WEEKLY.QUOTA"))
                     Spacer()
-                    DataPlaneLabel(text: "PLANE / 010", tint: DataPlaneTheme.signal)
+                    DataPlaneLabel(text: L10n.text("PLANE / 010"), tint: DataPlaneTheme.signal)
                 }
                 .padding(18)
 
@@ -244,36 +244,36 @@ private struct CodexDataPlanePanel: View {
 
                 LazyVGrid(columns: columns, spacing: 0) {
                     DataPlaneMetricCell(
-                        label: "RESET.TIME",
-                        value: status.resetDate.formatted(.dateTime.hour().minute()),
-                        detail: "LOCAL TIME",
+                        label: L10n.text("RESET.TIME"),
+                        value: status.resetDate.formatted(.dateTime.hour().minute().locale(L10n.locale)),
+                        detail: L10n.text("LOCAL TIME"),
                         isAccented: true
                     )
 
                     DataPlaneMetricCell(
-                        label: "RESET.DATE",
-                        value: status.resetDate.formatted(.dateTime.day().month(.abbreviated)).uppercased(),
-                        detail: status.resetDate.formatted(.dateTime.weekday(.wide)).uppercased(),
+                        label: L10n.text("RESET.DATE"),
+                        value: status.resetDate.formatted(.dateTime.day().month(.abbreviated).locale(L10n.locale)).uppercased(),
+                        detail: status.resetDate.formatted(.dateTime.weekday(.wide).locale(L10n.locale)).uppercased(),
                         isAccented: true
                     )
 
                     DataPlaneMetricCell(
-                        label: "SOURCE.HOST",
-                        value: "Desktop companion",
-                        detail: "CODEX SESSION LOCAL"
+                        label: L10n.text("SOURCE.HOST"),
+                        value: L10n.text("Desktop companion"),
+                        detail: L10n.text("CODEX SESSION LOCAL")
                     )
 
                     DataPlaneMetricCell(
-                        label: "RELAY.STATE",
+                        label: L10n.text("RELAY.STATE"),
                         value: syncState.relayValue,
-                        detail: "E2E · UNIVERSAL"
+                        detail: L10n.text("E2E · UNIVERSAL")
                     )
                 }
 
                 HStack(alignment: .center, spacing: 14) {
                     VStack(alignment: .leading, spacing: 7) {
-                        DataPlaneLabel(text: "STATUS.RECORD")
-                        Text("available · quota metadata only")
+                        DataPlaneLabel(text: L10n.text("STATUS.RECORD"))
+                        Text(L10n.text("available · quota metadata only"))
                             .font(.caption.monospaced())
                             .foregroundStyle(DataPlaneTheme.ink)
                     }
@@ -308,7 +308,7 @@ private struct DataPlaneQuotaValue: View {
                 .font(.title.bold())
                 .foregroundStyle(DataPlaneTheme.emphasis(for: status.remainingPercentage))
 
-            Text("LEFT")
+            Text(L10n.text("LEFT"))
                 .font(.caption2.monospaced().weight(.bold))
                 .tracking(1)
                 .foregroundStyle(DataPlaneTheme.emphasis(for: status.remainingPercentage))
@@ -316,8 +316,8 @@ private struct DataPlaneQuotaValue: View {
         .lineLimit(1)
         .minimumScaleFactor(0.7)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Cuota semanal")
-        .accessibilityValue("\(status.remainingPercentage) por ciento restante")
+        .accessibilityLabel(L10n.text("Weekly quota"))
+        .accessibilityValue(L10n.text("{0} percent remaining", status.remainingPercentage))
         .accessibilityIdentifier("weeklyQuotaValue")
     }
 }
@@ -328,14 +328,14 @@ private struct DataPlaneQuotaContext: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 13) {
             VStack(alignment: .leading, spacing: 4) {
-                DataPlaneLabel(text: "STATUS")
-                Text("AVAILABLE")
+                DataPlaneLabel(text: L10n.text("STATUS"))
+                Text(L10n.text("AVAILABLE"))
                     .font(.caption.monospaced().weight(.semibold))
                     .foregroundStyle(DataPlaneTheme.ink)
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                DataPlaneLabel(text: "SAMPLE")
+                DataPlaneLabel(text: L10n.text("SAMPLE"))
                 Text(status.updatedAt, style: .relative)
                     .font(.caption.monospaced())
                     .foregroundStyle(DataPlaneTheme.ink)
@@ -353,9 +353,9 @@ private struct WaitingForDesktopPanel: View {
         DataPlaneSurface(cornerRadius: 20) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    DataPlaneLabel(text: "CDX.WEEKLY.QUOTA")
+                    DataPlaneLabel(text: L10n.text("CDX.WEEKLY.QUOTA"))
                     Spacer()
-                    DataPlaneLabel(text: "NO SAMPLE", tint: DataPlaneTheme.muted)
+                    DataPlaneLabel(text: L10n.text("NO SAMPLE"), tint: DataPlaneTheme.muted)
                 }
                 .padding(18)
 
@@ -366,7 +366,7 @@ private struct WaitingForDesktopPanel: View {
                         Text("--")
                             .font(.system(.largeTitle, design: .rounded).bold())
                             .foregroundStyle(DataPlaneTheme.ink)
-                        Text("% LEFT")
+                        Text(L10n.text("% LEFT"))
                             .font(.caption.monospaced().weight(.bold))
                             .foregroundStyle(DataPlaneTheme.muted)
                     }
@@ -374,18 +374,18 @@ private struct WaitingForDesktopPanel: View {
                     DataPlaneMeter(remainingPercentage: 0)
                         .accessibilityHidden(true)
 
-                    Text("Abre Statusline Companion en Windows, Linux o macOS, crea un vínculo y escanea su QR para recibir la primera muestra cifrada.")
+                    Text(L10n.text("Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample."))
                         .font(.subheadline)
                         .foregroundStyle(DataPlaneTheme.muted)
 
-                    Button("Ver demo local", systemImage: "play.rectangle.fill", action: onLoadDemo)
+                    Button(L10n.text("View local demo"), systemImage: "play.rectangle.fill", action: onLoadDemo)
                         .buttonStyle(DataPlaneSecondaryButtonStyle())
-                        .accessibilityHint("Carga una muestra local y actualiza el widget sin usar una cuenta, un ordenador ni la red.")
+                        .accessibilityHint(L10n.text("Loads a local sample and updates the widget without an account, a computer or the network."))
                 }
                 .padding(18)
 
                 HStack {
-                    DataPlaneLabel(text: "SOURCE.HOST")
+                    DataPlaneLabel(text: L10n.text("SOURCE.HOST"))
                     Spacer()
                     DataPlaneStatusIndicator(
                         label: syncState.dataPlaneLabel,
@@ -413,7 +413,7 @@ private struct UniversalRelayPanel: View {
         DataPlaneSurface {
             VStack(alignment: .leading, spacing: 15) {
                 HStack {
-                    DataPlaneLabel(text: "RELAY.CONTROL", tint: DataPlaneTheme.ink)
+                    DataPlaneLabel(text: L10n.text("RELAY.CONTROL"), tint: DataPlaneTheme.ink)
                     Spacer()
                     DataPlaneStatusIndicator(
                         label: state.dataPlaneLabel,
@@ -427,7 +427,7 @@ private struct UniversalRelayPanel: View {
                     .font(.subheadline.monospaced())
                     .foregroundStyle(state.isError ? DataPlaneTheme.critical : DataPlaneTheme.ink)
 
-                Text("El relay almacena únicamente un blob AES-256-GCM. Las credenciales de Codex y la clave de cifrado nunca salen de tus dispositivos.")
+                Text(L10n.text("The relay stores only an AES-256-GCM encrypted snapshot. Codex credentials and the encryption key never leave your devices."))
                     .font(.caption)
                     .foregroundStyle(DataPlaneTheme.muted)
 
@@ -455,14 +455,14 @@ private struct UniversalRelayPanel: View {
             EmptyView()
 
         case .unpaired, .failed:
-            Button("Escanear QR", systemImage: "qrcode.viewfinder", action: onPair)
+            Button(L10n.text("Scan QR"), systemImage: "qrcode.viewfinder", action: onPair)
                 .buttonStyle(DataPlanePrimaryButtonStyle())
 
         case .pairing:
             HStack(spacing: 9) {
                 ProgressView()
                     .controlSize(.small)
-                Text("Emparejando…")
+                Text(L10n.text("Pairing…"))
             }
             .foregroundStyle(DataPlaneTheme.signal)
 
@@ -474,13 +474,13 @@ private struct UniversalRelayPanel: View {
                             .controlSize(.small)
                             .tint(DataPlaneTheme.canvas)
                     }
-                    Text(state == .syncing ? "Sincronizando" : "Actualizar data plane")
+                    Text(state == .syncing ? L10n.text("Syncing") : L10n.text("Refresh"))
                 }
             }
             .buttonStyle(DataPlanePrimaryButtonStyle())
             .disabled(state == .syncing)
 
-            Button("Desconectar", systemImage: "link.badge.minus", action: onDisconnect)
+            Button(L10n.text("Disconnect"), systemImage: "link.badge.minus", action: onDisconnect)
                 .buttonStyle(DataPlaneSecondaryButtonStyle())
                 .disabled(state == .syncing)
         }
@@ -511,8 +511,8 @@ private struct ManualUpdatePanel: View {
             } label: {
                 HStack {
                     VStack(alignment: .leading, spacing: 5) {
-                        DataPlaneLabel(text: "FALLBACK.INPUT", tint: DataPlaneTheme.ink)
-                        Text("Actualización manual")
+                        DataPlaneLabel(text: L10n.text("FALLBACK.INPUT"), tint: DataPlaneTheme.ink)
+                        Text(L10n.text("Manual update"))
                             .font(.subheadline.monospaced().weight(.semibold))
                             .foregroundStyle(DataPlaneTheme.ink)
                     }
@@ -536,7 +536,7 @@ private struct CodexStatusEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Pega la línea completa que devuelve `/status` en Codex.")
+            Text(L10n.text("Paste the complete line returned by /status in Codex."))
                 .font(.caption)
                 .foregroundStyle(DataPlaneTheme.muted)
 
@@ -556,7 +556,7 @@ private struct CodexStatusEditor: View {
                 Rectangle()
                     .strokeBorder(DataPlaneTheme.line)
             }
-            .accessibilityLabel("Línea de estado de Codex")
+            .accessibilityLabel(L10n.text("Codex status line"))
 
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) {
@@ -568,7 +568,7 @@ private struct CodexStatusEditor: View {
                 }
             }
 
-            Button("Guardar en este dispositivo", systemImage: "square.and.arrow.down", action: onUpdate)
+            Button(L10n.text("Save on this device"), systemImage: "square.and.arrow.down", action: onUpdate)
                 .buttonStyle(DataPlanePrimaryButtonStyle())
                 .disabled(isUpdating)
 
@@ -586,7 +586,7 @@ private struct CodexStatusEditor: View {
         PasteButton(payloadType: String.self, onPaste: onPaste)
             .buttonStyle(DataPlaneSecondaryButtonStyle())
 
-        Button("Usar ejemplo", systemImage: "text.badge.checkmark", action: onRestoreExample)
+        Button(L10n.text("Use example"), systemImage: "text.badge.checkmark", action: onRestoreExample)
             .buttonStyle(DataPlaneSecondaryButtonStyle())
     }
 }
@@ -595,19 +595,19 @@ private extension CodexRelaySyncState {
     var dataPlaneLabel: String {
         switch self {
         case .notConfigured:
-            "no endpoint"
+            L10n.text("NO ENDPOINT")
         case .unpaired:
-            "unpaired"
+            L10n.text("UNPAIRED")
         case .pairing:
-            "pairing"
+            L10n.text("PAIRING")
         case .syncing:
-            "syncing"
+            L10n.text("SYNCING")
         case .waitingForDesktop:
-            "waiting"
+            L10n.text("WAITING")
         case .synced:
-            "current"
+            L10n.text("CURRENT")
         case .failed:
-            "error"
+            L10n.text("ERROR")
         }
     }
 
@@ -625,19 +625,19 @@ private extension CodexRelaySyncState {
     var relayValue: String {
         switch self {
         case .notConfigured:
-            "Relay / config"
+            L10n.text("Relay / config")
         case .unpaired:
-            "Relay / unpaired"
+            L10n.text("Relay / unpaired")
         case .pairing:
-            "Relay / pairing"
+            L10n.text("Relay / pairing")
         case .syncing:
-            "Relay / syncing"
+            L10n.text("Relay / syncing")
         case .waitingForDesktop:
-            "Relay / waiting"
+            L10n.text("Relay / waiting")
         case .synced:
-            "Relay / current"
+            L10n.text("Relay / current")
         case .failed:
-            "Relay / error"
+            L10n.text("Relay / error")
         }
     }
 }

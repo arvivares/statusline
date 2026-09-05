@@ -71,8 +71,8 @@ de distribución es [release.yml](../../.github/workflows/release.yml), activado
 firmado `v<versión>` que debe coincidir con [`release.json`](../../release.json):
 
 ```shell
-git tag -s v0.1.10 -m "Statusline 0.1.10 beta"
-git push origin v0.1.10
+git tag -s v0.1.11 -m "Statusline 0.1.11 beta"
+git push origin v0.1.11
 ```
 
 El preflight comprueba que el tag anotado está verificado y coincide con npm, Cargo,
@@ -87,7 +87,7 @@ Después de compilar, el pipeline:
 - monta el DMG, inspecciona el payload del PKG y verifica arm64 + x86_64, icono y detección de Codex en macOS;
 - para builds macOS firmados, verifica Developer ID, Hardened Runtime, timestamps, tickets grapados y aceptación de Gatekeeper en la app, el DMG y el PKG;
 - reúne también el APK y AAB firmados por Android;
-- para `v0.1.10`, exige exactamente siete binarios públicos —tres Linux, dos macOS y dos Android— más las tres firmas Linux;
+- para `v0.1.11`, exige exactamente siete binarios públicos —tres Linux, dos macOS y dos Android— más las tres firmas Linux;
 - genera `RELEASE-MANIFEST.json`, `SHA256SUMS.txt` y `SHA256SUMS.txt.asc`;
 - crea una attestation de procedencia firmada por GitHub para cada binario y el manifest;
 - adjunta el conjunto completo y publica automáticamente la entrada con la marca **Pre-release**.

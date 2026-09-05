@@ -12,6 +12,7 @@ struct statuslineApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.locale, L10n.locale)
         }
     }
 }

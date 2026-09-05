@@ -12,6 +12,7 @@
         android:required="false" />
 
     <application
+        android:name=".StatuslineApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
@@ -52,6 +53,7 @@
             android:label="@string/widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

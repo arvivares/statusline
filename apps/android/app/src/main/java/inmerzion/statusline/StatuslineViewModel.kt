@@ -83,7 +83,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
         if (rawValue.isBlank()) {
             mutableState.value = mutableState.value.copy(
                 feedback = UserFeedback(
-                    "Pega primero el vínculo que muestra Statusline Companion.",
+                    "Paste the link shown by Statusline Companion first.",
                     isError = true,
                 ),
             )
@@ -108,7 +108,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
                         SyncPhase.SYNCED
                     },
                     feedback = UserFeedback(
-                        "Dispositivo conectado de forma cifrada.",
+                        "Device connected with encryption.",
                         isError = false,
                     ),
                 )
@@ -156,7 +156,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
                         SyncPhase.SYNCED
                     },
                     feedback = if (userInitiated) {
-                        UserFeedback("Snapshot cifrado actualizado.", isError = false)
+                        UserFeedback("Encrypted snapshot updated.", isError = false)
                     } else {
                         null
                     },
@@ -183,7 +183,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
                     status = status,
                     phase = SyncPhase.DEMO,
                     feedback = UserFeedback(
-                        "Muestra de demostración cargada sólo en este dispositivo.",
+                        "Demo sample loaded on this device only.",
                         isError = false,
                     ),
                     isPaired = false,
@@ -204,7 +204,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
                     status = null,
                     phase = SyncPhase.UNPAIRED,
                     feedback = UserFeedback(
-                        "Muestra de demostración eliminada.",
+                        "Demo sample removed.",
                         isError = false,
                     ),
                     isPaired = false,
@@ -224,7 +224,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
                 mutableState.value = StatuslineUiState(
                     endpoint = activeRepository.endpoint,
                     feedback = UserFeedback(
-                        "Este dispositivo se desconectó del relay.",
+                        "This device was disconnected from the relay.",
                         isError = false,
                     ),
                 )
@@ -236,8 +236,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
     fun scannerUnavailable(message: String? = null) {
         mutableState.value = mutableState.value.copy(
             feedback = UserFeedback(
-                message ?: "No se pudo abrir el escáner. " +
-                    "Puedes pegar el vínculo manualmente.",
+                message ?: "Could not open the scanner. You can paste the link manually.",
                 isError = true,
             ),
         )
@@ -246,7 +245,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
     fun externalPageUnavailable() {
         mutableState.value = mutableState.value.copy(
             feedback = UserFeedback(
-                "No se pudo abrir el navegador en este dispositivo.",
+                "Could not open the browser on this device.",
                 isError = true,
             ),
         )
@@ -270,7 +269,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
                 mutableState.value.isPaired
             },
             feedback = UserFeedback(
-                failure?.message ?: "Statusline no pudo completar la operación.",
+                failureMessage(failure?.kind),
                 isError = true,
             ),
         )
@@ -278,5 +277,20 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun updateWidgets() {
         StatuslineWidgetProvider.updateAll(getApplication())
+    }
+
+    private fun failureMessage(kind: FailureKind?): String = when (kind) {
+        FailureKind.INVALID_CONFIGURATION -> "This build does not have a relay endpoint configured yet."
+        FailureKind.INVALID_PAIRING -> "The pairing QR or link is invalid."
+        FailureKind.INVALID_RESPONSE -> "The relay returned an unexpected response."
+        FailureKind.INVALID_SNAPSHOT -> "The received snapshot has an invalid format."
+        FailureKind.SECURE_STORAGE -> "Could not access this device’s secure storage."
+        FailureKind.ENDPOINT_MISMATCH -> "The pairing belongs to a different Statusline relay."
+        FailureKind.NETWORK -> "Could not connect to the relay. Check your connection and try again."
+        FailureKind.TIMEOUT -> "The relay took too long to respond."
+        FailureKind.NOT_PAIRED -> "Pair this device with Statusline Companion first."
+        FailureKind.CHANNEL_EXPIRED -> "The channel has expired or was disconnected. Pair this device again."
+        FailureKind.RATE_LIMITED -> "Too many requests. Wait a moment before trying again."
+        FailureKind.UNKNOWN, null -> "Statusline could not complete the operation. Please try again."
     }
 }

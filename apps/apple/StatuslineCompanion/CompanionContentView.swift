@@ -54,8 +54,8 @@ private struct CompanionDataPlaneHeader: View {
     var body: some View {
         HStack(alignment: .bottom, spacing: 24) {
             VStack(alignment: .leading, spacing: 9) {
-                DataPlaneLabel(text: "STL / COMPANION / DATA PLANE", tint: DataPlaneTheme.signal)
-                Text("Codex relay")
+                DataPlaneLabel(text: L10n.text("STL / COMPANION / DATA PLANE"), tint: DataPlaneTheme.signal)
+                Text(L10n.text("Codex relay"))
                     .font(.largeTitle.bold())
                     .tracking(-1.4)
                     .foregroundStyle(DataPlaneTheme.ink)
@@ -85,8 +85,8 @@ private struct CompanionDataPlaneStatus: View {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 5) {
-                        DataPlaneLabel(text: "CODEX.ACCOUNT")
-                        Text(accountEmail ?? "Codex connected")
+                        DataPlaneLabel(text: L10n.text("CODEX.ACCOUNT"))
+                        Text(accountEmail ?? L10n.text("Codex connected"))
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(DataPlaneTheme.ink)
                             .textSelection(.enabled)
@@ -111,19 +111,19 @@ private struct CompanionDataPlaneStatus: View {
 
                         VStack(spacing: 0) {
                             DataPlaneMetricCell(
-                                label: "RESET",
+                                label: L10n.text("RESET"),
                                 value: status.resetDate.formatted(
-                                    .dateTime.hour().minute().day().month(.abbreviated)
+                                    .dateTime.hour().minute().day().month(.abbreviated).locale(L10n.locale)
                                 ).uppercased(),
-                                detail: "NEXT WEEKLY WINDOW",
+                                detail: L10n.text("NEXT WEEKLY WINDOW"),
                                 isAccented: true,
                                 minimumHeight: 96
                             )
 
                             DataPlaneMetricCell(
-                                label: "SAMPLE",
-                                value: status.updatedAt.formatted(.relative(presentation: .named)),
-                                detail: "LAST CODEX READ",
+                                label: L10n.text("SAMPLE"),
+                                value: L10n.relative(status.updatedAt),
+                                detail: L10n.text("LAST CODEX READ"),
                                 isAccented: true,
                                 minimumHeight: 96
                             )
@@ -136,11 +136,11 @@ private struct CompanionDataPlaneStatus: View {
                             .padding(20)
 
                         DataPlaneMetricCell(
-                            label: "RESET",
+                            label: L10n.text("RESET"),
                             value: status.resetDate.formatted(
-                                .dateTime.hour().minute().day().month(.abbreviated)
+                                .dateTime.hour().minute().day().month(.abbreviated).locale(L10n.locale)
                             ).uppercased(),
-                            detail: "NEXT WEEKLY WINDOW",
+                            detail: L10n.text("NEXT WEEKLY WINDOW"),
                             isAccented: true
                         )
                     }
@@ -162,23 +162,23 @@ private struct CompanionDataPlaneStatus: View {
     @ViewBuilder
     private var statusMetrics: some View {
         DataPlaneMetricCell(
-            label: "SOURCE",
-            value: "Codex local",
-            detail: "SESSION STAYS ON MAC",
+            label: L10n.text("SOURCE"),
+            value: L10n.text("Codex local"),
+            detail: L10n.text("SESSION STAYS ON MAC"),
             minimumHeight: 82
         )
 
         DataPlaneMetricCell(
-            label: "RELAY",
-            value: isBusy ? "Reading Codex" : relayState.displayValue,
-            detail: "AES-256-GCM · UNIVERSAL",
+            label: L10n.text("RELAY"),
+            value: isBusy ? L10n.text("Reading Codex") : relayState.displayValue,
+            detail: L10n.text("AES-256-GCM · UNIVERSAL"),
             minimumHeight: 82
         )
 
         DataPlaneMetricCell(
-            label: "STATUS",
+            label: L10n.text("STATUS"),
             value: connectionState.dataPlaneLabel,
-            detail: "ACCOUNT CHANNEL",
+            detail: L10n.text("ACCOUNT CHANNEL"),
             minimumHeight: 82
         )
     }
@@ -191,7 +191,7 @@ private struct CompanionQuotaReadout: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            DataPlaneLabel(text: "WEEKLY QUOTA")
+            DataPlaneLabel(text: L10n.text("WEEKLY QUOTA"))
 
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(status.remainingPercentage, format: .number)
@@ -204,7 +204,7 @@ private struct CompanionQuotaReadout: View {
                     .font(.title.bold())
                     .foregroundStyle(DataPlaneTheme.emphasis(for: status.remainingPercentage))
 
-                Text("LEFT")
+                Text(L10n.text("LEFT"))
                     .font(.caption2.monospaced().weight(.bold))
                     .tracking(1)
                     .foregroundStyle(DataPlaneTheme.emphasis(for: status.remainingPercentage))
@@ -226,9 +226,9 @@ private struct CompanionEmptyDataPlane: View {
         DataPlaneSurface(cornerRadius: 16) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    DataPlaneLabel(text: "CDX.WEEKLY.QUOTA")
+                    DataPlaneLabel(text: L10n.text("CDX.WEEKLY.QUOTA"))
                     Spacer()
-                    DataPlaneLabel(text: "NO SAMPLE")
+                    DataPlaneLabel(text: L10n.text("NO SAMPLE"))
                 }
                 .padding(18)
 
@@ -239,7 +239,7 @@ private struct CompanionEmptyDataPlane: View {
                         Text("--")
                             .font(.largeTitle.bold())
                             .foregroundStyle(DataPlaneTheme.ink)
-                        Text("% LEFT")
+                        Text(L10n.text("% LEFT"))
                             .font(.caption.monospaced().weight(.bold))
                             .foregroundStyle(DataPlaneTheme.muted)
                     }
@@ -254,7 +254,7 @@ private struct CompanionEmptyDataPlane: View {
                 .padding(20)
 
                 HStack {
-                    DataPlaneLabel(text: "ACCOUNT.CHANNEL")
+                    DataPlaneLabel(text: L10n.text("ACCOUNT.CHANNEL"))
                     Spacer()
                     DataPlaneStatusIndicator(
                         label: state.dataPlaneLabel,
@@ -279,7 +279,7 @@ private struct CompanionConnectionPanel: View {
             VStack(alignment: .leading, spacing: 15) {
                 HStack {
                     VStack(alignment: .leading, spacing: 5) {
-                        DataPlaneLabel(text: "ACCOUNT.CONTROL", tint: DataPlaneTheme.ink)
+                        DataPlaneLabel(text: L10n.text("ACCOUNT.CONTROL"), tint: DataPlaneTheme.ink)
                         Text(viewModel.connectionState.controlTitle)
                             .font(.headline)
                             .foregroundStyle(DataPlaneTheme.ink)
@@ -291,7 +291,7 @@ private struct CompanionConnectionPanel: View {
                         ProgressView()
                             .controlSize(.small)
                             .tint(DataPlaneTheme.signal)
-                            .accessibilityLabel("Procesando")
+                            .accessibilityLabel(L10n.text("Processing"))
                     }
                 }
 
@@ -355,22 +355,22 @@ private struct CompanionConnectionPanel: View {
 
     @ViewBuilder
     private var connectButtons: some View {
-        Button("Conectar con Codex", systemImage: "person.crop.circle.badge.checkmark", action: connectWithBrowser)
+        Button(L10n.text("Connect with Codex"), systemImage: "person.crop.circle.badge.checkmark", action: connectWithBrowser)
             .buttonStyle(DataPlanePrimaryButtonStyle())
             .disabled(viewModel.isBusy)
 
-        Button("Usar código de dispositivo", action: connectWithDeviceCode)
+        Button(L10n.text("Use device code"), action: connectWithDeviceCode)
             .buttonStyle(DataPlaneSecondaryButtonStyle())
             .disabled(viewModel.isBusy)
     }
 
     @ViewBuilder
     private var connectedButtons: some View {
-        Button("Sincronizar ahora", systemImage: "arrow.clockwise", action: refresh)
+        Button(L10n.text("Sync now"), systemImage: "arrow.clockwise", action: refresh)
             .buttonStyle(DataPlanePrimaryButtonStyle())
             .disabled(viewModel.isBusy)
 
-        Button("Desconectar", systemImage: "rectangle.portrait.and.arrow.right", action: disconnect)
+        Button(L10n.text("Disconnect"), systemImage: "rectangle.portrait.and.arrow.right", action: disconnect)
             .buttonStyle(DataPlaneSecondaryButtonStyle())
             .disabled(viewModel.isBusy)
     }
@@ -407,7 +407,7 @@ private struct LoginChallengePanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            DataPlaneLabel(text: "AUTH.CHALLENGE")
+            DataPlaneLabel(text: L10n.text("AUTH.CHALLENGE"))
 
             Text(userCode)
                 .font(.title2.monospaced().weight(.bold))
@@ -415,9 +415,9 @@ private struct LoginChallengePanel: View {
                 .textSelection(.enabled)
 
             HStack(spacing: 10) {
-                Button("Copiar código", systemImage: "doc.on.doc", action: onCopy)
+                Button(L10n.text("Copy code"), systemImage: "doc.on.doc", action: onCopy)
                     .buttonStyle(DataPlaneSecondaryButtonStyle())
-                Button("Abrir OpenAI", systemImage: "safari", action: onOpen)
+                Button(L10n.text("Open OpenAI"), systemImage: "safari", action: onOpen)
                     .buttonStyle(DataPlaneSecondaryButtonStyle())
             }
         }
@@ -439,7 +439,7 @@ private struct CompanionRelayPanel: View {
             VStack(alignment: .leading, spacing: 15) {
                 HStack {
                     VStack(alignment: .leading, spacing: 5) {
-                        DataPlaneLabel(text: "UNIVERSAL.RELAY", tint: DataPlaneTheme.ink)
+                        DataPlaneLabel(text: L10n.text("UNIVERSAL.RELAY"), tint: DataPlaneTheme.ink)
                         Text(viewModel.relayState.controlTitle)
                             .font(.headline)
                             .foregroundStyle(DataPlaneTheme.ink)
@@ -512,13 +512,13 @@ private struct CompanionRelayPanel: View {
                 .frame(width: 172, height: 172)
                 .padding(7)
                 .background(DataPlaneTheme.signal)
-                .accessibilityLabel("QR privado de emparejamiento")
+                .accessibilityLabel(L10n.text("Private pairing QR"))
         }
     }
 
     private func pairingCopy(uri: String) -> some View {
         VStack(alignment: .leading, spacing: 11) {
-            DataPlaneLabel(text: "PAIRING.LINK", tint: DataPlaneTheme.signal)
+            DataPlaneLabel(text: L10n.text("PAIRING.LINK"), tint: DataPlaneTheme.signal)
 
             Text(uri)
                 .font(.caption2.monospaced())
@@ -526,11 +526,11 @@ private struct CompanionRelayPanel: View {
                 .lineLimit(5)
                 .textSelection(.enabled)
 
-            Text("El vínculo contiene la clave de descifrado. No lo compartas.")
+            Text(L10n.text("The link contains the decryption key. Do not share it."))
                 .font(.caption)
                 .foregroundStyle(DataPlaneTheme.critical)
 
-            Button("Copiar vínculo privado", systemImage: "doc.on.doc") {
+            Button(L10n.text("Copy private link"), systemImage: "doc.on.doc") {
                 viewModel.copyPairingLink()
             }
             .buttonStyle(DataPlaneSecondaryButtonStyle())
@@ -545,7 +545,7 @@ private struct CompanionRelayPanel: View {
             EmptyView()
 
         case .unpaired:
-            Button("Crear vínculo", systemImage: "qrcode") {
+            Button(L10n.text("Create pairing"), systemImage: "qrcode") {
                 Task { await viewModel.createRelayPairing() }
             }
             .buttonStyle(DataPlanePrimaryButtonStyle())
@@ -567,19 +567,19 @@ private struct CompanionRelayPanel: View {
 
     @ViewBuilder
     private var pairingButtons: some View {
-        Button("Comprobar escaneo", systemImage: "arrow.clockwise") {
+        Button(L10n.text("Check scan"), systemImage: "arrow.clockwise") {
             Task { await viewModel.refreshRelayState() }
         }
         .buttonStyle(DataPlanePrimaryButtonStyle())
         .disabled(viewModel.isRelayBusy)
 
-        Button("Reemplazar QR") {
+        Button(L10n.text("Replace QR")) {
             Task { await viewModel.createRelayPairing() }
         }
         .buttonStyle(DataPlaneSecondaryButtonStyle())
         .disabled(viewModel.isRelayBusy)
 
-        Button("Eliminar vínculo") {
+        Button(L10n.text("Remove pairing")) {
             Task { await viewModel.disconnectRelay() }
         }
         .buttonStyle(DataPlaneSecondaryButtonStyle())
@@ -588,19 +588,19 @@ private struct CompanionRelayPanel: View {
 
     @ViewBuilder
     private var connectedButtons: some View {
-        Button("Comprobar relay", systemImage: "arrow.clockwise") {
+        Button(L10n.text("Check relay"), systemImage: "arrow.clockwise") {
             Task { await viewModel.refreshRelayState() }
         }
         .buttonStyle(DataPlanePrimaryButtonStyle())
         .disabled(viewModel.isRelayBusy)
 
-        Button("Conectar otro dispositivo") {
+        Button(L10n.text("Connect another device")) {
             Task { await viewModel.createRelayPairing() }
         }
         .buttonStyle(DataPlaneSecondaryButtonStyle())
         .disabled(viewModel.isRelayBusy)
 
-        Button("Eliminar vínculo") {
+        Button(L10n.text("Remove pairing")) {
             Task { await viewModel.disconnectRelay() }
         }
         .buttonStyle(DataPlaneSecondaryButtonStyle())
@@ -624,9 +624,9 @@ private struct CompanionPrivacyPanel: View {
         DataPlaneSurface(cornerRadius: 16) {
             VStack(spacing: 0) {
                 HStack {
-                    DataPlaneLabel(text: "PRIVACY.PLANE", tint: DataPlaneTheme.ink)
+                    DataPlaneLabel(text: L10n.text("PRIVACY.PLANE"), tint: DataPlaneTheme.ink)
                     Spacer()
-                    DataPlaneStatusIndicator(label: "private")
+                    DataPlaneStatusIndicator(label: L10n.text("PRIVATE"))
                 }
                 .padding(17)
 
@@ -646,22 +646,22 @@ private struct CompanionPrivacyPanel: View {
     @ViewBuilder
     private var privacyMetrics: some View {
         DataPlaneMetricCell(
-            label: "RELAY.PAYLOAD",
-            value: "Encrypted blob",
-            detail: "AES-256-GCM · 30 DAY TTL",
+            label: L10n.text("RELAY.PAYLOAD"),
+            value: L10n.text("Encrypted snapshot"),
+            detail: L10n.text("AES-256-GCM · 30 DAY TTL"),
             minimumHeight: 82
         )
 
         DataPlaneMetricCell(
-            label: "CODEX.SESSION",
-            value: "Stays on Mac",
-            detail: "NOT UPLOADED",
+            label: L10n.text("CODEX.SESSION"),
+            value: L10n.text("Stays on Mac"),
+            detail: L10n.text("NOT UPLOADED"),
             minimumHeight: 82
         )
 
         DataPlaneMetricCell(
-            label: "DEVICE.PAIRING",
-            value: "Private QR",
+            label: L10n.text("DEVICE.PAIRING"),
+            value: L10n.text("Private QR"),
             detail: "IOS · ANDROID",
             minimumHeight: 82
         )
@@ -672,39 +672,39 @@ private extension StatusRelayPublisherState {
     var displayValue: String {
         switch self {
         case .notConfigured:
-            "Relay / config"
+            L10n.text("Relay / config")
         case .unpaired:
-            "Relay / unpaired"
+            L10n.text("Relay / unpaired")
         case .pairing:
-            "Relay / pairing"
+            L10n.text("Relay / pairing")
         case .connected:
-            "Relay / current"
+            L10n.text("Relay / current")
         }
     }
 
     var controlTitle: String {
         switch self {
         case .notConfigured:
-            "Relay no configurado"
+            L10n.text("Relay not configured")
         case .unpaired:
-            "Conecta un dispositivo"
+            L10n.text("Connect a device")
         case .pairing:
-            "Escanea el QR privado"
+            L10n.text("Scan the private QR")
         case .connected:
-            "Relay cifrado activo"
+            L10n.text("Encrypted relay active")
         }
     }
 
     var statusLabel: String {
         switch self {
         case .notConfigured:
-            "config"
+            L10n.text("CONFIG")
         case .unpaired:
-            "unpaired"
+            L10n.text("UNPAIRED")
         case .pairing:
-            "pairing"
+            L10n.text("PAIRING")
         case .connected:
-            "current"
+            L10n.text("CURRENT")
         }
     }
 
@@ -722,15 +722,15 @@ private extension CompanionConnectionState {
     var dataPlaneLabel: String {
         switch self {
         case .checking:
-            "checking"
+            L10n.text("CHECKING")
         case .disconnected:
-            "offline"
+            L10n.text("OFFLINE")
         case .waitingForLogin:
-            "authorize"
+            L10n.text("AUTHORIZE")
         case .connected:
-            "current"
+            L10n.text("CURRENT")
         case .unavailable:
-            "unavailable"
+            L10n.text("UNAVAILABLE")
         }
     }
 
@@ -750,15 +750,15 @@ private extension CompanionConnectionState {
     var controlTitle: String {
         switch self {
         case .checking:
-            "Comprobando Codex"
+            L10n.text("Checking Codex")
         case .disconnected:
-            "Codex sin conectar"
+            L10n.text("Codex not connected")
         case .waitingForLogin:
-            "Esperando autorización"
+            L10n.text("Waiting for authorization")
         case .connected:
-            "Codex conectado"
+            L10n.text("Codex connected")
         case .unavailable:
-            "Codex CLI no disponible"
+            L10n.text("Codex CLI unavailable")
         }
     }
 }

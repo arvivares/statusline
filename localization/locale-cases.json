@@ -1,0 +1,18 @@
+[
+  { "primary": "es", "expected": "es" },
+  { "primary": "es-ES", "expected": "es" },
+  { "primary": "es-MX", "expected": "es" },
+  { "primary": "ES_ar.UTF-8", "expected": "es" },
+  { "primary": " es-419 ", "expected": "es" },
+  { "primary": "en", "expected": "en" },
+  { "primary": "en-GB", "expected": "en" },
+  { "primary": "en_US.UTF-8", "expected": "en" },
+  { "primary": "fr-FR", "expected": "en" },
+  { "primary": "fr:es", "expected": "en" },
+  { "primary": "pt-BR", "expected": "en" },
+  { "primary": "de-DE", "expected": "en" },
+  { "primary": "ar", "expected": "en" },
+  { "primary": "C", "expected": "en" },
+  { "primary": "", "expected": "en" },
+  { "primary": "espanol", "expected": "en" }
+]

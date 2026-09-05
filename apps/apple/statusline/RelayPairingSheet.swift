@@ -14,13 +14,13 @@ struct RelayPairingSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    DataPlaneLabel(text: "RELAY / DEVICE PAIRING", tint: DataPlaneTheme.signal)
+                    DataPlaneLabel(text: L10n.text("RELAY / DEVICE PAIRING"), tint: DataPlaneTheme.signal)
 
-                    Text("Conecta este dispositivo")
+                    Text(L10n.text("Connect this device"))
                         .font(.title2.bold())
                         .foregroundStyle(DataPlaneTheme.ink)
 
-                    Text("Escanea el QR privado del companion. La clave de cifrado se guarda en Keychain y nunca se envía al relay.")
+                    Text(L10n.text("Scan the companion’s private QR. The encryption key is stored in Keychain and is never sent to the relay."))
                         .font(.subheadline)
                         .foregroundStyle(DataPlaneTheme.muted)
 
@@ -36,10 +36,10 @@ struct RelayPairingSheet: View {
                             RoundedRectangle(cornerRadius: 16)
                                 .strokeBorder(DataPlaneTheme.line)
                         }
-                        .accessibilityLabel("Escáner de código QR")
+                        .accessibilityLabel(L10n.text("QR code scanner"))
                     } else {
                         DataPlaneSurface {
-                            Text("La cámara no está disponible aquí. Pega abajo el vínculo privado que muestra el companion.")
+                            Text(L10n.text("The camera is unavailable here. Paste the private link shown by the companion below."))
                                 .font(.subheadline)
                                 .foregroundStyle(DataPlaneTheme.muted)
                                 .padding(18)
@@ -48,7 +48,7 @@ struct RelayPairingSheet: View {
 
                     DataPlaneSurface {
                         VStack(alignment: .leading, spacing: 12) {
-                            DataPlaneLabel(text: "PRIVATE.PAIRING.LINK")
+                            DataPlaneLabel(text: L10n.text("PRIVATE.PAIRING.LINK"))
 
                             TextField("statusline://pair?…", text: $pairingLink, axis: .vertical)
                                 .textInputAutocapitalization(.never)
@@ -68,7 +68,7 @@ struct RelayPairingSheet: View {
                                             .controlSize(.small)
                                             .tint(DataPlaneTheme.canvas)
                                     }
-                                    Text(isSubmitting ? "Emparejando…" : "Conectar dispositivo")
+                                    Text(isSubmitting ? L10n.text("Pairing…") : L10n.text("Connect device"))
                                 }
                                 .frame(maxWidth: .infinity)
                             }
@@ -90,7 +90,7 @@ struct RelayPairingSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") {
+                    Button(L10n.text("Cancel")) {
                         dismiss()
                     }
                 }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,19 +14,22 @@
       <header class="topbar" data-tauri-drag-region>
         <p class="brand-route" data-tauri-drag-region>
           <span class="brand-code" data-tauri-drag-region>STL</span>
-          <span data-tauri-drag-region>/ COMPANION / DATA PLANE</span>
+          <span data-tauri-drag-region data-i18n="/ COMPANION / DATA PLANE"
+            >/ COMPANION / DATA PLANE</span
+          >
         </p>
 
         <div class="topbar-actions">
           <div class="live-state" data-tauri-drag-region>
             <span class="live-signal" aria-hidden="true"></span>
-            <span id="live-label">READING</span>
+            <span id="live-label" data-i18n="READING">READING</span>
           </div>
           <button
             class="settings-button"
             id="settings-button"
             type="button"
-            aria-label="Configurar conexiones"
+            aria-label="Configure connections"
+            data-i18n-aria-label="Configure connections"
             aria-controls="source-panel"
             aria-expanded="false"
           >
@@ -42,25 +45,27 @@
 
       <section class="quota-plane" aria-live="polite">
         <header class="panel-heading">
-          <span>CDX.WEEKLY.QUOTA</span>
-          <span class="panel-index">PLANE / 010</span>
+          <span data-i18n="CDX.WEEKLY.QUOTA">CDX.WEEKLY.QUOTA</span>
+          <span class="panel-index" data-i18n="PLANE / 010">PLANE / 010</span>
         </header>
 
         <div class="hero">
           <div class="quota-value" aria-hidden="true">
             <span id="meter-value">—</span>
             <span class="quota-suffix" id="meter-suffix">%</span>
-            <span class="quota-unit" id="meter-unit">LEFT</span>
+            <span class="quota-unit" id="meter-unit" data-i18n="LEFT"
+              >LEFT</span
+            >
           </div>
 
           <dl class="hero-context">
             <div>
-              <dt>STATUS</dt>
-              <dd id="status-value">READING</dd>
+              <dt data-i18n="STATUS">STATUS</dt>
+              <dd id="status-value" data-i18n="READING">READING</dd>
             </div>
             <div>
-              <dt>SAMPLE</dt>
-              <dd id="sample-value">WAITING</dd>
+              <dt data-i18n="SAMPLE">SAMPLE</dt>
+              <dd id="sample-value" data-i18n="WAITING">WAITING</dd>
             </div>
           </dl>
         </div>
@@ -70,55 +75,76 @@
             class="segment-meter is-loading"
             id="meter-track"
             role="progressbar"
-            aria-label="Límite semanal de Codex"
+            aria-label="Codex weekly limit"
+            data-i18n-aria-label="Codex weekly limit"
             aria-valuemin="0"
             aria-valuemax="100"
           ></div>
           <div class="meter-scale" aria-hidden="true">
             <span>0</span>
-            <span id="scale-value">— / LEFT</span>
+            <span id="scale-value" data-i18n="— / LEFT">— / LEFT</span>
             <span>100</span>
           </div>
         </div>
 
         <div class="state-copy">
-          <p class="eyebrow" id="state-eyebrow">SOURCE / CODEX LOCAL</p>
-          <h1 id="state-title">Reading local session</h1>
-          <p class="state-detail" id="state-detail">
-            Consultando las ventanas de uso mediante Codex App Server.
+          <p
+            class="eyebrow"
+            id="state-eyebrow"
+            data-i18n="SOURCE / CODEX LOCAL"
+          >
+            SOURCE / CODEX LOCAL
+          </p>
+          <h1 id="state-title" data-i18n="Reading local session">
+            Reading local session
+          </h1>
+          <p
+            class="state-detail"
+            id="state-detail"
+            data-i18n="Reading usage windows through Codex App Server."
+          >
+            Reading usage windows through Codex App Server.
           </p>
         </div>
 
         <dl class="metric-grid">
           <div class="metric-cell metric-cell--accent">
-            <dt>RESET.TIME</dt>
+            <dt data-i18n="RESET.TIME">RESET.TIME</dt>
             <dd id="reset-value">—</dd>
-            <span id="reset-detail">LOCAL TIME</span>
+            <span id="reset-detail" data-i18n="LOCAL TIME">LOCAL TIME</span>
           </div>
 
           <div class="metric-cell">
-            <dt>SHORT.WINDOW</dt>
+            <dt data-i18n="SHORT.WINDOW">SHORT.WINDOW</dt>
             <dd id="short-value">—</dd>
-            <span id="short-detail">NOT PUBLISHED</span>
+            <span id="short-detail" data-i18n="NOT PUBLISHED"
+              >NOT PUBLISHED</span
+            >
           </div>
 
           <div class="metric-cell">
-            <dt>ACCOUNT.PLAN</dt>
+            <dt data-i18n="ACCOUNT.PLAN">ACCOUNT.PLAN</dt>
             <dd id="plan-value">—</dd>
             <span id="plan-detail">CHATGPT</span>
           </div>
 
           <div class="metric-cell">
-            <dt>RELAY.STATE</dt>
-            <dd id="relay-value">READING</dd>
-            <span id="relay-detail">E2E ENCRYPTED</span>
+            <dt data-i18n="RELAY.STATE">RELAY.STATE</dt>
+            <dd id="relay-value" data-i18n="READING">READING</dd>
+            <span id="relay-detail" data-i18n="E2E ENCRYPTED"
+              >E2E ENCRYPTED</span
+            >
           </div>
         </dl>
 
         <div class="record-line">
           <div>
-            <span class="record-label">STATUS.RECORD</span>
-            <strong id="record-value">READING · LOCAL METADATA ONLY</strong>
+            <span class="record-label" data-i18n="STATUS.RECORD"
+              >STATUS.RECORD</span
+            >
+            <strong id="record-value" data-i18n="READING · LOCAL METADATA ONLY"
+              >READING · LOCAL METADATA ONLY</strong
+            >
           </div>
           <span class="record-signal" aria-hidden="true"></span>
         </div>
@@ -130,9 +156,15 @@
             <path d="M15.7 7.1A6.2 6.2 0 1 0 16 11" />
             <path d="M12.8 3.8h3.6v3.6" />
           </svg>
-          <span id="refresh-label">REFRESH NOW</span>
+          <span id="refresh-label" data-i18n="REFRESH NOW">REFRESH NOW</span>
         </button>
-        <p class="updated" id="updated-value">WAITING FOR LOCAL SAMPLE</p>
+        <p
+          class="updated"
+          id="updated-value"
+          data-i18n="WAITING FOR LOCAL SAMPLE"
+        >
+          WAITING FOR LOCAL SAMPLE
+        </p>
       </footer>
 
       <section
@@ -145,14 +177,17 @@
       >
         <header class="source-heading">
           <div>
-            <p>SYSTEM / CONNECTIONS</p>
-            <h2 id="source-panel-title">Data plane setup</h2>
+            <p data-i18n="SYSTEM / CONNECTIONS">SYSTEM / CONNECTIONS</p>
+            <h2 id="source-panel-title" data-i18n="Data plane setup">
+              Data plane setup
+            </h2>
           </div>
           <button
             class="source-close"
             id="source-close"
             type="button"
-            aria-label="Cerrar configuración"
+            aria-label="Close settings"
+            data-i18n-aria-label="Close settings"
           >
             <svg viewBox="0 0 20 20" aria-hidden="true">
               <path d="m5 5 10 10M15 5 5 15" />
@@ -160,7 +195,12 @@
           </button>
         </header>
 
-        <div class="settings-tabs" role="tablist" aria-label="Conexiones">
+        <div
+          class="settings-tabs"
+          role="tablist"
+          aria-label="Connections"
+          data-i18n-aria-label="Connections"
+        >
           <button
             class="settings-tab"
             id="source-tab"
@@ -168,6 +208,7 @@
             role="tab"
             aria-selected="true"
             aria-controls="source-settings-view"
+            data-i18n="CODEX SOURCE"
           >
             CODEX SOURCE
           </button>
@@ -179,6 +220,7 @@
             aria-selected="false"
             aria-controls="relay-settings-view"
             tabindex="-1"
+            data-i18n="UNIVERSAL RELAY"
           >
             UNIVERSAL RELAY
           </button>
@@ -193,31 +235,37 @@
           <div class="source-summary" id="source-summary" data-status="reading">
             <span class="source-beacon" aria-hidden="true"></span>
             <div>
-              <span>CODEX.RUNTIME</span>
-              <strong id="source-status">READING</strong>
+              <span data-i18n="CODEX.RUNTIME">CODEX.RUNTIME</span>
+              <strong id="source-status" data-i18n="READING">READING</strong>
             </div>
           </div>
 
           <dl class="source-grid">
             <div class="source-path-cell">
-              <dt>EXECUTABLE.PATH</dt>
-              <dd id="source-path" title="">Scanning local system…</dd>
+              <dt data-i18n="EXECUTABLE.PATH">EXECUTABLE.PATH</dt>
+              <dd id="source-path" title="" data-i18n="Scanning local system…">
+                Scanning local system…
+              </dd>
             </div>
             <div>
-              <dt>ORIGIN</dt>
-              <dd id="source-origin">AUTO DETECT</dd>
+              <dt data-i18n="ORIGIN">ORIGIN</dt>
+              <dd id="source-origin" data-i18n="AUTO DETECT">AUTO DETECT</dd>
             </div>
             <div>
-              <dt>VERSION</dt>
+              <dt data-i18n="VERSION">VERSION</dt>
               <dd id="source-version">—</dd>
             </div>
           </dl>
 
           <div class="source-guidance">
-            <p class="source-guidance-label">OFFICIAL SETUP</p>
-            <p>
-              Instala Codex CLI, ejecuta <code>codex</code> y completa
-              <strong>Sign in with ChatGPT</strong> antes de actualizar.
+            <p class="source-guidance-label" data-i18n="OFFICIAL SETUP">
+              OFFICIAL SETUP
+            </p>
+            <p
+              data-i18n="Install Codex CLI, run codex and sign in with ChatGPT before refreshing."
+            >
+              Install Codex CLI, run codex and sign in with ChatGPT before
+              refreshing.
             </p>
             <code class="install-command" id="install-command"
               >npm install -g @openai/codex</code
@@ -225,17 +273,38 @@
           </div>
 
           <div class="source-actions">
-            <button class="source-primary" id="source-choose" type="button">
+            <button
+              class="source-primary"
+              id="source-choose"
+              type="button"
+              data-i18n="SELECT EXECUTABLE"
+            >
               SELECT EXECUTABLE
             </button>
-            <button class="source-secondary" id="source-scan" type="button">
+            <button
+              class="source-secondary"
+              id="source-scan"
+              type="button"
+              data-i18n="SCAN AGAIN"
+            >
               SCAN AGAIN
             </button>
           </div>
-          <button class="source-reset" id="source-reset" type="button" hidden>
+          <button
+            class="source-reset"
+            id="source-reset"
+            type="button"
+            hidden
+            data-i18n="USE AUTOMATIC DETECTION"
+          >
             USE AUTOMATIC DETECTION
           </button>
-          <p class="source-feedback" id="source-feedback" aria-live="polite">
+          <p
+            class="source-feedback"
+            id="source-feedback"
+            aria-live="polite"
+            data-i18n="Statusline stores only the selected local path."
+          >
             Statusline stores only the selected local path.
           </p>
         </div>
@@ -250,50 +319,74 @@
           <div class="source-summary" id="relay-summary" data-status="reading">
             <span class="source-beacon" aria-hidden="true"></span>
             <div>
-              <span>PRIVATE.RELAY</span>
-              <strong id="relay-status">READING</strong>
+              <span data-i18n="PRIVATE.RELAY">PRIVATE.RELAY</span>
+              <strong id="relay-status" data-i18n="READING">READING</strong>
             </div>
           </div>
 
           <dl class="source-grid relay-grid">
             <div>
-              <dt>ENDPOINT</dt>
+              <dt data-i18n="ENDPOINT">ENDPOINT</dt>
               <dd id="relay-endpoint">—</dd>
             </div>
             <div>
-              <dt>SESSION.STORAGE</dt>
-              <dd id="relay-storage">SYSTEM KEYCHAIN</dd>
+              <dt data-i18n="SESSION.STORAGE">SESSION.STORAGE</dt>
+              <dd id="relay-storage" data-i18n="SYSTEM KEYCHAIN">
+                SYSTEM KEYCHAIN
+              </dd>
             </div>
             <div class="source-path-cell">
-              <dt>LAST.PUBLISH</dt>
-              <dd id="relay-published">NO SAMPLE PUBLISHED</dd>
+              <dt data-i18n="LAST.PUBLISH">LAST.PUBLISH</dt>
+              <dd id="relay-published" data-i18n="NO SAMPLE PUBLISHED">
+                NO SAMPLE PUBLISHED
+              </dd>
             </div>
           </dl>
 
           <div class="source-guidance relay-guidance">
-            <p class="source-guidance-label">UNIVERSAL / E2E</p>
-            <p>
-              Crea un vínculo y escanea el QR desde Statusline en iOS o Android.
-              El relay sólo almacena un snapshot cifrado; tu sesión de Codex
-              permanece local.
+            <p class="source-guidance-label" data-i18n="UNIVERSAL / E2E">
+              UNIVERSAL / E2E
+            </p>
+            <p
+              data-i18n="Create a pairing and scan its QR in Statusline on iOS or Android. The relay stores only an encrypted snapshot; your Codex session stays local."
+            >
+              Create a pairing and scan its QR in Statusline on iOS or Android.
+              The relay stores only an encrypted snapshot; your Codex session
+              stays local.
             </p>
           </div>
 
           <div class="relay-pairing" id="relay-pairing" hidden>
             <div class="relay-qr-frame">
-              <img id="relay-qr" alt="QR privado para emparejar Statusline" />
+              <img
+                id="relay-qr"
+                alt="Private QR to pair Statusline"
+                data-i18n-alt="Private QR to pair Statusline"
+              />
             </div>
             <div class="relay-pairing-copy">
-              <p class="source-guidance-label">PAIRING.LINK</p>
+              <p class="source-guidance-label" data-i18n="PAIRING.LINK">
+                PAIRING.LINK
+              </p>
               <code id="relay-pairing-link">—</code>
-              <button class="source-secondary" id="relay-copy" type="button">
+              <button
+                class="source-secondary"
+                id="relay-copy"
+                type="button"
+                data-i18n="COPY PRIVATE LINK"
+              >
                 COPY PRIVATE LINK
               </button>
             </div>
           </div>
 
           <div class="source-actions relay-actions">
-            <button class="source-primary" id="relay-connect" type="button">
+            <button
+              class="source-primary"
+              id="relay-connect"
+              type="button"
+              data-i18n="CREATE PAIRING"
+            >
               CREATE PAIRING
             </button>
             <button
@@ -301,11 +394,17 @@
               id="relay-disconnect"
               type="button"
               hidden
+              data-i18n="DISCONNECT"
             >
               DISCONNECT
             </button>
           </div>
-          <p class="source-feedback" id="relay-feedback" aria-live="polite">
+          <p
+            class="source-feedback"
+            id="relay-feedback"
+            aria-live="polite"
+            data-i18n="Publisher credentials and the encryption key stay in your system vault."
+          >
             Publisher credentials and the encryption key stay in your system
             vault.
           </p>

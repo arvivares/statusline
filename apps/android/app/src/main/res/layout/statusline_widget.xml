@@ -40,6 +40,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/widget_remaining_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
@@ -102,6 +103,7 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/widget_weekly_limit_label"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -205,6 +207,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/widget_resets_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
@@ -262,6 +265,7 @@
                 android:orientation="horizontal">
 
                 <TextView
+                    android:id="@+id/widget_weekly_limit_label_empty"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -275,6 +279,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/widget_no_data_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
@@ -335,6 +340,7 @@
                 android:scaleType="fitXY" />
 
             <TextView
+                android:id="@+id/widget_connect_companion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

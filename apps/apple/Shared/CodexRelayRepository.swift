@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 import Security
 
-enum CodexRelayError: Error, LocalizedError, Sendable {
+enum CodexRelayError: Error, StatuslineLocalizedError, Sendable {
     case notConfigured
     case notPaired
     case invalidConfiguration
@@ -19,29 +19,29 @@ enum CodexRelayError: Error, LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .notConfigured:
-            "Este build no tiene configurada la URL del relay universal."
+            L10n.text("This build does not have a relay endpoint configured yet.")
         case .notPaired:
-            "Empareja primero este dispositivo con Statusline Companion."
+            L10n.text("Pair this device with Statusline Companion first.")
         case .invalidConfiguration:
-            "La URL del relay universal no es válida."
+            L10n.text("The relay URL is invalid.")
         case .invalidPairing:
-            "El QR o vínculo de emparejamiento no es válido."
+            L10n.text("The pairing QR or link is invalid.")
         case .invalidResponse:
-            "El relay universal devolvió una respuesta inesperada."
+            L10n.text("The relay returned an unexpected response.")
         case .invalidSnapshot:
-            "El snapshot recibido no tiene un formato válido."
+            L10n.text("The received snapshot has an invalid format.")
         case .secureStorage:
-            "No se pudo acceder al almacén seguro del dispositivo."
+            L10n.text("Could not access this device’s secure storage.")
         case .encryptionFailed:
-            "No se pudo cifrar o descifrar el snapshot."
+            L10n.text("Could not encrypt or decrypt the snapshot.")
         case .endpointMismatch:
-            "El vínculo pertenece a otro endpoint de Statusline."
+            L10n.text("The pairing belongs to a different Statusline relay.")
         case .networkUnavailable:
-            "No se pudo conectar con el relay universal."
+            L10n.text("Could not connect to the relay. Check your connection and try again.")
         case .timedOut:
-            "El relay tardó demasiado en responder."
-        case .server(_, let message):
-            message
+            L10n.text("The relay took too long to respond.")
+        case .server(let code, _):
+            L10n.relayError(code)
         }
     }
 }

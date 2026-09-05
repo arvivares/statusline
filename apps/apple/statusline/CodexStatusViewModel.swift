@@ -39,17 +39,17 @@ enum CodexRelaySyncState: Equatable {
     var message: String {
         switch self {
         case .notConfigured:
-            "Este build todavía no tiene configurado el endpoint del relay."
+            L10n.text("This build does not have a relay endpoint configured yet.")
         case .unpaired:
-            "Escanea el QR que muestra Statusline Companion para conectar este dispositivo."
+            L10n.text("Scan the QR shown by Statusline Companion to connect this device.")
         case .pairing:
-            "Validando el vínculo cifrado con el relay…"
+            L10n.text("Validating the encrypted pairing with the relay…")
         case .syncing:
-            "Buscando el último snapshot cifrado…"
+            L10n.text("Looking for the latest encrypted snapshot…")
         case .waitingForDesktop:
-            "Dispositivo conectado. Esperando la primera muestra del companion."
+            L10n.text("Device connected. Waiting for the companion’s first sample.")
         case .synced(let date):
-            "Sincronizado \(date.formatted(.relative(presentation: .named)))"
+            L10n.text("Synced {0}", L10n.relative(date))
         case .failed(let message):
             message
         }
@@ -139,7 +139,7 @@ final class CodexStatusViewModel {
             }
             await refreshFromRelay()
         } catch {
-            relaySyncState = .failed(error.localizedDescription)
+            relaySyncState = .failed(L10n.error(error))
         }
     }
 
@@ -151,11 +151,11 @@ final class CodexStatusViewModel {
         feedback = nil
         do {
             try await relayRepository.pair(using: uri)
-            feedback = .success("Dispositivo conectado de forma cifrada.")
+            feedback = .success(L10n.text("Device connected with encryption."))
             await refreshFromRelay()
         } catch {
-            relaySyncState = .failed(error.localizedDescription)
-            feedback = .error(error.localizedDescription)
+            relaySyncState = .failed(L10n.error(error))
+            feedback = .error(L10n.error(error))
         }
     }
 
@@ -182,12 +182,12 @@ final class CodexStatusViewModel {
             relaySyncState = .synced(relayStatus.updatedAt)
             WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
             if userInitiated {
-                feedback = .success("Snapshot cifrado actualizado.")
+                feedback = .success(L10n.text("Encrypted snapshot updated."))
             }
         } catch CodexRelayError.notPaired {
             relaySyncState = .unpaired
         } catch {
-            relaySyncState = .failed(error.localizedDescription)
+            relaySyncState = .failed(L10n.error(error))
         }
     }
 
@@ -197,11 +197,11 @@ final class CodexStatusViewModel {
             store.clear()
             status = nil
             relaySyncState = .unpaired
-            feedback = .success("Este dispositivo se desconectó del relay.")
+            feedback = .success(L10n.text("This device was disconnected from the relay."))
             WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
         } catch {
-            relaySyncState = .failed(error.localizedDescription)
-            feedback = .error(error.localizedDescription)
+            relaySyncState = .failed(L10n.error(error))
+            feedback = .error(L10n.error(error))
         }
     }
 
@@ -214,7 +214,7 @@ final class CodexStatusViewModel {
 
     func updateStatus() {
         guard !sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            feedback = .error("Pega primero la línea de estado de Codex.")
+            feedback = .error(L10n.text("Paste the Codex status line first."))
             return
         }
 
@@ -226,9 +226,9 @@ final class CodexStatusViewModel {
             try store.save(parsedStatus)
             status = parsedStatus
             WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
-            feedback = .success("Widget local actualizado. El relay no fue modificado.")
+            feedback = .success(L10n.text("Local widget updated. The relay was not changed."))
         } catch {
-            feedback = .error(error.localizedDescription)
+            feedback = .error(L10n.error(error))
         }
     }
 
@@ -250,7 +250,7 @@ final class CodexStatusViewModel {
         updateStatus()
 
         if status != nil {
-            feedback = .success("Demo local activada. La app y el widget muestran una muestra de ejemplo.")
+            feedback = .success(L10n.text("Local demo enabled. The app and widget show an example sample."))
         }
     }
 }

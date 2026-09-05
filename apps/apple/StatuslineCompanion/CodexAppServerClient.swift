@@ -1,6 +1,6 @@
 import Foundation
 
-enum CodexAppServerError: Error, LocalizedError, Sendable {
+enum CodexAppServerError: Error, StatuslineLocalizedError, Sendable {
     case executableNotFound
     case invalidResponse
     case invalidLoginChallenge
@@ -11,15 +11,17 @@ enum CodexAppServerError: Error, LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .executableNotFound:
-            "No encuentro Codex CLI. Instálalo o incluye el ejecutable `codex` dentro del companion."
+            L10n.text("Codex CLI was not found. Install it or include the codex executable in the companion.")
         case .invalidResponse:
-            "Codex App Server devolvió una respuesta inesperada."
+            L10n.text("Codex App Server returned an unexpected response.")
         case .invalidLoginChallenge:
-            "Codex no devolvió una dirección válida para iniciar sesión."
+            L10n.text("Codex did not return a valid sign-in URL.")
         case .processExited:
-            "Codex App Server se cerró inesperadamente."
-        case .rpc(_, let message), .loginFailed(let message):
-            message
+            L10n.text("Codex App Server closed unexpectedly.")
+        case .rpc:
+            L10n.text("Codex App Server returned an unexpected response.")
+        case .loginFailed:
+            L10n.text("Could not sign in to Codex. Please try again.")
         }
     }
 }
@@ -296,7 +298,7 @@ actor CodexAppServerClient {
             result = .success(())
         } else {
             result = .failure(
-                .loginFailed(notification.params.error ?? "No se pudo iniciar sesión en Codex.")
+                .loginFailed(notification.params.error ?? L10n.text("Could not sign in to Codex. Please try again."))
             )
         }
 

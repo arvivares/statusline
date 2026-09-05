@@ -14,6 +14,7 @@ on:
       - "apps/apple/**"
       - "apps/desktop/**"
       - "docs/**"
+      - "localization/**"
       - "packaging/**"
       - "protocol/**"
       - "release.json"

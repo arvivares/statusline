@@ -54,6 +54,12 @@ npm run dev
 
 Abre http://127.0.0.1:1420/?preview=ready. También existen preview=loading, preview=empty y preview=error. Añade &panel=source o &panel=relay para abrir una superficie concreta.
 
+Añade `&lang=en`, `&lang=es` o `&lang=fr-FR` para verificar idiomas en previews locales.
+La app instalada siempre sigue el idioma del sistema: español o inglés, con inglés
+para cualquier otro idioma. Las traducciones se mantienen en el
+[catálogo compartido](../../localization/messages.json); consulta la
+[guía de localización](../../docs/architecture/localization.md).
+
 ## Verificación y build
 
 Comprobaciones rápidas:

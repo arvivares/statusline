@@ -18,8 +18,8 @@ final class CompanionViewModel {
     private(set) var status: CodexUsageStatus?
     private(set) var loginChallenge: CodexLoginChallenge?
     private(set) var accountEmail: String?
-    private(set) var message = "Comprobando tu sesión de Codex…"
-    private(set) var relayMessage = "Comprobando el relay universal…"
+    private(set) var message = L10n.text("Checking your Codex session…")
+    private(set) var relayMessage = L10n.text("Checking the relay…")
     private(set) var isBusy = false
     private(set) var isRelayBusy = false
 
@@ -95,7 +95,7 @@ final class CompanionViewModel {
 
         isBusy = true
         connectionState = .waitingForLogin
-        message = "Abriendo el inicio de sesión seguro de OpenAI…"
+        message = L10n.text("Opening secure OpenAI sign-in…")
 
         do {
             let challenge = try await appServer.beginLogin(mode: mode)
@@ -103,8 +103,8 @@ final class CompanionViewModel {
             NSWorkspace.shared.open(challenge.authorizationURL)
 
             message = challenge.userCode == nil
-                ? "Completa el inicio de sesión en tu navegador."
-                : "Introduce el código mostrado abajo en la página de OpenAI."
+                ? L10n.text("Complete sign-in in your browser.")
+                : L10n.text("Enter the code shown below on the OpenAI page.")
 
             try await appServer.waitForLogin(challenge.loginID)
             loginChallenge = nil
@@ -112,7 +112,7 @@ final class CompanionViewModel {
             let account = try await appServer.account()
             guard account.account?.type == "chatgpt" else {
                 throw CodexAppServerError.loginFailed(
-                    "Statusline necesita una sesión de ChatGPT, no una API key."
+                    L10n.text("Statusline needs a ChatGPT session, not an API key.")
                 )
             }
 
@@ -121,7 +121,7 @@ final class CompanionViewModel {
             try await fetchAndPublishStatus()
         } catch {
             connectionState = error is CodexAppServerError ? .disconnected : .unavailable
-            message = error.localizedDescription
+            message = L10n.error(error)
         }
 
         isBusy = false
@@ -136,7 +136,7 @@ final class CompanionViewModel {
         do {
             try await fetchAndPublishStatus()
         } catch {
-            message = error.localizedDescription
+            message = L10n.error(error)
         }
         isBusy = false
     }
@@ -153,9 +153,9 @@ final class CompanionViewModel {
             accountEmail = nil
             loginChallenge = nil
             connectionState = .disconnected
-            message = "Cuenta de Codex desconectada. El vínculo con tus dispositivos se conserva."
+            message = L10n.text("Codex account disconnected. Your devices remain paired.")
         } catch {
-            message = error.localizedDescription
+            message = L10n.error(error)
         }
         isBusy = false
     }
@@ -165,15 +165,15 @@ final class CompanionViewModel {
             return
         }
         isRelayBusy = true
-        relayMessage = "Creando credenciales independientes de lectura y escritura…"
+        relayMessage = L10n.text("Creating independent read and write credentials…")
         do {
             relayState = try await relayPublisher.createPairing()
-            relayMessage = "Escanea este QR desde Statusline en iOS o Android."
+            relayMessage = L10n.text("Scan this QR from Statusline on iOS or Android.")
             if let status {
                 relayState = try await relayPublisher.publish(status)
             }
         } catch {
-            relayMessage = error.localizedDescription
+            relayMessage = L10n.error(error)
         }
         isRelayBusy = false
     }
@@ -187,7 +187,7 @@ final class CompanionViewModel {
             relayState = try await relayPublisher.status()
             relayMessage = relayState.statusMessage
         } catch {
-            relayMessage = error.localizedDescription
+            relayMessage = L10n.error(error)
         }
         isRelayBusy = false
     }
@@ -200,9 +200,9 @@ final class CompanionViewModel {
         do {
             try await relayPublisher.disconnect()
             relayState = relayEndpoint.map { .unpaired(endpoint: $0) } ?? .notConfigured
-            relayMessage = "Vínculo eliminado. El snapshot remoto ya no puede descifrarse."
+            relayMessage = L10n.text("Pairing removed. The remote snapshot can no longer be decrypted.")
         } catch {
-            relayMessage = error.localizedDescription
+            relayMessage = L10n.error(error)
         }
         isRelayBusy = false
     }
@@ -226,7 +226,7 @@ final class CompanionViewModel {
             return
         }
         copyToPasteboard(pairingURI)
-        relayMessage = "Vínculo privado copiado. No lo compartas con terceros."
+        relayMessage = L10n.text("Private link copied. Do not share it with anyone else.")
     }
 
     private func restoreSession() async {
@@ -241,7 +241,7 @@ final class CompanionViewModel {
             let response = try await appServer.account()
             guard response.account?.type == "chatgpt" else {
                 connectionState = .disconnected
-                message = "Conecta tu cuenta de Codex para comenzar."
+                message = L10n.text("Connect your Codex account to get started.")
                 isBusy = false
                 return
             }
@@ -254,33 +254,33 @@ final class CompanionViewModel {
             message = CodexAppServerError.executableNotFound.localizedDescription
         } catch {
             connectionState = .disconnected
-            message = error.localizedDescription
+            message = L10n.error(error)
         }
 
         isBusy = false
     }
 
     private func fetchAndPublishStatus() async throws {
-        message = "Leyendo tu límite semanal de Codex…"
+        message = L10n.text("Reading your Codex weekly limit…")
         let limits = try await appServer.rateLimits()
         let currentStatus = try limits.weeklyStatus()
         status = currentStatus
 
         switch relayState {
         case .pairing, .connected:
-            relayMessage = "Cifrando y publicando el snapshot…"
+            relayMessage = L10n.text("Encrypting and publishing the snapshot…")
             do {
                 relayState = try await relayPublisher.publish(currentStatus)
                 relayMessage = relayState.statusMessage
-                message = "Codex leído y snapshot cifrado publicado."
+                message = L10n.text("Codex read and encrypted snapshot published.")
             } catch {
-                relayMessage = error.localizedDescription
-                message = "Codex leído; el relay necesita atención."
+                relayMessage = L10n.error(error)
+                message = L10n.text("Codex read; the relay needs attention.")
             }
         case .notConfigured:
-            message = "Codex leído. Configura el endpoint para sincronizar otros dispositivos."
+            message = L10n.text("Codex read. Configure the relay endpoint to sync other devices.")
         case .unpaired:
-            message = "Codex leído. Crea un vínculo para sincronizar iOS o Android."
+            message = L10n.text("Codex read. Create a pairing to sync iOS or Android.")
         }
     }
 
@@ -294,16 +294,16 @@ private extension StatusRelayPublisherState {
     var statusMessage: String {
         switch self {
         case .notConfigured:
-            "Este build no tiene configurado el endpoint del relay."
+            L10n.text("This build does not have a relay endpoint configured yet.")
         case .unpaired:
-            "Crea un vínculo para conectar iOS o Android."
+            L10n.text("Create a pairing to connect iOS or Android.")
         case .pairing(_, _, let expiresAt, _):
-            "Esperando el escaneo del QR. Caduca \(expiresAt.formatted(.relative(presentation: .named)))."
+            L10n.text("Waiting for the QR scan. Expires {0}.", L10n.relative(expiresAt))
         case .connected(_, let lastPublishedAt):
             if let lastPublishedAt {
-                "Snapshot cifrado publicado \(lastPublishedAt.formatted(.relative(presentation: .named)))."
+                L10n.text("Encrypted snapshot published {0}.", L10n.relative(lastPublishedAt))
             } else {
-                "Dispositivo conectado. Esperando la primera publicación."
+                L10n.text("Device connected. Waiting for the first publication.")
             }
         }
     }

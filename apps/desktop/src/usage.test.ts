@@ -109,7 +109,7 @@ describe("copyForState", () => {
     expect(copy).toEqual({
       eyebrow: "SOURCE / MISSING",
       title: "Codex CLI not found",
-      detail: "Abre Source Settings para detectar o seleccionar la CLI local.",
+      detail: "Open Source Settings to detect or select the local CLI.",
     });
   });
 
@@ -123,8 +123,7 @@ describe("copyForState", () => {
     expect(copy).toEqual({
       eyebrow: "STATUS / NO SAMPLE",
       title: "Weekly window unavailable",
-      detail:
-        "Codex no ha publicado una ventana de 6 a 8 días para esta cuenta.",
+      detail: "Codex has not published a 6–8 day window for this account.",
     });
   });
 });

@@ -13,7 +13,9 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { prepareReleaseAssets } from "./prepare-release-assets.mjs";
 
-const version = "0.1.10";
+const { version } = JSON.parse(
+  await readFile(new URL("../../../release.json", import.meta.url), "utf8"),
+);
 const fixtureNames = [
   `Statusline Companion_${version}_amd64.deb`,
   `Statusline Companion-${version}-1.x86_64.rpm`,
@@ -152,7 +154,7 @@ describe("prepareReleaseAssets", () => {
       prepareReleaseAssets({
         inputDirectory: input,
         outputDirectory: output,
-        context: context({ tag: "v0.1.11" }),
+        context: context({ tag: `v${version}-mismatch` }),
       }),
     ).rejects.toThrow(`tag must be v${version}`);
   });

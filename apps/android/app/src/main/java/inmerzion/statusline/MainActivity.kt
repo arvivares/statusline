@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -12,8 +13,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import inmerzion.statusline.ui.StatuslineApp
+import inmerzion.statusline.localization.LocalizedContext
 
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocalizedContext.wrap(newBase))
+    }
+
     private val viewModel by viewModels<StatuslineViewModel>()
     private var firstResume = true
     private val scannerLauncher = registerForActivityResult(
@@ -40,8 +46,7 @@ class MainActivity : ComponentActivity() {
             launchScanner()
         } else {
             viewModel.scannerUnavailable(
-                "Statusline necesita permiso de cámara para escanear el QR. " +
-                    "También puedes pegar el vínculo manualmente.",
+                "Statusline needs camera permission to scan the QR. You can also paste the link manually.",
             )
         }
     }
@@ -78,8 +83,7 @@ class MainActivity : ComponentActivity() {
     private fun scanPairingCode() {
         if (!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
             viewModel.scannerUnavailable(
-                "Este dispositivo no tiene una cámara disponible. " +
-                    "Puedes pegar el vínculo manualmente.",
+                "This device has no available camera. You can paste the link manually.",
             )
             return
         }

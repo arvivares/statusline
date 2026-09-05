@@ -28,7 +28,7 @@ struct CodexUsageStatus: Codable, Equatable, Sendable {
     }
 }
 
-enum CodexStatusParseError: Error, Equatable, LocalizedError, Sendable {
+enum CodexStatusParseError: Error, Equatable, StatuslineLocalizedError, Sendable {
     case missingPercentage
     case percentageOutOfRange
     case missingResetDate
@@ -37,13 +37,13 @@ enum CodexStatusParseError: Error, Equatable, LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .missingPercentage:
-            "No encuentro un porcentaje seguido de ‘% left’."
+            L10n.text("No percentage followed by ‘% left’ was found.")
         case .percentageOutOfRange:
-            "El porcentaje restante debe estar entre 0 y 100."
+            L10n.text("The remaining percentage must be between 0 and 100.")
         case .missingResetDate:
-            "No encuentro una fecha con el formato ‘resets 09:02 on 2 Sep’."
+            L10n.text("No date in the format ‘resets 09:02 on 2 Sep’ was found.")
         case .invalidResetDate:
-            "La fecha de reinicio no es válida."
+            L10n.text("The reset date is invalid.")
         }
     }
 }

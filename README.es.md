@@ -38,6 +38,8 @@ Statusline muestra el estado de la cuota de Codex en Windows, Linux, macOS, iPho
 
 La misma interfaz Data Plane mantiene cuota, reinicio y estado de sincronización consistentes entre escritorio, móvil y widgets nativos.
 
+La interfaz sigue el idioma principal del sistema: español o inglés. Para cualquier otro idioma usa inglés, también en los widgets. Consulta la [guía de localización](docs/architecture/localization.md).
+
 El companion consulta la sesión local de Codex; no requiere una API key de OpenAI ni una cuenta compartida entre el ordenador y el teléfono. Cuando el usuario activa la sincronización, publica únicamente un snapshot mínimo cifrado que el relay no puede descifrar.
 
 ## Qué incluye
@@ -72,7 +74,7 @@ Las descargas permanentes se publican en [GitHub Releases](https://github.com/ar
 La entrada actual `windows-bootstrap-v0.1.6` es una preview de Windows explícitamente sin
 firma para el onboarding de SignPath Foundation; no es la beta pública para usuarios.
 
-El tag firmado `v0.1.10` publica la primera prerelease para testers con
+El tag firmado `v0.1.11` publica la prerelease en inglés/español para testers con
 DEB/RPM/AppImage, DMG/PKG universal y APK/AAB firmados. El inventario, checksums, controles
 de confianza y attestations de procedencia deben aprobarse antes de hacerla pública.
 Windows permanece en su preview de onboarding sin firma hasta la aprobación de SignPath
@@ -381,6 +383,7 @@ La [checklist de publicación del repositorio](docs/release/public-repository-ch
 | [`apps/apple/`](apps/apple/README.md) | Proyecto Xcode y targets de iPhone, WidgetKit y macOS                                       |
 | `services/relay/`                     | Worker, D1, rate limits y páginas públicas                                                  |
 | `protocol/`                           | Especificación v1, fixtures y ejemplos interoperables                                       |
+| `localization/`                       | Catálogo común inglés/español y casos de prueba de idiomas                                  |
 | `packaging/`                          | Claves públicas y recursos de verificación para los instaladores                            |
 | [`docs/`](docs/README.md)             | Arquitectura, despliegue, releases, seguridad y [archivo de diseño](docs/archive/README.md) |
 | [`release.json`](release.json)        | Versiones canónicas del producto y sus componentes                                          |
