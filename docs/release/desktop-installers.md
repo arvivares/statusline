@@ -21,8 +21,10 @@ Hay un fallo de ejecución reportado para AppImage 0.1.12 en Ubuntu 26.04
 funciona en ese equipo. La [guía de diagnóstico de AppImage](appimage-diagnostics.md)
 permite aislar GIO y renderizado sin recompilar ni modificar el instalador original.
 La corrección candidata conserva el GIO incluido con su módulo TLS y resuelve Wayland
-desde el sistema. Todavía requiere ejecutar el pipeline y validar el nuevo artefacto
-en el equipo afectado; no modifica la release 0.1.12.
+desde el sistema. El candidato firmado del run `34059724766` pasó el pipeline en
+Ubuntu 22.04 y 24.04; falta validar su interfaz y sincronización en el equipo
+afectado. No modifica la release 0.1.12; los enlaces y checksums del candidato están
+en la [guía de diagnóstico](appimage-diagnostics.md#candidato-firmado-disponible-para-qa).
 
 MSI no inicia Statusline desde Windows Installer y NSIS deja desmarcada por defecto la opción de abrirlo al finalizar. El usuario debe hacer el primer arranque desde Inicio o el acceso directo; esto garantiza que la detección de Codex reciba el entorno de su sesión y que WebView2 complete su inicialización antes de mostrar la ventana.
 

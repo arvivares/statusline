@@ -1,7 +1,8 @@
 # AppImage: diagnóstico de la ventana vacía en Ubuntu
 
-Estado: corrección candidata implementada para [issue #18](https://github.com/arvivares/statusline/issues/18),
-pendiente de construir y validar en Linux; **no hay corrección publicada**.
+Estado: candidato de [issue #18](https://github.com/arvivares/statusline/issues/18)
+construido, firmado y validado en CI Ubuntu 22.04/24.04; pendiente de QA gráfico
+en Ubuntu 26.04. **No hay corrección publicada como release**.
 El `.deb` oficial funciona en el equipo Ubuntu 26.04 reportado. Las comparaciones
 de diagnóstico siguientes no requieren recompilar.
 
@@ -260,11 +261,41 @@ releases antiguas, incluida 0.1.12, no incluyen la política ni el marcador Linu
 anterior, no una excepción que omita el control nuevo. Los artefactos de Actions
 no equivalen a una release aprobada: debe finalizar todo el workflow correctamente.
 
+## Candidato firmado disponible para QA
+
+El [run 34059724766](https://github.com/arvivares/statusline/actions/runs/34059724766)
+terminó correctamente sobre el commit firmado
+`36d58ec2e5c837a396f66b3b0357f14bdf8394fe` del [PR #19](https://github.com/arvivares/statusline/pull/19):
+
+- 120 pruebas Vitest pasaron en el preflight Linux, incluida la regresión de
+  detección de procesos con `pgrep` y `/proc` reales.
+- Se construyeron DEB, RPM y AppImage. El nuevo empaquetado y la comparación de
+  contenido pasaron; DEB y AppImage completaron el handshake de frontend en
+  Ubuntu 22.04 y Ubuntu 24.04.
+- Los tres instaladores tienen firmas OpenPGP verificadas. Los archivos
+  descargados también se verificaron localmente contra la clave pública del
+  repositorio y el manifest firmado `SHA256SUMS.txt`.
+
+Descarga los artefactos **de ese run**, no los de la release antigua:
+
+- `statusline-0.1.12-linux-x64-installers-attempt-1`
+- `statusline-0.1.12-linux-x64-signatures-attempt-1`
+- `statusline-0.1.12-checksums-attempt-1`
+
+El candidato conserva temporalmente los metadatos `0.1.12`, pero **no es el
+AppImage publicado en Releases**. Su SHA-256 es
+`d36a0110b8ee3e569d84d43dba4b8f85251d148bfa7b57021b3825627789b064`.
+Los artefactos de Actions tienen retención de 30 días y no son una release pública.
+Verifica sus firmas antes de ejecutarlos; no uses el modo de comparación que
+excluye bibliotecas de nuevo sobre este candidato ya corregido.
+
+El primer intento de CI pasó empaquetado pero detectó un falso positivo del
+harness: la ruta del ejecutable aparecía entre los argumentos de su propio proceso
+shell. La corrección confirma la identidad mediante `/proc/<pid>/exe` y mantiene
+el rechazo de instancias reales o candidatos vivos que no puedan inspeccionarse.
+
 ## Verificaciones pendientes antes de distribuir
 
-- Ejecutar el pipeline Linux del candidato y confirmar construcción, reempaquetado,
-  firma/verificación y ambos runners. Las pruebas locales con herramientas simuladas
-  y la inspección estática del AppImage real no sustituyen estas ejecuciones.
 - Probar **el AppImage final firmado** en el Ubuntu 26.04 afectado, sin overrides
   de diagnóstico: interfaz visible y botones funcionales; bandeja, ocultar,
   reapertura y Salir; selección del Codex local; emparejamiento y sincronización
