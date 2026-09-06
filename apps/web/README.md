@@ -73,9 +73,34 @@ sin modificar el directorio servido, indica una carpeta temporal nueva de salida
 npm run build -- --outDir /tmp/statusline-web-review
 ```
 
-El workflow [Website](../../.github/workflows/website.yml) instala desde el lockfile,
-comprueba TypeScript y formato y genera el build con Node.js 24. Se ejecuta para
-cambios de esta aplicación o de su propio workflow y no despliega el sitio.
+### Integración continua y dependencias
+
+El workflow [Website](../../.github/workflows/website.yml) se inicia en todos los PR
+hacia `main`, sin filtros de rutas a nivel del evento. Su primer job comprueba la
+lógica de CI y detecta cambios en `apps/web/`, el workflow, su detector, Dependabot
+o la configuración compartida de Node y formato. Solo en esos casos instala desde
+el lockfile, comprueba TypeScript y formato, genera el build y valida sus artefactos
+SEO con Node.js 24. Los pushes relevantes a `main` y las ejecuciones manuales
+también validan la web. Ninguno de estos eventos despliega el sitio.
+
+El check obligatorio de `main` es **Website validation**. Siempre informa un
+resultado, incluso cuando no es necesario compilar: solo acepta una validación
+correcta o una omisión deliberada tras detectar que no hay cambios relevantes.
+Un fallo al leer el historial, una cancelación o un build fallido no se convierten
+en aprobación. No marques como obligatorio el job condicional de compilación ni
+añadas filtros de rutas al evento `pull_request`.
+
+Las pruebas del detector y del resultado obligatorio no necesitan dependencias
+npm. Desde la raíz del repositorio:
+
+```shell
+node --test scripts/website-ci.test.mjs
+```
+
+[Dependabot](../../.github/dependabot.yml) revisa las dependencias npm de esta web
+cada lunes a las 06:15 (`Europe/Madrid`). Agrupa cambios minor y patch; las versiones
+major se revisan por separado. Las propuestas deben pasar los mismos controles
+del PR y no se fusionan automáticamente.
 
 ## Contenido y recursos
 
@@ -121,6 +146,37 @@ Estos pasos son manuales: el build y el despliegue no verifican propiedades,
 no envían sitemaps a esas cuentas y no confirman indexación real.
 
 ## Despliegue en Docker y Nginx
+
+### Requisitos y adaptación a otro servidor
+
+La configuración incluida refleja la infraestructura de Inmerzion; **no es un
+stack autónomo** y no instala Mattermost, un proxy TLS ni Certbot. Mattermost no es
+una dependencia funcional de la web: es el nombre de la red compartida existente.
+
+Antes de usar los comandos de esta sección, prepara:
+
+- Docker Engine y Docker Compose, además de Node/npm para generar `dist/`.
+- Una red Docker externa `mattermost`, compartida por `statusline-web` y el proxy
+  `nginx_server`. El servicio web no publica puertos directamente al host.
+- Un proxy Nginx con TLS/HTTP2, acceso a los puertos públicos 80/443, los montajes
+  de certificados y el webroot ACME compartido con el renovador de certificados.
+- DNS de ambos dominios, certificados válidos y un mecanismo de renovación y
+  recarga del proxy. El timer mencionado más abajo ya existe en el servidor de
+  Inmerzion; este repositorio no lo crea.
+- El formato de log `inmerzion_session` definido en el bloque `http` del proxy.
+  Las dos plantillas públicas lo referencian, pero no incluyen su definición.
+  En otro servidor, usa tu formato existente o sustituye ese nombre por `combined`
+  en `deploy/statusline.conf` y `deploy/statusline-http.conf` antes de instalarlas.
+
+Para otro host, adapta el nombre de red en `compose.yml` y conecta tu proxy a ella;
+reemplaza nombres de dominio, rutas del host, certificados y mecanismo de
+renovación en las plantillas y comandos siguientes. Si cambia el dominio público,
+actualiza también `src/site.ts`, `public/robots.txt`, `public/sitemap.xml`,
+`public/llms.txt` y las referencias del sitio, y repite el build y `test:seo`.
+No copies las rutas `/opt/mattermost` a un servidor que no use esa distribución.
+Valida siempre `nginx -t` antes de recargar el proxy.
+
+### Instalación en la infraestructura de Inmerzion
 
 El dominio de publicación es `https://statusline.inmerzion.io`. La configuración
 versionada utiliza dos servicios:
