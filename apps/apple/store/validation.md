@@ -1,8 +1,8 @@
 # iOS release validation
 
-Validated 2–3 September 2026 for Statusline `1.0` (`2`). This file records reproducible readiness evidence without storing credentials or personal account data.
+This file records reproducible readiness evidence without storing credentials or personal account data. The 2–3 September evidence applies to `1.0 (2)`; the separate 6 September section tracks the localized `1.0 (3)` TestFlight candidate.
 
-## Passed
+## Passed — builds 1 and 2, 2–3 September 2026
 
 - iPhone-only Release Archive created for `inmerzion.statusline` with widget `inmerzion.statusline.widget`.
 - App and widget display name: `Statusline`; development language: Spanish.
@@ -31,8 +31,82 @@ Validated 2–3 September 2026 for Statusline `1.0` (`2`). This file records rep
 - The external tester remains unavailable while build `1` is in Beta App Review; no external invitation or TestFlight install is claimed yet.
 - Version `1.0` (`2`) was submitted to App Review on 3 September 2026. Submission `82a8811b-67a9-48b4-bd43-1cff4b741f7f` is **Waiting for Review** and the release mode is manual.
 
+## App Review correction — 6 September 2026
+
+- Apple's 5 September response lists one new rejection reason: Guideline 5,
+  concerning China mainland availability and references to OpenAI in metadata.
+- Removed China mainland through App Store Connect's availability selector. The
+  persisted country table reports **China mainland — Not Available**; a comparison
+  of all 175 country rows confirmed that this is the only changed territory.
+- The other 174 storefronts, including Hong Kong and Macau, remain **Available on
+  App Release**. Free pricing, public distribution and the selected `1.0 (2)` build
+  are unchanged.
+- Saved updated review notes in App Store Connect, preserving the existing video
+  and all six review-information sections while correcting regional availability.
+  Reloaded the version page and verified that the stored 3,567-character notes match
+  the prepared text exactly. Their source is maintained in `app-review.md`.
+- On 6 September, selected **Update Review** for version `1.0` and verified that
+  the existing `1.0 (2)` item became **Ready for Review**. Then confirmed **Resubmit
+  to App Review**. Submission `82a8811b-67a9-48b4-bd43-1cff4b741f7f` and its app-version
+  item both report **Waiting for Review**; App Store Connect shows 6 September as
+  the new submission date.
+- The correction is included in the saved Review Notes; no separate Resolution
+  Center message was sent. No binary compilation or upload was needed. Approval
+  and the subsequent manual release remain pending.
+
+## Localization candidate — 6 September 2026
+
+- Prepared `1.0 (3)` from the `v0.1.11` localization source, updating the iPhone
+  and widget Debug/Release build numbers together with `release.json`. Desktop and
+  Android version numbers remain unchanged.
+- Before archiving, the localization checker passed for all 403 EN/ES messages,
+  562 source references, placeholders and seven generated files. Release preflight
+  and property-list validation passed too.
+- Reused the existing derived-data directory and created one Release archive for
+  iPhone. Both packaged bundles report version `1.0`, build `3`, minimum iOS 17,
+  device family `1` and development language `en`. The app retains the HTTPS relay
+  origin, shared Data Plane icon and localized EN/ES camera permission descriptions.
+- Validated both the archive and the exported IPA with the compiled-bundle
+  localization checker: 403 messages in English, Spanish and French fallback,
+  plus 16 locale-resolution cases, passed for the app and widget separately.
+- Exported using Cloud Managed Apple Distribution for team `F3HRL896HJ`.
+  Signature verification passed; both distribution profiles have
+  `get-task-allow=false` and `beta-reports-active=true`, and both signed bundles
+  retain `group.inmerzion.statusline`.
+- The locally exported IPA has SHA-256
+  `70acb8e7f363d514ff98f2ca567d7bbfce0f31ac72632978a65b2932d2e6b98f`.
+  Xcode's explicit upload export reused the same archive without recompiling;
+  re-signing during that upload need not preserve the local IPA checksum.
+- Xcode reported **Upload succeeded** on 6 September. App Store Connect completed
+  processing the new `1.0 (3)` upload, created at 2:44 AM in the console's displayed
+  time zone. Build Metadata reports **Validated**, localizations **English, Spanish**,
+  device family **iPhone**, symbols included and no non-exempt encryption.
+- Confirmed `Internal QA` has automatic Xcode-build distribution enabled, one
+  installed tester, and Apple Silicon Mac/Vision Pro testing disabled.
+- The `Internal QA` Builds tab now lists `1.0 (3)` as **Testing**, expiring in
+  90 days. The global build list's **Ready to Submit** status concerns external
+  beta submission; it does not block this verified internal availability.
+- Saved the 968-character Spanish What to Test instructions from
+  `testflight/what-to-test-es-ES.txt` on build `3` and verified them after reloading.
+  The English equivalent is versioned in `testflight/what-to-test-en-US.txt` for a
+  future English TestFlight metadata localization. No external group was added.
+- The existing builds `1` and `2` now both show **Testing** in TestFlight and are
+  assigned to `Internal QA` and `External Beta`; the earlier pending Beta App Review
+  entry above is historical, not the current state.
+- The account holder explicitly chose to test build `3` internally first. The
+  waiting App Store submission remains `1.0 (2)`; its build, Review Notes,
+  availability and manual-release setting were not changed for this upload.
+- New physical-device QA for build `3` is pending. The compiled-bundle checks are
+  not a claim that the app was launched or the full XCTest suite executed on a
+  physical device during this upload. EN/ES test instructions are in `testflight/`.
+
 ## Remaining follow-ups
 
-- Wait for App Review to approve or request changes for version `1.0` (`2`).
+- Install `1.0 (3)` through TestFlight on the physical iPhone and validate English,
+  Spanish, unsupported-language fallback, the widget and preservation of pairing.
+- After that QA, obtain explicit authorization before replacing the queued
+  `1.0 (2)` App Store submission or distributing build `3` externally. Refresh
+  reviewer notes and localized listing assets when selecting the localized build.
+- Wait for App Review's decision on the corrected `1.0 (2)` submission sent on
+  6 September unless its replacement is subsequently authorized.
 - After approval, make the explicit manual-release decision in App Store Connect.
-- Independently wait for build `1` Beta App Review, then verify that the external tester receives access.
