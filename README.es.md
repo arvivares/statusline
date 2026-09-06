@@ -77,7 +77,7 @@ Las descargas permanentes se publican en [GitHub Releases](https://github.com/ar
 La entrada actual `windows-bootstrap-v0.1.6` es una preview de Windows explícitamente sin
 firma para el onboarding de SignPath Foundation; no es la beta pública para usuarios.
 
-El tag firmado `v0.1.11` publica la prerelease en inglés/español para testers con
+El tag firmado `v0.1.12` publica la prerelease con identidad unificada en inglés/español con
 DEB/RPM/AppImage, DMG/PKG universal y APK/AAB firmados. El inventario, checksums, controles
 de confianza y attestations de procedencia deben aprobarse antes de hacerla pública.
 Windows permanece en su preview de onboarding sin firma hasta la aprobación de SignPath

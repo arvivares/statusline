@@ -1,6 +1,6 @@
 # Apple App Store release kit
 
-This directory is the versioned source of truth for the first Statusline iPhone release. The current source targets bundle `inmerzion.statusline`, version `1.0` and build `3` for localization testing in TestFlight. The App Store submission still uses build `2` until physical QA and an explicit decision to replace it.
+This directory is the versioned source of truth for the first Statusline iPhone release. The current source targets bundle `inmerzion.statusline`, version `1.0` and build `4` for unified-brand and localization testing in TestFlight. The App Store submission still uses build `2` until physical QA and an explicit decision to replace it.
 
 ## App record
 
@@ -11,7 +11,7 @@ This directory is the versioned source of truth for the first Statusline iPhone 
 - SKU: `statusline-ios`
 - Apple ID: `6807851320`
 - App Store submission: `1.0` (`2`)
-- Latest TestFlight candidate: `1.0` (`3`), English/Spanish localization
+- Latest TestFlight candidate: `1.0` (`4`), unified icon and English/Spanish localization
 - Price: Free
 - Availability: 174 App Store countries or regions; China mainland excluded (Hong Kong and Macau unchanged)
 - Distribution: Public, iPhone only
@@ -63,6 +63,19 @@ Vision Pro testing remain disabled. App Store Connect processed build `3` as
 `Internal QA`. Spanish What to Test notes are saved; the English equivalent is
 prepared locally. The build-specific EN/ES instructions are in `testflight/`, and
 upload/validation evidence is tracked in `validation.md`.
+
+## Unified-brand candidate — 6 September 2026
+
+Build `1.0 (4)` packages the unified segmented Statusline icon from `v0.1.12`,
+retaining the English/Spanish app and widget behavior introduced in build `3`.
+The app and extension build numbers are advanced together. This candidate is
+prepared for manual upload and internal TestFlight testing; preparing the source
+does not mean that Apple has processed it or that physical QA has passed.
+
+The current What to Test files in `testflight/` target build `4`. Verify the new
+Home Screen and Settings icon, then recheck localization, pairing persistence and
+widget updates on a physical iPhone. Do not replace the waiting build `2` App Store
+submission or change its review metadata as part of this internal test.
 
 ## Contents
 
