@@ -1,4 +1,6 @@
-Build 1.0 (3): la app y el widget usan inglés o español según el idioma principal del sistema. Si es otro idioma, usan inglés, incluso si español es el segundo de la lista.
+Build 1.0 (4): el nuevo icono dorado y segmentado de Statusline coincide con Android y Companion. Revisa el icono en la pantalla de inicio y en Ajustes tras actualizar; confirma que el emparejamiento y los datos se conservan.
+
+La app y el widget usan inglés o español según el idioma principal del sistema. Si es otro idioma, usan inglés, incluso si español es el segundo de la lista.
 
 En tu iPhone emparejado, cambia el idioma principal entre español, inglés y uno no soportado, como francés. Vuelve a abrir Statusline y actualiza el widget. Revisa etiquetas, cuota restante, fechas de reinicio, errores, textos de accesibilidad y descripciones del permiso de cámara. Confirma que las etiquetas largas en español entran y que el emparejamiento y los datos se conservan.
 

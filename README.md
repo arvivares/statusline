@@ -82,7 +82,7 @@ Permanent downloads are published on [GitHub Releases](https://github.com/arviva
 The current `windows-bootstrap-v0.1.6` entry is an explicitly unsigned Windows onboarding
 preview for SignPath Foundation, not the public beta intended for end users.
 
-The signed `v0.1.11` tag publishes the English/Spanish tester prerelease with Linux
+The signed `v0.1.12` tag publishes the unified-brand English/Spanish prerelease with Linux
 DEB/RPM/AppImage, universal macOS DMG/PKG and signed Android APK/AAB. Automated inventory,
 checksums, platform trust checks and GitHub build provenance must all pass before it
 becomes public. Windows remains in its separate unsigned onboarding preview until
