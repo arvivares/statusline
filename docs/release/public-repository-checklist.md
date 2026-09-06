@@ -61,8 +61,10 @@ pre-public item above is incomplete.
       signed public releases.
 - [ ] Publish signed Linux, notarized macOS and signed Android artifacts from the
       `v0.1.10` tag; independently verify signatures, checksums and provenance.
-- [ ] After SignPath approval, configure its real identifiers/token and enable Windows in
-      a new version only after NSIS/MSI Authenticode and clean-machine validation pass.
+- [x] Document the explicit `unsigned-preview` Windows beta policy for 0.1.13, without
+      representing these previews as Authenticode-signed installers.
+- [ ] After SignPath approval, configure its real identifiers/token and switch Windows
+      to `signpath` in a new version after Authenticode and clean-machine validation.
 - [ ] Publish a concise security and privacy summary with the announcement; never include
       QR links, tokens, account identifiers or diagnostic logs containing user paths.
 

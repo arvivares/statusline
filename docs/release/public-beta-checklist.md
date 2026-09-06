@@ -140,6 +140,7 @@ The official signing-key fingerprint is `7076 AFAF 1090 C370 9D1F 080C 5D77 9E12
 
 ## Publish
 
-- [x] Review generated release notes and document the temporary absence of Windows.
+- [x] Review generated release notes; 0.1.10–0.1.12 exclude Windows, while 0.1.13
+      explicitly adds unsigned Windows beta previews with SmartScreen warnings.
 - [ ] Confirm the signed tag publishes `v0.1.10` automatically with the **Pre-release** flag.
 - [ ] Announce the tester release only after downloading and independently verifying its assets.

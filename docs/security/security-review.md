@@ -16,7 +16,32 @@ The source tree and maintainer-account controls are suitable for public distribu
 Repository-native security controls are enabled, and the one accepted dependency risk
 is documented below with explicit reachability evidence, ownership and exit criteria.
 
-## Resolved findings
+## 7 September addendum: explicit Windows beta preview
+
+### [MEDIUM — accepted] Windows previews lack Authenticode publisher trust
+
+- **Category:** OWASP A08 Software and Data Integrity Failures.
+- **Files:** `release.json`, `apps/desktop/scripts/windows-release-policy.mjs:5`,
+  `apps/desktop/scripts/verify-windows-preview.ps1` and the release workflows.
+- **Scope:** Targeted review of the changed artifact-policy code; this is not a new
+  full dependency, authentication, relay or infrastructure audit.
+- **Description and impact:** The maintainer explicitly requested public Windows
+  previews while SignPath onboarding is pending. Windows cannot authenticate the
+  publisher through Authenticode; SmartScreen or enterprise policy may block the files.
+- **Controls:** An explicit beta-only policy rejects missing/unknown modes and stable
+  publication. CI checks `NotSigned`, tests both installers and uploads only after smoke
+  success. Public filenames and release notes disclose unsigned status. The signed tag,
+  signed checksums and GitHub attestations bind the files to their source/run, but do not
+  replace Authenticode. Linux, Apple and Android signing requirements are unchanged.
+- **Recommendation and exit criteria:** Complete SignPath onboarding, select `signpath`
+  in a reviewed version and verify both signing stages. Never silently fall back after
+  signing failure, replace a published asset or advise users to disable protections.
+- **Owner:** `@arvivares`; recheck at every release until the exception is retired.
+- **Verification:** Regression tests cover policy validation, installer inventory,
+  unsigned naming, recovery without relabeling and upload ordering. Native signature
+  status and installer execution are additional Windows CI gates, not local macOS QA.
+
+## Previously resolved findings
 
 ### [HIGH] The release-owner account lacked two-factor authentication
 

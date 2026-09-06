@@ -211,8 +211,22 @@ jobs:
 
           signed_windows=false
           if [[ "$includes_windows" == true ]]; then
-            if [[ "$RELEASE_BUILD" == true || "$DISPATCH_SIGN_WINDOWS" == true ]]; then
+            if [[ "$DISPATCH_SIGN_WINDOWS" == true ]]; then
               signed_windows=true
+            fi
+          fi
+          if [[ "$RELEASE_BUILD" == true ]]; then
+            windows_policy=$(node apps/desktop/scripts/windows-release-policy.mjs)
+            expected_sign_windows=false
+            [[ "$windows_policy" != signpath ]] || expected_sign_windows=true
+            if [[ "$signed_windows" != "$expected_sign_windows" ]]; then
+              echo "Windows signing input does not match release.json." >&2
+              exit 1
+            fi
+            if [[ "$windows_policy" == disabled && "$includes_windows" == true ||
+                  "$windows_policy" != disabled && "$includes_windows" != true ]]; then
+              echo "Windows build scope does not match release.json." >&2
+              exit 1
             fi
           fi
           echo "signed_windows=$signed_windows" >> "$GITHUB_OUTPUT"
@@ -499,7 +513,7 @@ jobs:
           retryAttempts: 0
           uploadUpdaterJson: false
           uploadUpdaterSignatures: false
-          uploadWorkflowArtifacts: ${{ runner.os == 'Windows' }}
+          uploadWorkflowArtifacts: false
           workflowArtifactNamePattern: statusline-[version]-[platform]-[arch]-[bundle]-attempt-${{ github.run_attempt }}
 
       - name: Prepare AppImage compatibility policy before signing
@@ -667,11 +681,32 @@ jobs:
           -ExpectedSignerSubject '${{ vars.SIGNPATH_EXPECTED_SIGNER_SUBJECT }}'
         working-directory: apps/desktop
 
-      - name: Smoke test unsigned Windows QA installers
+      - name: Verify unsigned Windows preview identity
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD != 'true'
+        shell: pwsh
+        run: >-
+          ./scripts/verify-windows-preview.ps1
+          -ApplicationPath ./src-tauri/target/release/statusline-desktop.exe
+          -BundleRoot ./src-tauri/target/release/bundle
+        working-directory: apps/desktop
+
+      - name: Smoke test unsigned Windows preview installers
         if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD != 'true'
         shell: pwsh
         run: ./scripts/smoke-installers-windows.ps1 -BundleRoot ./src-tauri/target/release/bundle
         working-directory: apps/desktop
+
+      - name: Upload tested unsigned Windows preview installers
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD != 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ env.STATUSLINE_VERSION }}-windows-x64-unsigned-attempt-${{ github.run_attempt }}
+          path: |
+            apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
+            apps/desktop/src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
 
       - name: Smoke test signed Windows install and uninstall
         if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'

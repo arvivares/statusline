@@ -1,10 +1,11 @@
 # AppImage: diagnóstico de la ventana vacía en Ubuntu
 
-Estado: candidato de [issue #18](https://github.com/arvivares/statusline/issues/18)
-construido, firmado y validado en CI Ubuntu 22.04/24.04; pendiente de QA gráfico
-en Ubuntu 26.04. **No hay corrección publicada como release**.
-El `.deb` oficial funciona en el equipo Ubuntu 26.04 reportado. Las comparaciones
-de diagnóstico siguientes no requieren recompilar.
+Estado: corrección de [issue #18](https://github.com/arvivares/statusline/issues/18)
+incorporada a 0.1.13. El candidato firmado pasó CI en Ubuntu 22.04/24.04 y el
+informante confirmó renderizado estable en el Ubuntu 26.04.1 afectado. La publicación
+de los instaladores finales depende de completar los controles de la release;
+consulta [GitHub Releases](https://github.com/arvivares/statusline/releases) para
+descargas verificadas. Las comparaciones históricas siguientes no requieren recompilar.
 
 ## Hallazgos en el artefacto 0.1.12
 
@@ -294,14 +295,33 @@ harness: la ruta del ejecutable aparecía entre los argumentos de su propio proc
 shell. La corrección confirma la identidad mediante `/proc/<pid>/exe` y mantiene
 el rechazo de instancias reales o candidatos vivos que no puedan inspeccionarse.
 
-## Verificaciones pendientes antes de distribuir
+## Confirmación en el equipo afectado
 
-- Probar **el AppImage final firmado** en el Ubuntu 26.04 afectado, sin overrides
-  de diagnóstico: interfaz visible y botones funcionales; bandeja, ocultar,
-  reapertura y Salir; selección del Codex local; emparejamiento y sincronización
-  con el móvil; almacenamiento seguro y reinicio. Mantener QR/tokens privados.
-- Repetir la comprobación gráfica con Ubuntu 22.04/24.04 y, cuando haya equipos
-  disponibles, otra GPU y sesión Wayland/XWayland. No aumentar el soporte declarado
-  sólo por pasar un runner headless.
-- Elegir una nueva versión antes de publicar. No sobrescribir 0.1.12 ni cerrar el
-  issue hasta completar la verificación del candidato en el equipo afectado.
+La [confirmación del informante](https://github.com/arvivares/statusline/issues/18#issuecomment-5562928890)
+identifica el candidato firmado por el SHA-256 completo anterior. En Ubuntu 26.04.1,
+XFCE/X11 y Mesa 26.0.8, los cuatro casos, incluido el baseline sin overrides gráficos,
+muestran la interfaz sin `EGL_BAD_PARAMETER` ni el símbolo GIO indefinido. El timeout
+de 20 segundos es esperado y no se interpreta como un fallo de arranque.
+
+El informante comprobó la ventana propia de Statusline por ID, con geometría
+400 × 600 y contenido estable alrededor de 50 segundos; los procesos WebKit seguían
+vivos. Las capturas son una comprobación adicional del informante, no una función
+del script versionado. Los mapas de bibliotecas aportados corresponden al proceso
+principal y no se presentan como mapas independientes del renderizador.
+
+Esto confirma la resolución del fallo de ventana vacía **en ese equipo** y permite
+preparar la beta 0.1.13. El pipeline debe volver a validar los instaladores finales
+de esa nueva versión: el candidato QA 0.1.12 no se renombra ni reemplaza la release
+0.1.12 existente. El issue se cierra sólo después de verificar la nueva publicación.
+
+## Cobertura adicional pendiente
+
+La confirmación de renderizado no documenta una prueba completa de botones,
+bandeja/ocultar/reabrir/Salir, selección de Codex, emparejamiento, sincronización,
+keyring ni reinicio. Esos recorridos deben comprobarse al probar la beta final,
+manteniendo QR/tokens privados; no se contabilizan como QA completado.
+
+También falta ampliar la comprobación gráfica a Ubuntu 22.04/24.04, otras GPU y
+sesiones Wayland/XWayland. Las pruebas CI headless verifican arranque e IPC, no
+interacción gráfica física. Estas limitaciones permanecen documentadas en las
+[notas de 0.1.13](notes/v0.1.13.md); no se amplía el soporte declarado.

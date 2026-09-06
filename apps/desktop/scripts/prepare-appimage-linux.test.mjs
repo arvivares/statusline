@@ -311,9 +311,7 @@ it("gates Linux upload on packaging, readiness and signatures, and reuses the sa
   const positions = steps.map((name) => workflow.indexOf(`- name: ${name}`));
   expect(positions.every((position) => position >= 0)).toBe(true);
   expect(positions).toEqual([...positions].sort((a, b) => a - b));
-  expect(workflow).toContain(
-    "uploadWorkflowArtifacts: ${{ runner.os == 'Windows' }}",
-  );
+  expect(workflow).toContain("uploadWorkflowArtifacts: false");
   expect(workflow).toContain("runs-on: ubuntu-24.04");
   expect(workflow).toContain(
     "Validate AppImage and DEB frontend readiness without rebuilding",

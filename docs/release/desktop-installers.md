@@ -16,15 +16,16 @@ El companion se empaqueta de forma nativa en GitHub Actions. No se usa cross-com
 
 NSIS incorpora el bootstrapper Evergreen de WebView2. AppImage no empaqueta el conjunto de plugins multimedia de GStreamer (`bundleMediaFramework=false`), aunque WebKit puede incorporar bibliotecas GStreamer como dependencias. DMG y PKG contienen la misma app universal con arquitecturas arm64 y x86_64; no requieren una segunda compilación.
 
-Hay un fallo de ejecución reportado para AppImage 0.1.12 en Ubuntu 26.04
-([issue #18](https://github.com/arvivares/statusline/issues/18)); el `.deb` oficial
-funciona en ese equipo. La [guía de diagnóstico de AppImage](appimage-diagnostics.md)
-permite aislar GIO y renderizado sin recompilar ni modificar el instalador original.
-La corrección candidata conserva el GIO incluido con su módulo TLS y resuelve Wayland
-desde el sistema. El candidato firmado del run `34059724766` pasó el pipeline en
-Ubuntu 22.04 y 24.04; falta validar su interfaz y sincronización en el equipo
-afectado. No modifica la release 0.1.12; los enlaces y checksums del candidato están
-en la [guía de diagnóstico](appimage-diagnostics.md#candidato-firmado-disponible-para-qa).
+La versión 0.1.13 incorpora la corrección de la ventana vacía de AppImage 0.1.12
+([issue #18](https://github.com/arvivares/statusline/issues/18)). Conserva el GIO
+incluido con su módulo TLS y resuelve las bibliotecas Wayland desde el sistema.
+El candidato firmado pasó las pruebas de arranque en Ubuntu 22.04/24.04 y el
+[informante confirmó renderizado estable en Ubuntu 26.04.1](https://github.com/arvivares/statusline/issues/18#issuecomment-5562928890),
+sin los errores EGL/GIO originales. Esa comprobación no certifica otras GPU ni
+emparejamiento o sincronización. El pipeline de cada release vuelve a validar el
+paquete antes de firmarlo y publicarlo; los artefactos 0.1.12 no se sustituyen.
+La [guía de diagnóstico](appimage-diagnostics.md) conserva la evidencia, checksums,
+limitaciones y pruebas adicionales recomendadas.
 
 MSI no inicia Statusline desde Windows Installer y NSIS deja desmarcada por defecto la opción de abrirlo al finalizar. El usuario debe hacer el primer arranque desde Inicio o el acceso directo; esto garantiza que la detección de Codex reciba el entorno de su sesión y que WebView2 complete su inicialización antes de mostrar la ventana.
 
@@ -166,7 +167,15 @@ La salida de `gpg --fingerprint` debe coincidir exactamente con el fingerprint p
 
 ## Firma de Windows
 
-Statusline ha seleccionado SignPath Foundation para la firma Authenticode pública de Windows. La política y los responsables están documentados en [Statusline Code Signing Policy](../security/code-signing-policy.md). La incorporación del proyecto todavía está pendiente; hasta completarla, los artefactos de Windows generados manualmente son exclusivamente builds de QA sin firma.
+Statusline ha seleccionado SignPath Foundation para Authenticode. Mientras se completa
+la incorporación, desde 0.1.13 se permiten previews beta públicas NSIS/MSI **sin firma
+Authenticode**, con nombres `.unsigned.exe` y `.unsigned.msi`. CI verifica `NotSigned`
+en el ejecutable y ambos instaladores y ejecuta las pruebas de instalación antes de
+subirlos. Checksums firmados y attestations verifican integridad, no confianza del editor.
+SmartScreen puede advertir o bloquearlos: no desactives las protecciones para instalarlos.
+La excepción es explícita en `release.json` y no admite releases estables ni un fallback
+si falla SignPath. Linux, macOS y Android mantienen sus controles de firma. Consulta la
+[política y responsables](../security/code-signing-policy.md).
 
 El backend PFX anterior fue retirado. Después de la aprobación, copia desde el proyecto
 real de SignPath un secret:
@@ -186,7 +195,7 @@ No inventes estos valores: deben proceder de la página CI integration y de los
 certificados del proyecto aprobado. El workflow construye primero la aplicación con
 `--no-bundle`, sube ese ejecutable a SignPath, restaura el resultado firmado y ejecuta
 `tauri bundle` sin recompilar. Después envía NSIS y MSI a una segunda configuración de
-artefacto. Cada release requiere aprobación y validación de Authenticode, identidad del
+artefacto. Cada release en modo `signpath` requiere aprobación y validación de Authenticode, identidad del
 firmante y timestamp en los tres archivos; no existe fallback sin firma.
 
 ## Firma de macOS

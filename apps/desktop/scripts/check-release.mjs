@@ -3,6 +3,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { windowsReleasePolicy } from "./windows-release-policy.mjs";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -290,6 +291,7 @@ const releasePlatformProfile = Array.isArray(githubReleasePlatforms)
 const isUnixPreviewProfile = releasePlatformProfile === "linux,macos,android";
 const isCompleteProfile =
   releasePlatformProfile === "windows,linux,macos,android";
+const windowsSigning = windowsReleasePolicy(releaseMetadata);
 assert(
   uniqueVersions.size === 1 && !uniqueVersions.has(undefined),
   `versions differ: ${Object.entries(versions)
@@ -334,6 +336,23 @@ assert(
     (!isUnixPreviewProfile ||
       releaseNotes.includes("Windows is not included in this prerelease")),
   "the current release needs curated notes with verification and limitations",
+);
+assert(
+  windowsSigning !== "unsigned-preview" ||
+    (releaseNotes.includes("unsigned") &&
+      releaseNotes.includes("SmartScreen") &&
+      releaseNotes.includes("Authenticode")),
+  "unsigned Windows prereleases must disclose Authenticode and SmartScreen limitations",
+);
+assert(
+  releaseWorkflow.includes("windows-release-policy.mjs") &&
+    releaseWorkflow.includes(
+      "needs.preflight.outputs.sign_windows == 'true'",
+    ) &&
+    workflow.includes("windows-release-policy.mjs") &&
+    workflow.includes("Windows signing input does not match release.json") &&
+    workflow.includes("verify-windows-preview.ps1"),
+  "Windows preview policy must be explicit, checked before builds, and never a signing fallback",
 );
 
 assertExactTargets(windowsConfig.bundle?.targets, ["nsis", "msi"], "Windows");
@@ -383,9 +402,7 @@ assert(
 assert(
   packageJson.scripts["bundle:linux"].includes("prepare-appimage-linux.mjs") &&
     workflow.includes("Prepare AppImage compatibility policy before signing") &&
-    workflow.includes(
-      "uploadWorkflowArtifacts: ${{ runner.os == 'Windows' }}",
-    ) &&
+    workflow.includes("uploadWorkflowArtifacts: false") &&
     workflow.indexOf("- name: Upload validated Linux installers") >
       workflow.indexOf(
         "- name: Verify Linux installer signatures independently",

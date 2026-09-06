@@ -12,6 +12,7 @@ import {
 } from "node:fs/promises";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { windowsReleasePolicy } from "./windows-release-policy.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(scriptDirectory, "../../..");
@@ -108,6 +109,7 @@ export async function prepareReleaseAssets({
 
   const metadata = JSON.parse(await readFile(resolve(metadataPath), "utf8"));
   validateContext(context, metadata);
+  const windowsSigning = windowsReleasePolicy(metadata);
   const releasePlatforms = metadata.distribution?.githubReleasePlatforms;
   assert(
     Array.isArray(releasePlatforms) && releasePlatforms.length > 0,
@@ -189,7 +191,20 @@ export async function prepareReleaseAssets({
     basename(left).localeCompare(basename(right), "en"),
   )) {
     const sourceName = basename(source);
-    const name = portableAssetName(sourceName);
+    const kind = classify(source) ?? "linux-signature";
+    const isWindows = kind.startsWith("windows-");
+    let name = portableAssetName(sourceName);
+    if (isWindows) {
+      const extension = extname(name);
+      const isPreviewName = name.endsWith(`.unsigned${extension}`);
+      assert(
+        windowsSigning === "unsigned-preview" || !isPreviewName,
+        "unsigned preview filenames cannot enter a signed Windows release",
+      );
+      if (windowsSigning === "unsigned-preview" && !isPreviewName) {
+        name = `${name.slice(0, -extension.length)}.unsigned${extension}`;
+      }
+    }
     assert(
       !stagedNames.has(name),
       `duplicate portable filename after normalization: ${name}`,
@@ -198,16 +213,17 @@ export async function prepareReleaseAssets({
     const destination = join(output, name);
     await copyFile(source, destination);
     const fileStat = await stat(destination);
-    const kind = classify(source) ?? "linux-signature";
     assetRecords.push({
       name,
       platform: kind === "linux-signature" ? "linux" : platformFor(kind),
       kind,
       bytes: fileStat.size,
       sha256: await sha256(destination),
+      ...(isWindows ? { windowsSigning } : {}),
     });
   }
 
+  assetRecords.sort((left, right) => left.name.localeCompare(right.name, "en"));
   const manifest = {
     schemaVersion: 1,
     product: metadata.product,

@@ -75,9 +75,10 @@ export const platformMessages: Record<
       title: "The next step for your desktop.",
       badge: "PREVIEW",
       description:
-        "The public Windows release is awaiting code signing. The current onboarding preview is unsigned and is not a public beta for users.",
-      requirement: "FOLLOW WINDOWS AVAILABILITY IN THE PROJECT DOCUMENTATION",
-      cta: "Check Windows status",
+        "Public NSIS and MSI beta previews are available without Authenticode signing while SignPath onboarding is pending. SmartScreen may warn or block installation; verify the signed checksums and provenance.",
+      requirement:
+        "UNSIGNED PREVIEW · REQUIRES CODEX CLI, INSTALLED AND SIGNED IN",
+      cta: "Explore preview releases",
     },
     android: {
       title: "Your quota, on your home screen.",
@@ -117,10 +118,10 @@ export const platformMessages: Record<
       title: "El próximo paso para tu escritorio.",
       badge: "PREVIEW",
       description:
-        "La versión pública de Windows está pendiente de firma de código. La preview de incorporación actual no está firmada y no es una beta pública para usuarios.",
+        "Hay previews beta públicas NSIS y MSI sin Authenticode mientras se completa SignPath. SmartScreen puede advertir o bloquear la instalación; verifica los checksums firmados y la procedencia.",
       requirement:
-        "SIGUE EL ESTADO DE WINDOWS EN LA DOCUMENTACIÓN DEL PROYECTO",
-      cta: "Ver estado de Windows",
+        "PREVIEW SIN FIRMA · REQUIERE CODEX CLI INSTALADO Y AUTENTICADO",
+      cta: "Explorar previews",
     },
     android: {
       title: "Tu cuota, en tu pantalla de inicio.",

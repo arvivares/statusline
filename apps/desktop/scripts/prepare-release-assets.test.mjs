@@ -39,7 +39,7 @@ afterEach(async () => {
   }
 });
 
-async function makeFixture({ includeWindows = false } = {}) {
+async function makeFixture({ includeWindows = true } = {}) {
   testRoot = await mkdtemp(join(tmpdir(), "statusline-release-assets-"));
   const input = join(testRoot, "input");
   const output = join(testRoot, "output");
@@ -79,7 +79,7 @@ describe("prepareReleaseAssets", () => {
     });
 
     expect(manifest.version).toBe(version);
-    expect(manifest.assets).toHaveLength(10);
+    expect(manifest.assets).toHaveLength(12);
     expect(manifest.source.commit).toBe("a".repeat(40));
     expect(
       manifest.assets.every((asset) => /^[0-9a-f]{64}$/u.test(asset.sha256)),
@@ -90,6 +90,7 @@ describe("prepareReleaseAssets", () => {
     expect(persisted.workflow.runId).toBe(12345);
     expect(persisted.workflow.runAttempt).toBe(1);
     expect(persisted.distribution.githubReleasePlatforms).toEqual([
+      "windows",
       "linux",
       "macos",
       "android",
@@ -202,11 +203,21 @@ describe("prepareReleaseAssets", () => {
 
   it("rejects an artifact from a deferred platform", async () => {
     const { input, output } = await makeFixture({ includeWindows: true });
+    const metadataPath = join(testRoot, "unix-release.json");
+    await writeFile(
+      metadataPath,
+      JSON.stringify({
+        version,
+        tag: `v${version}`,
+        distribution: { githubReleasePlatforms: ["linux", "macos", "android"] },
+      }),
+    );
 
     await expect(
       prepareReleaseAssets({
         inputDirectory: input,
         outputDirectory: output,
+        metadataPath,
         context: context(),
       }),
     ).rejects.toThrow("belongs to a platform not enabled");
@@ -226,6 +237,7 @@ describe("prepareReleaseAssets", () => {
         distribution: {
           githubReleasePlatforms: ["windows", "linux", "macos", "android"],
           publishPrerelease: true,
+          windowsSigning: "signpath",
         },
         components: {},
       }),
@@ -239,5 +251,94 @@ describe("prepareReleaseAssets", () => {
     });
 
     expect(manifest.assets).toHaveLength(12);
+    expect(
+      manifest.assets
+        .filter((asset) => asset.platform === "windows")
+        .every(
+          (asset) =>
+            asset.windowsSigning === "signpath" &&
+            !asset.name.includes(".unsigned."),
+        ),
+    ).toBe(true);
+  });
+
+  it("labels only Windows preview assets and records the unsigned policy", async () => {
+    const { input, output } = await makeFixture();
+    const manifest = await prepareReleaseAssets({
+      inputDirectory: input,
+      outputDirectory: output,
+      context: context(),
+    });
+    const windows = manifest.assets.filter(
+      (asset) => asset.platform === "windows",
+    );
+    expect(windows.map((asset) => asset.name).sort()).toEqual([
+      `Statusline.Companion_${version}_x64-setup.unsigned.exe`,
+      `Statusline.Companion_${version}_x64.unsigned.msi`,
+    ]);
+    expect(
+      windows.every((asset) => asset.windowsSigning === "unsigned-preview"),
+    ).toBe(true);
+    expect(
+      manifest.assets
+        .filter((asset) => asset.platform !== "windows")
+        .every(
+          (asset) =>
+            asset.windowsSigning === undefined &&
+            !asset.name.includes(".unsigned."),
+        ),
+    ).toBe(true);
+  });
+
+  it("preserves unsigned filenames when recovering an already staged candidate", async () => {
+    const { input, output } = await makeFixture();
+    const first = await prepareReleaseAssets({
+      inputDirectory: input,
+      outputDirectory: output,
+      context: context(),
+    });
+    const recovered = await prepareReleaseAssets({
+      inputDirectory: output,
+      outputDirectory: join(testRoot, "recovered"),
+      context: context(),
+    });
+    expect(recovered).toEqual(first);
+  });
+
+  it("refuses to relabel unsigned preview assets as a signed release", async () => {
+    const { input, output } = await makeFixture();
+    await prepareReleaseAssets({
+      inputDirectory: input,
+      outputDirectory: output,
+      context: context(),
+    });
+    const metadataPath = join(testRoot, "signed-release.json");
+    const metadata = JSON.parse(
+      await readFile(new URL("../../../release.json", import.meta.url), "utf8"),
+    );
+    metadata.distribution.windowsSigning = "signpath";
+    await writeFile(metadataPath, JSON.stringify(metadata));
+    await expect(
+      prepareReleaseAssets({
+        inputDirectory: output,
+        outputDirectory: join(testRoot, "signed"),
+        metadataPath,
+        context: context(),
+      }),
+    ).rejects.toThrow(
+      "unsigned preview filenames cannot enter a signed Windows release",
+    );
+  });
+
+  it("requires both Windows installers in preview mode", async () => {
+    const { input, output } = await makeFixture();
+    await rm(join(input, windowsFixtureNames[1]));
+    await expect(
+      prepareReleaseAssets({
+        inputDirectory: input,
+        outputDirectory: output,
+        context: context(),
+      }),
+    ).rejects.toThrow("expected exactly one windows-msi");
   });
 });

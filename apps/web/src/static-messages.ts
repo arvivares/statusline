@@ -136,12 +136,12 @@ export const staticMessages = {
     "availability.linuxRequirements":
       "Linux x64. Codex CLI installed and signed in.",
     "availability.linuxLink": "Linux releases",
-    "availability.windowsStatus": "SIGNING PENDING",
+    "availability.windowsStatus": "UNSIGNED BETA",
     "availability.windowsFormats":
-      "Unsigned onboarding preview; not a public beta.",
+      "Public NSIS and MSI previews without Authenticode; verify signed checksums.",
     "availability.windowsRequirements":
-      "Windows x64 and authenticated Codex CLI. Public installers await Authenticode signing.",
-    "availability.windowsLink": "Windows signing status",
+      "Windows x64 and authenticated Codex CLI. SmartScreen may warn or block installation.",
+    "availability.windowsLink": "Windows preview releases",
     "availability.androidStatus": "IN TESTING",
     "availability.androidFormats":
       "Signed prerelease APKs. Google Play is in its closed-test process.",
@@ -326,12 +326,12 @@ export const staticMessages = {
     "availability.linuxRequirements":
       "Linux x64. Codex CLI instalado y autenticado.",
     "availability.linuxLink": "Versiones para Linux",
-    "availability.windowsStatus": "FIRMA PENDIENTE",
+    "availability.windowsStatus": "BETA SIN FIRMA",
     "availability.windowsFormats":
-      "Preview de incorporación sin firma; no es una beta pública.",
+      "Previews públicas NSIS y MSI sin Authenticode; verifica los checksums firmados.",
     "availability.windowsRequirements":
-      "Windows x64 y Codex CLI autenticado. Los instaladores públicos esperan la firma Authenticode.",
-    "availability.windowsLink": "Estado de firma Windows",
+      "Windows x64 y Codex CLI autenticado. SmartScreen puede advertir o bloquear la instalación.",
+    "availability.windowsLink": "Previews para Windows",
     "availability.androidStatus": "EN PRUEBAS",
     "availability.androidFormats":
       "APK firmados de prereleases. Google Play sigue su proceso de pruebas cerradas.",
