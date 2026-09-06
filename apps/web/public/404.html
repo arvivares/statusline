@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#0d0e0b" />
+    <title>Signal not found — Statusline</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/statusline-mark.svg" />
+    <script type="module" src="/not-found.js"></script>
+    <style>
+      @font-face {
+        font-family: Manrope;
+        src: url("/fonts/manrope-500.ttf");
+        font-display: swap;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        background: #0d0e0b;
+        color: #ece9dc;
+        font-family: Manrope, sans-serif;
+        padding: 32px;
+      }
+      main {
+        max-width: 650px;
+        width: 100%;
+      }
+      img {
+        width: 50px;
+        height: 50px;
+      }
+      .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+      .language-switch {
+        display: flex;
+        gap: 4px;
+        padding: 3px;
+        border: 1px solid #35362b;
+        border-radius: 6px;
+      }
+      .language-switch button {
+        min-width: 44px;
+        min-height: 44px;
+        border: 0;
+        border-radius: 3px;
+        background: transparent;
+        color: #a2a293;
+        font:
+          12px Manrope,
+          sans-serif;
+        cursor: pointer;
+      }
+      .language-switch button[aria-pressed="true"] {
+        background: #efc65a;
+        color: #0d0e0b;
+      }
+      .language-switch button:hover {
+        color: #ece9dc;
+        background: #35362b;
+      }
+      .language-switch button[aria-pressed="true"]:hover {
+        color: #0d0e0b;
+        background: #f5d477;
+      }
+      .signal {
+        display: block;
+        margin-top: 50px;
+        color: #efc65a;
+        font: 12px monospace;
+        letter-spacing: 2px;
+      }
+      h1 {
+        font-size: clamp(42px, 8vw, 76px);
+        line-height: 1.08;
+        letter-spacing: -3px;
+        font-weight: 500;
+        margin: 20px 0;
+      }
+      p {
+        color: #a2a293;
+        line-height: 1.8;
+        font-size: 15px;
+      }
+      a {
+        display: inline-block;
+        color: #0d0e0b;
+        background: #efc65a;
+        text-decoration: none;
+        padding: 16px 23px;
+        border-radius: 4px;
+        margin-top: 22px;
+        font-size: 13px;
+      }
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid #efc65a;
+        outline-offset: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="page-header">
+        <img src="/assets/statusline-mark.svg" alt="Statusline" />
+        <div class="language-switch" role="group" aria-label="Language">
+          <button
+            type="button"
+            data-language="en"
+            lang="en"
+            aria-label="English"
+            aria-pressed="true"
+          >
+            EN
+          </button>
+          <button
+            type="button"
+            data-language="es"
+            lang="es"
+            aria-label="Español"
+            aria-pressed="false"
+          >
+            ES
+          </button>
+        </div>
+      </div>
+      <span class="signal" data-message="signal">404 / SIGNAL NOT FOUND</span>
+      <h1>
+        <span data-message="heading1">This signal</span><br /><span
+          data-message="heading2"
+          >got lost.</span
+        >
+      </h1>
+      <p>
+        <span data-message="description1"
+          >The page you’re looking for isn’t here.</span
+        ><br />
+        <span data-message="description2"
+          >Head back home to pick up where you left off.</span
+        >
+      </p>
+      <a href="/" data-message="back">Back to Statusline →</a>
+    </main>
+  </body>
+</html>

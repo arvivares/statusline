@@ -1,0 +1,23 @@
+{
+  "name": "statusline-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "The public presentation website for Statusline.",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "check": "tsc --noEmit",
+    "format": "prettier --write src scripts index.html package.json tsconfig.json compose.yml README.md public/404.html public/not-found.js public/not-found-messages.js",
+    "format:check": "prettier --check src scripts index.html package.json tsconfig.json compose.yml README.md public/404.html public/not-found.js public/not-found-messages.js",
+    "build": "npm run check && node --experimental-strip-types scripts/build.mjs",
+    "test:seo": "node --experimental-strip-types scripts/check-seo.mjs",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "devDependencies": {
+    "parse5": "8.0.1",
+    "prettier": "3.9.6",
+    "typescript": "7.0.2",
+    "vite": "8.2.2"
+  }
+}

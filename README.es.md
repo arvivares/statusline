@@ -242,6 +242,20 @@ npm run tauri dev
 
 HTTP sólo se acepta para loopback en Debug. Los builds de producción requieren un origen HTTPS.
 
+### Sitio de presentación
+
+La [web independiente](apps/web/README.md) tiene como dominio de publicación
+[statusline.inmerzion.io](https://statusline.inmerzion.io). Utiliza recursos locales
+y demostraciones identificadas, sin un backend de relay.
+
+```shell
+cd apps/web
+npm ci
+npm run dev -- --port 4173
+```
+
+Antes de publicar, ejecuta `npm run check`, `npm run format:check` y `npm run build`.
+
 ### Relay
 
 ```shell
@@ -381,6 +395,7 @@ La [checklist de publicación del repositorio](docs/release/public-repository-ch
 | `apps/desktop/`                       | Companion Tauri para Windows, Linux y macOS                                                 |
 | `apps/android/`                       | App, QR scanner, widget y kit versionado de Google Play                                     |
 | [`apps/apple/`](apps/apple/README.md) | Proyecto Xcode y targets de iPhone, WidgetKit y macOS                                       |
+| [`apps/web/`](apps/web/README.md)     | Sitio estático de presentación y despliegue Docker/Nginx                                    |
 | `services/relay/`                     | Worker, D1, rate limits y páginas públicas                                                  |
 | `protocol/`                           | Especificación v1, fixtures y ejemplos interoperables                                       |
 | `localization/`                       | Catálogo común inglés/español y casos de prueba de idiomas                                  |

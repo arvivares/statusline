@@ -1,0 +1,1420 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d0e0b" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="Your Codex quota, at a glance. Statusline connects desktop, mobile and widgets with end-to-end encrypted sync. Open source and independent."
+      data-i18n-content="meta.description"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta
+      property="og:title"
+      content="Statusline — Codex quota monitor for desktop &amp; mobile"
+      data-i18n-content="meta.title"
+    />
+    <meta
+      property="og:description"
+      content="Keep creating. Your Codex quota stays with you on desktop, mobile and widgets. Private by design. Open source."
+      data-i18n-content="meta.socialDescription"
+    />
+    <meta property="og:url" content="https://statusline.inmerzion.io/" />
+    <meta
+      property="og:image"
+      content="https://statusline.inmerzion.io/assets/social-card-en.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://statusline.inmerzion.io/" />
+    <link rel="icon" type="image/svg+xml" href="/assets/statusline-mark.svg" />
+    <link
+      rel="preload"
+      href="/fonts/manrope-500.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/manrope-700.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <title data-i18n="meta.title">
+      Statusline — Codex quota monitor for desktop &amp; mobile
+    </title>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido" data-i18n="accessibility.skip"
+      >Skip to content</a
+    >
+    <header class="site-header">
+      <div class="container header-inner">
+        <a
+          class="brand"
+          href="#inicio"
+          aria-label="Statusline, home"
+          data-i18n-aria-label="accessibility.home"
+          ><span class="brand-symbol" aria-hidden="true"></span
+          ><span>statusline<span class="brand-period">.</span></span></a
+        >
+        <nav
+          class="desktop-nav"
+          aria-label="Main navigation"
+          data-i18n-aria-label="navigation.primary"
+        >
+          <a href="#producto" data-i18n="navigation.product">The product</a>
+          <a href="#como-funciona" data-i18n="navigation.how">How it works</a>
+          <a href="#privacidad" data-i18n="navigation.privacy">Privacy</a>
+        </nav>
+        <div class="header-actions">
+          <div
+            class="language-switch"
+            role="group"
+            aria-label="Website language"
+            data-i18n-aria-label="language.group"
+          >
+            <a
+              href="/"
+              hreflang="en"
+              data-language="en"
+              lang="en"
+              aria-label="Switch to English"
+              aria-current="true"
+            >
+              EN</a
+            ><span aria-hidden="true">/</span
+            ><a
+              href="/es/"
+              hreflang="es"
+              data-language="es"
+              lang="es"
+              aria-label="Cambiar a español"
+            >
+              ES
+            </a>
+          </div>
+          <a
+            class="github-link"
+            href="https://github.com/arvivares/statusline"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View Statusline on GitHub (opens in a new tab)"
+            data-i18n-aria-label="navigation.github"
+            ><svg class="icon" aria-hidden="true">
+              <use href="#icon-github" /></svg
+            ><span>GitHub</span
+            ><svg class="icon small" aria-hidden="true">
+              <use href="#icon-external" /></svg
+          ></a>
+          <a class="button button-small" href="#empezar"
+            ><span data-i18n="navigation.start">Get started</span>
+            <svg class="icon" aria-hidden="true"><use href="#icon-arrow" /></svg
+          ></a>
+          <button
+            class="menu-toggle"
+            type="button"
+            aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="mobile-nav"
+          >
+            <span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <nav
+        id="mobile-nav"
+        class="mobile-nav"
+        aria-label="Mobile navigation"
+        data-i18n-aria-label="navigation.mobile"
+        hidden
+      >
+        <a href="#producto"
+          ><span data-i18n="navigation.product">The product</span>
+          <span>01</span></a
+        >
+        <a href="#como-funciona"
+          ><span data-i18n="navigation.how">How it works</span>
+          <span>02</span></a
+        >
+        <a href="#privacidad"
+          ><span data-i18n="navigation.privacy">Privacy</span>
+          <span>03</span></a
+        >
+        <a href="#empezar"
+          ><span data-i18n="navigation.start">Get started</span>
+          <svg class="icon" aria-hidden="true"><use href="#icon-arrow" /></svg
+        ></a>
+      </nav>
+    </header>
+
+    <main id="contenido">
+      <section class="hero" id="inicio" aria-labelledby="hero-heading">
+        <div class="hero-grid" aria-hidden="true"></div>
+        <div class="container hero-inner">
+          <div class="hero-copy">
+            <a class="release-pill" href="#empezar"
+              ><span class="status-dot"></span>
+              <span data-i18n="hero.release"
+                >OPEN SOURCE. ALWAYS EVOLVING.</span
+              >
+              <svg class="icon small" aria-hidden="true">
+                <use href="#icon-arrow" /></svg
+            ></a>
+            <h1 id="hero-heading" data-i18n-html="hero.heading">
+              Your quota.<br /><span>At a glance.</span>
+            </h1>
+            <p class="hero-description" data-i18n-html="hero.description">
+              Your next big project shouldn't catch you out of quota. Your
+              <strong>Codex</strong> usage, on your desktop and your phone.
+              Always within reach.
+            </p>
+            <div class="hero-actions">
+              <a class="button" href="#empezar"
+                ><span data-i18n="hero.discover">Discover Statusline</span>
+                <svg class="icon" aria-hidden="true">
+                  <use href="#icon-arrow" /></svg
+              ></a>
+              <a class="text-button" href="#producto"
+                ><span class="play-icon" aria-hidden="true"
+                  ><svg class="icon"><use href="#icon-play" /></svg
+                ></span>
+                <span data-i18n="hero.tryDemo">Try the demo</span></a
+              >
+            </div>
+            <div class="hero-proof">
+              <span
+                ><svg class="icon small" aria-hidden="true">
+                  <use href="#icon-lock" />
+                </svg>
+                <span data-i18n="hero.encryption"
+                  >End-to-end encrypted</span
+                ></span
+              ><span class="proof-divider"></span
+              ><span data-i18n="hero.noAccount">No extra account</span>
+            </div>
+          </div>
+
+          <div
+            class="hero-scene"
+            aria-label="Illustrative Statusline desktop and mobile view with 73 percent of weekly quota remaining"
+            data-i18n-aria-label="hero.previewLabel"
+          >
+            <span
+              class="scene-coordinate coordinate-top"
+              data-i18n="hero.systems"
+              >STL / CONNECTED SYSTEMS</span
+            >
+            <span class="scene-coordinate coordinate-side"
+              >41° 23′ 08″ N — DATA PLANE</span
+            >
+            <div class="orbital-glow" aria-hidden="true"></div>
+            <div class="orbit orbit-one" aria-hidden="true"><i></i></div>
+            <div class="orbit orbit-two" aria-hidden="true"><i></i></div>
+            <div class="orbit orbit-three" aria-hidden="true"></div>
+            <div class="scene-cross cross-one" aria-hidden="true">+</div>
+            <div class="scene-cross cross-two" aria-hidden="true">+</div>
+            <div class="desktop-device">
+              <div class="window-bar">
+                <span class="window-dots" aria-hidden="true"
+                  ><i></i><i></i><i></i></span
+                ><span>STATUSLINE COMPANION</span
+                ><svg class="icon small" aria-hidden="true">
+                  <use href="#icon-settings" />
+                </svg>
+              </div>
+              <div class="device-body">
+                <div class="instrument-heading">
+                  <span><b>STL</b> / DATA PLANE</span
+                  ><span class="live-label"><i></i> DEMO</span>
+                </div>
+                <div class="instrument-panel">
+                  <div class="instrument-overline">
+                    <span>CDX.WEEKLY.QUOTA</span><span>PLANE / 010</span>
+                  </div>
+                  <div class="instrument-value">
+                    <strong>73<span>%</span></strong
+                    ><span
+                      class="value-description"
+                      data-i18n-html="hero.availableToCreate"
+                      >AVAILABLE<br /><b>TO CREATE.</b></span
+                    >
+                  </div>
+                  <div
+                    class="segment-meter"
+                    style="--quota: 73%"
+                    aria-hidden="true"
+                  ></div>
+                  <div class="meter-scale">
+                    <span>0</span
+                    ><span data-i18n="hero.remaining73">73 / LEFT</span
+                    ><span>100</span>
+                  </div>
+                  <div class="instrument-caption">
+                    <span class="tiny-label" data-i18n="hero.availableState"
+                      >STATUS / AVAILABLE</span
+                    ><strong data-i18n="hero.nextIdea"
+                      >Room for your next idea.</strong
+                    >
+                  </div>
+                  <div class="instrument-details">
+                    <div>
+                      <span>RESET.TIME</span
+                      ><strong data-i18n-html="hero.desktopReset"
+                        >Mon, 13:00 <span>↗</span></strong
+                      >
+                    </div>
+                    <div>
+                      <span>SHORT.WINDOW</span
+                      ><strong
+                        >91%
+                        <small data-i18n="hero.remaining">LEFT</small></strong
+                      >
+                    </div>
+                    <div><span>ACCOUNT.PLAN</span><strong>PLUS</strong></div>
+                    <div>
+                      <span>RELAY.STATE</span
+                      ><strong class="gold"
+                        ><span data-i18n="hero.synced">SYNCED</span
+                        ><svg class="icon small" aria-hidden="true">
+                          <use href="#icon-lock" /></svg
+                      ></strong>
+                    </div>
+                  </div>
+                  <div class="instrument-footer">
+                    <span class="status-dot"></span>
+                    <span data-i18n="hero.metadataOnly"
+                      >QUOTA METADATA ONLY</span
+                    >
+                    <span>E2E / AES-256-GCM</span>
+                  </div>
+                </div>
+              </div>
+              <div class="device-bottom">
+                <span
+                  ><span class="status-dot"></span>
+                  <span data-i18n="hero.codexConnected"
+                    >CODEX CONNECTED</span
+                  ></span
+                ><span data-i18n="hero.sampleData">SAMPLE DATA</span>
+              </div>
+            </div>
+            <div class="mobile-device" aria-hidden="true">
+              <div class="phone-camera"></div>
+              <div class="phone-top"><span>9:41</span><span>▮▮▮ ▰</span></div>
+              <div class="phone-screen">
+                <div class="phone-title">
+                  <span class="mini-symbol">S</span> statusline.
+                </div>
+                <div class="phone-rule"></div>
+                <span class="tiny-label">CDX.WEEKLY.QUOTA</span>
+                <div class="phone-value">73<span>%</span></div>
+                <span class="phone-left" data-i18n="hero.available"
+                  >AVAILABLE</span
+                >
+                <div class="segment-meter" style="--quota: 73%"></div>
+                <div class="phone-reset">
+                  <span data-i18n="hero.nextReset">NEXT RESET</span
+                  ><strong data-i18n="hero.mobileReset">Mon, 13:00</strong>
+                </div>
+                <div class="phone-synced">
+                  <span class="status-dot"></span>
+                  <span data-i18n="hero.synced">SYNCED</span
+                  ><svg class="icon small"><use href="#icon-lock" /></svg>
+                </div>
+              </div>
+              <div class="phone-home"></div>
+            </div>
+            <div class="floating-label">
+              <span class="connection-icon" aria-hidden="true"
+                ><svg class="icon"><use href="#icon-link" /></svg
+              ></span>
+              <div data-i18n-html="hero.allDevices">
+                One status. All your devices.<span>ENCRYPTED CONNECTION</span>
+              </div>
+              <span class="status-dot"></span>
+            </div>
+            <span
+              class="scene-coordinate coordinate-bottom"
+              data-i18n="hero.devices"
+              >01 — DESKTOP ↔ MOBILE ↔ WIDGETS</span
+            >
+          </div>
+        </div>
+        <div class="container hero-footer">
+          <span class="mono" data-i18n="hero.flow"
+            >LESS GUESSWORK. MORE FLOW.</span
+          ><a href="#producto" class="scroll-link"
+            ><span data-i18n="hero.explore">EXPLORE THE SYSTEM</span>
+            <svg class="icon small" aria-hidden="true">
+              <use href="#icon-down" /></svg
+          ></a>
+        </div>
+      </section>
+
+      <div class="platform-strip">
+        <div class="container platform-inner">
+          <p data-i18n-html="platforms.ecosystem">
+            Designed for<br /><strong>your ecosystem.</strong>
+          </p>
+          <div class="platform-names">
+            <span
+              ><svg class="icon" aria-hidden="true">
+                <use href="#icon-apple" />
+              </svg>
+              macOS</span
+            ><span
+              ><svg class="icon" aria-hidden="true">
+                <use href="#icon-windows" />
+              </svg>
+              Windows</span
+            ><span
+              ><svg class="icon" aria-hidden="true">
+                <use href="#icon-terminal" />
+              </svg>
+              Linux</span
+            ><span
+              ><svg class="icon" aria-hidden="true">
+                <use href="#icon-phone" />
+              </svg>
+              iOS</span
+            ><span
+              ><svg class="icon" aria-hidden="true">
+                <use href="#icon-android" />
+              </svg>
+              Android</span
+            >
+          </div>
+          <a href="#empezar" class="mono availability-link"
+            ><span data-i18n="platforms.availability">CHECK AVAILABILITY</span>
+            <svg class="icon small" aria-hidden="true">
+              <use href="#icon-external" /></svg
+          ></a>
+        </div>
+      </div>
+
+      <section
+        class="section product-section"
+        id="producto"
+        aria-labelledby="product-heading"
+      >
+        <div class="container">
+          <div class="section-heading reveal">
+            <div>
+              <p class="eyebrow">
+                <span data-i18n="product.eyebrow">01 / THE PRODUCT</span><i></i>
+              </p>
+              <h2 id="product-heading" data-i18n-html="product.heading">
+                All the context.<br /><span>None of the noise.</span>
+              </h2>
+            </div>
+            <p data-i18n-html="product.description">
+              Stay focused on what you're building.<br />Statusline keeps your
+              quota<br class="desktop-break" />
+              right where you can see it.
+            </p>
+          </div>
+          <p class="product-definition reveal" data-i18n="product.definition">
+            Statusline is an independent, open source Codex quota monitor by
+            Inmerzion. It shows your remaining quota and reset times on desktop,
+            mobile and native widgets, with optional end-to-end encrypted sync.
+          </p>
+          <div class="feature-grid">
+            <article class="feature-card quota-card reveal">
+              <div class="card-heading">
+                <span class="icon-box"
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="#icon-activity" /></svg></span
+                ><span class="card-index" data-i18n="quota.index"
+                  >01.1 / VISIBILITY</span
+                >
+              </div>
+              <h3 data-i18n="quota.heading">One glance. Now you know.</h3>
+              <p data-i18n="quota.description">
+                Available quota, short window and next reset. Everything you
+                need to plan your next session.
+              </p>
+              <div class="interactive-demo" id="demo">
+                <div class="demo-top">
+                  <span class="mono"
+                    ><span class="status-dot"></span>
+                    <span data-i18n="demo.label">INTERACTIVE DEMO</span></span
+                  >
+                  <div
+                    class="demo-tabs"
+                    role="group"
+                    aria-label="Quota window"
+                    data-i18n-aria-label="demo.windowGroup"
+                  >
+                    <button
+                      type="button"
+                      class="is-active"
+                      data-window="weekly"
+                      aria-pressed="true"
+                      data-i18n="demo.weekly"
+                    >
+                      Weekly</button
+                    ><button
+                      type="button"
+                      data-window="short"
+                      aria-pressed="false"
+                      data-i18n="demo.short"
+                    >
+                      5 hours
+                    </button>
+                  </div>
+                </div>
+                <div class="demo-reading">
+                  <div>
+                    <span id="demo-value">73</span
+                    ><span class="demo-percent">%</span>
+                  </div>
+                  <div class="demo-reading-label">
+                    <span id="demo-status">Room to create</span
+                    ><span data-i18n="demo.available">AVAILABLE QUOTA</span>
+                  </div>
+                </div>
+                <div
+                  class="demo-segments"
+                  id="demo-segments"
+                  aria-hidden="true"
+                ></div>
+                <div class="demo-scale mono">
+                  <span>0</span><span id="demo-window-label">WEEKLY WINDOW</span
+                  ><span>100</span>
+                </div>
+                <div class="demo-slider-row">
+                  <label for="quota-slider" data-i18n="demo.slider"
+                    >Adjust your quota</label
+                  ><input
+                    id="quota-slider"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="73"
+                    aria-describedby="demo-note"
+                  /><svg class="icon small" aria-hidden="true">
+                    <use href="#icon-sliders" />
+                  </svg>
+                </div>
+                <p id="demo-note" class="demo-note" data-i18n="demo.note">
+                  Sample data. Your account is not connected.
+                </p>
+                <span
+                  id="demo-announcement"
+                  class="sr-only"
+                  role="status"
+                  aria-live="polite"
+                ></span>
+              </div>
+            </article>
+            <article class="feature-card widget-card reveal">
+              <div class="card-heading">
+                <span class="icon-box"
+                  ><svg class="icon" aria-hidden="true">
+                    <use href="#icon-grid" /></svg></span
+                ><span class="card-index" data-i18n="widgets.index"
+                  >01.2 / NATIVE WIDGETS</span
+                >
+              </div>
+              <h3 data-i18n="widgets.heading">Your quota goes with you.</h3>
+              <p data-i18n="widgets.description">
+                On your home screen, without opening another app. Native widgets
+                for iPhone and Android.
+              </p>
+              <div
+                class="widget-stage"
+                aria-label="Illustration of a widget with sample data"
+                data-i18n-aria-label="widgets.previewLabel"
+              >
+                <div class="widget-ring ring-one"></div>
+                <div class="widget-ring ring-two"></div>
+                <div class="small-widget">
+                  <div class="mono">
+                    <span class="gold">STL</span> / CODEX
+                    <span class="status-dot"></span>
+                  </div>
+                  <div class="widget-value">
+                    73<span>%</span
+                    ><svg class="icon" aria-hidden="true">
+                      <use href="#icon-activity" />
+                    </svg>
+                  </div>
+                  <div
+                    class="segment-meter"
+                    style="--quota: 73%"
+                    aria-hidden="true"
+                  ></div>
+                  <div class="widget-bottom mono">
+                    <span data-i18n="widgets.weeklyQuota">WEEKLY QUOTA</span
+                    ><span>DEMO</span>
+                  </div>
+                </div>
+                <span class="widget-caption mono" data-i18n="widgets.caption"
+                  >YOUR SCREEN. YOUR CONTEXT.</span
+                >
+              </div>
+            </article>
+            <article class="feature-card compact-card reveal">
+              <span class="icon-box"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#icon-command" /></svg
+              ></span>
+              <div>
+                <h3 data-i18n="companion.heading">
+                  In the background. By your side.
+                </h3>
+                <p data-i18n="companion.description">
+                  A companion in your system tray or menu bar. Close by when you
+                  need it.
+                </p>
+              </div>
+              <span class="card-index">01.3</span>
+            </article>
+            <article class="feature-card compact-card reveal">
+              <span class="icon-box"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#icon-code" /></svg
+              ></span>
+              <div>
+                <h3 data-i18n="opensource.heading">
+                  Open from the first line.
+                </h3>
+                <p data-i18n="opensource.description">
+                  MIT licensed. Explore the code, build it your way or help us
+                  make it better.
+                </p>
+              </div>
+              <a
+                class="card-arrow"
+                href="https://github.com/arvivares/statusline"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Explore the code on GitHub (opens in a new tab)"
+                data-i18n-aria-label="opensource.linkLabel"
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#icon-external" /></svg
+              ></a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="section connect-section"
+        id="como-funciona"
+        aria-labelledby="connect-heading"
+      >
+        <div class="container">
+          <div class="section-heading reveal">
+            <div>
+              <p class="eyebrow">
+                <span data-i18n="connect.eyebrow">02 / CONNECT YOUR WORLD</span
+                ><i></i>
+              </p>
+              <h2 id="connect-heading" data-i18n-html="connect.heading">
+                From your desktop.<br /><span>To wherever you are.</span>
+              </h2>
+            </div>
+            <p data-i18n-html="connect.description">
+              Your Codex session is where it starts.<br />One QR code is all
+              that separates<br />your computer from your phone.
+            </p>
+          </div>
+          <div class="connection-experience reveal">
+            <div class="connection-visual">
+              <div class="connection-grid" aria-hidden="true"></div>
+              <div class="network-line" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="network-node node-desktop">
+                <svg class="node-icon" aria-hidden="true">
+                  <use href="#icon-monitor" /></svg
+                ><span class="mono">COMPANION</span
+                ><span class="node-caption" data-i18n="connect.source"
+                  >Where the signal starts</span
+                >
+              </div>
+              <div class="network-node node-relay">
+                <div class="relay-core">
+                  <svg class="icon" aria-hidden="true">
+                    <use href="#icon-lock" />
+                  </svg>
+                </div>
+                <span class="mono" data-i18n="connect.relay"
+                  >ENCRYPTED RELAY</span
+                ><span class="node-caption" data-i18n="connect.key"
+                  >Only you have the key</span
+                >
+              </div>
+              <div class="network-node node-mobile">
+                <svg class="node-icon" aria-hidden="true">
+                  <use href="#icon-phone" /></svg
+                ><span class="mono" data-i18n="connect.mobile">YOUR PHONE</span
+                ><span class="node-caption" data-i18n="connect.quota"
+                  >Your quota goes with you</span
+                >
+              </div>
+              <div class="network-caption mono">
+                <span class="status-dot"></span>
+                <span data-i18n="connect.caption"
+                  >OPTIONAL SYNC · LOCAL ENCRYPTION</span
+                >
+              </div>
+            </div>
+            <div class="steps">
+              <article>
+                <span class="step-number">01</span>
+                <div>
+                  <h3 data-i18n="connect.step1Title">Install the companion</h3>
+                  <p data-i18n="connect.step1Description">
+                    With Codex CLI already signed in, Statusline detects your
+                    local session and shows your quota.
+                  </p>
+                </div>
+              </article>
+              <article>
+                <span class="step-number">02</span>
+                <div>
+                  <h3 data-i18n="connect.step2Title">Scan. Connect.</h3>
+                  <p data-i18n="connect.step2Description">
+                    Create a pairing and scan the QR code with your phone. No
+                    extra account.
+                  </p>
+                </div>
+              </article>
+              <article>
+                <span class="step-number">03</span>
+                <div>
+                  <h3 data-i18n="connect.step3Title">
+                    Get back to what drives you
+                  </h3>
+                  <p data-i18n="connect.step3Description">
+                    Add the widget. See your latest synced quota from your home
+                    screen.
+                  </p>
+                </div>
+              </article>
+            </div>
+          </div>
+          <div class="setup-link reveal">
+            <span data-i18n="connect.setupCaption"
+              >From your first install to your first widget.</span
+            ><a
+              class="text-link"
+              href="https://github.com/arvivares/statusline/blob/main/SETUP.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              ><span data-i18n="connect.setupLink">Setup guide</span>
+              <svg class="icon small" aria-hidden="true">
+                <use href="#icon-external" /></svg
+            ></a>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="section privacy-section"
+        id="privacidad"
+        aria-labelledby="privacy-heading"
+      >
+        <div class="container privacy-layout">
+          <div class="privacy-art reveal" aria-hidden="true">
+            <div class="privacy-orbit privacy-orbit-one"></div>
+            <div class="privacy-orbit privacy-orbit-two"></div>
+            <div class="privacy-orbit privacy-orbit-three"></div>
+            <div class="privacy-axis axis-horizontal"></div>
+            <div class="privacy-axis axis-vertical"></div>
+            <span class="encrypted-text encrypted-one"
+              >a7f9 · e2b4 · 8c1d · f06a</span
+            ><span
+              class="encrypted-text encrypted-two"
+              data-i18n="privacy.encryptedBits"
+              >256 BIT / ENCRYPTED</span
+            ><span class="encrypted-text encrypted-three"
+              >4d8e · c31a · 09b7 · e6f2</span
+            >
+            <div class="privacy-shield">
+              <svg viewBox="0 0 120 140">
+                <path
+                  d="M60 8 106 25v42c0 29-21 48-46 64C35 115 14 96 14 67V25Z"
+                />
+                <path
+                  class="shield-inner"
+                  d="M60 23 93 35v31c0 22-16 39-33 51-17-12-33-29-33-51V35Z"
+                /></svg
+              ><svg class="shield-lock"><use href="#icon-lock" /></svg>
+            </div>
+            <div class="privacy-art-label">
+              <span class="status-dot"></span>
+              <span data-i18n="privacy.artCaption">PRIVATE BY DESIGN</span>
+            </div>
+          </div>
+          <div class="privacy-copy reveal">
+            <p class="eyebrow">
+              <span data-i18n="privacy.eyebrow">03 / PRIVATE BY DESIGN</span
+              ><i></i>
+            </p>
+            <h2 id="privacy-heading" data-i18n-html="privacy.heading">
+              Your quota travels.<br /><span>Your secrets stay.</span>
+            </h2>
+            <p data-i18n="privacy.description">
+              Encryption starts on your computer and ends on your phone. The
+              relay carries your quota, but can't read it. The key stays with
+              you.
+            </p>
+            <ul class="privacy-list">
+              <li>
+                <svg class="icon" aria-hidden="true">
+                  <use href="#icon-check" />
+                </svg>
+                <span data-i18n="privacy.metadata"
+                  >Quota metadata only. No code or conversations.</span
+                >
+              </li>
+              <li>
+                <svg class="icon" aria-hidden="true">
+                  <use href="#icon-check" />
+                </svg>
+                <span data-i18n="privacy.credentials"
+                  >Your Codex credentials stay private.</span
+                >
+              </li>
+              <li>
+                <svg class="icon" aria-hidden="true">
+                  <use href="#icon-check" />
+                </svg>
+                <span data-i18n="privacy.pairing"
+                  >Single-use pairing. You're in control.</span
+                >
+              </li>
+            </ul>
+            <a
+              class="text-link"
+              href="https://statusline-relay.inmerzion.workers.dev/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              ><span data-i18n="privacy.link">How we protect your data</span>
+              <svg class="icon small" aria-hidden="true">
+                <use href="#icon-external" /></svg
+            ></a>
+            <div class="privacy-signature mono">
+              <span>AES-256-GCM</span
+              ><span data-i18n="privacy.e2e">END-TO-END ENCRYPTED</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="section start-section"
+        id="empezar"
+        aria-labelledby="start-heading"
+      >
+        <div class="container">
+          <div class="start-intro reveal">
+            <p class="eyebrow">
+              <span data-i18n="start.eyebrow">04 / YOUR NEXT STEP</span><i></i>
+            </p>
+            <h2 id="start-heading" data-i18n-html="start.heading">
+              More focus.<br /><span>Starts here.</span>
+            </h2>
+            <p data-i18n-html="start.description">
+              Statusline is just getting started.<br />Explore the beta, get to
+              know the project and help us build what comes next.
+            </p>
+          </div>
+          <div class="download-panel reveal">
+            <div class="download-top">
+              <span class="mono"
+                ><span class="status-dot"></span>
+                <span data-i18n="start.earlyAccess">EARLY ACCESS</span></span
+              ><span class="mono" data-i18n="start.choosePlatform"
+                >CHOOSE YOUR PLATFORM</span
+              >
+            </div>
+            <div
+              class="download-tabs"
+              role="tablist"
+              aria-label="Installation platform"
+              data-i18n-aria-label="start.platformGroup"
+            >
+              <button
+                id="tab-macos"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                aria-controls="platform-panel"
+                tabindex="0"
+                data-platform="macos"
+              >
+                <svg class="icon" aria-hidden="true">
+                  <use href="#icon-apple" /></svg
+                >macOS</button
+              ><button
+                id="tab-linux"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="platform-panel"
+                tabindex="-1"
+                data-platform="linux"
+              >
+                <svg class="icon" aria-hidden="true">
+                  <use href="#icon-terminal" /></svg
+                >Linux</button
+              ><button
+                id="tab-windows"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="platform-panel"
+                tabindex="-1"
+                data-platform="windows"
+              >
+                <svg class="icon" aria-hidden="true">
+                  <use href="#icon-windows" /></svg
+                >Windows</button
+              ><button
+                id="tab-android"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="platform-panel"
+                tabindex="-1"
+                data-platform="android"
+              >
+                <svg class="icon" aria-hidden="true">
+                  <use href="#icon-android" /></svg
+                >Android</button
+              ><button
+                id="tab-ios"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="platform-panel"
+                tabindex="-1"
+                data-platform="ios"
+              >
+                <svg class="icon" aria-hidden="true">
+                  <use href="#icon-phone" /></svg
+                >iOS
+              </button>
+            </div>
+            <div
+              class="download-content"
+              id="platform-panel"
+              role="tabpanel"
+              aria-labelledby="tab-macos"
+              tabindex="0"
+            >
+              <div>
+                <div class="download-title">
+                  <h3 id="platform-title">A small companion. Big ideas.</h3>
+                  <span class="platform-badge" id="platform-badge">BETA</span>
+                </div>
+                <p id="platform-description">
+                  A universal companion for Apple Silicon and Intel Macs.
+                  Explore the project's releases for DMG and PKG installers.
+                </p>
+                <span
+                  class="download-requirement mono"
+                  id="platform-requirement"
+                  >REQUIRES CODEX CLI, INSTALLED AND SIGNED IN</span
+                >
+              </div>
+              <a
+                id="platform-link"
+                class="button"
+                href="https://github.com/arvivares/statusline/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+                ><span id="platform-link-label">Explore releases</span
+                ><svg class="icon" aria-hidden="true">
+                  <use href="#icon-external" /></svg
+              ></a>
+            </div>
+          </div>
+          <div class="availability-overview reveal">
+            <div
+              class="availability-scroll"
+              role="region"
+              tabindex="0"
+              aria-labelledby="availability-caption"
+            >
+              <table class="availability-table" data-platform-table>
+                <caption
+                  id="availability-caption"
+                  data-i18n="availability.caption"
+                >
+                  Statusline platform availability
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col" data-i18n="availability.platform">
+                      Platform
+                    </th>
+                    <th scope="col" data-i18n="availability.status">
+                      Availability
+                    </th>
+                    <th scope="col" data-i18n="availability.requirements">
+                      Requirements &amp; use
+                    </th>
+                    <th scope="col" data-i18n="availability.links">
+                      Project links
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-availability-platform="macos">
+                    <th scope="row">macOS</th>
+                    <td>
+                      <span
+                        class="availability-status"
+                        data-i18n="availability.beta"
+                        >TESTER BETA</span
+                      >
+                      <p data-i18n="availability.macosFormats">
+                        Universal DMG and PKG installers.
+                      </p>
+                    </td>
+                    <td>
+                      <p data-i18n="availability.macosRequirements">
+                        Apple Silicon or Intel Mac. Codex CLI installed and
+                        signed in.
+                      </p>
+                    </td>
+                    <td>
+                      <a
+                        href="https://github.com/arvivares/statusline/releases"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><span data-i18n="availability.macosLink"
+                          >macOS releases</span
+                        ><svg class="icon small" aria-hidden="true">
+                          <use href="#icon-external" /></svg
+                      ></a>
+                    </td>
+                  </tr>
+                  <tr data-availability-platform="linux">
+                    <th scope="row">Linux</th>
+                    <td>
+                      <span
+                        class="availability-status"
+                        data-i18n="availability.beta"
+                        >TESTER BETA</span
+                      >
+                      <p data-i18n="availability.linuxFormats">
+                        DEB, RPM and AppImage packages.
+                      </p>
+                    </td>
+                    <td>
+                      <p data-i18n="availability.linuxRequirements">
+                        Linux x64. Codex CLI installed and signed in.
+                      </p>
+                    </td>
+                    <td>
+                      <a
+                        href="https://github.com/arvivares/statusline/releases"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><span data-i18n="availability.linuxLink"
+                          >Linux releases</span
+                        ><svg class="icon small" aria-hidden="true">
+                          <use href="#icon-external" /></svg
+                      ></a>
+                    </td>
+                  </tr>
+                  <tr data-availability-platform="windows">
+                    <th scope="row">Windows</th>
+                    <td>
+                      <span
+                        class="availability-status"
+                        data-i18n="availability.windowsStatus"
+                        >SIGNING PENDING</span
+                      >
+                      <p data-i18n="availability.windowsFormats">
+                        Unsigned onboarding preview; not a public beta.
+                      </p>
+                    </td>
+                    <td>
+                      <p data-i18n="availability.windowsRequirements">
+                        Windows x64 and authenticated Codex CLI. Public
+                        installers await Authenticode signing.
+                      </p>
+                    </td>
+                    <td>
+                      <a
+                        href="https://github.com/arvivares/statusline/blob/main/docs/security/code-signing-policy.md"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><span data-i18n="availability.windowsLink"
+                          >Windows signing status</span
+                        ><svg class="icon small" aria-hidden="true">
+                          <use href="#icon-external" /></svg
+                      ></a>
+                    </td>
+                  </tr>
+                  <tr data-availability-platform="android">
+                    <th scope="row">Android</th>
+                    <td>
+                      <span
+                        class="availability-status"
+                        data-i18n="availability.androidStatus"
+                        >IN TESTING</span
+                      >
+                      <p data-i18n="availability.androidFormats">
+                        Signed prerelease APKs. Google Play is in its
+                        closed-test process.
+                      </p>
+                    </td>
+                    <td>
+                      <p data-i18n="availability.androidRequirements">
+                        Android 6.0+. Companion and relay for sync; offline demo
+                        available.
+                      </p>
+                    </td>
+                    <td>
+                      <a
+                        href="https://github.com/arvivares/statusline/releases"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><span data-i18n="availability.androidLink"
+                          >Android releases</span
+                        ><svg class="icon small" aria-hidden="true">
+                          <use href="#icon-external" /></svg
+                      ></a>
+                    </td>
+                  </tr>
+                  <tr data-availability-platform="ios">
+                    <th scope="row">iPhone / iOS</th>
+                    <td>
+                      <span
+                        class="availability-status"
+                        data-i18n="availability.iosStatus"
+                        >LIMITED ACCESS</span
+                      >
+                      <p data-i18n="availability.iosFormats">
+                        TestFlight and App Store release process. Check the
+                        project for access.
+                      </p>
+                    </td>
+                    <td>
+                      <p data-i18n="availability.iosRequirements">
+                        iPhone with iOS 17+. Companion sync or manual /status
+                        entry; local demo available.
+                      </p>
+                    </td>
+                    <td>
+                      <a
+                        href="https://github.com/arvivares/statusline/tree/main/apps/apple"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><span data-i18n="availability.iosLink"
+                          >iPhone access</span
+                        ><svg class="icon small" aria-hidden="true">
+                          <use href="#icon-external" /></svg
+                      ></a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p
+              class="availability-scroll-hint"
+              data-i18n="availability.scrollHint"
+            >
+              Scroll horizontally to compare all columns.
+            </p>
+            <p class="availability-note" data-i18n="availability.note">
+              Availability follows each release and store review. Check the
+              project links for the latest status.
+            </p>
+          </div>
+          <div class="source-note reveal">
+            <svg class="icon" aria-hidden="true">
+              <use href="#icon-github" /></svg
+            ><span data-i18n="source.question">Rather build it yourself?</span
+            ><a
+              href="https://github.com/arvivares/statusline"
+              target="_blank"
+              rel="noopener noreferrer"
+              ><span data-i18n="source.link"
+                >The code is yours to explore.</span
+              >
+              <svg class="icon small" aria-hidden="true">
+                <use href="#icon-arrow" /></svg></a
+            ><a
+              class="mono source-license"
+              href="https://github.com/arvivares/statusline/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer license"
+              data-i18n="source.license"
+              >MIT LICENSE</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="section faq-section" aria-labelledby="faq-heading">
+        <div class="container faq-layout">
+          <div class="reveal">
+            <p class="eyebrow">
+              <span data-i18n="faq.eyebrow">05 / GOOD TO KNOW</span><i></i>
+            </p>
+            <h2 id="faq-heading" data-i18n="faq.heading">Good question.</h2>
+            <p data-i18n-html="faq.description">
+              A little more context<br />before you get started.
+            </p>
+            <a
+              class="text-link"
+              href="https://github.com/arvivares/statusline/blob/main/SUPPORT.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              ><span data-i18n="faq.help">Help center</span>
+              <svg class="icon small" aria-hidden="true">
+                <use href="#icon-external" /></svg
+            ></a>
+          </div>
+          <div class="faq-list reveal">
+            <details>
+              <summary data-i18n-html="faq.whatQuestion">
+                What exactly is Statusline?<span aria-hidden="true">+</span>
+              </summary>
+              <p data-i18n="faq.whatAnswer">
+                Statusline is an open source project that shows the quota for
+                your local Codex session: how much you have left, when it resets
+                and your short window. The companion lives on your desktop and
+                can sync an encrypted summary to your phone and its widgets.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n-html="faq.accountQuestion">
+                Do I need an API key or a new account?<span aria-hidden="true"
+                  >+</span
+                >
+              </summary>
+              <p data-i18n="faq.accountAnswer">
+                You don't need an API key or a Statusline account. For automatic
+                sync, install Codex CLI on your computer, sign in with ChatGPT
+                and pair the companion with your phone. On iPhone, you can also
+                paste a /status quota line manually. The local demo works
+                without a companion or an account.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n-html="faq.widgetQuestion">
+                Does the widget update in real time?<span aria-hidden="true"
+                  >+</span
+                >
+              </summary>
+              <p data-i18n="faq.widgetAnswer">
+                The widget shows the latest synced sample, saved in the local
+                cache. Update frequency depends on the companion, your
+                connection and iOS or Android restrictions. Check the update
+                timestamp to see how recent your quota reading is.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n-html="faq.agentsQuestion">
+                Does it work with other AI agents?<span aria-hidden="true"
+                  >+</span
+                >
+              </summary>
+              <p data-i18n="faq.agentsAnswer">
+                Codex is the complete integration today. The roadmap includes an
+                architecture for adding other agents, with AGY proposed as the
+                first additional adapter and Claude Code and GitHub Copilot
+                under research. These integrations aren't available yet.
+              </p>
+            </details>
+            <details>
+              <summary data-i18n-html="faq.officialQuestion">
+                Is this an official OpenAI product?<span aria-hidden="true"
+                  >+</span
+                >
+              </summary>
+              <p data-i18n="faq.officialAnswer">
+                No. Statusline is an independent project by Inmerzion. It is not
+                affiliated with, sponsored or endorsed by OpenAI. Codex, ChatGPT
+                and OpenAI are trademarks of their respective owners.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-top">
+          <a
+            class="brand"
+            href="#inicio"
+            aria-label="Statusline, back to top"
+            data-i18n-aria-label="footer.home"
+            ><span class="brand-symbol" aria-hidden="true"></span
+            ><span>statusline<span class="brand-period">.</span></span></a
+          >
+          <p data-i18n-html="footer.tagline">
+            One status line.<br />Your whole world connected.
+          </p>
+          <div class="footer-links">
+            <a
+              href="https://github.com/arvivares/statusline"
+              target="_blank"
+              rel="noopener noreferrer"
+              >GitHub
+              <svg class="icon small" aria-hidden="true">
+                <use href="#icon-external" /></svg></a
+            ><a
+              href="https://github.com/arvivares/statusline/blob/main/ROADMAP.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-i18n="footer.roadmap"
+              >Roadmap</a
+            ><a
+              href="https://statusline-relay.inmerzion.workers.dev/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-i18n="navigation.privacy"
+              >Privacy</a
+            ><a href="mailto:founder@inmerzion.io" data-i18n="footer.contact"
+              >Contact</a
+            >
+          </div>
+        </div>
+        <div
+          class="footer-wordmark"
+          aria-hidden="true"
+          data-i18n-html="footer.wordmark"
+        >
+          stay in the flow<span>.</span>
+        </div>
+        <div class="footer-bottom">
+          <span
+            ><span data-i18n="footer.credit"
+              >© 2026 Statusline · A project by</span
+            >
+            <a
+              href="https://inmerzion.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Inmerzion ↗</a
+            ></span
+          ><span data-i18n="footer.independent"
+            >Independent. Not affiliated with OpenAI.</span
+          ><button
+            class="motion-toggle mono"
+            type="button"
+            aria-pressed="false"
+          >
+            <span class="status-dot"></span
+            ><span id="motion-label">PAUSE ANIMATION</span>
+          </button>
+        </div>
+      </div>
+    </footer>
+
+    <svg
+      class="svg-definitions"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <symbol id="icon-arrow" viewBox="0 0 24 24">
+          <path d="M4 12h16m-6-6 6 6-6 6" />
+        </symbol>
+        <symbol id="icon-external" viewBox="0 0 24 24">
+          <path d="M6 18 18 6M6 6h12v12" />
+        </symbol>
+        <symbol id="icon-down" viewBox="0 0 24 24">
+          <path d="M12 4v16m-6-6 6 6 6-6" />
+        </symbol>
+        <symbol id="icon-play" viewBox="0 0 24 24">
+          <path d="m9 5 10 7-10 7Z" />
+        </symbol>
+        <symbol id="icon-lock" viewBox="0 0 24 24">
+          <rect x="5" y="10" width="14" height="11" rx="2" />
+          <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2" />
+        </symbol>
+        <symbol id="icon-link" viewBox="0 0 24 24">
+          <path
+            d="m9 15 6-6m-7 4-2 2a3.5 3.5 0 0 0 5 5l3-3a3.5 3.5 0 0 0 0-5m2-1 2-2a3.5 3.5 0 0 0-5-5L10 7a3.5 3.5 0 0 0 0 5"
+          />
+        </symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+          <path d="M4 6h8m4 0h4M4 12h2m4 0h10M4 18h11m4 0h1" />
+          <circle cx="14" cy="6" r="2" />
+          <circle cx="8" cy="12" r="2" />
+          <circle cx="17" cy="18" r="2" />
+        </symbol>
+        <symbol id="icon-sliders" viewBox="0 0 24 24">
+          <path d="M4 6h8m4 0h4M4 18h3m4 0h9" />
+          <circle cx="14" cy="6" r="2" />
+          <circle cx="9" cy="18" r="2" />
+        </symbol>
+        <symbol id="icon-github" viewBox="0 0 24 24">
+          <path
+            d="M9 19c-4.3 1.3-4.3-2-6-2.5M15 22v-3.3c0-.9-.1-1.5-.5-2 3.3-.4 6.5-1.6 6.5-7a5.4 5.4 0 0 0-1.5-3.8 5 5 0 0 0-.1-3.8s-1.2-.4-3.9 1.5a13 13 0 0 0-7 0C5.8 1.7 4.6 2.1 4.6 2.1A5 5 0 0 0 4.5 6 5.4 5.4 0 0 0 3 9.7c0 5.4 3.2 6.6 6.5 7-.4.5-.5 1.1-.5 2V22"
+          />
+        </symbol>
+        <symbol id="icon-apple" viewBox="0 0 24 24">
+          <path
+            d="M16.6 2c0 1.8-1.5 3.8-3.6 4 0-2 1.7-3.7 3.6-4ZM20.5 17c-1.1 2.7-2.6 5-4.6 5-1.3 0-1.7-.8-3.4-.8s-2.3.8-3.5.8C6 22 3 17.1 3 12.7 3 9 5.2 7 7.7 7c1.7 0 3 1 4.3 1 1.2 0 3-1.1 4.6-1 1.7 0 3.2.8 4.1 2-3.6 1.9-3.5 6.3-.2 8Z"
+          />
+        </symbol>
+        <symbol id="icon-windows" viewBox="0 0 24 24">
+          <path
+            d="m3 5 8-1v7H3Zm10-1.3L22 2v9h-9ZM3 13h8v7l-8-1Zm10 0h9v9l-9-1.7Z"
+          />
+        </symbol>
+        <symbol id="icon-terminal" viewBox="0 0 24 24">
+          <rect x="2" y="4" width="20" height="16" rx="3" />
+          <path d="m6 9 3 3-3 3m7 0h5" />
+        </symbol>
+        <symbol id="icon-phone" viewBox="0 0 24 24">
+          <rect x="6" y="2" width="12" height="20" rx="3" />
+          <path d="M10 5h4m-3 14h2" />
+        </symbol>
+        <symbol id="icon-android" viewBox="0 0 24 24">
+          <path
+            d="m6 3 2 3m10-3-2 3M4 13V9a8 5 0 0 1 16 0v4H4Zm0 2v4h16v-4M8 19v3m8-3v3M1 11v6m22-6v6M8 10h.01M16 10h.01"
+          />
+        </symbol>
+        <symbol id="icon-activity" viewBox="0 0 24 24">
+          <path d="M2 12h4l3-8 6 16 3-8h4" />
+        </symbol>
+        <symbol id="icon-grid" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+        </symbol>
+        <symbol id="icon-command" viewBox="0 0 24 24">
+          <path
+            d="M9 7V5a2 2 0 1 0-2 2h10a2 2 0 1 0-2-2v14a2 2 0 1 0 2-2H7a2 2 0 1 0 2 2V7Z"
+          />
+        </symbol>
+        <symbol id="icon-code" viewBox="0 0 24 24">
+          <path d="m7 6-6 6 6 6m10-12 6 6-6 6M14 3l-4 18" />
+        </symbol>
+        <symbol id="icon-monitor" viewBox="0 0 24 24">
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <path d="M8 22h8m-4-5v5M8 8l-2 2 2 2m8-4 2 2-2 2" />
+        </symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24">
+          <path d="m5 12 4 4L19 6" />
+        </symbol>
+      </defs>
+    </svg>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

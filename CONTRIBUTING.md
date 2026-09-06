@@ -21,16 +21,23 @@ The repository is a multi-platform monorepo. Start with the
 [documentation index](docs/README.md) and [universal setup guide](SETUP.md), then use the
 component-specific commands below.
 
-| Component     | Validation command                                                                     |
-| ------------- | -------------------------------------------------------------------------------------- |
-| Desktop       | `cd apps/desktop && npm ci && npm run release:check`                                   |
-| Relay         | `cd services/relay && npm ci && npm run db:migrate:local && npm test && npm run check` |
-| Android       | `cd apps/android && ./gradlew testDebugUnitTest lintDebug assembleDebug`               |
-| Apple         | Open `apps/apple/statusline.xcodeproj` and run the relevant Xcode test scheme          |
-| Documentation | `node scripts/check-markdown-links.mjs`                                                |
+| Component     | Validation command                                                                                    |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| Desktop       | `cd apps/desktop && npm ci && npm run release:check`                                                  |
+| Relay         | `cd services/relay && npm ci && npm run db:migrate:local && npm test && npm run check`                |
+| Website       | `cd apps/web && npm ci && npm run check && npm run format:check && npm run build && npm run test:seo` |
+| Android       | `cd apps/android && ./gradlew testDebugUnitTest lintDebug assembleDebug`                              |
+| Apple         | Open `apps/apple/statusline.xcodeproj` and run the relevant Xcode test scheme                         |
+| Documentation | `node scripts/check-markdown-links.mjs`                                                               |
 
 Node, Java and Rust versions are pinned at the repository root. Platform-specific native
 requirements are documented in each application directory.
+
+The [website guide](apps/web/README.md) covers local development, bilingual content
+and deployment prerequisites. Changes to its CI scope or required-check policy
+must also pass `node --test scripts/website-ci.test.mjs` from the repository root.
+The always-reported **Website validation** check is required on `main`; unrelated
+pull requests skip the website build without bypassing scope detection.
 
 ## Making a change
 

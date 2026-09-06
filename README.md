@@ -245,6 +245,20 @@ npm run release:check
 Run `npm run dev` for browser-based interface previews, or `npm run tauri dev` for the
 native companion.
 
+### Presentation website
+
+The standalone [website](apps/web/README.md) targets
+[statusline.inmerzion.io](https://statusline.inmerzion.io). It uses local assets and
+explicit sample data, without a relay backend.
+
+```shell
+cd apps/web
+npm ci
+npm run dev -- --port 4173
+```
+
+Run `npm run check`, `npm run format:check` and `npm run build` before publishing.
+
 ### Relay
 
 ```shell
@@ -320,6 +334,7 @@ workflows may generate explicitly unsigned artifacts for private QA only.
 | `apps/desktop/`                       | Tauri companion for Windows, Linux and macOS               |
 | `apps/android/`                       | Android app, QR scanner, widget and Play Store kit         |
 | [`apps/apple/`](apps/apple/README.md) | Xcode project for iPhone, WidgetKit and native macOS       |
+| [`apps/web/`](apps/web/README.md)     | Static presentation website and Docker/Nginx deployment    |
 | `services/relay/`                     | Worker, D1 adapter, rate limiting and public pages         |
 | `protocol/`                           | Versioned protocol, fixtures and interoperability examples |
 | `localization/`                       | Shared English/Spanish messages and locale test cases      |
