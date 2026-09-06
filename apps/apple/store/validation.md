@@ -1,6 +1,6 @@
 # iOS release validation
 
-This file records reproducible readiness evidence without storing credentials or personal account data. The 2–3 September evidence applies to `1.0 (2)`; the separate 6 September section tracks the localized `1.0 (3)` TestFlight candidate.
+This file records reproducible readiness evidence without storing credentials or personal account data. The 2–3 September evidence applies to `1.0 (2)`; the separate 6 September sections track the localized `1.0 (3)` and unified-brand `1.0 (4)` TestFlight candidates.
 
 ## Passed — builds 1 and 2, 2–3 September 2026
 
@@ -100,12 +100,49 @@ This file records reproducible readiness evidence without storing credentials or
   not a claim that the app was launched or the full XCTest suite executed on a
   physical device during this upload. EN/ES test instructions are in `testflight/`.
 
+## Unified-brand candidate — 6 September 2026
+
+- Built `1.0 (4)` from signed preparation commit
+  `26219fe2e67c577cf3652b2bb2a6716b0be3eb78`. Protected-branch PR `16` merged
+  the identical tree as `377b3ab4eef5a6e898252868341382e0e6b1e1a1`, the target
+  of the GitHub-verified signed tag `v0.1.12`.
+- Release checks passed before archiving: 57 desktop tests, TypeScript,
+  formatting, 189 local Markdown links and all 403 EN/ES messages. The Xcode
+  project passed property-list validation; PR CI also passed Android tests/lint.
+- Reused Xcode derived data and produced one iPhone Release archive, then
+  exported and uploaded that same archive without recompiling. App and widget
+  report `1.0 (4)`; the app retains the production HTTPS relay origin, iPhone-only
+  device family, minimum iOS 17 and the unified icon.
+- Both archived and exported bundles passed 403 compiled-message checks in
+  English, Spanish and French fallback, plus all 16 locale-resolution cases.
+- Exported with Apple Distribution for team `F3HRL896HJ`. Signature verification
+  passed outside the filesystem sandbox. Both signed bundles retain the App Group,
+  `get-task-allow=false` and `beta-reports-active=true`.
+- Local exported IPA SHA-256:
+  `6da77f4e5110ed3d70f92b9a45fc4cb848299f289956b45607150c0c047198ff`.
+  Upload export may re-sign the package and need not retain that local checksum.
+- Xcode reported **Upload succeeded**. App Store Connect completed processing
+  and reports **Validated**, build `4`, **English, Spanish**, **iPhone**, symbols
+  included and no non-exempt encryption. The console records the upload on
+  6 September at approximately 5:15–5:16 AM in its displayed time zone.
+- Saved the 1,180-character Spanish What to Test instructions and verified the
+  persisted text after reloading. The English equivalent remains versioned for
+  a future English TestFlight metadata localization.
+- Confirmed `Internal QA` has four builds and lists `1.0 (4)` as **Testing**,
+  expiring in 90 days, with one installed account-holder tester. The global
+  **Ready to Submit** label refers to external beta review, not internal access.
+- No external group was added to build `4`, and no App Review submission,
+  review notes, availability, pricing or release-mode setting was changed.
+- Physical-device QA for build `4` remains pending; archive validation and
+  TestFlight processing do not establish runtime or widget correctness.
+
 ## Remaining follow-ups
 
-- Install `1.0 (3)` through TestFlight on the physical iPhone and validate English,
-  Spanish, unsupported-language fallback, the widget and preservation of pairing.
+- Install `1.0 (4)` through TestFlight on the physical iPhone and validate the new
+  icon, English, Spanish, unsupported-language fallback, the widget and preservation
+  of pairing.
 - After that QA, obtain explicit authorization before replacing the queued
-  `1.0 (2)` App Store submission or distributing build `3` externally. Refresh
+  `1.0 (2)` App Store submission or distributing build `4` externally. Refresh
   reviewer notes and localized listing assets when selecting the localized build.
 - Wait for App Review's decision on the corrected `1.0 (2)` submission sent on
   6 September unless its replacement is subsequently authorized.
