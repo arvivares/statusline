@@ -1,0 +1,26 @@
+# Statusline
+
+> Statusline is an independent open-source companion for viewing Codex quota and reset times on desktop, mobile apps and widgets.
+
+The desktop companion reads usage metadata from the local Codex session. Optional
+mobile synchronization uses end-to-end encrypted quota snapshots. Statusline is
+not affiliated with, sponsored by or endorsed by OpenAI.
+
+## Website
+
+- [Statusline — English](https://statusline.inmerzion.io/): Project overview, features and download links.
+- [Statusline — Español](https://statusline.inmerzion.io/es/): Project overview in Spanish.
+
+## Project and documentation
+
+- [Source repository](https://github.com/arvivares/statusline): Source code and project overview.
+- [Releases](https://github.com/arvivares/statusline/releases): Published downloads and release notes.
+- [Documentation index](https://github.com/arvivares/statusline/blob/main/docs/README.md): Architecture, operations, release and security documentation.
+- [Setup guide](https://github.com/arvivares/statusline/blob/main/SETUP.md): Installation and configuration instructions in Spanish.
+- [MIT license](https://github.com/arvivares/statusline/blob/main/LICENSE): License terms for the project.
+
+## Support and privacy
+
+- [Support](https://statusline-relay.inmerzion.workers.dev/support): Public support information.
+- [Troubleshooting](https://github.com/arvivares/statusline/blob/main/SUPPORT.md): Installation, pairing and usage troubleshooting.
+- [Privacy policy](https://statusline-relay.inmerzion.workers.dev/privacy): Data handling, encrypted synchronization and retention.
