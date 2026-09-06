@@ -4,14 +4,33 @@
 set -euo pipefail
 [[ $# -eq 1 ]] || { echo 'Usage: smoke-frontend-linux.sh <executable-or-AppImage>' >&2; exit 2; }
 [[ $(uname -s) == Linux && $(id -u) != 0 ]] || { echo 'Use a non-root Linux user.' >&2; exit 1; }
-for tool in realpath setsid dbus-run-session xvfb-run pgrep; do
+for tool in realpath readlink setsid dbus-run-session xvfb-run pgrep; do
   command -v "$tool" >/dev/null || { echo "Missing tool: $tool" >&2; exit 1; }
 done
 executable=$(realpath -- "$1")
 [[ -f $executable && -x $executable ]] || { echo 'Expected an executable file.' >&2; exit 1; }
 process_status=0
-pgrep -u "$(id -u)" -f '(^|/)statusline-desktop([[:space:]]|$)' >/dev/null || process_status=$?
-[[ $process_status == 1 ]] || { echo 'Quit Statusline first, or investigate the failed process check.' >&2; exit 1; }
+candidate_pids=$(pgrep -u "$(id -u)" -f '(^|/)statusline-desktop([[:space:]]|$)') || process_status=$?
+[[ $process_status == 0 || $process_status == 1 ]] || { echo 'The Statusline process check failed.' >&2; exit 1; }
+if [[ $process_status == 0 ]]; then
+  [[ -n $candidate_pids ]] || { echo 'The process check returned no candidate IDs.' >&2; exit 1; }
+  while IFS= read -r candidate_pid; do
+    [[ $candidate_pid =~ ^[1-9][0-9]*$ ]] || { echo 'Invalid process candidate ID.' >&2; exit 1; }
+    # pgrep -f also matches THIS harness when the DEB binary path is an
+    # argument. Confirm the actual executable, not words in a shell command.
+    if candidate_exe=$(readlink -- "/proc/$candidate_pid/exe"); then
+      case "$candidate_exe" in
+        */statusline-desktop|*/statusline-desktop\ \(deleted\))
+          echo 'Quit Statusline first; its executable is already running.' >&2
+          exit 1
+          ;;
+      esac
+    elif kill -0 "$candidate_pid" 2>/dev/null; then
+      echo 'Cannot inspect a live process candidate; refusing to overlap instances.' >&2
+      exit 1
+    fi
+  done <<< "$candidate_pids"
+fi
 umask 077
 smoke_directory=$(mktemp -d "${TMPDIR:-/tmp}/statusline-frontend-smoke.XXXXXX")
 mkdir "$smoke_directory/config" "$smoke_directory/data" "$smoke_directory/cache"

@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
+  copyFile,
   mkdir,
   mkdtemp,
   readFile,
@@ -33,7 +34,10 @@ async function fixture(extra = {}) {
   const mocks = {
     uname: 'echo "${FIXTURE_OS:-Linux}"',
     id: 'echo "${FIXTURE_UID:-1000}"',
-    pgrep: 'exit "${FIXTURE_PGREP:-1}"',
+    pgrep:
+      'if [[ ${FIXTURE_PGREP:-1} == 0 ]]; then printf "1234\\n"; fi; exit "${FIXTURE_PGREP:-1}"',
+    readlink:
+      'if [[ ${FIXTURE_READLINK:-ok} == fail ]]; then exit 1; fi; printf "%s\\n" "${FIXTURE_EXE:-/usr/bin/bash}"',
     setsid: 'exec "$@"',
     "dbus-run-session": 'shift; exec "$@"',
     "xvfb-run": 'shift; exec "$@"',
@@ -146,12 +150,66 @@ describe.skipIf(process.platform === "win32")(
     it.each([
       { FIXTURE_OS: "Darwin" },
       { FIXTURE_UID: "0" },
-      { FIXTURE_PGREP: "0" },
+      { FIXTURE_PGREP: "0", FIXTURE_EXE: "/usr/bin/statusline-desktop" },
       { FIXTURE_PGREP: "2" },
     ])("guards the environment before launch: %j", async (environment) => {
       const f = await fixture(environment);
       expect(run(f).status).toBe(1);
       expect(await readdir(f.logs)).toEqual([]);
     });
+
+    it("ignores a shell harness whose arguments contain the target executable", async () => {
+      const result = run(
+        await fixture({ FIXTURE_PGREP: "0", FIXTURE_EXE: "/usr/bin/bash" }),
+      );
+      expect(result.status, result.stderr).toBe(0);
+    });
+
+    it("still rejects a running deleted Statusline executable", async () => {
+      const result = run(
+        await fixture({
+          FIXTURE_PGREP: "0",
+          FIXTURE_EXE: "/usr/bin/statusline-desktop (deleted)",
+        }),
+      );
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("already running");
+    });
+
+    it("fails closed when a live candidate cannot be inspected", async () => {
+      const result = run(
+        await fixture({ FIXTURE_PGREP: "0", FIXTURE_READLINK: "fail" }),
+      );
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        "Cannot inspect a live process candidate",
+      );
+    });
+
+    it.skipIf(process.platform !== "linux" || process.getuid?.() === 0)(
+      "regression: real Linux pgrep sees the harness but /proc identifies bash",
+      async () => {
+        const f = await fixture();
+        const executable = join(temporary, "statusline-desktop");
+        const calls = join(temporary, "proc-inspections");
+        await copyFile(f.executable, executable);
+        // Use procps and /proc for real; only the app/display/process-group boundary
+        // remains simulated. This catches the CI failure before any Rust build.
+        await rm(join(temporary, "bin/pgrep"));
+        await rm(join(temporary, "bin/id"));
+        await writeFile(
+          join(temporary, "bin/readlink"),
+          '#!/usr/bin/env bash\nprintf "%s\\n" "$*" >> "$FIXTURE_READLINK_CALLS"\nexec /usr/bin/readlink "$@"\n',
+          { mode: 0o755 },
+        );
+        const result = run({
+          ...f,
+          executable,
+          env: { ...f.env, FIXTURE_READLINK_CALLS: calls },
+        });
+        expect(result.status, result.stderr).toBe(0);
+        expect(await readFile(calls, "utf8")).toMatch(/\/proc\/\d+\/exe/);
+      },
+    );
   },
 );
