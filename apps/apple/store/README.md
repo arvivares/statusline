@@ -68,11 +68,12 @@ upload/validation evidence is tracked in `validation.md`.
 
 Build `1.0 (4)` packages the unified segmented Statusline icon from `v0.1.12`,
 retaining the English/Spanish app and widget behavior introduced in build `3`.
-The app and extension build numbers are advanced together. This candidate is
-prepared for manual upload and internal TestFlight testing; preparing the source
-does not mean that Apple has processed it or that physical QA has passed.
+The app and extension build numbers are advanced together. A single archive was
+exported, validated and manually uploaded. App Store Connect reports **Validated**
+and `Internal QA` lists `1.0 (4)` as **Testing**. Physical-device QA remains pending.
 
-The current What to Test files in `testflight/` target build `4`. Verify the new
+The current What to Test files in `testflight/` target build `4`; the Spanish notes
+are saved in App Store Connect and verified after reloading. Verify the new
 Home Screen and Settings icon, then recheck localization, pairing persistence and
 widget updates on a physical iPhone. Do not replace the waiting build `2` App Store
 submission or change its review metadata as part of this internal test.
