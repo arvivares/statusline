@@ -10,13 +10,13 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- product tag: `v0.1.12`;
-- desktop and Android code version: `0.1.12`;
-- Android generated build: `versionCode 8` (Google Play submission is separate);
+- product tag: `v0.1.13`;
+- desktop and Android code version: `0.1.13`;
+- Android generated build: `versionCode 9` (Google Play submission is separate);
 - iOS source/TestFlight candidate: `1.0 (4)`, distributed manually through App Store
   Connect. The existing App Store submission remains `1.0 (2)`.
-- GitHub prerelease platforms: Linux, macOS and Android. Windows is deferred until
-  SignPath Foundation onboarding is complete.
+- GitHub prerelease platforms: Windows, Linux, macOS and Android. Windows explicitly
+  uses `windowsSigning: unsigned-preview` while SignPath onboarding is pending.
 
 The release preflight rejects drift between this file, npm, Cargo, Tauri, Gradle and the
 Xcode project.
@@ -40,19 +40,27 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.12`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.13`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
-| Platform | Required assets                                           |
-| -------- | --------------------------------------------------------- |
-| Linux    | DEB, RPM, AppImage and one `.asc` signature per installer |
-| macOS    | Universal DMG, universal PKG                              |
-| Android  | Signed APK, signed AAB                                    |
+| Platform | Required assets                                            |
+| -------- | ---------------------------------------------------------- |
+| Windows  | NSIS `.unsigned.exe` and MSI `.unsigned.msi` beta previews |
+| Linux    | DEB, RPM, AppImage and one `.asc` signature per installer  |
+| macOS    | Universal DMG, universal PKG                               |
+| Android  | Signed APK, signed AAB                                     |
 
-The Windows NSIS `.exe` and MSI are deliberately absent from this prerelease. When
-SignPath is approved, add `windows` to `distribution.githubReleasePlatforms`, remove its
-deferred status and release a new version. The same finalizer will then require exactly
-both Windows installers as well; an unsigned fallback is impossible.
+Windows is included without Authenticode under an explicit beta-only policy. CI checks
+`NotSigned` status on the application and both installers and requires successful install,
+frontend/Codex-discovery and uninstall smoke tests before uploading them. The finalizer
+adds `.unsigned` to their names and records `windowsSigning` in the manifest; release notes
+must disclose unsigned status and SmartScreen limitations. Signed checksums and provenance
+authenticate integrity, not Windows publisher trust. Never disable security protections.
+
+When SignPath is approved, set `distribution.windowsSigning` to `signpath` in a reviewed
+commit and release a new version. Both executable and installer signing stages then become
+mandatory, with no fallback to preview mode on failure. Other platform signing gates are
+unchanged. The current full release has nine installers and 16 total downloadable assets.
 
 It also creates `RELEASE-MANIFEST.json`, `SHA256SUMS.txt`,
 `SHA256SUMS.txt.asc` and includes the Linux public key. The generated manifest binds every
@@ -90,15 +98,15 @@ signature stops the run before release assets are uploaded.
 ## Creating the candidate
 
 Do not create the tag until the manual **Release** workflow preflight succeeds. For the
-current profile this validates Linux, macOS, Android and relay configuration without
+current profile this validates the explicit Windows preview policy, Linux, macOS, Android and relay configuration without
 requiring the still-unassigned SignPath values. From a clean `main` checkout whose commit
 is verified on GitHub:
 
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.12 -m "Statusline 0.1.12 beta"
-git push origin v0.1.12
+git tag -s v0.1.13 -m "Statusline 0.1.13 beta"
+git push origin v0.1.13
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -143,6 +151,7 @@ gh attestation verify "<downloaded-asset>" --repo arvivares/statusline
 
 Also run [Revalidate desktop installers](../../.github/workflows/desktop-installer-smoke.yml)
 against the release workflow run ID and its successful attempt number, then complete
-clean-machine installation on Ubuntu/Debian, Fedora, Apple Silicon and Intel macOS. Once
-Windows joins the enabled profile, add clean Windows 11 installation and SmartScreen
-validation. Never publish or replace an asset copied from a different run or commit.
+clean-machine installation on Ubuntu/Debian, Fedora, Apple Silicon and Intel macOS. For
+the Windows preview, add clean Windows 11 installation and record the SmartScreen
+result without disabling security protections. Never publish or replace an asset copied
+from a different run or commit.

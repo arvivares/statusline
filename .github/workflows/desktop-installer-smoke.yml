@@ -119,10 +119,14 @@ jobs:
         working-directory: apps/desktop
 
   linux:
-    name: Linux installer smoke
+    name: Linux installer smoke (${{ matrix.runner }})
     needs: validate-inputs
     if: inputs.platform == 'linux' || inputs.platform == 'all'
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-22.04, ubuntu-24.04]
     timeout-minutes: 10
 
     steps:
@@ -135,7 +139,13 @@ jobs:
         shell: bash
         run: |
           bash -n apps/desktop/scripts/smoke-installers-linux.sh
+          bash -n apps/desktop/scripts/smoke-frontend-linux.sh
           bash -n apps/desktop/scripts/verify-linux-signatures.sh
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
 
       - name: Install Linux smoke-test dependencies
         run: |
@@ -143,9 +153,15 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             dbus-x11 \
             file \
-            libfuse2 \
+            libegl1 \
+            libgl1-mesa-dri \
+            libwayland-client0 \
+            libwayland-server0 \
+            libwayland-cursor0 \
+            libwayland-egl1 \
             gnupg \
             rpm \
+            xauth \
             xvfb
 
       - name: Download Linux installers

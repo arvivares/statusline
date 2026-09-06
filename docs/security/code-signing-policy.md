@@ -1,8 +1,29 @@
 # Code signing policy
 
-Statusline has selected SignPath Foundation as the trust provider for public Windows releases. SignPath onboarding is still in progress. The repository-side two-stage integration is prepared, but no public Windows release can run until SignPath assigns and validates the real organization, project, policy and artifact-configuration identifiers. Until the integration has been accepted and independently validated, Windows artifacts are unsigned QA builds and must not be represented as officially signed releases.
+Statusline has selected SignPath Foundation as the trust provider for Authenticode-signed
+Windows releases. Onboarding is still in progress. Starting with 0.1.13, the maintainer
+explicitly permits public **unsigned Windows beta previews**, identified by the
+`unsigned-preview` policy in `release.json`. They are not Authenticode-signed releases.
+The two-stage SignPath integration remains prepared for the provider-assigned values.
 
 Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+
+## Temporary unsigned Windows beta policy
+
+- Only `channel: beta` and `publishPrerelease: true` permit `windowsSigning: unsigned-preview`.
+  Missing or unknown policies fail closed; there is no automatic signing fallback.
+- The source commit and annotated release tag are signed. Windows CI checks that the
+  application, NSIS and MSI report `NotSigned`, then tests installation, frontend
+  readiness, Codex discovery and uninstallation before uploading the candidate.
+- Public Windows filenames contain `.unsigned`. The release notes and provenance
+  manifest explicitly record the policy. Signed SHA-256 checksums and GitHub build
+  attestations cover both installers, but are **not substitutes for Authenticode**.
+- SmartScreen or organizational policy may warn or block these previews. Users should
+  not disable security protections to install them. Signed publication remains preferred.
+- Linux OpenPGP signatures, Apple signing/notarization and Android signing remain
+  mandatory. The exception does not extend to those platforms or stable releases.
+- Once SignPath is approved, change `windowsSigning` to `signpath` in a reviewed commit
+  and publish a new version. Never silently replace a published preview with new bytes.
 
 ## Signed artifact scope
 
@@ -26,7 +47,7 @@ Once onboarding is complete, every signed Windows release must follow this proce
 6. The signed application executable is used to produce the NSIS and MSI installers without recompiling the application.
 7. Both installers are uploaded through the same trusted workflow and submitted for final Authenticode signing.
 8. CI verifies the signer, SHA-256 Authenticode signature and trusted timestamp on the application, NSIS installer and MSI before running installation smoke tests.
-9. The unified release finalizer verifies the complete platform profile, creates signed checksums and GitHub build-provenance attestations, then publishes only verified artifacts as a prerelease. Windows cannot be enabled in that profile until every preceding SignPath gate succeeds.
+9. The unified release finalizer verifies the complete platform profile, creates signed checksums and GitHub build-provenance attestations, then publishes only verified artifacts as a prerelease. In `signpath` mode every preceding SignPath gate must succeed.
 
 A signing failure is fail-closed: the workflow must not publish or silently substitute an unsigned Windows artifact.
 

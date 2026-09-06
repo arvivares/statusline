@@ -28,6 +28,7 @@ jobs:
     outputs:
       desktop_platform: ${{ steps.metadata.outputs.desktop_platform }}
       include_windows: ${{ steps.metadata.outputs.include_windows }}
+      sign_windows: ${{ steps.metadata.outputs.sign_windows }}
       version: ${{ steps.metadata.outputs.version }}
 
     steps:
@@ -78,6 +79,10 @@ jobs:
           version=$(node -p "require('./release.json').version")
           expected_tag=$(node -p "require('./release.json').tag")
           release_platforms=$(node -p "require('./release.json').distribution.githubReleasePlatforms.join(',')")
+          windows_policy=$(node apps/desktop/scripts/windows-release-policy.mjs)
+          sign_windows=false
+          [[ "$windows_policy" != signpath ]] || sign_windows=true
+          echo "sign_windows=$sign_windows" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           if [[ "$expected_tag" != "v$version" ]]; then
             echo "release.json tag must be v$version." >&2
@@ -153,7 +158,7 @@ jobs:
           ANDROID_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
           ANDROID_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
           ANDROID_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
-          INCLUDE_WINDOWS: ${{ steps.metadata.outputs.include_windows }}
+          SIGN_WINDOWS: ${{ steps.metadata.outputs.sign_windows }}
         run: |
           set -euo pipefail
           missing=()
@@ -173,7 +178,7 @@ jobs:
             ANDROID_UPLOAD_KEY_ALIAS
             ANDROID_UPLOAD_KEY_PASSWORD
           )
-          if [[ "$INCLUDE_WINDOWS" == true ]]; then
+          if [[ "$SIGN_WINDOWS" == true ]]; then
             required_values+=(
               SIGNPATH_API_TOKEN
               SIGNPATH_ORGANIZATION_ID
@@ -255,7 +260,7 @@ jobs:
     uses: ./.github/workflows/desktop-installers.yml
     with:
       platform: ${{ needs.preflight.outputs.desktop_platform }}
-      sign_windows: ${{ needs.preflight.outputs.include_windows == 'true' }}
+      sign_windows: ${{ needs.preflight.outputs.sign_windows == 'true' }}
       sign_macos: true
       sign_linux: true
       release: true

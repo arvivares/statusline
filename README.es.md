@@ -77,12 +77,15 @@ Las descargas permanentes se publican en [GitHub Releases](https://github.com/ar
 La entrada actual `windows-bootstrap-v0.1.6` es una preview de Windows explícitamente sin
 firma para el onboarding de SignPath Foundation; no es la beta pública para usuarios.
 
-El tag firmado `v0.1.12` publica la prerelease con identidad unificada en inglés/español con
+El tag firmado `v0.1.13` publica la corrección de arranque de AppImage y conserva la
+interfaz unificada en inglés/español. La prerelease incluye previews NSIS/MSI de Windows,
 DEB/RPM/AppImage, DMG/PKG universal y APK/AAB firmados. El inventario, checksums, controles
 de confianza y attestations de procedencia deben aprobarse antes de hacerla pública.
-Windows permanece en su preview de onboarding sin firma hasta la aprobación de SignPath
-Foundation; se incorporará a la release unificada cuando Authenticode esté operativo. Los
-artefactos de Actions son resultados temporales de QA y nunca se presentan como releases.
+**Los instaladores Windows son previews sin firma Authenticode** mientras se completa
+SignPath Foundation; sus nombres incluyen `.unsigned` y SmartScreen puede advertir o
+bloquear la instalación. Los checksums firmados y la procedencia de GitHub verifican
+integridad, no la confianza del editor en Windows. No desactives las protecciones de
+Windows. Los artefactos de Actions son resultados temporales de QA, no releases.
 
 Consulta el [runbook de release pública](docs/release/release-runbook.md) para ver el
 inventario exacto, la configuración SignPath y los comandos de verificación.
@@ -339,7 +342,11 @@ Consulta la [política de privacidad](PRIVACY.md), la [revisión de seguridad](d
 
 Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 
-Statusline ha seleccionado SignPath Foundation para las releases públicas de Windows. La incorporación todavía está en curso: hasta que la integración y la verificación independiente estén completas, los artefactos Windows son builds de QA sin firma y no se presentan como releases oficiales firmadas.
+Statusline ha seleccionado SignPath Foundation para firmar Windows. Mientras se completa
+la incorporación, la beta permite explícitamente previews públicas sin Authenticode;
+nunca se presentan como instaladores firmados. La política `unsigned-preview` sólo
+permite prereleases beta. Cambiar a `signpath` exige ambas etapas de firma y verificación,
+sin fallback si falla el proveedor. Linux, macOS y Android mantienen su firma obligatoria.
 
 El flujo de dos etapas del repositorio ya está preparado y espera únicamente los valores
 reales del proyecto y el token que proporcionará SignPath.
@@ -415,7 +422,7 @@ Las dependencias y salidas de build (`node_modules`, `target`, `dist`, `.gradle`
 - Las apps móviles refrescan al abrirse o por acción del usuario. APNs/FCM todavía no señalizan snapshots en segundo plano.
 - El relay autohospedado para Linux está diseñado, pero su imagen y adaptador persistente aún no están publicados.
 - El updater integrado de Tauri todavía no está habilitado.
-- La firma Authenticode de Windows está en proceso de incorporación con SignPath Foundation; los builds manuales sin firma son sólo para pruebas.
+- La firma Authenticode de Windows espera a SignPath Foundation; las previews públicas `.unsigned` son para pruebas y pueden activar SmartScreen.
 - iOS requiere un proceso de distribución manual desde Xcode.
 
 ## Soporte

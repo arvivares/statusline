@@ -190,7 +190,7 @@ const repository = "https://github.com/arvivares/statusline";
 const platformLinks: Record<Platform, string> = {
   macos: `${repository}/releases`,
   linux: `${repository}/releases`,
-  windows: `${repository}/blob/main/docs/security/code-signing-policy.md`,
+  windows: `${repository}/releases`,
   android: `${repository}/releases`,
   ios: `${repository}/tree/main/apps/apple`,
 };

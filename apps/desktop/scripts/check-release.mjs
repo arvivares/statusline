@@ -3,6 +3,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { windowsReleasePolicy } from "./windows-release-policy.mjs";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -113,6 +114,8 @@ const smokeWorkflow = readText(
   "../../.github/workflows/desktop-installer-smoke.yml",
 );
 const windowsSmokeScript = readText("scripts/smoke-installers-windows.ps1");
+const linuxSmokeScript = readText("scripts/smoke-installers-linux.sh");
+const linuxFrontendSmokeScript = readText("scripts/smoke-frontend-linux.sh");
 const linuxSigningPreparationScript = readText(
   "scripts/prepare-linux-signing.sh",
 );
@@ -288,6 +291,7 @@ const releasePlatformProfile = Array.isArray(githubReleasePlatforms)
 const isUnixPreviewProfile = releasePlatformProfile === "linux,macos,android";
 const isCompleteProfile =
   releasePlatformProfile === "windows,linux,macos,android";
+const windowsSigning = windowsReleasePolicy(releaseMetadata);
 assert(
   uniqueVersions.size === 1 && !uniqueVersions.has(undefined),
   `versions differ: ${Object.entries(versions)
@@ -332,6 +336,23 @@ assert(
     (!isUnixPreviewProfile ||
       releaseNotes.includes("Windows is not included in this prerelease")),
   "the current release needs curated notes with verification and limitations",
+);
+assert(
+  windowsSigning !== "unsigned-preview" ||
+    (releaseNotes.includes("unsigned") &&
+      releaseNotes.includes("SmartScreen") &&
+      releaseNotes.includes("Authenticode")),
+  "unsigned Windows prereleases must disclose Authenticode and SmartScreen limitations",
+);
+assert(
+  releaseWorkflow.includes("windows-release-policy.mjs") &&
+    releaseWorkflow.includes(
+      "needs.preflight.outputs.sign_windows == 'true'",
+    ) &&
+    workflow.includes("windows-release-policy.mjs") &&
+    workflow.includes("Windows signing input does not match release.json") &&
+    workflow.includes("verify-windows-preview.ps1"),
+  "Windows preview policy must be explicit, checked before builds, and never a signing fallback",
 );
 
 assertExactTargets(windowsConfig.bundle?.targets, ["nsis", "msi"], "Windows");
@@ -378,6 +399,28 @@ assert(
   linuxConfig.bundle?.linux?.appimage?.bundleMediaFramework === false,
   "AppImage must not bundle unused multimedia frameworks",
 );
+assert(
+  packageJson.scripts["bundle:linux"].includes("prepare-appimage-linux.mjs") &&
+    workflow.includes("Prepare AppImage compatibility policy before signing") &&
+    workflow.includes("uploadWorkflowArtifacts: false") &&
+    workflow.indexOf("- name: Upload validated Linux installers") >
+      workflow.indexOf(
+        "- name: Verify Linux installer signatures independently",
+      ),
+  "Linux must prepare and validate the final unsigned AppImage before signing and uploading",
+);
+assert(
+  linuxSmokeScript.includes(
+    'bash "$script_directory/smoke-frontend-linux.sh" "$appimage"',
+  ) &&
+    linuxSmokeScript.includes("--verify-appdir") &&
+    linuxFrontendSmokeScript.includes("--statusline-window-smoke") &&
+    linuxFrontendSmokeScript.includes("APPIMAGE_EXTRACT_AND_RUN=1") &&
+    linuxFrontendSmokeScript.includes("Frontend did not initialize") &&
+    desktopLibSource.includes("frontend_smoke::write_ready_marker") &&
+    workflow.includes("Linux compatibility (Ubuntu 24.04)"),
+  "Linux must test AppImage policy and frontend readiness on the build base and a newer host",
+);
 
 for (const relativePath of [
   "scripts/generate-checksums.mjs",
@@ -385,6 +428,11 @@ for (const relativePath of [
   "scripts/prepare-release-assets.test.mjs",
   "scripts/smoke-installers-windows.ps1",
   "scripts/smoke-installers-linux.sh",
+  "scripts/smoke-frontend-linux.sh",
+  "scripts/smoke-frontend-linux.test.mjs",
+  "scripts/prepare-appimage-linux.mjs",
+  "scripts/prepare-appimage-linux.test.mjs",
+  "../../packaging/linux/statusline-gio.sh",
   "scripts/prepare-linux-signing.sh",
   "scripts/sign-linux-files.sh",
   "scripts/verify-linux-signatures.sh",

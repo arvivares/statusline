@@ -2,12 +2,15 @@
 
 set -euo pipefail
 
+[[ $(uname -s) == Linux && $(id -u) != 0 ]] || { echo 'Use a non-root Linux CI user.' >&2; exit 1; }
+
 if [[ $# -ne 1 ]]; then
   echo "Usage: smoke-installers-linux.sh <bundle-root>" >&2
   exit 2
 fi
 
 bundle_root=$(realpath "$1")
+script_directory=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 
 find_single_bundle() {
   local pattern=$1
@@ -27,19 +30,19 @@ deb=$(find_single_bundle "*.deb" "Debian package")
 rpm=$(find_single_bundle "*.rpm" "RPM package")
 appimage=$(find_single_bundle "*.AppImage" "AppImage")
 package_name=$(dpkg-deb -f "$deb" Package)
+[[ $package_name == statusline-companion ]] || { echo 'Unexpected Debian package identity.' >&2; exit 1; }
+existing_status=$(dpkg-query -W -f='${Status}' "$package_name" 2>/dev/null || true)
+[[ $existing_status != 'install ok installed' ]] || { echo 'Do not replace an existing Statusline installation. Use a clean CI runner.' >&2; exit 1; }
 installed_package=""
-app_pid=""
 extract_directory=$(mktemp -d)
 
 cleanup() {
-  if [[ -n "$app_pid" ]] && kill -0 "$app_pid" 2>/dev/null; then
-    kill "$app_pid" 2>/dev/null || true
-    wait "$app_pid" 2>/dev/null || true
-  fi
+  local smoke_status=$?
   if [[ -n "$installed_package" ]]; then
-    sudo apt-get remove -y "$installed_package" >/dev/null
+    sudo apt-get remove -y "$installed_package" >/dev/null || true
   fi
-  rm -rf -- "$extract_directory"
+  printf 'Private extracted AppImage evidence: %s\n' "$extract_directory"
+  exit "$smoke_status"
 }
 trap cleanup EXIT
 
@@ -53,6 +56,7 @@ chmod +x "$appimage"
   "$appimage" --appimage-extract >/dev/null
 )
 test -x "$extract_directory/squashfs-root/AppRun"
+node "$script_directory/prepare-appimage-linux.mjs" --verify-appdir "$extract_directory/squashfs-root"
 
 sudo apt-get install -y "$deb" >/dev/null
 installed_package="$package_name"
@@ -62,18 +66,10 @@ if [[ -z "$binary" ]] || [[ ! -x "$binary" ]]; then
   exit 1
 fi
 
-launch_log="$extract_directory/statusline-launch.log"
-dbus-run-session -- xvfb-run -a "$binary" >"$launch_log" 2>&1 &
-app_pid=$!
-sleep 4
-if ! kill -0 "$app_pid" 2>/dev/null; then
-  echo "Statusline exited during the four-second launch smoke test" >&2
-  cat "$launch_log" >&2
-  exit 1
-fi
-kill "$app_pid" 2>/dev/null || true
-wait "$app_pid" 2>/dev/null || true
-app_pid=""
+bash "$script_directory/smoke-frontend-linux.sh" "$binary"
+# Launch the AppImage's own runtime (FUSE-free extraction mode), not the DEB
+# executable or a manually adjusted inner binary. Both need the IPC marker.
+bash "$script_directory/smoke-frontend-linux.sh" "$appimage"
 
 sudo apt-get remove -y "$package_name" >/dev/null
 installed_package=""

@@ -82,6 +82,9 @@ jobs:
             exit 1
           fi
           source_sha=$(jq -r '.object.sha' <<< "$tag_object")
+          gh api "repos/$GITHUB_REPOSITORY/contents/release.json?ref=$source_sha" \
+            --jq .content | base64 --decode | cmp - release.json
+          node apps/desktop/scripts/windows-release-policy.mjs
 
           source_run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID")
           if [[ $(jq -r '.repository.full_name' <<< "$source_run") != "$GITHUB_REPOSITORY" ||

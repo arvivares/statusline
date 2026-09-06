@@ -82,13 +82,15 @@ Permanent downloads are published on [GitHub Releases](https://github.com/arviva
 The current `windows-bootstrap-v0.1.6` entry is an explicitly unsigned Windows onboarding
 preview for SignPath Foundation, not the public beta intended for end users.
 
-The signed `v0.1.12` tag publishes the unified-brand English/Spanish prerelease with Linux
+The signed `v0.1.13` tag publishes the AppImage startup fix while preserving the unified
+English/Spanish interface. The prerelease includes Windows NSIS/MSI previews, Linux
 DEB/RPM/AppImage, universal macOS DMG/PKG and signed Android APK/AAB. Automated inventory,
 checksums, platform trust checks and GitHub build provenance must all pass before it
-becomes public. Windows remains in its separate unsigned onboarding preview until
-SignPath Foundation approval; it will join the unified release only after Authenticode
-signing is operational. Action artifacts are temporary QA outputs and are never presented
-as releases.
+becomes public. **Windows installers are unsigned previews without Authenticode** while
+SignPath Foundation onboarding is pending; their filenames contain `.unsigned` and
+SmartScreen may warn or block installation. Signed checksums and GitHub provenance
+verify their integrity, not Windows publisher trust. Do not disable Windows security
+protections. Action artifacts are temporary QA outputs, not releases.
 
 See the [public release runbook](docs/release/release-runbook.md) for the exact asset list,
 SignPath configuration and verification commands.
@@ -316,9 +318,8 @@ Free code signing provided by [SignPath.io](https://signpath.io/), certificate b
 
 Statusline has selected SignPath Foundation for public Windows releases. Onboarding is
 still in progress. The repository-side two-stage workflow is ready and waits for the real
-SignPath project identifiers and token. Until the integration and independent verification
-are complete, Windows artifacts are unsigned QA builds and are not represented as official
-signed releases.
+SignPath project identifiers and token. The current beta explicitly allows public
+unsigned Windows previews; they are never represented as Authenticode-signed releases.
 
 - Committer and reviewer: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
 - Release and signing approver: [Alan Rodrigo Vivares (`@arvivares`)](https://github.com/arvivares)
@@ -327,8 +328,10 @@ signed releases.
 
 The unified `v<version>` release tag fails closed unless every platform enabled in
 `release.json` satisfies its signing, trust, inventory, checksum and provenance gates.
-Windows cannot enter that profile until Authenticode is operational. Manual component
-workflows may generate explicitly unsigned artifacts for private QA only.
+Windows uses the explicit beta-only `unsigned-preview` policy until SignPath is ready.
+Selecting `signpath` restores mandatory two-stage Authenticode verification; a signing
+failure never falls back to an unsigned build. Linux, macOS and Android signing remains
+mandatory in both modes.
 
 ## Repository map
 

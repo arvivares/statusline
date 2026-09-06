@@ -5,6 +5,9 @@ pub mod relay_protocol;
 pub mod universal_relay;
 pub mod usage;
 
+#[cfg(any(target_os = "linux", test))]
+mod frontend_smoke;
+
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -188,7 +191,17 @@ fn frontend_ready(app: AppHandle) {
     #[cfg(target_os = "windows")]
     schedule_initial_window_activation(app);
 
-    #[cfg(not(target_os = "windows"))]
+    // The Linux smoke test must observe a round trip from the initialized
+    // frontend, not merely the survival of the GTK parent process. This is not
+    // a substitute for real-GPU rendering and interaction tests.
+    #[cfg(target_os = "linux")]
+    if app.get_webview_window("main").is_some() {
+        if let Some(path) = WINDOW_READY_MARKER.get() {
+            let _ = frontend_smoke::write_ready_marker(path);
+        }
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "linux")))]
     let _ = app;
 }
 
