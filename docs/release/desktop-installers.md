@@ -14,7 +14,15 @@ El companion se empaqueta de forma nativa en GitHub Actions. No se usa cross-com
 | macOS universal | .dmg        | Apple Silicon e Intel; instalación mediante arrastrar a Apps |
 | macOS universal | .pkg        | Instalador guiado y despliegues administrados                |
 
-NSIS incorpora el bootstrapper Evergreen de WebView2. El AppImage no incluye GStreamer porque Statusline no reproduce multimedia. DMG y PKG contienen la misma app universal con arquitecturas arm64 y x86_64; no requieren una segunda compilación.
+NSIS incorpora el bootstrapper Evergreen de WebView2. AppImage no empaqueta el conjunto de plugins multimedia de GStreamer (`bundleMediaFramework=false`), aunque WebKit puede incorporar bibliotecas GStreamer como dependencias. DMG y PKG contienen la misma app universal con arquitecturas arm64 y x86_64; no requieren una segunda compilación.
+
+Hay un fallo de ejecución reportado para AppImage 0.1.12 en Ubuntu 26.04
+([issue #18](https://github.com/arvivares/statusline/issues/18)); el `.deb` oficial
+funciona en ese equipo. La [guía de diagnóstico de AppImage](appimage-diagnostics.md)
+permite aislar GIO y renderizado sin recompilar ni modificar el instalador original.
+La corrección candidata conserva el GIO incluido con su módulo TLS y resuelve Wayland
+desde el sistema. Todavía requiere ejecutar el pipeline y validar el nuevo artefacto
+en el equipo afectado; no modifica la release 0.1.12.
 
 MSI no inicia Statusline desde Windows Installer y NSIS deja desmarcada por defecto la opción de abrirlo al finalizar. El usuario debe hacer el primer arranque desde Inicio o el acceso directo; esto garantiza que la detección de Codex reciba el entorno de su sesión y que WebView2 complete su inicialización antes de mostrar la ventana.
 
@@ -83,7 +91,8 @@ plataformas antes de reservar runners nativos.
 Después de compilar, el pipeline:
 
 - cuando Windows está habilitado, instala, abre y desinstala NSIS y MSI;
-- inspecciona RPM/AppImage, instala y elimina Debian, y verifica las firmas OpenPGP detached de los tres instaladores Linux;
+- ajusta y reextrae AppImage para verificar su política y el contenido completo; ejecuta DEB y AppImage exigiendo la inicialización del frontend/IPC en Ubuntu 22.04;
+- firma/verifica los tres paquetes Linux antes de subirlos y revalida los mismos artefactos en Ubuntu 24.04, sin recompilar; las pruebas headless no sustituyen el QA gráfico en Ubuntu 26.04;
 - monta el DMG, inspecciona el payload del PKG y verifica arm64 + x86_64, icono y detección de Codex en macOS;
 - para builds macOS firmados, verifica Developer ID, Hardened Runtime, timestamps, tickets grapados y aceptación de Gatekeeper en la app, el DMG y el PKG;
 - reúne también el APK y AAB firmados por Android;
@@ -97,6 +106,12 @@ SignPath. Al habilitarlo en una versión posterior, el mismo inventario pasará 
 nueve binarios y el flujo fallará si NSIS o MSI no están firmados.
 
 Si cambia sólo un smoke test, [desktop-installer-smoke.yml](../../.github/workflows/desktop-installer-smoke.yml) revalida artefactos existentes sin recompilar. Indica tanto el run ID como el número de intento exitoso para no mezclar artefactos de una reejecución. `require_windows_trust`, `require_linux_signatures` y `require_macos_trust` deben permanecer activadas para releases públicas; sólo se desactivan al inspeccionar un build manual deliberadamente no firmado.
+
+El nuevo smoke Linux requiere la política AppImage y el marcador de frontend del
+candidato; 0.1.12 y versiones anteriores no los incluyen. No desactives estas
+comprobaciones para hacer pasar un artefacto antiguo: utiliza la
+[guía de diagnóstico](appimage-diagnostics.md) para esos casos. Ejecuta el smoke de
+instalación en un runner limpio, no sobre una instalación personal existente.
 
 ## Codex en el equipo del usuario
 

@@ -113,6 +113,8 @@ const smokeWorkflow = readText(
   "../../.github/workflows/desktop-installer-smoke.yml",
 );
 const windowsSmokeScript = readText("scripts/smoke-installers-windows.ps1");
+const linuxSmokeScript = readText("scripts/smoke-installers-linux.sh");
+const linuxFrontendSmokeScript = readText("scripts/smoke-frontend-linux.sh");
 const linuxSigningPreparationScript = readText(
   "scripts/prepare-linux-signing.sh",
 );
@@ -378,6 +380,30 @@ assert(
   linuxConfig.bundle?.linux?.appimage?.bundleMediaFramework === false,
   "AppImage must not bundle unused multimedia frameworks",
 );
+assert(
+  packageJson.scripts["bundle:linux"].includes("prepare-appimage-linux.mjs") &&
+    workflow.includes("Prepare AppImage compatibility policy before signing") &&
+    workflow.includes(
+      "uploadWorkflowArtifacts: ${{ runner.os == 'Windows' }}",
+    ) &&
+    workflow.indexOf("- name: Upload validated Linux installers") >
+      workflow.indexOf(
+        "- name: Verify Linux installer signatures independently",
+      ),
+  "Linux must prepare and validate the final unsigned AppImage before signing and uploading",
+);
+assert(
+  linuxSmokeScript.includes(
+    'bash "$script_directory/smoke-frontend-linux.sh" "$appimage"',
+  ) &&
+    linuxSmokeScript.includes("--verify-appdir") &&
+    linuxFrontendSmokeScript.includes("--statusline-window-smoke") &&
+    linuxFrontendSmokeScript.includes("APPIMAGE_EXTRACT_AND_RUN=1") &&
+    linuxFrontendSmokeScript.includes("Frontend did not initialize") &&
+    desktopLibSource.includes("frontend_smoke::write_ready_marker") &&
+    workflow.includes("Linux compatibility (Ubuntu 24.04)"),
+  "Linux must test AppImage policy and frontend readiness on the build base and a newer host",
+);
 
 for (const relativePath of [
   "scripts/generate-checksums.mjs",
@@ -385,6 +411,11 @@ for (const relativePath of [
   "scripts/prepare-release-assets.test.mjs",
   "scripts/smoke-installers-windows.ps1",
   "scripts/smoke-installers-linux.sh",
+  "scripts/smoke-frontend-linux.sh",
+  "scripts/smoke-frontend-linux.test.mjs",
+  "scripts/prepare-appimage-linux.mjs",
+  "scripts/prepare-appimage-linux.test.mjs",
+  "../../packaging/linux/statusline-gio.sh",
   "scripts/prepare-linux-signing.sh",
   "scripts/sign-linux-files.sh",
   "scripts/verify-linux-signatures.sh",
