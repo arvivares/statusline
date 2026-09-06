@@ -1,1 +1,5 @@
-Test a clean iPhone install: open the local demo and confirm 70% in both the app and widget; paste a `/status` line; pair a real Companion by QR and manual link; refresh from the relay; deny and later grant camera access; disconnect; restart the app and phone; verify no-sample, waiting, synced and error states. Never include QR codes, pairing links or credentials in feedback.
+Build 1.0 (3): English and Spanish now follow the primary system language in the app and widget. Other primary languages use English, even if Spanish is second in the language list.
+
+On your paired iPhone, switch the primary language between Spanish, English and an unsupported language such as French. Reopen Statusline and refresh the widget. Check labels, remaining quota, reset dates, errors, accessibility text and camera permission descriptions. Confirm long Spanish labels fit and pairing/data remain intact.
+
+On a separate clean install, open the local demo and confirm 70% in both the app and widget; paste a `/status` line; pair a real Companion by QR and manual link; refresh from the relay; deny and later grant camera access; disconnect; restart the app and phone; verify no-sample, waiting, synced and error states. Never include QR codes, pairing links or credentials in feedback.
