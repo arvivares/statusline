@@ -3,6 +3,7 @@ export type Platform = "macos" | "linux" | "windows" | "android" | "ios";
 
 export const siteOrigin = "https://statusline.inmerzion.io";
 export const repository = "https://github.com/arvivares/statusline";
+export const brandAssetVersion = "segmented-s-2026";
 export const languagePaths: Record<Language, string> = { en: "/", es: "/es/" };
 
 export function languageFromPath(path: string): Language {
@@ -14,7 +15,7 @@ export function pageMetadata(language: Language) {
     canonical: `${siteOrigin}${languagePaths[language]}`,
     locale: language === "en" ? "en_US" : "es_ES",
     alternateLocale: language === "en" ? "es_ES" : "en_US",
-    image: `${siteOrigin}/assets/${language === "en" ? "social-card-en.png" : "social-card.png"}`,
+    image: `${siteOrigin}/assets/${language === "en" ? "social-card-en.png" : "social-card.png"}?v=${brandAssetVersion}`,
   };
 }
 
@@ -53,7 +54,7 @@ export function structuredData(
         isAccessibleForFree: true,
         license: `${repository}/blob/main/LICENSE`,
         sameAs: [repository],
-        image: `${siteOrigin}/assets/statusline-mark.svg`,
+        image: `${siteOrigin}/assets/statusline-mark.png?v=${brandAssetVersion}`,
         publisher: { "@id": `${siteOrigin}/#publisher` },
       },
       {

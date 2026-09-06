@@ -5,14 +5,104 @@ import { pathToFileURL } from "node:url";
 import { parse, parseFragment, serialize } from "parse5";
 import { nodes, attribute } from "./render-html.mjs";
 import { staticMessages } from "../src/static-messages.ts";
-import { languagePaths, pageMetadata, siteOrigin } from "../src/site.ts";
+import {
+  brandAssetVersion,
+  languagePaths,
+  pageMetadata,
+  siteOrigin,
+} from "../src/site.ts";
 
 const text = (node) =>
   node.nodeName === "#text"
     ? node.value
     : (node.childNodes ?? []).map(text).join("");
 
+function validateIconLinks(elements) {
+  for (const expected of [
+    { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+    {
+      rel: "icon",
+      type: "image/png",
+      sizes: "16x16",
+      href: "/favicon-16x16.png",
+    },
+    {
+      rel: "icon",
+      type: "image/png",
+      sizes: "32x32",
+      href: "/favicon-32x32.png",
+    },
+    {
+      rel: "icon",
+      type: "image/svg+xml",
+      sizes: "any",
+      href: "/assets/statusline-mark.svg",
+    },
+    {
+      rel: "apple-touch-icon",
+      sizes: "180x180",
+      href: "/apple-touch-icon.png",
+    },
+  ]) {
+    expected.href += `?v=${brandAssetVersion}`;
+    const matches = elements.filter(
+      (node) =>
+        node.tagName === "link" &&
+        Object.entries(expected).every(
+          ([name, value]) => attribute(node, name) === value,
+        ),
+    );
+    assert.equal(
+      matches.length,
+      1,
+      `Missing or duplicate icon: ${expected.href}`,
+    );
+  }
+}
+
+async function validateBrandAssets(outDir) {
+  for (const [asset, width, height] of [
+    ["favicon-16x16.png", 16, 16],
+    ["favicon-32x32.png", 32, 32],
+    ["apple-touch-icon.png", 180, 180],
+    ["assets/statusline-mark.png", 512, 512],
+    ["assets/social-card-en.png", 1200, 630],
+    ["assets/social-card.png", 1200, 630],
+  ]) {
+    const bytes = await readFile(resolve(outDir, asset));
+    assert.equal(
+      bytes.subarray(0, 8).toString("hex"),
+      "89504e470d0a1a0a",
+      asset,
+    );
+    assert.equal(bytes.readUInt32BE(16), width, `${asset}: width`);
+    assert.equal(bytes.readUInt32BE(20), height, `${asset}: height`);
+  }
+  const ico = await readFile(resolve(outDir, "favicon.ico"));
+  assert.equal(ico.readUInt16LE(0), 0, "Invalid ICO header");
+  assert.equal(ico.readUInt16LE(2), 1, "Invalid ICO image type");
+  const sizes = [];
+  for (let index = 0; index < ico.readUInt16LE(4); index++) {
+    const entry = 6 + index * 16;
+    sizes.push(ico[entry] || 256);
+    assert.equal(ico[entry], ico[entry + 1], "Favicon frame must be square");
+    assert(
+      ico.readUInt32LE(entry + 12) + ico.readUInt32LE(entry + 8) <= ico.length,
+      "Truncated ICO image",
+    );
+  }
+  assert(
+    sizes.includes(16) && sizes.includes(32),
+    "Missing ICO fallback sizes",
+  );
+  for (const asset of ["statusline-symbol.svg", "statusline-mark.svg"]) {
+    const svg = await readFile(resolve(outDir, "assets", asset), "utf8");
+    assert(svg.includes("<svg") && svg.includes("viewBox="), asset);
+  }
+}
+
 export async function validateSEO(outDir) {
+  await validateBrandAssets(outDir);
   assert.deepEqual(
     Object.keys(staticMessages.en).sort(),
     Object.keys(staticMessages.es).sort(),
@@ -36,6 +126,7 @@ export async function validateSEO(outDir) {
         "content",
       );
     const canonical = pageMetadata(language).canonical;
+    validateIconLinks(elements);
     assert.equal(
       attribute(
         elements.find((node) => node.tagName === "html"),
@@ -162,6 +253,11 @@ export async function validateSEO(outDir) {
       graph["@graph"].find((entry) => entry["@type"] === "WebPage").url,
       canonical,
     );
+    assert.equal(
+      graph["@graph"].find((entry) => entry["@type"] === "SoftwareApplication")
+        .image,
+      `${siteOrigin}/assets/statusline-mark.png?v=${brandAssetVersion}`,
+    );
     assert(
       !text(json[0]).includes('"aggregateRating"'),
       "Do not fabricate ratings",
@@ -172,14 +268,18 @@ export async function validateSEO(outDir) {
         element.tagName === "script"
           ? attribute(element, "src")
           : element.tagName === "link" &&
-              ["stylesheet", "icon", "preload"].includes(
+              ["stylesheet", "icon", "apple-touch-icon", "preload"].includes(
                 attribute(element, "rel"),
               )
             ? attribute(element, "href")
             : null;
       if (asset?.startsWith("/"))
         assert(
-          (await readFile(resolve(outDir, `.${asset}`))).length > 0,
+          (
+            await readFile(
+              resolve(outDir, `.${new URL(asset, siteOrigin).pathname}`),
+            )
+          ).length > 0,
           asset,
         );
     }
@@ -188,6 +288,7 @@ export async function validateSEO(outDir) {
       "utf8",
     );
     const errorNodes = [...nodes(parse(errorHTML))];
+    validateIconLinks(errorNodes);
     assert.equal(
       attribute(
         errorNodes.find((node) => node.tagName === "html"),
@@ -225,7 +326,7 @@ export async function validateSEO(outDir) {
       llms.includes("https://github.com/arvivares/statusline"),
   );
   console.log(
-    "SEO checks passed: complete EN/ES HTML, metadata, reciprocal alternates, schema, platform table, assets, 404s and crawl files.",
+    "SEO checks passed: complete EN/ES HTML, metadata, reciprocal alternates, schema, platform table, brand icons, assets, 404s and crawl files.",
   );
 }
 

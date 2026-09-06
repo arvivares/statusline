@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="apps/desktop/src-tauri/icons/app-icon.svg" alt="Statusline app icon" width="112">
+  <img src="branding/statusline-icon.svg" alt="Statusline logo" width="112">
   <h1>Statusline</h1>
   <p><strong>Your Codex usage, visible everywhere.</strong></p>
   <p>Cross-platform desktop companion, encrypted mobile sync and native widgets for iPhone and Android.</p>
@@ -45,6 +45,9 @@ credentials, prompts, conversations or source code.
 
 The Data Plane interface keeps quota, reset and sync state consistent across desktop,
 mobile and native widgets.
+
+The segmented gold **S** is Statusline's official logo. Its shared source and
+platform exports are maintained in the [brand kit](branding/README.md).
 
 ### Highlights
 

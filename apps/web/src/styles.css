@@ -224,26 +224,26 @@ svg.icon,
   color: var(--gold);
 }
 .brand-symbol {
+  --symbol-width: 28px;
+  --symbol-height: 30px;
+  position: relative;
   display: block;
-  width: 28px;
-  height: 30px;
+  flex-shrink: 0;
+  width: var(--symbol-width);
+  height: var(--symbol-height);
+}
+.brand-symbol::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  /* The shared SVG includes the original 5-degree skew. Scale uniformly to
+     preserve that angle, centered inside the existing layout footprint. */
+  height: calc(var(--symbol-width) * 1.158917236);
   background: var(--gold);
-  clip-path: polygon(
-    0 0,
-    100% 0,
-    100% 19%,
-    22% 19%,
-    22% 40%,
-    100% 40%,
-    100% 100%,
-    0 100%,
-    0 81%,
-    78% 81%,
-    78% 60%,
-    0 60%
-  );
-  mask-image: repeating-linear-gradient(90deg, #000 0 4px, transparent 4px 6px);
-  transform: skewY(-5deg);
+  mask: url("/assets/statusline-symbol.svg") center / contain no-repeat;
+  transform: translateY(-50%);
 }
 .desktop-nav {
   display: flex;
@@ -2309,8 +2309,8 @@ svg.icon,
   font-size: 24px;
 }
 .footer-top .brand-symbol {
-  width: 26px;
-  height: 26px;
+  --symbol-width: 26px;
+  --symbol-height: 26px;
 }
 .footer-top > p {
   font-size: 10px;
@@ -2869,8 +2869,8 @@ svg.icon,
     gap: 9px;
   }
   .brand-symbol {
-    width: 24px;
-    height: 25px;
+    --symbol-width: 24px;
+    --symbol-height: 25px;
   }
   .header-actions {
     gap: 12px;

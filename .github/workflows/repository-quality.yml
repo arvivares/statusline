@@ -13,6 +13,7 @@ on:
       - "apps/android/**"
       - "apps/apple/**"
       - "apps/desktop/**"
+      - "branding/**"
       - "docs/**"
       - "localization/**"
       - "packaging/**"
@@ -56,6 +57,7 @@ jobs:
           cache: npm
           cache-dependency-path: |
             apps/desktop/package-lock.json
+            branding/package-lock.json
             services/relay/package-lock.json
 
       - name: Install desktop dependencies
@@ -65,6 +67,14 @@ jobs:
       - name: Install relay dependencies
         run: npm ci
         working-directory: services/relay
+
+      - name: Install brand asset tooling
+        run: npm ci
+        working-directory: branding
+
+      - name: Validate official brand assets
+        run: npm run check
+        working-directory: branding
 
       - name: Validate documentation and desktop release policy
         run: npm run release:check

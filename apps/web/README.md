@@ -78,7 +78,8 @@ npm run build -- --outDir /tmp/statusline-web-review
 El workflow [Website](../../.github/workflows/website.yml) se inicia en todos los PR
 hacia `main`, sin filtros de rutas a nivel del evento. Su primer job comprueba la
 lógica de CI y detecta cambios en `apps/web/`, el workflow, su detector, Dependabot
-o la configuración compartida de Node y formato. Solo en esos casos instala desde
+o la configuración compartida de Node y formato, además del kit de marca en
+`branding/` y su generador. Solo en esos casos instala desde
 el lockfile, comprueba TypeScript y formato, genera el build y valida sus artefactos
 SEO con Node.js 24. Los pushes relevantes a `main` y las ejecuciones manuales
 también validan la web. Ninguno de estos eventos despliega el sitio.
@@ -115,6 +116,29 @@ del PR y no se fusionan automáticamente.
 Los recursos se sirven desde el mismo origen, sin cargar fuentes remotas. La web
 no consulta cuotas ni crea canales de sincronización. El enlace de privacidad
 lleva a la página pública del relay; las descargas y el código enlazan a GitHub.
+
+### Identidad oficial
+
+La S dorada segmentada del encabezado es el logo oficial, incluida su inclinación
+ascendente de 5°. La geometría y las exportaciones se mantienen en el
+[kit de marca común](../../branding/README.md), no en una segunda versión CSS.
+El encabezado y el pie usan `public/assets/statusline-symbol.svg`; el favicon,
+el 404 y los metadatos usan las variantes cuadradas del mismo símbolo.
+También se incluyen fallbacks ICO/PNG y el icono táctil de Apple. Las referencias
+versionadas evitan reutilizar el antiguo logo desde la caché del navegador.
+
+Las tarjetas sociales tienen fuentes HTML/CSS en `scripts/templates/`, fuera de
+los recursos públicos. Para regenerarlas con Playwright y Chromium instalados en
+un entorno de autoría aislado, ejecuta desde este directorio:
+
+```shell
+python scripts/render-social-cards.py
+```
+
+El comando admite `--out-dir` para revisar las tarjetas sin reemplazar las
+publicadas. Playwright no es una dependencia de la web ni de su build habitual.
+Revisa ambas imágenes antes de publicar; las capturas reales del producto se
+mantienen como evidencia de sus respectivas versiones.
 
 Mantén las funciones disponibles y el roadmap diferenciados. El estado de las
 distribuciones debe revisarse antes de modificar los botones de plataforma;

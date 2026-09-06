@@ -30,6 +30,11 @@ use usage::UsageResponse;
 
 const TRAY_ID: &str = "statusline-companion-tray";
 
+// The menu bar uses a transparent template; app, Dock and installer icons stay gold.
+#[cfg(target_os = "macos")]
+const MACOS_TRAY_TEMPLATE: tauri::image::Image<'static> =
+    tauri::include_image!("./icons/tray-template@2x.png");
+
 struct LocalizedMenu {
     show: MenuItem<tauri::Wry>,
     refresh: MenuItem<tauri::Wry>,
@@ -244,6 +249,13 @@ pub fn run() {
                         handle_window_interaction(tray.app_handle(), WindowInteraction::TrayClick);
                     }
                 });
+            #[cfg(target_os = "macos")]
+            {
+                tray_builder = tray_builder
+                    .icon(MACOS_TRAY_TEMPLATE)
+                    .icon_as_template(true);
+            }
+            #[cfg(not(target_os = "macos"))]
             if let Some(icon) = app.default_window_icon() {
                 tray_builder = tray_builder.icon(icon.clone());
             }
@@ -345,6 +357,26 @@ fn handle_window_interaction(app: &AppHandle, interaction: WindowInteraction) {
 #[cfg(test)]
 mod tray_interaction_tests {
     use super::{BlurPolicy, WindowInteraction, WindowVisibility, next_visibility};
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn menu_bar_template_has_a_black_mark_and_transparent_canvas() {
+        let icon = super::MACOS_TRAY_TEMPLATE;
+        assert_eq!((icon.width(), icon.height()), (44, 44));
+
+        let mut visible_pixels = 0;
+        for pixel in icon.rgba().chunks_exact(4) {
+            if pixel[3] > 0 {
+                assert_eq!(&pixel[..3], &[0, 0, 0]);
+                visible_pixels += 1;
+            }
+        }
+
+        assert!(icon.rgba().chunks_exact(4).any(|pixel| pixel[3] == 255));
+        // Reject an opaque app-icon backplate: only the segmented S is a mask.
+        assert!(visible_pixels > 0 && visible_pixels < (44 * 44) / 2);
+        assert_eq!(&icon.rgba()[..4], &[0, 0, 0, 0]);
+    }
 
     #[test]
     fn second_tray_click_should_hide_after_focus_loss() {

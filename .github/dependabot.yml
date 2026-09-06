@@ -56,6 +56,20 @@ updates:
           - minor
           - patch
 
+  - package-ecosystem: npm
+    directory: /branding
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:30"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        update-types:
+          - minor
+          - patch
+
   - package-ecosystem: gradle
     directory: /apps/android
     schedule:
