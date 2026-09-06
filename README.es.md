@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="apps/desktop/src-tauri/icons/app-icon.svg" alt="Icono de Statusline" width="112">
+  <img src="branding/statusline-icon.svg" alt="Logo de Statusline" width="112">
   <h1>Statusline</h1>
   <p><strong>Tu uso de Codex, visible en todas partes.</strong></p>
   <p>Companion multiplataforma, sincronización móvil cifrada y widgets nativos para iPhone y Android.</p>
@@ -37,6 +37,9 @@ Statusline muestra el estado de la cuota de Codex en Windows, Linux, macOS, iPho
 </table>
 
 La misma interfaz Data Plane mantiene cuota, reinicio y estado de sincronización consistentes entre escritorio, móvil y widgets nativos.
+
+La **S** dorada segmentada es el logo oficial de Statusline. Su fuente común y las
+variantes para cada plataforma se mantienen en el [kit de marca](branding/README.md).
 
 La interfaz sigue el idioma principal del sistema: español o inglés. Para cualquier otro idioma usa inglés, también en los widgets. Consulta la [guía de localización](docs/architecture/localization.md).
 

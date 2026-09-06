@@ -29,6 +29,7 @@ component-specific commands below.
 | Android       | `cd apps/android && ./gradlew testDebugUnitTest lintDebug assembleDebug`                              |
 | Apple         | Open `apps/apple/statusline.xcodeproj` and run the relevant Xcode test scheme                         |
 | Documentation | `node scripts/check-markdown-links.mjs`                                                               |
+| Brand assets  | `cd branding && npm ci && npm run check`                                                              |
 
 Node, Java and Rust versions are pinned at the repository root. Platform-specific native
 requirements are documented in each application directory.
@@ -38,6 +39,10 @@ and deployment prerequisites. Changes to its CI scope or required-check policy
 must also pass `node --test scripts/website-ci.test.mjs` from the repository root.
 The always-reported **Website validation** check is required on `main`; unrelated
 pull requests skip the website build without bypassing scope detection.
+
+The [brand kit](branding/README.md) owns the official logo and all generated
+platform icons. Update its shared source and regenerate the exports together;
+do not redraw individual platform icons or edit the generated PNGs by hand.
 
 ## Making a change
 

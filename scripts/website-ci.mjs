@@ -9,12 +9,17 @@ const relevantFiles = new Set([
   ".github/dependabot.yml",
   "scripts/website-ci.mjs",
   "scripts/website-ci.test.mjs",
+  "scripts/generate-brand-assets.mjs",
   ".editorconfig",
   ".node-version",
 ]);
 
 export function isWebsitePath(path) {
-  return path.startsWith("apps/web/") || relevantFiles.has(path);
+  return (
+    path.startsWith("apps/web/") ||
+    path.startsWith("branding/") ||
+    relevantFiles.has(path)
+  );
 }
 
 export function detectWebsiteScope(env, runGit = execFileSync) {

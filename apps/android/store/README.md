@@ -16,6 +16,11 @@ This directory is the versioned source of truth for the Statusline Google Play l
 
 The screenshots are captured from the real Android build. Generated artwork uses the same Data Plane tokens as the product and does not contain the OpenAI logo or imply affiliation.
 
+The official app icon now uses the website's segmented gold **S**. Its Play icon,
+legacy launcher and adaptive/themed variants are generated together from the
+[shared brand kit](../../../branding/README.md). These assets apply to the next
+build and listing update; they do not change the submitted release recorded below.
+
 The feature graphic is declared in Play Console as created or edited using AI. The app icon and four screenshots are not: the screenshots come from the physical Android build and the icon is the existing Statusline product artwork.
 
 ## Current Play submission

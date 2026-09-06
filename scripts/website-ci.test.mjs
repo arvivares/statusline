@@ -19,6 +19,10 @@ test("website source, assets, tooling and shared configuration need validation",
     "apps/web/deploy/static.conf",
     "apps/web/package-lock.json",
     "apps/web/README.md",
+    "branding/logo.json",
+    "branding/statusline-symbol.svg",
+    "branding/package-lock.json",
+    "scripts/generate-brand-assets.mjs",
     ".github/workflows/website.yml",
     ".github/dependabot.yml",
     "scripts/website-ci.mjs",
@@ -38,6 +42,7 @@ test("unrelated changes do not rebuild the website", () => {
     "apps/desktop/package-lock.json",
     "services/relay/src/index.ts",
     "apps/web-other/index.html",
+    "branding-other/logo.svg",
   ];
   for (const path of paths) assert.equal(isWebsitePath(path), false, path);
   assert.equal(

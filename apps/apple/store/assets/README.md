@@ -4,9 +4,10 @@ Capture the real Release UI on the largest required iPhone class so App Store Co
 
 ## App icon
 
-- `source/app-icon.svg` is the opaque iOS master for the shared Data Plane icon used by Android and desktop.
-- The geometry and palette match `apps/desktop/src-tauri/icons/app-icon.svg`; only the full-canvas `#0D0E0B` background differs because App Store icons cannot contain transparency.
-- Render it at 1024 × 1024, flatten it to RGB, and place the result at `statusline/Assets.xcassets/AppIcon.appiconset/AppIcon.png`.
+- The official icon is the website's segmented, upward-slanted gold **S** on the Data Plane canvas.
+- Its canonical geometry and reproducible exports live in the [shared brand kit](../../../../branding/README.md). `source/app-icon.svg` is a generated, full-canvas iOS variant, not a separate master.
+- Run `npm ci && npm run generate && npm run check` from `branding/` at the repository root to update the 1024 × 1024 RGB icon at `statusline/Assets.xcassets/AppIcon.appiconset/AppIcon.png` together with the other platforms. Keep the iOS canvas opaque and square; the system supplies the corner mask.
+- These source assets are for the next build. Existing App Store Connect/TestFlight builds and the dated capture/submission records below are not changed by regenerating them.
 
 ## Listing order
 

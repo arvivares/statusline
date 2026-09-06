@@ -1,0 +1,245 @@
+@font-face {
+  font-family: Manrope;
+  src: url("../../public/fonts/manrope-800.ttf") format("truetype");
+  font-weight: 800;
+  font-display: block;
+}
+@font-face {
+  font-family: Manrope;
+  src: url("../../public/fonts/manrope-500.ttf") format("truetype");
+  font-weight: 500;
+  font-display: block;
+}
+@font-face {
+  font-family: Plex;
+  src: url("../../public/fonts/ibm-plex-mono-400.ttf") format("truetype");
+  font-weight: 400;
+  font-display: block;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  width: 1200px;
+  height: 630px;
+  overflow: hidden;
+}
+body {
+  background: #0d0e0b;
+  color: #f4f4e9;
+  font-family: Manrope, sans-serif;
+}
+.card {
+  position: relative;
+  isolation: isolate;
+  width: 1200px;
+  height: 630px;
+  padding: 44px 60px;
+  background: radial-gradient(ellipse at 91% 48%, #efc65a0f, transparent 50%);
+}
+.card:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(#efc65a07 1px, transparent 1px),
+    linear-gradient(90deg, #efc65a07 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(90deg, transparent, #000 70%);
+}
+.card:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-top: 4px solid #efc65a;
+  pointer-events: none;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+}
+.brand img {
+  width: 40px;
+  height: 40px;
+}
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #cfceb6;
+  font:
+    12px Plex,
+    monospace;
+  letter-spacing: 1.6px;
+}
+.tag:before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: #efc65a;
+  border-radius: 50%;
+  box-shadow: 0 0 14px #efc65a66;
+}
+.eyebrow {
+  margin: 66px 0 20px;
+  color: #b2b39e;
+  font:
+    12px Plex,
+    monospace;
+  letter-spacing: 3px;
+}
+h1 {
+  margin: 0;
+  font-weight: 800;
+  font-size: 106px;
+  line-height: 1.045;
+  letter-spacing: -7px;
+}
+h1 span {
+  color: #efc65a;
+}
+.orbit {
+  position: absolute;
+  top: 116px;
+  right: 31px;
+  width: 466px;
+  height: 466px;
+  border: 1px solid #efc65a13;
+  border-radius: 50%;
+  transform: rotate(-21deg);
+}
+.orbit:before {
+  content: "";
+  position: absolute;
+  inset: 23px;
+  border: 1px dashed #efc65a1e;
+  border-radius: 50%;
+}
+.orbit:after {
+  content: "";
+  position: absolute;
+  top: 39px;
+  left: 91px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #efc65a;
+  box-shadow: 0 0 20px #efc65a4d;
+}
+.meter {
+  position: absolute;
+  top: 172px;
+  right: 87px;
+  width: 354px;
+  height: 354px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #1c1d1355, #0d0e0b88);
+  box-shadow: 0 0 60px #efc65a08;
+}
+.meter:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #efc65a 0deg 262.8deg,
+    #efc65a12 262.8deg 360deg
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 9px),
+    #000 calc(100% - 8px)
+  );
+}
+.meter:after {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  border: 1px solid #efc65a16;
+  border-radius: 50%;
+}
+.readout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding-bottom: 5px;
+}
+.readout small {
+  color: #adae94;
+  font:
+    11px Plex,
+    monospace;
+  letter-spacing: 2.1px;
+  margin-bottom: 8px;
+}
+.number {
+  font-size: 91px;
+  font-weight: 800;
+  letter-spacing: -5px;
+  line-height: 1.12;
+}
+.number span {
+  font-size: 35px;
+  font-weight: 500;
+  color: #efc65a;
+  letter-spacing: -2px;
+  margin-left: 5px;
+}
+.readout p {
+  margin: 11px 0 0;
+  color: #efc65a;
+  font:
+    12px Plex,
+    monospace;
+  letter-spacing: 1px;
+}
+.ticks {
+  position: absolute;
+  left: 176px;
+  bottom: 26px;
+  width: 3px;
+  height: 6px;
+  background: #efc65a40;
+  box-shadow:
+    8px 0 #efc65a40,
+    -8px 0 #efc65a40,
+    16px 0 #efc65a40,
+    -16px 0 #efc65a40;
+}
+footer {
+  position: absolute;
+  bottom: 42px;
+  left: 60px;
+  right: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #e8e7d21b;
+  padding-top: 22px;
+  font:
+    11px Plex,
+    monospace;
+  letter-spacing: 1.6px;
+  color: #a9aa96;
+}
+.domain {
+  letter-spacing: 0;
+  color: #dfdfc9;
+  font-size: 12px;
+}

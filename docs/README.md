@@ -12,6 +12,8 @@ requests are welcome.
 
 - [Product and engineering roadmap](../ROADMAP.md): provider feasibility, multi-agent
   architecture, delivery sequence and feature backlog.
+- [Official brand kit](../branding/README.md): shared logo geometry, platform icons
+  and reproducible asset generation.
 
 ## Architecture and protocol
 

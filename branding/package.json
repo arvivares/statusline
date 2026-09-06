@@ -1,0 +1,20 @@
+{
+  "name": "statusline-brand-assets",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Deterministic exports of the official Statusline header symbol.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "generate": "node ../scripts/generate-brand-assets.mjs",
+    "check": "node ../scripts/generate-brand-assets.mjs --check && node --test ../scripts/brand-assets.test.mjs",
+    "test": "node --test ../scripts/brand-assets.test.mjs"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "fflate": "0.8.3"
+  }
+}

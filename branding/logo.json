@@ -1,0 +1,44 @@
+{
+  "name": "Statusline",
+  "description": "The original website header symbol: a vertically striped S with a -5 degree vertical shear.",
+  "colors": {
+    "gold": "#EFC65A",
+    "canvas": "#0D0E0B"
+  },
+  "symbol": {
+    "width": 28,
+    "height": 30,
+    "skewYDegrees": -5,
+    "stripeWidth": 4,
+    "stripePeriod": 6,
+    "polygon": [
+      [0, 0],
+      [28, 0],
+      [28, 5.7],
+      [6.16, 5.7],
+      [6.16, 12],
+      [28, 12],
+      [28, 30],
+      [0, 30],
+      [0, 24.3],
+      [21.84, 24.3],
+      [21.84, 18],
+      [0, 18]
+    ]
+  },
+  "icon": {
+    "canvasSize": 1024,
+    "symbolHeightRatio": 0.64,
+    "cornerRadius": 220
+  },
+  "android": {
+    "viewportSize": 108,
+    "adaptiveSymbolHeight": 48,
+    "safeZoneDiameter": 66
+  },
+  "macOSMenuBar": {
+    "canvasSize": 22,
+    "symbolHeight": 20,
+    "color": "#000000"
+  }
+}

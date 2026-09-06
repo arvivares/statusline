@@ -10,6 +10,8 @@ on:
       - main
     paths:
       - "apps/web/**"
+      - "branding/**"
+      - "scripts/generate-brand-assets.mjs"
       - ".github/workflows/website.yml"
       - ".github/dependabot.yml"
       - "scripts/website-ci.mjs"
