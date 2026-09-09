@@ -325,3 +325,68 @@ También falta ampliar la comprobación gráfica a Ubuntu 22.04/24.04, otras GPU
 sesiones Wayland/XWayland. Las pruebas CI headless verifican arranque e IPC, no
 interacción gráfica física. Estas limitaciones permanecen documentadas en las
 [notas de 0.1.13](notes/v0.1.13.md); no se amplía el soporte declarado.
+
+## Arch Linux: arranque normal confirmado en 0.1.13
+
+El [issue #21](https://github.com/arvivares/statusline/issues/21) se abrió por un
+informe de ventana blanca al arrancar normalmente en Arch Linux, sesión Wayland
+y labwc/wlroots, mientras que los cuatro casos extraídos de 0.1.13 registraban
+`rendered`. Una respuesta posterior con los cuatro casos en blanco correspondía,
+por SHA-256, a la release antigua **0.1.12**, no al artefacto corregido.
+
+El 7 de septiembre el informante confirmó que la AppImage pública **0.1.13**
+también muestra la interfaz al abrirla directamente, fuera del script. Se
+[cerró el issue con esa evidencia](https://github.com/arvivares/statusline/issues/21#issuecomment-5570984723),
+sin recompilar ni modificar los instaladores. No se determinó la causa exacta
+del fallo inicial: un acceso directo antiguo o una instancia anterior son
+posibilidades, no causas demostradas. La confirmación cubre el renderizado en
+ese equipo, no una prueba completa de interacción, bandeja, keyring o sincronización.
+
+La comparación de dos casos descrita a continuación quedó preparada y probada
+localmente, pero el informante **no la ejecutó**; no se contabiliza como evidencia
+gráfica de Arch. Se conserva para futuros diagnósticos si reaparece el fallo.
+No es necesario repetirla mientras el arranque normal funciona.
+
+El modo `--launch-comparison` del script actualizado evita repetir esa matriz:
+
+```bash
+bash apps/desktop/scripts/diagnose-appimage-linux.sh \
+  "/ruta/Statusline.Companion_0.1.13_amd64.AppImage" \
+  --sha256 a4ec6c4fd083ee92702741bb2949819acd09395fcb70fd39ebdf60b03727b339 \
+  --launch-comparison --seconds 30
+```
+
+Este modo se añadió después del tag `v0.1.13`: requiere el script actualizado,
+no el script antiguo de ese tag. No requiere un nuevo instalador ni recompilar.
+Ejecuta la prueba desde la misma sesión gráfica, como usuario normal, tras salir
+con **Quit/Salir**. No abras otra instancia ni emparejes o cambies ajustes.
+
+- `mounted-clean`: ejecuta el archivo AppImage original mediante su runtime.
+- `extracted-clean`: ejecuta el `AppRun` extraído, sin modificarlo ni mover
+  bibliotecas. Es compatible con el paquete corregido, que ya no incluye Wayland.
+
+Ambos arrancan desde el mismo directorio de trabajo, conservan la sesión gráfica,
+usan perfiles XDG/GStreamer vacíos independientes para evitar arrastrar estado,
+desactivan el relay y eliminan los mismos overrides gráficos/GIO. No se fuerza
+software rendering. Se eliminan también el override que desactiva el sandbox y
+`APPIMAGE_EXTRACT_AND_RUN`/`NO_CLEANUP`, para no transformar accidentalmente el caso
+montado en otro arranque extraído. La distinción entre montaje y extracción está
+documentada por [AppImage](https://docs.appimage.org/user-guide/troubleshooting/fuse.html).
+
+Comparte primero `summary.tsv`, la observación real de cada ventana y cómo se
+inicia normalmente la instancia que queda blanca. `124` sólo indica timeout;
+`rendered` exige contenido visible y controles que respondan. Los logs quedan
+privados en cada caso; revisa y redacta cualquier fragmento antes de compartirlo.
+
+Si sólo falla `mounted-clean`, investigaremos runtime, montaje y resolución de
+rutas; no prueba por sí solo un error de FUSE. Si ambos funcionan, la siguiente
+comparación debe aislar el entorno del lanzador, configuración/caché o arranque
+con relay, sin borrar el perfil real. Si también falla el extraído, necesitamos
+su secuencia de errores y las diferencias respecto al diagnóstico previo.
+Un cambio de directorio interno realizado por el propio lanzador forma parte de
+la ruta de arranque que se compara; no se altera ese comportamiento.
+
+Esta comparación no prueba Wayland nativo, el perfil habitual, emparejamiento,
+keyring ni sincronización. Los tests locales validan el control de los casos con
+herramientas simuladas, no el renderizado físico en Arch. No ejecutar
+`--wayland-comparison` sobre la 0.1.13 ni combinar ambos modos.

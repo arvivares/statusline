@@ -49,6 +49,24 @@ mobile and native widgets.
 The segmented gold **S** is Statusline's official logo. Its shared source and
 platform exports are maintained in the [brand kit](branding/README.md).
 
+### Download for iPhone
+
+<div align="center">
+  <a href="https://apps.apple.com/app/statusline/id6807851320">
+    <img src="docs/assets/readme/app-store-qr.svg" alt="Scan to download Statusline for iPhone from the App Store" width="245" height="245">
+  </a>
+  <p><a href="https://apps.apple.com/app/statusline/id6807851320"><strong>Download on the App Store</strong></a><br><sub>Free · iPhone · iOS 17 or later</sub></p>
+</div>
+
+Scan with your iPhone camera, or tap the link from your phone. This is a public
+download QR, not a private device-pairing code.
+
+### Android · Coming soon
+
+**Coming soon on Google Play.** The store download link and QR will be added here
+once the app is approved. Android beta APKs are already available on
+[GitHub Releases](https://github.com/arvivares/statusline/releases).
+
 ### Highlights
 
 - Weekly and short-window usage, percentage remaining, reset time and account plan.
@@ -62,19 +80,20 @@ platform exports are maintained in the [brand kit](branding/README.md).
 
 ### Project status
 
-Statusline is in beta. The product flow has been tested on physical mobile devices and
-desktop installers are generated for all supported operating systems. Store review and
+Statusline for iPhone is available on the App Store; desktop and Android remain in
+beta. The product flow has been tested on physical mobile devices and desktop
+installers are generated for all supported operating systems. Store review and
 public code-signing onboarding are tracked in the
 [public beta checklist](docs/release/public-beta-checklist.md).
 
-| Surface                     | Status                | Distribution                                             |
-| --------------------------- | --------------------- | -------------------------------------------------------- |
-| Windows x64                 | Beta                  | NSIS and MSI; public Authenticode onboarding in progress |
-| Linux x64                   | Beta                  | DEB, RPM and AppImage with OpenPGP signatures            |
-| macOS Apple Silicon + Intel | Beta                  | Universal DMG and PKG, Developer ID and notarization     |
-| iPhone, iOS 17+             | Beta                  | TestFlight and App Store process                         |
-| Android 6.0+                | Beta                  | Signed APK/AAB and Google Play closed testing            |
-| Cloudflare Workers + D1     | Operational reference | Public encrypted relay                                   |
+| Surface                     | Status                | Distribution                                                    |
+| --------------------------- | --------------------- | --------------------------------------------------------------- |
+| Windows x64                 | Beta                  | NSIS and MSI; public Authenticode onboarding in progress        |
+| Linux x64                   | Beta                  | DEB, RPM and AppImage with OpenPGP signatures                   |
+| macOS Apple Silicon + Intel | Beta                  | Universal DMG and PKG, Developer ID and notarization            |
+| iPhone, iOS 17+             | Available             | [App Store](https://apps.apple.com/app/statusline/id6807851320) |
+| Android 6.0+                | Beta                  | Signed APK/AAB and Google Play closed testing                   |
+| Cloudflare Workers + D1     | Operational reference | Public encrypted relay                                          |
 
 ## Releases
 
@@ -206,7 +225,7 @@ The installers do not bundle Codex or user credentials.
 4. Refresh the companion and then the mobile app.
 5. Add Statusline from the operating system's widget gallery.
 
-Treat the QR as a password during its ten-minute lifetime. Never share it in logs,
+Treat the companion's pairing QR as a password during its ten-minute lifetime. Never share it in logs,
 screenshots or support requests.
 
 ## Development

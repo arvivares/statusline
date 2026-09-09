@@ -97,6 +97,8 @@ export GDK_BACKEND=x11
 export GIO_EXTRA_MODULES="$PWD/usr/lib/x86_64-linux-gnu/gio/modules"
 printf 'module=%s\\nextra=%s\\nsoftware=%s\\nrelay=%s\\n' "\${GIO_MODULE_DIR:-unset}" "$GIO_EXTRA_MODULES" "\${LIBGL_ALWAYS_SOFTWARE:-unset}" "\${STATUSLINE_RELAY_BASE_URL:-disabled}"
 printf 'config=%s\\ndata=%s\\ncache=%s\\nregistry=%s\\n' "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$GST_REGISTRY"
+printf 'cwd=%s\\nsandbox_override=%s\\nextract_override=%s\\ncleanup_override=%s\\n' "$PWD" "\${WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS:-unset}" "\${APPIMAGE_EXTRACT_AND_RUN:-unset}" "\${NO_CLEANUP:-unset}"
+if [[ \${FIXTURE_LAUNCH_COMPARISON:-} == yes ]]; then exit 124; fi
 if [[ -z \${GIO_MODULE_DIR:-} ]]; then printf 'undefined symbol: g_task_set_static_name\\n' >&2; fi
 if [[ \${FIXTURE_WAYLAND_EXPERIMENT:-} == yes ]]; then
   if [[ -f "$PWD/usr/lib/libwayland-client.so.0" || \${FIXTURE_PERSIST_EGL:-} == yes ]]; then printf 'EGL_BAD_PARAMETER\\n' >&2; fi
@@ -113,7 +115,13 @@ exit 124
   await executable(
     appimage,
     `
-[[ "\${1:-}" == --appimage-extract ]] || exit 2
+if [[ "\${1:-}" != --appimage-extract ]]; then
+  [[ \${FIXTURE_LAUNCH_COMPARISON:-} == yes ]] || exit 2
+  [[ -z \${APPIMAGE_EXTRACT_AND_RUN:-} && -z \${NO_CLEANUP:-} ]] || exit 43
+  printf 'entry=mounted\\n'
+  if [[ \${FIXTURE_MOUNT_FAIL:-} == yes ]]; then printf 'fixture mount failure\\n' >&2; exit 42; fi
+  exec "$FIXTURE_APPDIR/AppRun"
+fi
 [[ "\${FIXTURE_EXTRACT_FAIL:-}" != yes ]] || exit 42
 cp -R "$FIXTURE_APPDIR" squashfs-root
 `,
@@ -185,6 +193,8 @@ describe.skipIf(process.platform === "win32")(
       ["--sha256", "invalid"],
       ["--unknown"],
       ["--wayland-comparison"],
+      ["--launch-comparison"],
+      ["--launch-comparison", "--wayland-comparison", "--sha256", digest],
     ])("rejects invalid arguments: %s %s", async (...args) => {
       const f = await fixture();
       expect(f.run(args).status).toBe(1);
@@ -280,6 +290,78 @@ describe.skipIf(process.platform === "win32")(
       expect(await readFile(join(directory, "summary.tsv"), "utf8")).toContain(
         "baseline\t124\tyes\tyes\tnot-observed",
       );
+    });
+
+    it("compares the mounted and extracted entry points with equivalent clean conditions without changing a 0.1.13-style payload", async () => {
+      const f = await fixture({
+        FIXTURE_LAUNCH_COMPARISON: "yes",
+        APPIMAGE_EXTRACT_AND_RUN: "1",
+        NO_CLEANUP: "1",
+        WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS: "1",
+        GIO_MODULE_DIR: "/private/host/modules",
+        GIO_EXTRA_MODULES: "/private/host/extra",
+        LIBGL_ALWAYS_SOFTWARE: "true",
+        STATUSLINE_RELAY_BASE_URL: "https://private.invalid",
+      });
+      // The fixed release deliberately ships none of these Wayland libraries.
+      for (const name of waylandLibraries) {
+        await rm(join(f.appdir, "usr/lib", name));
+      }
+      const original = await readFile(f.appimage);
+      const result = f.run(["--launch-comparison", "--sha256", digest]);
+      expect(result.status, result.stderr).toBe(0);
+      const directory = await f.outputDirectory();
+      expect(await readFile(join(directory, "summary.tsv"), "utf8")).toBe(
+        "case\texit_code\tgio_symbol_error\tegl_bad_parameter\tui_observation\n" +
+          "mounted-clean\t124\tno\tno\tnot-observed\n" +
+          "extracted-clean\t124\tno\tno\tnot-observed\n",
+      );
+      for (const name of ["mounted-clean", "extracted-clean"]) {
+        const log = await readFile(
+          join(directory, name, "startup.log"),
+          "utf8",
+        );
+        expect(log.includes("entry=mounted")).toBe(name === "mounted-clean");
+        expect(log).toContain(`cwd=${directory}/extracted/squashfs-root`);
+        expect(log).toContain(`config=${directory}/${name}/config`);
+        expect(log).toContain(`data=${directory}/${name}/data`);
+        expect(log).toContain(`cache=${directory}/${name}/cache`);
+        expect(log).toContain("module=unset");
+        expect(log).toContain("software=unset");
+        expect(log).toContain("relay=disabled");
+        expect(log).toContain("sandbox_override=unset");
+        expect(log).toContain("extract_override=unset");
+        expect(log).toContain("cleanup_override=unset");
+        expect(log).not.toContain("/private/host/");
+        expect(await readdir(join(directory, name))).not.toContain(
+          "loader.fixture",
+        );
+      }
+      expect(await readFile(f.appimage)).toEqual(original);
+      expect(
+        await readFile(join(directory, "extracted/squashfs-root/AppRun")),
+      ).toEqual(await readFile(join(f.appdir, "AppRun")));
+      expect(await readdir(directory)).not.toContain("wayland-quarantine");
+      expect(result.stdout).toContain(
+        "normal-launch failure remains unresolved",
+      );
+      expect(result.stdout).not.toContain("private.invalid");
+    });
+
+    it("retains a mounted-launch failure and still runs the extracted control without treating either as rendered", async () => {
+      const f = await fixture({
+        FIXTURE_LAUNCH_COMPARISON: "yes",
+        FIXTURE_MOUNT_FAIL: "yes",
+      });
+      const result = f.run(["--launch-comparison", "--sha256", digest]);
+      expect(result.status, result.stderr).toBe(0);
+      const directory = await f.outputDirectory();
+      const summary = await readFile(join(directory, "summary.tsv"), "utf8");
+      expect(summary).toContain("mounted-clean\t42\tno\tno\tnot-observed");
+      expect(summary).toContain("extracted-clean\t124\tno\tno\tnot-observed");
+      expect(
+        await readFile(join(directory, "mounted-clean/startup.log"), "utf8"),
+      ).toContain("fixture mount failure");
     });
 
     it("compares bundled and host Wayland with identical isolated GIO and no software override", async () => {

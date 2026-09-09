@@ -45,6 +45,24 @@ La interfaz sigue el idioma principal del sistema: español o inglés. Para cual
 
 El companion consulta la sesión local de Codex; no requiere una API key de OpenAI ni una cuenta compartida entre el ordenador y el teléfono. Cuando el usuario activa la sincronización, publica únicamente un snapshot mínimo cifrado que el relay no puede descifrar.
 
+### Descargar para iPhone
+
+<div align="center">
+  <a href="https://apps.apple.com/app/statusline/id6807851320">
+    <img src="docs/assets/readme/app-store-qr.svg" alt="Escanea para descargar Statusline para iPhone desde la App Store" width="245" height="245">
+  </a>
+  <p><a href="https://apps.apple.com/app/statusline/id6807851320"><strong>Descargar en la App Store</strong></a><br><sub>Gratis · iPhone · iOS 17 o posterior</sub></p>
+</div>
+
+Escanea con la cámara del iPhone o toca el enlace desde el teléfono. Este QR es
+público y sirve para descargar la app; no es un código privado de emparejamiento.
+
+### Android · Próximamente
+
+**Próximamente en Google Play.** Añadiremos aquí el enlace de descarga y su QR
+cuando la app esté aprobada. Los APK de la beta de Android ya están disponibles en
+[GitHub Releases](https://github.com/arvivares/statusline/releases).
+
 ## Qué incluye
 
 - Estado semanal de Codex, porcentaje restante, fecha de reinicio, ventana corta y plan.
@@ -57,17 +75,17 @@ El companion consulta la sesión local de Codex; no requiere una API key de Open
 
 ## Plataformas
 
-| Plataforma                  | Rol          | Implementación   | Distribución                               |
-| --------------------------- | ------------ | ---------------- | ------------------------------------------ |
-| Windows x64                 | Publisher    | Tauri + Rust     | NSIS `.exe` y MSI                          |
-| Linux x64                   | Publisher    | Tauri + Rust     | DEB, RPM y AppImage + firmas OpenPGP       |
-| macOS Apple Silicon + Intel | Publisher    | Tauri + Rust     | DMG y PKG universales                      |
-| macOS nativo                | Publisher    | SwiftUI          | Target `StatuslineCompanion` de Xcode      |
-| iPhone, iOS 17 o posterior  | Reader       | SwiftUI          | Xcode/TestFlight/App Store, proceso manual |
-| Widget de iOS               | Presentación | WidgetKit        | Incluido con la app de iPhone              |
-| Android 6.0 o posterior     | Reader       | Kotlin + Compose | APK y AAB firmados                         |
-| Widget de Android           | Presentación | App Widget       | Incluido con la app Android                |
-| Cloudflare Workers + D1     | Relay        | TypeScript       | Despliegue con Wrangler                    |
+| Plataforma                  | Rol          | Implementación   | Distribución                                                    |
+| --------------------------- | ------------ | ---------------- | --------------------------------------------------------------- |
+| Windows x64                 | Publisher    | Tauri + Rust     | NSIS `.exe` y MSI                                               |
+| Linux x64                   | Publisher    | Tauri + Rust     | DEB, RPM y AppImage + firmas OpenPGP                            |
+| macOS Apple Silicon + Intel | Publisher    | Tauri + Rust     | DMG y PKG universales                                           |
+| macOS nativo                | Publisher    | SwiftUI          | Target `StatuslineCompanion` de Xcode                           |
+| iPhone, iOS 17 o posterior  | Reader       | SwiftUI          | [App Store](https://apps.apple.com/app/statusline/id6807851320) |
+| Widget de iOS               | Presentación | WidgetKit        | Incluido con la app de iPhone                                   |
+| Android 6.0 o posterior     | Reader       | Kotlin + Compose | APK y AAB firmados                                              |
+| Widget de Android           | Presentación | App Widget       | Incluido con la app Android                                     |
+| Cloudflare Workers + D1     | Relay        | TypeScript       | Despliegue con Wrangler                                         |
 
 `apps/desktop` contiene el companion multiplataforma que genera los instaladores públicos de escritorio. El target SwiftUI `StatuslineCompanion`, dentro de `apps/apple`, se conserva como implementación nativa de macOS; no es necesario para compilar Tauri.
 
@@ -182,7 +200,7 @@ Los instaladores no incluyen Codex ni credenciales de usuario.
 4. Actualiza el companion y después la app móvil.
 5. Añade el widget desde el selector del sistema.
 
-El QR debe tratarse como una contraseña durante sus diez minutos de vigencia. No lo compartas en logs, capturas o solicitudes de soporte.
+El QR de emparejamiento del companion debe tratarse como una contraseña durante sus diez minutos de vigencia. No lo compartas en logs, capturas o solicitudes de soporte.
 
 ## Desarrollo
 
