@@ -28,6 +28,7 @@ pub enum CodexDiagnosticStatus {
 pub enum CodexSource {
     Environment,
     Saved,
+    DesktopApp,
     Standalone,
     Npm,
     Volta,
@@ -64,6 +65,12 @@ pub enum CodexConfigurationError {
 struct Candidate {
     path: PathBuf,
     source: CodexSource,
+}
+
+struct VerifiedCandidate {
+    candidate: Candidate,
+    launch: CodexLaunch,
+    version: String,
 }
 
 #[derive(Clone, Debug)]
@@ -264,41 +271,29 @@ pub async fn inspect_codex(
 ) -> Result<CodexDiagnostic, CodexConfigurationError> {
     let (saved_path, settings_warning) = read_saved_path(settings_directory)?;
     let candidates = collect_candidates(saved_path.as_deref());
-    let mut first_failure = None;
-
-    for candidate in candidates {
-        let Some(launch) = launch_for_candidate(&candidate.path) else {
-            if candidate.path.is_file() && first_failure.is_none() {
-                first_failure = Some(format!(
-                    "{} is not a supported Codex launcher",
-                    display_path(&candidate.path)
-                ));
-            }
-            continue;
+    let (verified, first_failure) = select_verified_candidate(&candidates).await;
+    if let Some(VerifiedCandidate {
+        candidate,
+        launch,
+        version,
+    }) = verified
+    {
+        let saved_fallback = saved_path
+            .as_ref()
+            .is_some_and(|saved| !paths_are_equal(saved, &candidate.path));
+        let message = if saved_fallback {
+            Some("The saved path is unavailable; automatic detection is active.".to_owned())
+        } else {
+            settings_warning
         };
-
-        match verify_launch(&launch).await {
-            Ok(version) => {
-                let saved_fallback = saved_path
-                    .as_ref()
-                    .is_some_and(|saved| !paths_are_equal(saved, &candidate.path));
-                let message = if saved_fallback {
-                    Some("The saved path is unavailable; automatic detection is active.".to_owned())
-                } else {
-                    settings_warning
-                };
-                return Ok(CodexDiagnostic {
-                    status: CodexDiagnosticStatus::Ready,
-                    path: Some(display_path(&launch.display_path)),
-                    source: Some(candidate.source),
-                    version: Some(version),
-                    saved_path: saved_path.as_ref().map(|path| display_path(path)),
-                    message,
-                });
-            }
-            Err(error) if first_failure.is_none() => first_failure = Some(error),
-            Err(_) => {}
-        }
+        return Ok(CodexDiagnostic {
+            status: CodexDiagnosticStatus::Ready,
+            path: Some(display_path(&launch.display_path)),
+            source: Some(candidate.source),
+            version: Some(version),
+            saved_path: saved_path.as_ref().map(|path| display_path(path)),
+            message,
+        });
     }
 
     let status = if first_failure.is_some() {
@@ -314,6 +309,41 @@ pub async fn inspect_codex(
         saved_path: saved_path.as_ref().map(|path| display_path(path)),
         message: first_failure.or(settings_warning),
     })
+}
+
+// Diagnostics and actual usage reads must select the same verified source.
+async fn select_verified_candidate(
+    candidates: &[Candidate],
+) -> (Option<VerifiedCandidate>, Option<String>) {
+    let mut first_failure = None;
+    for candidate in candidates {
+        let Some(launch) = launch_for_candidate(&candidate.path) else {
+            if candidate.path.is_file() && first_failure.is_none() {
+                first_failure = Some(format!(
+                    "{} is not a supported Codex launcher",
+                    display_path(&candidate.path)
+                ));
+            }
+            continue;
+        };
+
+        match verify_launch(&launch).await {
+            Ok(version) => {
+                return (
+                    Some(VerifiedCandidate {
+                        candidate: candidate.clone(),
+                        launch,
+                        version,
+                    }),
+                    first_failure,
+                );
+            }
+            Err(error) if first_failure.is_none() => first_failure = Some(error),
+            Err(_) => {}
+        }
+    }
+
+    (None, first_failure)
 }
 
 pub async fn save_codex_path(
@@ -346,13 +376,15 @@ pub async fn clear_codex_path(
     inspect_codex(Some(settings_directory)).await
 }
 
-pub(crate) fn resolve_codex_launch(settings_directory: Option<&Path>) -> Option<CodexLaunch> {
+pub(crate) async fn resolve_codex_launch(settings_directory: Option<&Path>) -> Option<CodexLaunch> {
     let saved_path = read_saved_path(settings_directory)
         .ok()
         .and_then(|(path, _warning)| path);
-    collect_candidates(saved_path.as_deref())
-        .into_iter()
-        .find_map(|candidate| launch_for_candidate(&candidate.path))
+    let candidates = collect_candidates(saved_path.as_deref());
+    select_verified_candidate(&candidates)
+        .await
+        .0
+        .map(|verified| verified.launch)
 }
 
 fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
@@ -363,6 +395,15 @@ fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
     }
     if let Some(path) = saved_path {
         push_candidate(&mut candidates, path.to_path_buf(), CodexSource::Saved);
+    }
+
+    // Only macOS layouts have been verified. Never guess Windows Store/Linux bundles.
+    #[cfg(target_os = "macos")]
+    for path in macos_desktop_app_paths(
+        Path::new("/Applications"),
+        env::var_os("HOME").as_deref().map(Path::new),
+    ) {
+        push_candidate(&mut candidates, path, CodexSource::DesktopApp);
     }
 
     #[cfg(windows)]
@@ -381,6 +422,21 @@ fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
     }
 
     candidates
+}
+
+#[cfg(any(target_os = "macos", test))]
+fn macos_desktop_app_paths(applications: &Path, user_home: Option<&Path>) -> Vec<PathBuf> {
+    let mut roots = vec![applications.to_path_buf()];
+    if let Some(user_home) = user_home {
+        push_unique_path(&mut roots, user_home.join("Applications"));
+    }
+    roots
+        .into_iter()
+        .flat_map(|root| {
+            ["ChatGPT.app", "Codex.app"]
+                .map(|name| root.join(name).join("Contents/Resources/codex"))
+        })
+        .collect()
 }
 
 #[cfg(windows)]
@@ -557,6 +613,12 @@ fn child_directories(parent: &Path) -> Vec<PathBuf> {
 }
 
 fn launch_for_candidate(path: &Path) -> Option<CodexLaunch> {
+    // File pickers on macOS return the .app package, not its internal executable.
+    // Keep the saved package path so app updates do not pin a versioned location.
+    #[cfg(target_os = "macos")]
+    if path.is_dir() && path.extension().is_some_and(|extension| extension == "app") {
+        return launch_for_candidate(&path.join("Contents/Resources/codex"));
+    }
     if !path.is_file() {
         return None;
     }
@@ -1009,6 +1071,145 @@ mod tests {
         Settings, launch_for_candidate, read_saved_path, windows_common_paths,
         windows_local_app_data_from_executable, write_settings,
     };
+
+    #[test]
+    fn desktop_app_locations_are_bounded_and_user_independent() {
+        let paths = super::macos_desktop_app_paths(
+            std::path::Path::new("/Applications"),
+            Some(std::path::Path::new("/Users/Ada Lovelace")),
+        );
+        assert_eq!(
+            paths,
+            vec![
+                PathBuf::from("/Applications/ChatGPT.app/Contents/Resources/codex"),
+                PathBuf::from("/Applications/Codex.app/Contents/Resources/codex"),
+                PathBuf::from(
+                    "/Users/Ada Lovelace/Applications/ChatGPT.app/Contents/Resources/codex"
+                ),
+                PathBuf::from(
+                    "/Users/Ada Lovelace/Applications/Codex.app/Contents/Resources/codex"
+                ),
+            ]
+        );
+        assert_eq!(
+            super::macos_desktop_app_paths(std::path::Path::new("/Applications"), None).len(),
+            2
+        );
+        assert_eq!(
+            serde_json::to_value(super::CodexSource::DesktopApp).unwrap(),
+            "desktopApp"
+        );
+    }
+
+    #[cfg(unix)]
+    fn fake_codex(path: &std::path::Path, script: &str) {
+        use std::os::unix::fs::PermissionsExt;
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, script).unwrap();
+        fs::set_permissions(path, fs::Permissions::from_mode(0o700)).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn verified_selection_skips_missing_broken_and_non_codex_sources() {
+        use super::{Candidate, CodexSource, select_verified_candidate};
+        let directory = test_directory("verified-fallback");
+        let missing = directory.join("missing");
+        let broken = directory.join("broken");
+        let impostor = directory.join("not-codex");
+        let bundled = directory.join("ChatGPT.app/Contents/Resources/codex");
+        let fallback = directory.join("cli/codex");
+        fake_codex(&broken, "#!/bin/sh\nexit 1\n");
+        fake_codex(&impostor, "#!/bin/sh\nprintf 'unrelated tool 1.0\\n'\n");
+        fake_codex(
+            &bundled,
+            "#!/bin/sh\n[ \"$1\" = --version ] || exit 1\nprintf 'codex-cli 0.151.0\\n'\n",
+        );
+        fake_codex(&fallback, "#!/bin/sh\nprintf 'codex-cli 0.149.1\\n'\n");
+        let candidates = vec![
+            Candidate {
+                path: missing,
+                source: CodexSource::Environment,
+            },
+            Candidate {
+                path: broken,
+                source: CodexSource::Saved,
+            },
+            Candidate {
+                path: impostor,
+                source: CodexSource::DesktopApp,
+            },
+            Candidate {
+                path: bundled.clone(),
+                source: CodexSource::DesktopApp,
+            },
+            Candidate {
+                path: fallback.clone(),
+                source: CodexSource::Path,
+            },
+        ];
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let (selected, failure) = runtime.block_on(select_verified_candidate(&candidates));
+        let selected = selected.unwrap();
+        assert!(failure.is_some());
+        assert_eq!(selected.launch.program, bundled);
+        assert_eq!(selected.candidate.source, CodexSource::DesktopApp);
+        assert_eq!(selected.version, "codex-cli 0.151.0");
+        // An app removed/replaced by its updater must not hide a valid CLI.
+        fs::remove_file(&bundled).unwrap();
+        let (selected, _) = runtime.block_on(select_verified_candidate(&candidates));
+        assert_eq!(selected.unwrap().launch.program, fallback);
+        // Explicit choices still win over automatic app discovery.
+        fake_codex(&bundled, "#!/bin/sh\nprintf 'codex-cli 0.151.0\\n'\n");
+        let explicit = vec![
+            Candidate {
+                path: fallback,
+                source: CodexSource::Saved,
+            },
+            candidates[3].clone(),
+        ];
+        let (selected, _) = runtime.block_on(select_verified_candidate(&explicit));
+        assert_eq!(selected.unwrap().candidate.source, CodexSource::Saved);
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_picker_accepts_an_app_package_with_spaces_but_not_arbitrary_directories() {
+        let directory = test_directory("app-picker");
+        let bundle = directory.join("My Codex.app");
+        let executable = bundle.join("Contents/Resources/codex");
+        fake_codex(&executable, "#!/bin/sh\nprintf 'codex-cli 0.151.0\\n'\n");
+        let launch = launch_for_candidate(&bundle).unwrap();
+        assert_eq!(launch.program, executable);
+        assert!(launch.prefix_args.is_empty());
+        assert!(launch_for_candidate(&directory).is_none());
+        assert!(launch_for_candidate(&directory.join("Missing.app")).is_none());
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn saved_paths_precede_automatic_bundles_in_the_production_collector() {
+        let saved = PathBuf::from("/explicit/test/codex");
+        let candidates = super::collect_candidates(Some(&saved));
+        let saved_index = candidates
+            .iter()
+            .position(|candidate| candidate.path == saved)
+            .unwrap();
+        let app_index = candidates
+            .iter()
+            .position(|candidate| candidate.source == super::CodexSource::DesktopApp)
+            .unwrap();
+        assert!(saved_index < app_index);
+        assert_eq!(
+            candidates[app_index].path,
+            PathBuf::from("/Applications/ChatGPT.app/Contents/Resources/codex")
+        );
+    }
 
     #[test]
     fn windows_standalone_codex_path_is_user_independent() {

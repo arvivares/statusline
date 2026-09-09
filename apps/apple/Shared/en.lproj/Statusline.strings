@@ -40,6 +40,7 @@
 "Check relay" = "Check relay";
 "Check scan" = "Check scan";
 "Check that you are signed in to the CLI, then refresh." = "Check that you are signed in to the CLI, then refresh.";
+"Check your Codex session in the desktop app or CLI, then refresh." = "Check your Codex session in the desktop app or CLI, then refresh.";
 "Check your connection and try again in a few seconds." = "Check your connection and try again in a few seconds.";
 "CHECKING" = "CHECKING";
 "Checking Codex" = "Checking Codex";
@@ -67,6 +68,7 @@
 "Codex is local, verified and ready for account metadata." = "Codex is local, verified and ready for account metadata.";
 "Codex local" = "Codex local";
 "Codex not connected" = "Codex not connected";
+"Codex not found" = "Codex not found";
 "Codex query failed" = "Codex query failed";
 "Codex read and encrypted snapshot published." = "Codex read and encrypted snapshot published.";
 "Codex read; the relay needs attention." = "Codex read; the relay needs attention.";
@@ -132,6 +134,7 @@
 "Demo sample loaded on this device only." = "Demo sample loaded on this device only.";
 "Demo sample removed." = "Demo sample removed.";
 "Demo sample. {0}" = "Demo sample. {0}";
+"DESKTOP APP" = "DESKTOP APP";
 "Desktop companion" = "Desktop companion";
 "Device connected with encryption." = "Device connected with encryption.";
 "Device connected. Waiting for the companion’s first sample." = "Device connected. Waiting for the companion’s first sample.";
@@ -201,7 +204,9 @@
 "OFFICIAL SETUP" = "OFFICIAL SETUP";
 "OFFLINE" = "OFFLINE";
 "OFFLINE · NO SAMPLE AVAILABLE" = "OFFLINE · NO SAMPLE AVAILABLE";
+"On macOS, use Codex in ChatGPT or Codex.app. Alternatively, install the CLI below. Sign in with ChatGPT, then refresh." = "On macOS, use Codex in ChatGPT or Codex.app. Alternatively, install the CLI below. Sign in with ChatGPT, then refresh.";
 "Open OpenAI" = "Open OpenAI";
+"Open Source Settings to detect or select a local Codex runtime." = "Open Source Settings to detect or select a local Codex runtime.";
 "Open Source Settings to detect or select the local CLI." = "Open Source Settings to detect or select the local CLI.";
 "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample." = "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample.";
 "Opening secure OpenAI sign-in…" = "Opening secure OpenAI sign-in…";
@@ -299,12 +304,14 @@
 "Scanning local system…" = "Scanning local system…";
 "SECRET SERVICE" = "SECRET SERVICE";
 "See your remaining weekly quota and its next reset." = "See your remaining weekly quota and its next reset.";
+"Select a Codex executable or macOS app" = "Select a Codex executable or macOS app";
 "SELECT EXECUTABLE" = "SELECT EXECUTABLE";
 "Select the Codex executable" = "Select the Codex executable";
 "SESSION STAYS ON MAC" = "SESSION STAYS ON MAC";
 "SESSION.STORAGE" = "SESSION.STORAGE";
 "SHORT.WINDOW" = "SHORT.WINDOW";
 "Show" = "Show";
+"Sign in to Codex in your desktop app or CLI, then refresh." = "Sign in to Codex in your desktop app or CLI, then refresh.";
 "SOURCE" = "SOURCE";
 "SOURCE / BUSY" = "SOURCE / BUSY";
 "SOURCE / CODEX LOCAL" = "SOURCE / CODEX LOCAL";
@@ -378,6 +385,7 @@
 "UNPAIRED" = "UNPAIRED";
 "Unsupported Codex state" = "Unsupported Codex state";
 "Update Statusline Companion or check your CLI version." = "Update Statusline Companion or check your CLI version.";
+"Update Statusline Companion or your Codex installation." = "Update Statusline Companion or your Codex installation.";
 "Update Statusline Companion to read this response." = "Update Statusline Companion to read this response.";
 "USE AUTOMATIC DETECTION" = "USE AUTOMATIC DETECTION";
 "Use device code" = "Use device code";

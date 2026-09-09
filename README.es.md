@@ -173,7 +173,12 @@ El contrato normativo está en [Statusline Relay Protocol v1](protocol/statuslin
 
 ### 1. Preparar Codex
 
-Instala Codex CLI en el ordenador, ejecútalo y completa **Sign in with ChatGPT**:
+En macOS puedes usar **Codex integrado en ChatGPT o Codex.app**, sin instalar una
+CLI por separado. Instala la app de escritorio en Aplicaciones, abre Codex e inicia
+sesión con ChatGPT. Statusline detecta automáticamente su ejecutable integrado.
+
+Como alternativa en macOS, Windows o Linux, instala Codex CLI y completa
+**Sign in with ChatGPT**:
 
 ```shell
 codex --version
@@ -181,6 +186,10 @@ codex
 ```
 
 Statusline detecta instalaciones standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y `PATH`. También permite seleccionar manualmente un ejecutable y lo verifica con `codex --version` antes de guardarlo.
+
+Reutilizar la sesión de escritorio depende del modo de autenticación local de OpenAI.
+Consulta [los orígenes de Codex](docs/architecture/codex-sources.md) para ver las rutas
+compatibles en macOS y qué hacer si el ejecutable integrado pide iniciar sesión.
 
 ### 2. Instalar el companion
 
@@ -194,7 +203,7 @@ Los instaladores no incluyen Codex ni credenciales de usuario.
 
 ### 3. Emparejar el móvil
 
-1. Abre **Connections → Codex Source** y confirma que la CLI esté verificada.
+1. Abre **Conexiones → Origen Codex** y confirma que el ejecutable esté verificado (`APP DE ESCRITORIO` si usas el integrado en macOS).
 2. En **Universal Relay**, selecciona **Create pairing**.
 3. En iOS o Android, abre **Pair device** y escanea el QR o pega el vínculo privado.
 4. Actualiza el companion y después la app móvil.
@@ -208,7 +217,7 @@ El QR de emparejamiento del companion debe tratarse como una contraseña durante
 
 - Node.js 24 o posterior y npm 11.
 - Rust 1.98 mediante rustup para el companion Tauri.
-- Codex CLI instalado y autenticado para probar datos reales.
+- Codex autenticado para probar datos reales: app de escritorio en macOS o Codex CLI.
 - Requisitos nativos de [Tauri 2](https://v2.tauri.app/start/prerequisites/) para cada escritorio.
 - Xcode actual para iOS, WidgetKit y el companion SwiftUI de macOS.
 - JDK 17, Android SDK Platform 37 y Build Tools 36.0.0 para Android.

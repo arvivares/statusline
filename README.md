@@ -194,7 +194,12 @@ with a shared [AES-GCM interoperability vector](protocol/fixtures/aes-gcm-v1.jso
 
 ### 1. Prepare Codex
 
-Install Codex CLI on the desktop, launch it and complete **Sign in with ChatGPT**:
+On macOS, you can use **Codex inside ChatGPT or Codex.app** without installing a
+separate CLI. Install the desktop app in Applications, open Codex and sign in with
+ChatGPT. Statusline detects its bundled runtime automatically.
+
+Alternatively, on macOS, Windows or Linux, install Codex CLI and complete
+**Sign in with ChatGPT**:
 
 ```shell
 codex --version
@@ -204,6 +209,10 @@ codex
 Statusline discovers standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise and `PATH`
 installations. A manually selected executable is validated with `codex --version` before
 it is stored.
+
+Desktop-session reuse depends on OpenAI's local authentication mode. See
+[Codex sources](docs/architecture/codex-sources.md) for supported macOS locations,
+source precedence and what to do if the bundled runtime still asks for sign-in.
 
 ### 2. Install the companion
 
@@ -219,7 +228,7 @@ The installers do not bundle Codex or user credentials.
 
 ### 3. Pair a mobile device
 
-1. Open **Connections → Codex Source** and verify the detected CLI.
+1. Open **Connections → Codex Source** and verify the detected runtime (`DESKTOP APP` on macOS when using the bundled source).
 2. Under **Universal Relay**, select **Create pairing**.
 3. On iPhone or Android, open **Pair device** and scan the QR or paste its private link.
 4. Refresh the companion and then the mobile app.
@@ -234,7 +243,7 @@ screenshots or support requests.
 
 - Node.js 24 and npm 11.
 - Rust 1.98 through rustup.
-- Codex CLI installed and authenticated for real-data testing.
+- An authenticated Codex runtime for real-data testing: the macOS desktop app or Codex CLI.
 - Native [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/) for the host OS.
 - Xcode for the iPhone, WidgetKit and native macOS targets.
 - JDK 17, Android SDK Platform 37.0 and Build Tools 36.0.0 for Android.
