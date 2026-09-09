@@ -118,10 +118,20 @@ export const staticMessages = {
     "start.eyebrow": "04 / YOUR NEXT STEP",
     "start.heading": "More focus.<br /><span>Starts here.</span>",
     "start.description":
-      "Statusline is just getting started.<br />Explore the beta, get to know the project and help us build what comes next.",
-    "start.earlyAccess": "EARLY ACCESS",
+      "Now on the App Store for iPhone.<br />Explore the desktop and Android betas, and help us build what comes next.",
+    "start.downloads": "DOWNLOADS",
     "start.choosePlatform": "CHOOSE YOUR PLATFORM",
     "start.platformGroup": "Installation platform",
+    "appStore.eyebrow": "AVAILABLE FOR IPHONE",
+    "appStore.heading": "Your quota. One glance away.",
+    "appStore.description":
+      "Keep your Codex quota and reset time on your home screen. Pair with the desktop companion for encrypted sync, or explore the app with the built-in demo.",
+    "appStore.cta": "Download on the App Store",
+    "appStore.requirements": "FREE · IPHONE · IOS 17+",
+    "appStore.qrAlt":
+      "Scan to download Statusline for iPhone from the App Store",
+    "appStore.qrCaption": "Scan with your iPhone camera",
+    "appStore.qrNote": "App download, not device pairing.",
     "availability.caption": "Statusline platform availability",
     "availability.platform": "Platform",
     "availability.status": "Availability",
@@ -148,12 +158,12 @@ export const staticMessages = {
     "availability.androidRequirements":
       "Android 6.0+. Companion and relay for sync; offline demo available.",
     "availability.androidLink": "Android releases",
-    "availability.iosStatus": "LIMITED ACCESS",
+    "availability.iosStatus": "AVAILABLE",
     "availability.iosFormats":
-      "TestFlight and App Store release process. Check the project for access.",
+      "Free download on the App Store. Native app and home screen widgets.",
     "availability.iosRequirements":
       "iPhone with iOS 17+. Companion sync or manual /status entry; local demo available.",
-    "availability.iosLink": "iPhone access",
+    "availability.iosLink": "Download on the App Store",
     "availability.note":
       "Availability follows each release and store review. Check the project links for the latest status.",
     "availability.scrollHint": "Scroll horizontally to compare all columns.",
@@ -308,10 +318,20 @@ export const staticMessages = {
     "start.eyebrow": "04 / TU SIGUIENTE PASO",
     "start.heading": "Más foco.<br /><span>Desde aquí.</span>",
     "start.description":
-      "Statusline está dando sus primeros pasos.<br />Explora la beta, conoce el proyecto y ayúdanos a construir lo que viene.",
-    "start.earlyAccess": "ACCESO ANTICIPADO",
+      "Ya disponible en el App Store para iPhone.<br />Prueba las betas de escritorio y Android, y ayúdanos a construir lo que viene.",
+    "start.downloads": "DESCARGAS",
     "start.choosePlatform": "ELIGE TU PLATAFORMA",
     "start.platformGroup": "Plataforma de instalación",
+    "appStore.eyebrow": "DISPONIBLE PARA IPHONE",
+    "appStore.heading": "Tu cuota. Siempre a la vista.",
+    "appStore.description":
+      "Consulta tu cuota de Codex y cuándo se reinicia desde la pantalla de inicio. Empareja el companion de escritorio para sincronizar con cifrado, o explora la app con la demo incluida.",
+    "appStore.cta": "Descargar en el App Store",
+    "appStore.requirements": "GRATIS · IPHONE · IOS 17+",
+    "appStore.qrAlt":
+      "Escanea para descargar Statusline para iPhone desde el App Store",
+    "appStore.qrCaption": "Escanea con la cámara de tu iPhone",
+    "appStore.qrNote": "Descarga de la app, no emparejamiento.",
     "availability.caption": "Statusline: plataformas y acceso",
     "availability.platform": "Plataforma",
     "availability.status": "Disponibilidad",
@@ -338,12 +358,12 @@ export const staticMessages = {
     "availability.androidRequirements":
       "Android 6.0+. Companion y relay para sincronizar; demo disponible sin conexión.",
     "availability.androidLink": "Versiones para Android",
-    "availability.iosStatus": "ACCESO LIMITADO",
+    "availability.iosStatus": "DISPONIBLE",
     "availability.iosFormats":
-      "Proceso de publicación en TestFlight y App Store. Consulta el acceso en el proyecto.",
+      "Descarga gratuita en el App Store. App nativa y widgets de pantalla de inicio.",
     "availability.iosRequirements":
       "iPhone con iOS 17+. Sincronización con companion o entrada manual de /status; demo local disponible.",
-    "availability.iosLink": "Acceso para iPhone",
+    "availability.iosLink": "Descargar en el App Store",
     "availability.note":
       "La disponibilidad depende de cada release y revisión de tienda. Consulta el estado actualizado en los enlaces del proyecto.",
     "availability.scrollHint":

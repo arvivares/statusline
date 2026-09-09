@@ -1939,6 +1939,80 @@ svg.icon,
   font-size: 13px;
   line-height: 1.8;
 }
+.app-store-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 278px;
+  align-items: center;
+  gap: 40px;
+  max-width: 975px;
+  margin: 48px auto 0;
+  padding: 40px;
+  border: 1px solid #635536;
+  border-top: 2px solid var(--gold);
+  border-radius: 7px;
+  background: var(--surface);
+}
+.app-store-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.app-store-copy h3 {
+  max-width: 430px;
+  margin-top: 22px;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -1.2px;
+  text-wrap: balance;
+}
+.app-store-description {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.85;
+}
+.app-store-copy > .button {
+  margin-top: 28px;
+  gap: 12px;
+}
+.app-store-requirements {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+.app-store-qr {
+  margin: 0;
+  padding-left: 32px;
+  border-left: 1px solid var(--line);
+  text-align: center;
+}
+.app-store-qr > a {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+}
+.app-store-qr img {
+  display: block;
+  width: 245px;
+  height: 245px;
+  background: #fff;
+}
+.app-store-qr figcaption {
+  margin-top: 16px;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.app-store-qr-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+}
 .download-panel {
   margin-top: 48px;
   max-width: 975px;
@@ -1947,6 +2021,9 @@ svg.icon,
   border-radius: 7px;
   overflow: hidden;
   background: linear-gradient(135deg, #1a2114, #13190f);
+}
+.app-store-card + .download-panel {
+  margin-top: 24px;
 }
 .download-top {
   display: flex;
@@ -3364,6 +3441,30 @@ svg.icon,
     font-size: 12px;
     max-width: 350px;
     margin-inline: auto;
+  }
+  .app-store-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding: 28px 20px;
+    margin-top: 32px;
+  }
+  .app-store-copy h3 {
+    font-size: 30px;
+    letter-spacing: -1px;
+  }
+  .app-store-copy > .button {
+    width: 100%;
+    padding-inline: 12px;
+    font-size: 12px;
+  }
+  .app-store-qr {
+    padding: 28px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .app-store-qr img {
+    width: 196px;
+    height: 196px;
   }
   .download-panel {
     margin-top: 32px;

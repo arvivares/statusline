@@ -54,6 +54,7 @@ Abre `http://localhost:4173`. Para comprobar y generar la versión estática:
 ```shell
 npm run check
 npm run format:check
+npm run test:dev
 npm run build
 npm run test:seo
 ```
@@ -63,6 +64,9 @@ y ejecuta `scripts/build.mjs`: compila con Vite y renderiza el HTML de cada idio
 con parse5 a partir de `index.html` y los catálogos locales. El resultado incluye
 `dist/index.html`, `dist/es/index.html` y ambos 404. `npm run test:seo` valida los
 artefactos generados.
+
+`npm run test:dev` levanta un servidor Vite temporal en localhost y comprueba que
+el QR compartido se sirva como SVG desde ambas rutas, sin sustituirlo por HTML.
 
 `dist/` está excluido de Git. `npm run preview -- --port 4173` permite revisar ese
 resultado localmente después del build. Para generar una versión de revisión
@@ -79,7 +83,8 @@ El workflow [Website](../../.github/workflows/website.yml) se inicia en todos lo
 hacia `main`, sin filtros de rutas a nivel del evento. Su primer job comprueba la
 lógica de CI y detecta cambios en `apps/web/`, el workflow, su detector, Dependabot
 o la configuración compartida de Node y formato, además del kit de marca en
-`branding/` y su generador. Solo en esos casos instala desde
+`branding/`, su generador y el QR compartido `docs/assets/readme/app-store-qr.svg`.
+Solo en esos casos instala desde
 el lockfile, comprueba TypeScript y formato, genera el build y valida sus artefactos
 SEO con Node.js 24. Los pushes relevantes a `main` y las ejecuciones manuales
 también validan la web. Ninguno de estos eventos despliega el sitio.
@@ -115,7 +120,26 @@ del PR y no se fusionan automáticamente.
 
 Los recursos se sirven desde el mismo origen, sin cargar fuentes remotas. La web
 no consulta cuotas ni crea canales de sincronización. El enlace de privacidad
-lleva a la página pública del relay; las descargas y el código enlazan a GitHub.
+lleva a la página pública del relay; la descarga para iPhone enlaza al App Store.
+Los instaladores de escritorio, la beta de Android y el código enlazan a GitHub.
+
+### Descarga para iPhone
+
+La sección de descargas incluye el mismo
+[QR con el logo oficial](../../docs/assets/readme/app-store-qr.svg) que los READMEs,
+sin duplicar el archivo: Vite incorpora el SVG al build como recurso local con
+hash. Conserva el fondo blanco, la zona libre y el tamaño de 245 px en escritorio
+o 196 px en móvil. El botón directo permite descargar desde el propio iPhone.
+En desarrollo, `vite.config.mjs` sirve únicamente ese SVG en su ruta pública;
+no amplía el acceso de Vite al resto del repositorio.
+Tanto el QR como los enlaces de iOS llevan a la ficha pública del App Store;
+este código no sirve para emparejar dispositivos. Android permanece en beta.
+
+Los textos y las descripciones accesibles están traducidos en ambos catálogos.
+La validación del build comprueba los enlaces, la presencia del QR en el HTML
+estático EN/ES y que el SVG publicado sea idéntico al original compartido. Para
+regenerar o validar el QR, consulta su
+[documentación](../../docs/assets/readme/README.md#app-store-download-qr).
 
 ### Identidad oficial
 

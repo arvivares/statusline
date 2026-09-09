@@ -12,6 +12,7 @@ on:
       - "apps/web/**"
       - "branding/**"
       - "scripts/generate-brand-assets.mjs"
+      - "docs/assets/readme/app-store-qr.svg"
       - ".github/workflows/website.yml"
       - ".github/dependabot.yml"
       - "scripts/website-ci.mjs"
@@ -91,6 +92,9 @@ jobs:
 
       - name: Check formatting
         run: npm run format:check
+
+      - name: Validate shared QR in the development server
+        run: npm run test:dev
 
       - name: Build production website
         run: npm run build

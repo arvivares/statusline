@@ -4,6 +4,7 @@
   <p><strong>Tu uso de Codex, visible en todas partes.</strong></p>
   <p>Companion multiplataforma, sincronización móvil cifrada y widgets nativos para iPhone y Android.</p>
   <p><a href="README.md">English</a> · <strong>Español</strong></p>
+  <p><a href="https://statusline.inmerzion.io/es/"><strong>Sitio oficial</strong></a> · <a href="https://apps.apple.com/app/statusline/id6807851320">App Store</a> · <a href="https://github.com/arvivares/statusline/releases">Descargas</a></p>
 </div>
 
 <div align="center">
