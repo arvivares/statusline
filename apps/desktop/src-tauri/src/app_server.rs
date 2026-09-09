@@ -22,7 +22,7 @@ const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum AppServerError {
-    #[error("Codex CLI was not found; install Codex or configure its path in Statusline")]
+    #[error("Codex was not found; open source settings to detect or select a local runtime")]
     CodexNotFound,
     #[error("Could not start Codex App Server: {0}")]
     Spawn(String),
@@ -155,8 +155,16 @@ async fn query_account_usage(
     client_version: &str,
     settings_directory: Option<&Path>,
 ) -> Result<AccountUsageResults, AppServerError> {
-    let launch = resolve_codex_launch(settings_directory).ok_or(AppServerError::CodexNotFound)?;
-    let mut command = launch.command();
+    let launch = resolve_codex_launch(settings_directory)
+        .await
+        .ok_or(AppServerError::CodexNotFound)?;
+    query_with_command(launch.command(), client_version).await
+}
+
+async fn query_with_command(
+    mut command: tokio::process::Command,
+    client_version: &str,
+) -> Result<AccountUsageResults, AppServerError> {
     command
         .arg("app-server")
         .arg("--listen")
@@ -187,8 +195,14 @@ async fn query_account_usage(
     write_message(&mut stdin, &initialized).await?;
     write_message(&mut stdin, &account_read).await?;
     let account = wait_for_result(&mut lines, 1, "account read").await?;
-    write_message(&mut stdin, &rate_limits_read).await?;
-    let rate_limits = wait_for_result(&mut lines, 2, "rate-limit read").await?;
+    // An unsigned-in app server rejects the quota request. Preserve the account
+    // response so the normalizer can show the actionable notSignedIn state.
+    let rate_limits = if account.get("account") == Some(&Value::Null) {
+        json!({})
+    } else {
+        write_message(&mut stdin, &rate_limits_read).await?;
+        wait_for_result(&mut lines, 2, "rate-limit read").await?
+    };
 
     drop(stdin);
     stop_child(&mut child).await?;
@@ -196,6 +210,86 @@ async fn query_account_usage(
         account,
         rate_limits,
     })
+}
+
+#[cfg(all(test, unix))]
+mod runtime_tests {
+    use super::*;
+
+    // Real stdio exchange with an isolated fixture: no installed CLI, auth,
+    // account reads, network, relay or graphical application required.
+    fn fixture(signed_in: bool) -> tokio::process::Command {
+        let account = if signed_in {
+            r#"{"type":"chatgpt","planType":"plus"}"#
+        } else {
+            "null"
+        };
+        let quotas = if signed_in {
+            r#"read -r request || exit 1
+case "$request" in *account/rateLimits/read*) ;; *) exit 2 ;; esac
+printf '%s\n' '{"id":2,"result":{"rateLimits":{"primary":{"usedPercent":52,"windowDurationMins":10080,"resetsAt":2000000000}}}}'
+"#
+        } else {
+            ""
+        };
+        let script = format!(
+            r#"
+read -r request || exit 1
+case "$request" in *initialize*) ;; *) exit 2 ;; esac
+printf '%s\n' '{{"id":0,"result":{{}}}}'
+read -r request || exit 1
+case "$request" in *initialized*) ;; *) exit 2 ;; esac
+read -r request || exit 1
+case "$request" in *account/read*) ;; *) exit 2 ;; esac
+printf '%s\n' '{{"id":1,"result":{{"account":{account}}}}}'
+{quotas}
+"#
+        );
+        let mut command = tokio::process::Command::new("/bin/sh");
+        command.arg("-c").arg(script);
+        command
+    }
+
+    #[test]
+    fn embedded_style_weekly_primary_round_trips_without_cli_or_credentials() {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let result = runtime
+            .block_on(query_with_command(fixture(true), "test"))
+            .unwrap();
+        let usage = normalize_usage(result.account, result.rate_limits, 1);
+        match usage {
+            UsageResponse::Ready {
+                weekly,
+                short_window,
+                ..
+            } => {
+                assert_eq!(weekly.remaining_percent, 48.0);
+                assert!(short_window.is_none());
+            }
+            other => panic!("expected ready, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn no_session_does_not_request_quotas_or_become_a_generic_rpc_error() {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let result = runtime
+            .block_on(query_with_command(fixture(false), "test"))
+            .unwrap();
+        assert_eq!(
+            normalize_usage(result.account, result.rate_limits, 1),
+            UsageResponse::Unavailable {
+                reason: crate::usage::UsageUnavailableReason::NotSignedIn,
+                checked_at: 1,
+            }
+        );
+    }
 }
 
 async fn write_message(stdin: &mut ChildStdin, message: &Value) -> Result<(), AppServerError> {

@@ -59,8 +59,8 @@ android {
         applicationId = "inmerzion.statusline"
         minSdk = 23
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.1.13"
+        versionCode = 10
+        versionName = "0.1.14"
 
         buildConfigField("String", "RELAY_BASE_URL", relayBaseURL.asBuildConfigLiteral())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

@@ -98,7 +98,7 @@ describe("parseUsageResponse", () => {
 });
 
 describe("copyForState", () => {
-  it("explains how to recover when the Codex CLI cannot be found", () => {
+  it("explains how to recover without requiring a separately installed CLI", () => {
     const copy = copyForState({
       status: "error",
       code: "codexNotFound",
@@ -108,8 +108,8 @@ describe("copyForState", () => {
 
     expect(copy).toEqual({
       eyebrow: "SOURCE / MISSING",
-      title: "Codex CLI not found",
-      detail: "Open Source Settings to detect or select the local CLI.",
+      title: "Codex not found",
+      detail: "Open Source Settings to detect or select a local Codex runtime.",
     });
   });
 

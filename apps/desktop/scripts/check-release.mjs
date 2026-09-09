@@ -102,6 +102,22 @@ const macosConfig = readJson("src-tauri/tauri.macos.conf.json");
 const macosInfoPlist = readText("src-tauri/Info.macos.plist");
 const cargoToml = readText("src-tauri/Cargo.toml");
 const cargoLock = readText("src-tauri/Cargo.lock");
+const runtimeTestCargo = readText("runtime-tests/Cargo.toml");
+for (const dependency of [
+  "serde",
+  "serde_json",
+  "sys-locale",
+  "thiserror",
+  "tokio",
+  "dirs",
+  "winreg",
+]) {
+  assert(
+    exactCargoDependencyVersion(runtimeTestCargo, dependency) ===
+      exactCargoDependencyVersion(cargoToml, dependency),
+    `runtime-tests must use the production version of ${dependency}`,
+  );
+}
 const capabilities = readJson("src-tauri/capabilities/default.json");
 const releaseMetadata = readJson("../../release.json");
 const workflow = readText("../../.github/workflows/desktop-installers.yml");

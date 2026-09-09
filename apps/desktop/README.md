@@ -6,7 +6,7 @@ Companion de bandeja para consultar la cuota de Codex en Windows, Linux y macOS.
 
 - Consulta la sesión local mediante Codex App Server y muestra límite semanal, reinicio, ventana corta y plan.
 - No copia ni persiste tokens de Codex, API keys o correo.
-- Source Settings detecta la CLI, valida codex --version y permite guardar una ruta local.
+- Source Settings detecta el Codex integrado en ChatGPT/Codex.app en macOS o la CLI, valida codex --version y permite guardar una ruta local.
 - Universal Relay publica sólo el snapshot mínimo cifrado de extremo a extremo para iOS y futuros clientes Android.
 - La credencial publisher y la clave AES permanecen en Keychain, Windows Credential Manager o Secret Service.
 - El frontend recibe estado operacional y el vínculo de emparejamiento mientras está vigente; nunca recibe la credencial publisher.
@@ -21,11 +21,16 @@ La interfaz conserva canvas #0D0E0B, surface #14150F, texto #ECE9DC, señal #EFC
 
 1. Node.js 24 o posterior.
 2. Rust 1.98 mediante rustup, con rustfmt y clippy.
-3. Codex CLI instalado y autenticado mediante Sign in with ChatGPT.
+3. Codex autenticado mediante Sign in with ChatGPT: app de escritorio en macOS o CLI.
 4. Los [prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/) del sistema.
 5. Un Statusline Relay local o un origen HTTPS desplegado según [SETUP.md](../../SETUP.md).
 
 Statusline busca standalone, npm, Homebrew, Volta, NVM, FNM, asdf, mise y PATH. Si la aplicación gráfica hereda un PATH incompleto, abre Source Settings y selecciona el ejecutable. STATUSLINE_CODEX_PATH permanece como override de administración.
+
+En macOS también busca ChatGPT.app y Codex.app en `/Applications` y en la carpeta
+Applications del usuario. Puedes seleccionar un paquete `.app` instalado en otra
+ubicación. La [guía de origen Codex](../../docs/architecture/codex-sources.md)
+describe la prioridad, las limitaciones de sesión y la prueba en un Mac sin CLI.
 
 ## Desarrollo
 
@@ -74,10 +79,16 @@ npm run release:check
 Núcleo nativo:
 
 ```shell
+cargo test --manifest-path runtime-tests/Cargo.toml --locked
 cargo test --manifest-path src-tauri/Cargo.toml --locked
 cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features --locked -- -D warnings
 ```
+
+`runtime-tests` compila los módulos reales de detección, App Server, normalización
+y localización sin Tauri/WebView. Es la primera comprobación nativa en equipos con
+poco disco; CI la ejecuta también en macOS, Windows y Linux. No sustituye el build
+completo ni la prueba física del instalador.
 
 Bundles nativos:
 

@@ -40,6 +40,7 @@
 "Check relay" = "Comprobar relay";
 "Check scan" = "Comprobar escaneo";
 "Check that you are signed in to the CLI, then refresh." = "Comprueba que has iniciado sesión en la CLI y vuelve a actualizar.";
+"Check your Codex session in the desktop app or CLI, then refresh." = "Revisa tu sesión de Codex en la app de escritorio o la CLI y actualiza.";
 "Check your connection and try again in a few seconds." = "Comprueba la conexión y vuelve a intentarlo en unos segundos.";
 "CHECKING" = "COMPROBANDO";
 "Checking Codex" = "Comprobando Codex";
@@ -67,6 +68,7 @@
 "Codex is local, verified and ready for account metadata." = "Codex está instalado, verificado y listo para leer los metadatos de la cuenta.";
 "Codex local" = "Codex local";
 "Codex not connected" = "Codex sin conectar";
+"Codex not found" = "No se encontró Codex";
 "Codex query failed" = "No se pudo consultar Codex";
 "Codex read and encrypted snapshot published." = "Codex leído y muestra cifrada publicada.";
 "Codex read; the relay needs attention." = "Codex leído; el relay necesita atención.";
@@ -132,6 +134,7 @@
 "Demo sample loaded on this device only." = "Muestra de demostración cargada solo en este dispositivo.";
 "Demo sample removed." = "Muestra de demostración eliminada.";
 "Demo sample. {0}" = "Muestra de demostración. {0}";
+"DESKTOP APP" = "APP DE ESCRITORIO";
 "Desktop companion" = "Companion de escritorio";
 "Device connected with encryption." = "Dispositivo conectado de forma cifrada.";
 "Device connected. Waiting for the companion’s first sample." = "Dispositivo conectado. Esperando la primera muestra del companion.";
@@ -201,7 +204,9 @@
 "OFFICIAL SETUP" = "INSTALACIÓN OFICIAL";
 "OFFLINE" = "SIN CONEXIÓN";
 "OFFLINE · NO SAMPLE AVAILABLE" = "SIN CONEXIÓN · SIN MUESTRA DISPONIBLE";
+"On macOS, use Codex in ChatGPT or Codex.app. Alternatively, install the CLI below. Sign in with ChatGPT, then refresh." = "En macOS, usa Codex en ChatGPT o Codex.app. También puedes instalar la CLI indicada abajo. Inicia sesión con ChatGPT y actualiza.";
 "Open OpenAI" = "Abrir OpenAI";
+"Open Source Settings to detect or select a local Codex runtime." = "Abre la configuración de origen para detectar o seleccionar un ejecutable local de Codex.";
 "Open Source Settings to detect or select the local CLI." = "Abre la configuración de origen para detectar o seleccionar la CLI local.";
 "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample." = "Abre Statusline Companion en Windows, Linux o macOS, crea un vínculo y escanea su QR para recibir la primera muestra cifrada.";
 "Opening secure OpenAI sign-in…" = "Abriendo el inicio de sesión seguro de OpenAI…";
@@ -299,12 +304,14 @@
 "Scanning local system…" = "Buscando en el equipo…";
 "SECRET SERVICE" = "ALMACÉN DE SECRETOS";
 "See your remaining weekly quota and its next reset." = "Consulta la cuota semanal restante y su próximo reinicio.";
+"Select a Codex executable or macOS app" = "Selecciona un ejecutable de Codex o una app de macOS";
 "SELECT EXECUTABLE" = "ELEGIR EJECUTABLE";
 "Select the Codex executable" = "Selecciona el ejecutable de Codex";
 "SESSION STAYS ON MAC" = "SESIÓN SOLO EN EL MAC";
 "SESSION.STORAGE" = "ALMACÉN.SESIÓN";
 "SHORT.WINDOW" = "PERIODO.CORTO";
 "Show" = "Mostrar";
+"Sign in to Codex in your desktop app or CLI, then refresh." = "Inicia sesión en Codex desde la app de escritorio o la CLI y actualiza.";
 "SOURCE" = "ORIGEN";
 "SOURCE / BUSY" = "ORIGEN / OCUPADO";
 "SOURCE / CODEX LOCAL" = "ORIGEN / CODEX LOCAL";
@@ -378,6 +385,7 @@
 "UNPAIRED" = "SIN VÍNCULO";
 "Unsupported Codex state" = "Estado de Codex no compatible";
 "Update Statusline Companion or check your CLI version." = "Actualiza Statusline Companion o revisa la versión de la CLI.";
+"Update Statusline Companion or your Codex installation." = "Actualiza Statusline Companion o tu instalación de Codex.";
 "Update Statusline Companion to read this response." = "Actualiza Statusline Companion para interpretar esta respuesta.";
 "USE AUTOMATIC DETECTION" = "USAR DETECCIÓN AUTOMÁTICA";
 "Use device code" = "Usar código de dispositivo";

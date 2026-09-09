@@ -57,11 +57,12 @@ describe("messages", () => {
       message: "private backend detail",
       checkedAt: 1,
     });
-    expect(copy.title).toBe("No se encontró Codex CLI");
+    expect(copy.title).toBe("No se encontró Codex");
     expect(copy.detail).toBe(
-      "Abre la configuración de origen para detectar o seleccionar la CLI local.",
+      "Abre la configuración de origen para detectar o seleccionar un ejecutable local de Codex.",
     );
     expect(labelForCodexSource("saved")).toBe("RUTA GUARDADA");
+    expect(labelForCodexSource("desktopApp")).toBe("APP DE ESCRITORIO");
     expect(relayErrorCopy("pairingExpired")).toContain("caducado");
     expect(relayErrorCopy("unknown_server_error")).toContain(
       "Comprueba la conexión",

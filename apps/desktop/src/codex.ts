@@ -4,6 +4,7 @@ export type CodexDiagnosticStatus = "ready" | "missing" | "invalid";
 export type CodexSource =
   | "environment"
   | "saved"
+  | "desktopApp"
   | "standalone"
   | "npm"
   | "volta"
@@ -39,6 +40,8 @@ export function labelForCodexSource(source: CodexSource | null): string {
       return t("ENV OVERRIDE");
     case "saved":
       return t("SAVED PATH");
+    case "desktopApp":
+      return t("DESKTOP APP");
     case "standalone":
       return t("STANDALONE");
     case "npm":
@@ -70,6 +73,8 @@ function readNullableSource(value: unknown): CodexSource | null {
       return "environment";
     case "saved":
       return "saved";
+    case "desktopApp":
+      return "desktopApp";
     case "standalone":
       return "standalone";
     case "npm":

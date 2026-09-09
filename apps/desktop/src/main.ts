@@ -465,7 +465,7 @@ async function chooseCodexExecutable(): Promise<void> {
     selected = await open({
       multiple: false,
       directory: false,
-      title: t("Select the Codex executable"),
+      title: t("Select a Codex executable or macOS app"),
     });
   } catch (error: unknown) {
     renderSourceFailure(error);

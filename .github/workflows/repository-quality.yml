@@ -39,6 +39,25 @@ env:
   RUST_VERSION: "1.98.0"
 
 jobs:
+  codex-runtime:
+    name: Codex runtime (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-14, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.98.0 --profile minimal --component rustfmt
+      - name: Check formatting
+        run: cargo fmt --manifest-path apps/desktop/runtime-tests/Cargo.toml --all -- --check
+      - name: Test production Codex modules without a CLI, credentials or WebView
+        run: cargo test --manifest-path apps/desktop/runtime-tests/Cargo.toml --locked
+
   validate:
     name: Docs, frontend, relay and release policy
     runs-on: ubuntu-22.04

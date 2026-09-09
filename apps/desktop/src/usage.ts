@@ -161,7 +161,7 @@ function copyForUnavailable(reason: UnavailableReason): StatusCopy {
       return {
         eyebrow: t("AUTH / REQUIRED"),
         title: t("Connect Codex"),
-        detail: t("Run codex login and refresh the meter."),
+        detail: t("Sign in to Codex in your desktop app or CLI, then refresh."),
       };
     case "unknown":
       return {
@@ -177,8 +177,10 @@ function copyForError(code: UsageErrorCode): StatusCopy {
     case "codexNotFound":
       return {
         eyebrow: t("SOURCE / MISSING"),
-        title: t("Codex CLI not found"),
-        detail: t("Open Source Settings to detect or select the local CLI."),
+        title: t("Codex not found"),
+        detail: t(
+          "Open Source Settings to detect or select a local Codex runtime.",
+        ),
       };
     case "timeout":
       return {
@@ -196,14 +198,16 @@ function copyForError(code: UsageErrorCode): StatusCopy {
       return {
         eyebrow: t("CONTRACT / CHANGED"),
         title: t("Unexpected quota format"),
-        detail: t("Update Statusline Companion or check your CLI version."),
+        detail: t("Update Statusline Companion or your Codex installation."),
       };
     case "appServer":
     case "unknown":
       return {
         eyebrow: t("SOURCE / OFFLINE"),
         title: t("Codex query failed"),
-        detail: t("Check that you are signed in to the CLI, then refresh."),
+        detail: t(
+          "Check your Codex session in the desktop app or CLI, then refresh.",
+        ),
       };
   }
 }

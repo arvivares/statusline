@@ -20,7 +20,7 @@ La especificación normativa y el vector de interoperabilidad viven en [../../pr
 ## Flujo
 
 ```text
-Codex CLI
+Codex runtime (macOS desktop app / CLI)
    │ JSONL local
    ▼
 Codex App Server adapter

@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- product tag: `v0.1.13`;
-- desktop and Android code version: `0.1.13`;
-- Android generated build: `versionCode 9` (Google Play submission is separate);
+- product tag: `v0.1.14`;
+- desktop and Android code version: `0.1.14`;
+- Android generated build: `versionCode 10` (Google Play submission is separate);
 - iOS App Store release: `1.0 (4)`, distributed manually through App Store Connect.
   Apple approved submission `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`; the account
   holder authorized public release on 9 September 2026 (Europe/Madrid).
@@ -45,7 +45,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.13`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.14`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -110,8 +110,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.13 -m "Statusline 0.1.13 beta"
-git push origin v0.1.13
+git tag -s v0.1.14 -m "Statusline 0.1.14 beta"
+git push origin v0.1.14
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,

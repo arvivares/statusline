@@ -3,6 +3,18 @@ import { describe, expect, it } from "vitest";
 import { labelForCodexSource, parseCodexDiagnostic } from "./codex";
 
 describe("parseCodexDiagnostic", () => {
+  it("accepts a runtime embedded in the desktop app", () => {
+    const result = parseCodexDiagnostic({
+      status: "ready",
+      path: "/Applications/ChatGPT.app/Contents/Resources/codex",
+      source: "desktopApp",
+      version: "codex-cli 0.151.0-alpha.7.2",
+      savedPath: null,
+      message: null,
+    });
+    expect(result.source).toBe("desktopApp");
+    expect(labelForCodexSource(result.source)).toBe("DESKTOP APP");
+  });
   it("preserves a verified npm launcher", () => {
     expect(
       parseCodexDiagnostic({
