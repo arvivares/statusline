@@ -10,14 +10,15 @@
 
 ## Review Notes
 
-App Review update - 6 September 2026 (Guideline 5)
-China mainland has been deselected in Pricing and Availability and now shows Not Available. Statusline will not be distributed on the China mainland App Store, following the alternative in your 5 September review message. All other selected storefronts are unchanged. The submitted binary remains version 1.0 (2).
+App Review update - 7 September 2026 - version 1.0 (4)
+Build 4 replaces build 2 after TestFlight testing on a physical iPhone. It updates the shared Statusline icon and adds English/Spanish localization to the app and widget, with English as the fallback for other system languages. Core functionality and data handling are unchanged.
+China mainland remains excluded following the alternative in your 5 September review message (Guideline 5). All other selected storefronts are unchanged.
 Statusline displays Codex usage/quota metadata; it does not offer chat or generate text, images or code.
 
 APP REVIEW INFORMATION
 
 Screen recording
-A 52-second recording captured on a physical iPhone is attached in App Review Information and in the Resolution Center reply. It begins on the iPhone Home Screen, launches the submitted TestFlight build, and shows the typical flow: opening Statusline, pairing with the desktop Companion by scanning its one-time QR code, receiving and refreshing a Codex quota snapshot, and adding/viewing the native Home Screen widget.
+A 52-second physical-iPhone recording remains attached in App Review Information and the Resolution Center reply. Recorded before build 4, it shows the same core flow: launching Statusline from the Home Screen, QR pairing with Companion, receiving/refreshing a quota snapshot, and adding/viewing the widget. The icon and localized labels are updated in build 4; this is not a new recording of that build.
 
 Purpose and target audience
 Statusline is an independent, open-source utility for developers who use Codex CLI. It shows remaining weekly quota, reset time, and last update in a focused iPhone dashboard and widget, avoiding repeated trips to the desktop terminal to check /status.
@@ -28,17 +29,17 @@ Statusline has no account registration, login, account deletion, subscription, i
 To review without external setup:
 
 1. Launch the app.
-2. Tap "Ver demo local" in the first quota panel.
+2. Tap "View local demo" / "Ver demo local" in the first quota panel.
 3. The app stores a clearly labeled sample locally and updates the widget.
 4. Add the Statusline widget from the iPhone Home Screen.
-   The manual editor under "Actualización manual" also accepts a complete weekly-limit line.
+   The manual editor under "Manual update" / "Actualización manual" also accepts a complete weekly-limit line.
 
 Optional live sync:
 
 1. Install and authenticate Codex CLI on Windows, Linux, or macOS using the reviewer's own Codex/ChatGPT account.
 2. Run the open-source Statusline Companion.
 3. Select Connections > Codex Source, then Universal Relay > Create pairing.
-4. On iPhone tap "Escanear QR" and scan the temporary QR code, or paste its private link.
+4. On iPhone tap "Scan QR" / "Escanear QR" and scan the temporary QR code, or paste its private link.
 5. Refresh the Companion and iPhone app.
 
 External services, tools, and platforms

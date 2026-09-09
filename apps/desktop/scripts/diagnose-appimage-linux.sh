@@ -5,10 +5,11 @@ set -euo pipefail
 
 usage() {
   printf '%s\n' \
-    'Usage: bash diagnose-appimage-linux.sh <AppImage> [--sha256 <digest>] [--seconds 10..60] [--trace] [--wayland-comparison]' \
+    'Usage: bash diagnose-appimage-linux.sh <AppImage> [--sha256 <digest>] [--seconds 10..60] [--trace] [--wayland-comparison | --launch-comparison]' \
     'Run on the affected Linux graphical desktop, as your normal user.' \
     'Quit Statusline from its tray menu first. Each of four cases lasts 20 seconds by default.' \
     '--wayland-comparison runs two cases with isolated GIO and requires --sha256; loader traces are automatic.' \
+    '--launch-comparison compares the mounted image and unchanged extracted AppRun; requires --sha256, changes no libraries.' \
     'Logs and an extracted copy stay in a private temporary directory; nothing is uploaded.'
 }
 
@@ -25,6 +26,7 @@ expected_sha256=""
 case_seconds=20
 trace=false
 wayland_comparison=false
+launch_comparison=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --sha256)
@@ -39,11 +41,16 @@ while [[ $# -gt 0 ]]; do
       ;;
     --trace) trace=true; shift ;;
     --wayland-comparison) wayland_comparison=true; trace=true; shift ;;
+    --launch-comparison) launch_comparison=true; shift ;;
     *) fail "Unknown option: $1" ;;
   esac
 done
 if [[ $wayland_comparison == true && -z $expected_sha256 ]]; then
   fail '--wayland-comparison requires --sha256 from the verified release manifest.'
+fi
+if [[ $launch_comparison == true ]]; then
+  [[ $wayland_comparison == false ]] || fail 'Choose only one comparison mode.'
+  [[ -n $expected_sha256 ]] || fail '--launch-comparison requires --sha256 from the verified release manifest.'
 fi
 
 [[ $(uname -s) == Linux ]] || fail 'This script needs Linux; it cannot reproduce Linux rendering on macOS.'
@@ -102,16 +109,17 @@ printf '%s\n' 'Codex may still be detected locally. Do not share unreviewed logs
   printf 'session=%s\ndesktop=%s\n' "${XDG_SESSION_TYPE:-unset}" "${XDG_CURRENT_DESKTOP:-unset}"
   printf 'trace=%s\nseconds_per_case=%s\n' "$trace" "$case_seconds"
   printf 'wayland_comparison=%s\n' "$wayland_comparison"
+  printf 'launch_comparison=%s\n' "$launch_comparison"
   if [[ -r /etc/os-release ]]; then
     grep -E '^(ID|VERSION_ID|PRETTY_NAME)=' /etc/os-release || true
   fi
   # Record only the presence of relevant overrides, not a full environment or private paths.
-  for variable in GDK_BACKEND GIO_MODULE_DIR GIO_EXTRA_MODULES GIO_USE_VFS LIBGL_ALWAYS_SOFTWARE LD_LIBRARY_PATH LD_PRELOAD WEBKIT_DISABLE_DMABUF_RENDERER GST_PLUGIN_SYSTEM_PATH GST_PLUGIN_SYSTEM_PATH_1_0; do
+  for variable in GDK_BACKEND GIO_MODULE_DIR GIO_EXTRA_MODULES GIO_USE_VFS LIBGL_ALWAYS_SOFTWARE LD_LIBRARY_PATH LD_PRELOAD WEBKIT_DISABLE_DMABUF_RENDERER WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS GST_PLUGIN_SYSTEM_PATH GST_PLUGIN_SYSTEM_PATH_1_0 APPIMAGE_EXTRACT_AND_RUN NO_CLEANUP; do
     if [[ -n ${!variable:-} ]]; then printf '%s=present\n' "$variable"; fi
   done
 } > "$diagnostic_root/environment.txt"
 
-if ! (cd "$diagnostic_root/extracted" && "$appimage" --appimage-extract) > "$diagnostic_root/extract.log" 2>&1; then
+if ! (cd "$diagnostic_root/extracted" && env -u APPIMAGE_EXTRACT_AND_RUN -u NO_CLEANUP "$appimage" --appimage-extract) > "$diagnostic_root/extract.log" 2>&1; then
   fail "Extraction failed. Review $diagnostic_root/extract.log locally."
 fi
 appdir="$diagnostic_root/extracted/squashfs-root"
@@ -179,6 +187,13 @@ if [[ $wayland_comparison == true ]]; then
   case_names=(gio-bundled-wayland gio-host-wayland)
 fi
 
+if [[ $launch_comparison == true ]]; then
+  case_names=(mounted-clean extracted-clean)
+  printf '%s\n' 'Launch comparison: same graphical session and starting directory, equivalent fresh temporary profiles, relay disabled, no software override.'
+  printf '%s\n' 'Only the entry point changes: original AppImage runtime versus unchanged extracted AppRun. No bundled libraries are moved.'
+  printf '%s\n' 'This is not a test of your regular profile, desktop shortcut or native Wayland. If both pass, the normal-launch failure remains unresolved.'
+fi
+
 summary="$diagnostic_root/summary.tsv"
 printf 'case\texit_code\tgio_symbol_error\tegl_bad_parameter\tui_observation\n' > "$summary"
 for case_name in "${case_names[@]}"; do
@@ -192,8 +207,10 @@ for case_name in "${case_names[@]}"; do
     env -u GIO_MODULE_DIR -u GIO_EXTRA_MODULES -u GIO_USE_VFS
     -u LIBGL_ALWAYS_SOFTWARE -u GDK_BACKEND -u LD_DEBUG -u LD_DEBUG_OUTPUT
     -u LD_LIBRARY_PATH -u LD_PRELOAD -u WEBKIT_DISABLE_DMABUF_RENDERER
+    -u WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS
     -u GST_PLUGIN_SYSTEM_PATH -u GST_PLUGIN_SYSTEM_PATH_1_0
     -u GST_REGISTRY -u GST_REGISTRY_1_0 -u APPDIR -u APPIMAGE
+    -u APPIMAGE_EXTRACT_AND_RUN -u NO_CLEANUP
     "STATUSLINE_RELAY_BASE_URL="
     "XDG_CONFIG_HOME=$case_directory/config"
     "XDG_DATA_HOME=$case_directory/data"
@@ -213,11 +230,15 @@ for case_name in "${case_names[@]}"; do
     case_environment+=(LD_DEBUG=libs "LD_DEBUG_OUTPUT=$case_directory/loader")
   fi
   printf '\nCase: %s (%s seconds). Observe whether the UI renders and responds.\n' "$case_name" "$case_seconds"
-  # Preserve the AppRun code/hooks in both trees and run from the corresponding AppDir.
+  case_executable="$appdir/AppRun"
+  if [[ $case_name == mounted-clean ]]; then case_executable=$appimage; fi
+  # Both launch-comparison cases start in the same directory; only the entry
+  # point changes. Their blank XDG profiles are separate to prevent carryover.
+  # Never force extract-and-run for the mounted case or alter either AppRun.
   (
     cd "$appdir"
     exec setsid timeout --signal=TERM --kill-after=3s "${case_seconds}s" \
-      "${case_environment[@]}" "$appdir/AppRun"
+      "${case_environment[@]}" "$case_executable"
   ) > "$case_directory/startup.log" 2>&1 &
   active_pid=$!
   exit_code=0

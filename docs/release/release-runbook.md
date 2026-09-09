@@ -13,8 +13,13 @@ component versions and curated release-notes path. For the current public beta:
 - product tag: `v0.1.13`;
 - desktop and Android code version: `0.1.13`;
 - Android generated build: `versionCode 9` (Google Play submission is separate);
-- iOS source/TestFlight candidate: `1.0 (4)`, distributed manually through App Store
-  Connect. The existing App Store submission remains `1.0 (2)`.
+- iOS App Store release: `1.0 (4)`, distributed manually through App Store Connect.
+  Apple approved submission `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`; the account
+  holder authorized public release on 9 September 2026 (Europe/Madrid).
+  The delivered version reports **Ready for Distribution**; the account holder
+  subsequently confirmed the public listing is visible. An on-device App Store
+  download remains to be verified.
+  See the current status in [iOS validation](../../apps/apple/store/validation.md).
 - GitHub prerelease platforms: Windows, Linux, macOS and Android. Windows explicitly
   uses `windowsSigning: unsigned-preview` while SignPath onboarding is pending.
 

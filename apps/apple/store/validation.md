@@ -2,6 +2,67 @@
 
 This file records reproducible readiness evidence without storing credentials or personal account data. The 2–3 September evidence applies to `1.0 (2)`; the separate 6 September sections track the localized `1.0 (3)` and unified-brand `1.0 (4)` TestFlight candidates.
 
+## Current status — 9 September 2026: build 4 released, public listing visible
+
+- Apple approved submission `9de1d3a4-27a7-403f-aa7f-12de04c9db4f` for
+  `1.0 (4)`. The authenticated version page confirmed **Pending Developer
+  Release** and build UUID `2e3d0d49-4c4a-4205-83bf-1b32656646ae` before release.
+- The account holder explicitly authorized public release. At approximately
+  00:58 CEST on 9 September (22:58 UTC on 8 September), confirmed **Release This
+  Version** in Apple's 174-country-or-region confirmation dialog.
+- Before release, checked all 175 current-price rows: every price is zero.
+  Public distribution is selected; Apple Silicon Mac and Vision Pro distribution
+  are disabled. The full availability table lists only China mainland as
+  **Not Available**, with the other 174 storefronts **Available on App Release**,
+  including Hong Kong and Macau. None of these settings was changed.
+- After confirmation, the version changed to **Ready for Distribution**.
+  Reloaded the delivered-version page and verified the same status, build `4`,
+  no visible error and the absence of the **Release This Version** button.
+- The [public App Store link](https://apps.apple.com/app/statusline/id6807851320)
+  still returned Apple's page-not-found screen immediately after release, with
+  United States shown as the storefront. Apple's approval email states public
+  availability can take up to 24 hours after release. Later on 9 September, the
+  account holder confirmed that the public listing was visible. This is a user
+  observation, not a new automated storefront check. A public-device download or
+  availability in every enabled region has not yet been verified.
+- No archive, binary upload, pricing, territory, metadata, review-note or
+  TestFlight-group changes were made. The dated sections below are historical.
+
+## App Review submission — 7 September 2026: build 4 queued
+
+- The account holder confirmed the physical-iPhone test and authorized replacing
+  the queued build `2` with `1.0 (4)`. No new archive or upload is required:
+  build `4` is the latest completed TestFlight upload, and the iOS app, widget,
+  shared sources, Xcode project and localization are unchanged from `v0.1.12`.
+- Removed version `1.0` from App Review. App Store Connect then reported
+  **Developer Rejected**, the expected result of this developer withdrawal.
+  The earlier **Waiting for Review** entries below are historical.
+- Replaced the version's build association with build `4`
+  (`2e3d0d49-4c4a-4205-83bf-1b32656646ae`) in the editor. This did not delete
+  or expire build `2` in TestFlight.
+- Saved the 3,732-character replacement notes in `app-review.md`. Authentication
+  initially expired during verification; after the account holder signed back in,
+  reloaded the version and confirmed an exact match with the saved notes and
+  the persisted build `4` association. The existing video remained attached,
+  sign-in remained unnecessary, and manual release remained selected. The notes
+  explicitly identify the recording as predating build `4`; no new recording is
+  claimed.
+- Read the full availability table: China mainland is **Not Available** and all
+  other 174 storefronts are **Available on App Release**, including Hong Kong and
+  Macau. Apple Silicon Mac and Vision Pro distribution remain disabled.
+- Completed **Add for Review**, verified the draft item was `1.0 (4)`, then
+  confirmed **Submit for Review**. Apple acknowledged **1 Item Submitted**.
+  New submission `9de1d3a4-27a7-403f-aa7f-12de04c9db4f` records 7 September 2026
+  at 9:28 AM in the console's displayed time zone.
+- Reloaded both the submission details and the version page. The submission and
+  its `1.0 (4)` app-version item report **Waiting for Review**. The version page
+  also confirms build `4`, the exact saved notes, video attachment, no-login
+  access and manual release. This is a queued submission, not Apple approval or
+  public availability.
+- No pricing, territory, public-release or external TestFlight changes were made
+  during this replacement. China mainland remained excluded and release stayed
+  manual until the separately authorized 9 September public release.
+
 ## Passed — builds 1 and 2, 2–3 September 2026
 
 - iPhone-only Release Archive created for `inmerzion.statusline` with widget `inmerzion.statusline.widget`.
@@ -133,17 +194,17 @@ This file records reproducible readiness evidence without storing credentials or
   **Ready to Submit** label refers to external beta review, not internal access.
 - No external group was added to build `4`, and no App Review submission,
   review notes, availability, pricing or release-mode setting was changed.
-- Physical-device QA for build `4` remains pending; archive validation and
-  TestFlight processing do not establish runtime or widget correctness.
+- Physical-device QA for build `4` was pending at the time of this upload;
+  archive validation and TestFlight processing do not establish runtime or widget
+  correctness. The subsequent account-holder confirmation is recorded above.
 
 ## Remaining follow-ups
 
-- Install `1.0 (4)` through TestFlight on the physical iPhone and validate the new
-  icon, English, Spanish, unsupported-language fallback, the widget and preservation
-  of pairing.
-- After that QA, obtain explicit authorization before replacing the queued
-  `1.0 (2)` App Store submission or distributing build `4` externally. Refresh
-  reviewer notes and localized listing assets when selecting the localized build.
-- Wait for App Review's decision on the corrected `1.0 (2)` submission sent on
-  6 September unless its replacement is subsequently authorized.
-- After approval, make the explicit manual-release decision in App Store Connect.
+- Install `1.0` from the public App Store on a physical iPhone and confirm launch, pairing and
+  widget updates. App Review approval and manual release are complete.
+- The physical-device confirmation does not establish that every EN/ES/fallback,
+  widget and pairing-persistence test was executed. Keep the detailed checklist
+  in `testflight/` for regression QA; adding build `4` to an external TestFlight
+  group still requires a separate explicit decision.
+- Review localized product-page assets separately; only the review notes were
+  changed during this replacement.

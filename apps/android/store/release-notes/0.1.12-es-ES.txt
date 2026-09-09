@@ -1,0 +1,1 @@
+Statusline ahora usa el mismo icono dorado y segmentado que Companion y iPhone. Incluye español e inglés según el idioma principal del sistema, con inglés para otros idiomas. Revisa el nuevo icono, el emparejamiento por QR o enlace, la cuota restante, los reinicios y el widget compacto. Al actualizar desde Google Play se conservan el emparejamiento y los datos existentes.

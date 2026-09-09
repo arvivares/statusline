@@ -1,0 +1,1 @@
+Statusline now uses the same segmented gold icon as Companion and iPhone. Includes English and Spanish based on your primary system language, with English for other languages. Check the updated icon, QR/manual pairing, remaining quota, reset times and the compact home-screen widget. Updating through Google Play preserves your existing pairing and data.

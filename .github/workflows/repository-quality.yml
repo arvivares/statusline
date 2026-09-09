@@ -76,6 +76,9 @@ jobs:
         run: npm run check
         working-directory: branding
 
+      - name: Validate App Store download QR
+        run: node scripts/generate-download-qr.mjs --check
+
       - name: Validate documentation and desktop release policy
         run: npm run release:check
         working-directory: apps/desktop
