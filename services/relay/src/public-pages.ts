@@ -25,7 +25,7 @@ const pages: Readonly<Record<string, PublicPage>> = {
   "/privacy": {
     title: "Privacy Policy",
     eyebrow: "STL / PRIVACY",
-    summary: "Effective 31 August 2026",
+    summary: "Effective 9 September 2026",
     content: `
       <section>
         <h2>Data processed locally</h2>
@@ -45,7 +45,13 @@ const pages: Readonly<Record<string, PublicPage>> = {
       <section>
         <h2>Hosting, abuse prevention and logs</h2>
         <p>The Cloudflare deployment applies abuse limits using a SHA-256 digest of the source IP address. Neither the source IP nor that digest is written to the Statusline D1 database.</p>
-        <p>Persistent Worker invocation logs are disabled. Cloudflare may still process IP addresses and request metadata at its edge for delivery, security, abuse prevention, aggregate metrics and billing. Statusline contains no advertising SDK and no first-party product analytics SDK.</p>
+        <p>Persistent Worker invocation logs are disabled. Cloudflare may still process IP addresses and request metadata at its edge for delivery, security, abuse prevention, aggregate metrics and billing. The Statusline desktop and mobile applications contain no advertising SDK and no first-party product analytics SDK.</p>
+      </section>
+      <section>
+        <h2>Website analytics</h2>
+        <p>The public website at statusline.inmerzion.io uses Plausible at plausible.inmerzion.io to understand visits, referral sources, page engagement and clicks on external links and downloads. The integration does not set analytics cookies or persistent visitor identifiers. Browser requests include page and referrer URLs, IP addresses and browser information; Plausible uses this information to produce aggregate statistics. Do not put private information in website URLs.</p>
+        <p>This measurement applies only to the public marketing website, not to the desktop or mobile applications, their widgets, pairing flows or the relay's public pages. No Codex credentials, quota snapshots, pairing keys or conversation content are sent by Statusline to Plausible. Blocking analytics does not prevent use of the website.</p>
+        <p>See <a href="https://plausible.io/data-policy" rel="noreferrer">Plausible's data policy</a> for its analytics processing model; hosting and operational logs of the Inmerzion instance are managed separately from the encrypted relay.</p>
       </section>
       <section>
         <h2>Retention and deletion</h2>
