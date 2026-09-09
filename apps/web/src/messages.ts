@@ -90,11 +90,11 @@ export const platformMessages: Record<
     },
     ios: {
       title: "A quick glance from your iPhone.",
-      badge: "LIMITED ACCESS",
+      badge: "AVAILABLE",
       description:
-        "A native app with widgets for iOS 17 and later. TestFlight and App Store distribution is managed manually; check the project for access details.",
+        "Free on the App Store. See your Codex quota in the native iPhone app and home screen widgets. Pair with the desktop companion for encrypted sync.",
       requirement: "IPHONE · IOS 17+ · WIDGETKIT",
-      cta: "Check iOS access",
+      cta: "Download on the App Store",
     },
   },
   es: {
@@ -134,11 +134,11 @@ export const platformMessages: Record<
     },
     ios: {
       title: "Un vistazo desde tu iPhone.",
-      badge: "ACCESO LIMITADO",
+      badge: "DISPONIBLE",
       description:
-        "App nativa con widgets para iOS 17 o posterior. La distribución en TestFlight y App Store se gestiona de forma manual; consulta el estado de acceso en el proyecto.",
+        "Gratis en el App Store. Consulta tu cuota de Codex en la app nativa para iPhone y sus widgets. Empareja el companion de escritorio para sincronizar con cifrado.",
       requirement: "IPHONE · IOS 17+ · WIDGETKIT",
-      cta: "Ver acceso para iOS",
+      cta: "Descargar en el App Store",
     },
   },
 };

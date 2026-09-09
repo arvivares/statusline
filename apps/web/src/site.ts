@@ -3,6 +3,14 @@ export type Platform = "macos" | "linux" | "windows" | "android" | "ios";
 
 export const siteOrigin = "https://statusline.inmerzion.io";
 export const repository = "https://github.com/arvivares/statusline";
+export const appStoreUrl = "https://apps.apple.com/app/statusline/id6807851320";
+export const platformLinks: Record<Platform, string> = {
+  macos: `${repository}/releases`,
+  linux: `${repository}/releases`,
+  windows: `${repository}/releases`,
+  android: `${repository}/releases`,
+  ios: appStoreUrl,
+};
 export const brandAssetVersion = "segmented-s-2026";
 export const languagePaths: Record<Language, string> = { en: "/", es: "/es/" };
 

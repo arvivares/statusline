@@ -10,6 +10,7 @@ const relevantFiles = new Set([
   "scripts/website-ci.mjs",
   "scripts/website-ci.test.mjs",
   "scripts/generate-brand-assets.mjs",
+  "docs/assets/readme/app-store-qr.svg",
   ".editorconfig",
   ".node-version",
 ]);

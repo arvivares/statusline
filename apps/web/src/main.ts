@@ -5,6 +5,7 @@ import {
   uiText,
   type Platform,
 } from "./i18n";
+import { platformLinks } from "./site";
 
 initializeLanguage();
 const root = document.documentElement;
@@ -186,14 +187,6 @@ windowButtons.forEach((button) =>
 );
 updateQuota(73);
 
-const repository = "https://github.com/arvivares/statusline";
-const platformLinks: Record<Platform, string> = {
-  macos: `${repository}/releases`,
-  linux: `${repository}/releases`,
-  windows: `${repository}/releases`,
-  android: `${repository}/releases`,
-  ios: `${repository}/tree/main/apps/apple`,
-};
 let selectedPlatform: Platform = "macos";
 const platformTabs = [
   ...document.querySelectorAll<HTMLButtonElement>("[data-platform]"),

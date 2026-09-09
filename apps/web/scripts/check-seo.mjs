@@ -5,10 +5,14 @@ import { pathToFileURL } from "node:url";
 import { parse, parseFragment, serialize } from "parse5";
 import { nodes, attribute } from "./render-html.mjs";
 import { staticMessages } from "../src/static-messages.ts";
+import { platformMessages } from "../src/messages.ts";
 import {
+  appStoreUrl,
   brandAssetVersion,
   languagePaths,
   pageMetadata,
+  platformLinks,
+  repository,
   siteOrigin,
 } from "../src/site.ts";
 
@@ -98,6 +102,64 @@ async function validateBrandAssets(outDir) {
   for (const asset of ["statusline-symbol.svg", "statusline-mark.svg"]) {
     const svg = await readFile(resolve(outDir, "assets", asset), "utf8");
     assert(svg.includes("<svg") && svg.includes("viewBox="), asset);
+  }
+}
+
+async function validateAppStoreDownload(elements, language, outDir) {
+  assert.equal(
+    appStoreUrl,
+    "https://apps.apple.com/app/statusline/id6807851320",
+    "Use the approved public App Store listing",
+  );
+  assert.equal(platformLinks.ios, appStoreUrl);
+  assert.equal(platformLinks.android, `${repository}/releases`);
+  assert.equal(
+    platformMessages[language].ios.badge,
+    staticMessages[language]["availability.iosStatus"],
+    "Interactive and static iPhone availability must agree",
+  );
+  const images = elements.filter(
+    (node) => attribute(node, "id") === "app-store-qr",
+  );
+  assert.equal(
+    images.length,
+    1,
+    "One download QR must exist without JavaScript",
+  );
+  const qr = images[0];
+  assert.equal(qr.tagName, "img");
+  assert.equal(attribute(qr, "width"), "245");
+  assert.equal(attribute(qr, "height"), "245");
+  assert.equal(
+    attribute(qr, "alt"),
+    staticMessages[language]["appStore.qrAlt"],
+  );
+  const src = attribute(qr, "src");
+  assert.match(src, /^\/assets\/app-store-qr-[\w-]+\.svg$/);
+  const original = await readFile(
+    new URL("../../../docs/assets/readme/app-store-qr.svg", import.meta.url),
+  );
+  const bundled = await readFile(resolve(outDir, `.${src}`));
+  assert.deepEqual(
+    bundled,
+    original,
+    "Preserve the canonical branded QR exactly",
+  );
+  assert(original.toString().includes(appStoreUrl));
+
+  const cta = elements.find(
+    (node) => attribute(node, "id") === "app-store-download",
+  );
+  const iosRow = elements.find(
+    (node) => attribute(node, "data-availability-platform") === "ios",
+  );
+  assert(iosRow, "iPhone must remain in the no-JavaScript platform table");
+  const tableLink = [...nodes(iosRow)].find((node) => node.tagName === "a");
+  for (const link of [qr.parentNode, cta, tableLink]) {
+    assert(link, "Missing App Store download link");
+    assert.equal(link.tagName, "a");
+    assert.equal(attribute(link, "href"), appStoreUrl);
+    assert.equal(attribute(link, "rel"), "noopener noreferrer");
   }
 }
 
@@ -234,6 +296,7 @@ export async function validateSEO(outDir) {
       5,
       "Five platform rows must be present without JavaScript",
     );
+    await validateAppStoreDownload(elements, language, outDir);
     const json = elements.filter(
       (node) =>
         node.tagName === "script" &&
@@ -326,7 +389,7 @@ export async function validateSEO(outDir) {
       llms.includes("https://github.com/arvivares/statusline"),
   );
   console.log(
-    "SEO checks passed: complete EN/ES HTML, metadata, reciprocal alternates, schema, platform table, brand icons, assets, 404s and crawl files.",
+    "SEO checks passed: complete EN/ES HTML, metadata, reciprocal alternates, schema, platform table, App Store links and shared QR, brand icons, assets, 404s and crawl files.",
   );
 }
 

@@ -4,6 +4,7 @@
   <p><strong>Your Codex usage, visible everywhere.</strong></p>
   <p>Cross-platform desktop companion, encrypted mobile sync and native widgets for iPhone and Android.</p>
   <p><strong>English</strong> · <a href="README.es.md">Español</a></p>
+  <p><a href="https://statusline.inmerzion.io/"><strong>Official website</strong></a> · <a href="https://apps.apple.com/app/statusline/id6807851320">App Store</a> · <a href="https://github.com/arvivares/statusline/releases">Downloads</a></p>
 </div>
 
 <div align="center">

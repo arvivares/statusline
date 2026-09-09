@@ -13,11 +13,15 @@ not affiliated with, sponsored by or endorsed by OpenAI.
 
 ## Project and documentation
 
+- [iPhone app](https://apps.apple.com/app/statusline/id6807851320): Free on the App Store for iPhone with iOS 17 or later. Native app and home screen widgets.
 - [Source repository](https://github.com/arvivares/statusline): Source code and project overview.
 - [Releases](https://github.com/arvivares/statusline/releases): Published downloads and release notes.
 - [Documentation index](https://github.com/arvivares/statusline/blob/main/docs/README.md): Architecture, operations, release and security documentation.
 - [Setup guide](https://github.com/arvivares/statusline/blob/main/SETUP.md): Installation and configuration instructions in Spanish.
 - [MIT license](https://github.com/arvivares/statusline/blob/main/LICENSE): License terms for the project.
+
+Android is in beta, with APKs available on GitHub Releases. Public Google Play
+availability is coming soon.
 
 ## Support and privacy
 
