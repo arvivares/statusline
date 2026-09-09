@@ -1,6 +1,6 @@
 # Statusline — Privacy Policy
 
-Effective date: 31 August 2026
+Effective date: 9 September 2026
 
 Public policy: https://statusline-relay.inmerzion.workers.dev/privacy
 
@@ -29,7 +29,13 @@ The relay receives:
 
 The relay does not receive the encryption key, Codex credentials, email address, prompts or source code, and therefore cannot decrypt the quota snapshot. The Cloudflare deployment applies abuse limits before credential parsing using a SHA-256 digest of the source IP address. Neither the source IP nor that digest is written to the Statusline D1 database.
 
-Persistent Cloudflare Worker invocation logs are disabled in the production project configuration. Cloudflare may still process IP addresses and request metadata at its edge for request delivery, security, abuse prevention, aggregate metrics and billing. Statusline does not integrate advertising SDKs or its own product analytics SDK. The ML Kit diagnostics described above are the only bundled third-party SDK telemetry currently identified in the mobile applications.
+Persistent Cloudflare Worker invocation logs are disabled in the production project configuration. Cloudflare may still process IP addresses and request metadata at its edge for request delivery, security, abuse prevention, aggregate metrics and billing. The Statusline desktop and mobile applications do not integrate advertising SDKs or their own product analytics SDK. The ML Kit diagnostics described above are the only bundled third-party SDK telemetry currently identified in the mobile applications.
+
+## Website analytics
+
+The public website at `statusline.inmerzion.io` uses Plausible at `plausible.inmerzion.io` to understand visits, referral sources, page engagement and clicks on external links and downloads. The integration does not set analytics cookies or persistent visitor identifiers. Browser requests include page and referrer URLs, IP addresses and browser information; Plausible uses this information to produce aggregate statistics. Do not put private information in website URLs.
+
+This measurement applies only to the public marketing website, not to the desktop or mobile applications, their widgets, pairing flows or the relay's public pages. No Codex credentials, quota snapshots, pairing keys or conversation content are sent by Statusline to Plausible. Blocking analytics does not prevent use of the website. See [Plausible's data policy](https://plausible.io/data-policy) for its analytics processing model; hosting and operational logs of the Inmerzion instance are managed separately from the encrypted relay.
 
 ## Retention and deletion
 

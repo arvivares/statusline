@@ -5,9 +5,11 @@ import {
   uiText,
   type Platform,
 } from "./i18n";
-import { platformLinks } from "./site";
+import { platformLinks, siteOrigin } from "./site";
+import { initializeAnalytics } from "./analytics";
 
 initializeLanguage();
+initializeAnalytics(import.meta.env.PROD, siteOrigin);
 const root = document.documentElement;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 root.classList.add("js");

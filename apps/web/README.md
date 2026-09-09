@@ -55,6 +55,7 @@ Abre `http://localhost:4173`. Para comprobar y generar la versión estática:
 npm run check
 npm run format:check
 npm run test:dev
+npm run test:analytics
 npm run build
 npm run test:seo
 ```
@@ -67,6 +68,9 @@ artefactos generados.
 
 `npm run test:dev` levanta un servidor Vite temporal en localhost y comprueba que
 el QR compartido se sirva como SVG desde ambas rutas, sin sustituirlo por HTML.
+`npm run test:analytics` comprueba la carga única de Plausible, su cola de inicio,
+la exclusión de desarrollo/previews y los permisos mínimos de la CSP, sin enviar
+peticiones al servicio de analítica. Ambas pruebas se ejecutan también en CI.
 
 `dist/` está excluido de Git. `npm run preview -- --port 4173` permite revisar ese
 resultado localmente después del build. Para generar una versión de revisión
@@ -118,10 +122,54 @@ del PR y no se fusionan automáticamente.
 - `public/robots.txt`, `sitemap.xml` y `llms.txt`: recursos de descubrimiento.
 - `deploy/`: configuración del servidor estático y del proxy público.
 
-Los recursos se sirven desde el mismo origen, sin cargar fuentes remotas. La web
+Los recursos visuales se sirven desde el mismo origen, sin cargar fuentes remotas. La web
 no consulta cuotas ni crea canales de sincronización. El enlace de privacidad
 lleva a la página pública del relay; la descarga para iPhone enlaza al App Store.
 Los instaladores de escritorio, la beta de Android y el código enlazan a GitHub.
+
+### Analítica del sitio
+
+`src/analytics.ts` incorpora el snippet de Plausible facilitado por Inmerzion al
+bundle existente: conserva la cola oficial y `plausible.init()` y carga una sola
+vez el script remoto con `async`. No añade dependencias npm, JavaScript inline,
+cookies propias ni identificadores de usuario. Un bloqueo del script por el
+navegador o una caída de Plausible no impide usar la web.
+
+Solo se activa en builds de producción cuyo origen coincide exactamente con
+`siteOrigin` (`https://statusline.inmerzion.io`). `npm run dev`, localhost y los
+previews en otros dominios no cargan el tracker ni contaminan las estadísticas.
+No se carga en los 404 ni en las aplicaciones móviles, el companion o el relay.
+
+El script público configurado es
+`https://plausible.inmerzion.io/js/pa-I8pQQow2mmhcCJBQvq-7n.js` y envía eventos a
+`https://plausible.inmerzion.io/api/event`. Su configuración actual también
+habilita enlaces externos, descargas y envíos de formularios; el sitio no tiene
+formularios. Estos ajustes se administran en Plausible, no con listeners nuevos
+en la web. No se envían propiedades personalizadas, credenciales ni cuotas de
+Codex. Las visitas y los cambios EN/ES usan el seguimiento automático de
+`pushState`/`popstate`; no enviamos pageviews manuales ni activamos rutas por hash
+para los enlaces de sección. Consulta las
+[opciones oficiales de seguimiento](https://plausible.io/docs/script-extensions).
+
+La CSP en `deploy/statusline.conf` autoriza exclusivamente ese script y ese
+endpoint externo. No permite JavaScript inline, `eval` ni comodines. **Para
+activarlo en el servidor hay que publicar el build y actualizar/recargar el
+vhost Nginx** siguiendo los pasos de despliegue; hacer push no despliega la web.
+Publica también la actualización de la política de privacidad del relay,
+enlazada desde el pie, antes de activar la medición.
+
+Para verificar una publicación, abre `/` y `/es/` en un navegador sin bloqueo de
+analítica y comprueba en Network que el script y los POST a `/api/event` tienen
+respuesta correcta. Debe aparecer un único evento `pageview` por carga o cambio
+de idioma; los eventos `engagement` son mediciones separadas, no visitas
+duplicadas. Los enlaces de sección y seleccionar de nuevo el idioma actual no
+deben generar otro pageview. Revisa la consola por errores CSP y comprueba también
+que las demos y el selector siguen funcionando si bloqueas Plausible.
+
+El identificador del script es público, no una credencial, y no necesita `.env`.
+En un fork, sustituye el script por el de tu propio sitio, adapta `siteOrigin` y
+ambos permisos CSP, y actualiza la política de privacidad. No reutilices el
+identificador de Inmerzion para medir otro sitio.
 
 ### Descarga para iPhone
 
