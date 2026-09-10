@@ -10,11 +10,14 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.15` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.15`;
-- Android candidate: `versionCode 11` (Google Play submission is separate);
-- prepared iOS candidate: `1.0.1 (5)`, for local archive and manual TestFlight
-  upload after review. It is not yet an uploaded or physically tested release.
+- prepared product tag: `v0.1.16` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.16`;
+- Android candidate: `versionCode 12` (Google Play submission is separate);
+- separately uploaded iOS candidate: `1.0.1 (6)`, acknowledged for TestFlight
+  processing. A local development-signed USB upgrade confirmed an independent
+  widget read with the existing pairing; TestFlight availability and the
+  distribution-signed upgrade remain unverified. Build 5 has an empty widget
+  endpoint and must not be publicly released.
 - currently published iOS App Store release: `1.0 (4)`, distributed manually through App Store Connect.
   Apple approved submission `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`; the account
   holder authorized public release on 9 September 2026 (Europe/Madrid).
@@ -23,7 +26,7 @@ component versions and curated release-notes path. For the current public beta:
   download remains to be verified.
   See the current status in [iOS validation](../../apps/apple/store/validation.md).
 - GitHub prerelease platforms: Windows, Linux, macOS and Android. Windows explicitly
-  uses `windowsSigning: unsigned-preview` while SignPath onboarding is pending.
+  uses `windowsSigning: unsigned-preview`; no SignPath certificate has been approved.
 
 The release preflight rejects drift between this file, npm, Cargo, Tauri, Gradle and the
 Xcode project.
@@ -47,7 +50,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.15`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.16`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -112,8 +115,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.15 -m "Statusline 0.1.15 beta"
-git push origin v0.1.15
+git tag -s v0.1.16 -m "Statusline 0.1.16 beta"
+git push origin v0.1.16
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -121,21 +124,21 @@ targets the exact workflow commit and matches `release.json`. The signed tag is 
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
 
-### 0.1.15 candidate gates
+### 0.1.16 candidate gates
 
-- The candidate includes the validated Sharp development-tooling fix and PR #14's
-  Wrangler update. Keep the clean-install, audit and tooling regression checks
-  passing before signing/tagging. See the dated
-  [security review](../security/security-review.md#10-september-addendum-dependabot-alert-2).
-  Confirm Dependabot rescans main after merge; the alert has not been dismissed.
+- Preserve the validated `0.1.15` synchronization and dependency fixes; this patch
+  adds focus-loss dismissal, Windows desktop discovery and iOS bundle guards.
+  Production Rust tests and the PowerShell fixture must pass on Windows, Linux
+  and macOS as applicable before signing/tagging.
 - Review and merge the preparation PR before creating the public tag. Do not
   retarget a published tag or publish branch-QA artifacts as a verified release.
-- Publish the static website before or alongside the relay redirect update.
-  App Store Connect and Play Console URL fields are separate account-side edits.
-- Validate the [sync upgrade checklist](../architecture/synchronization.md),
-  especially paired-iPhone Keychain migration and hidden-window publications.
-- Archive iOS locally only once the candidate is ready and enough disk space is
-  available. Reuse that archive for export/upload; GitHub Actions never builds iOS.
+- Record the remaining physical-device checks explicitly in the beta notes:
+  [window interactions](../architecture/companion-window.md), desktop-only Windows
+  detection and the [sync upgrade checklist](../architecture/synchronization.md).
+  CI is not a substitute for native window-manager and clean-machine QA.
+- Reuse the already-uploaded iOS build 6 for its separate TestFlight validation;
+  do not rebuild or replace App Review as part of this desktop/Android release.
+  GitHub Actions never builds iOS; App Store and Google Play actions are separate.
 
 Release assets use portable ASCII filenames. Whitespace emitted by native packagers is
 normalized to `.` before checksums, provenance and upload are generated, so the names

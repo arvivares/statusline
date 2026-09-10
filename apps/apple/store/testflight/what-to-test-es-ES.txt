@@ -1,4 +1,6 @@
-Build 1.0.1 (5): sincronización independiente del widget y enlaces de privacidad/soporte en el sitio oficial.
+Build 1.0.1 (6): corrige el endpoint del relay que faltaba en el widget del build 5. La app y el widget heredan la misma configuración y la compilación valida ambos endpoints empaquetados.
+
+Prueba prioritaria: actualiza sin desinstalar ni volver a emparejar. Abre Statusline una vez, vuelve al inicio y deja visible el widget. Comprueba que recibe una muestra posterior sin abrir la app. Un porcentaje que no cambia no demuestra un fallo: compara también la hora o antigüedad de la muestra. Anota cuánto tarda; no fuerces el cierre de Statusline durante esta observación.
 
 Actualiza un iPhone ya emparejado y abre Statusline una vez para migrar la credencial compartida. Confirma que conserva el emparejamiento y la cuota. Luego vuelve al inicio sin abrir la app: con el ordenador despierto y Companion ejecutándose, verifica que el widget obtiene una muestra posterior. iOS decide cuándo actualizar; la solicitud de 30 minutos no garantiza una hora exacta.
 

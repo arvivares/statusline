@@ -5,6 +5,7 @@ pub mod refresh;
 pub mod relay_protocol;
 pub mod universal_relay;
 pub mod usage;
+pub mod window_behavior;
 
 #[cfg(any(target_os = "linux", test))]
 mod frontend_smoke;
@@ -12,7 +13,7 @@ mod frontend_smoke;
 use std::{
     fs,
     path::{Path, PathBuf},
-    sync::OnceLock,
+    sync::{Mutex, OnceLock},
     time::Duration,
 };
 
@@ -24,7 +25,9 @@ use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_positioner::{Position, WindowExt};
+use window_behavior::{BLUR_DELAY, WindowBehavior};
 
 use codex_installation::CodexDiagnostic;
 use universal_relay::{RelayStatus, UniversalRelayState};
@@ -66,45 +69,54 @@ pub fn set_window_ready_marker(output_path: PathBuf) -> Result<(), PathBuf> {
     WINDOW_READY_MARKER.set(output_path)
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum WindowVisibility {
-    Hidden,
-    Visible,
+#[derive(Default)]
+struct WindowBehaviorState(Mutex<WindowBehavior>);
+
+fn with_window_behavior<T>(app: &AppHandle, action: impl FnOnce(&mut WindowBehavior) -> T) -> T {
+    let state = app.state::<WindowBehaviorState>();
+    let mut behavior = state.0.lock().unwrap_or_else(|error| error.into_inner());
+    action(&mut behavior)
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum WindowInteraction {
-    FocusLost,
-    TrayClick,
-}
+// The native callback owns this guard, not the WebView's promise lifecycle.
+// Cancellation, selection and a dropped callback all restore blur handling.
+struct NativeDialogGuard(AppHandle);
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum BlurPolicy {
-    Hide,
-    Preserve,
-}
-
-const BLUR_POLICY: BlurPolicy = if cfg!(target_os = "linux") {
-    BlurPolicy::Hide
-} else {
-    BlurPolicy::Preserve
-};
-
-fn next_visibility(
-    current: WindowVisibility,
-    interaction: WindowInteraction,
-    blur_policy: BlurPolicy,
-) -> WindowVisibility {
-    match interaction {
-        WindowInteraction::FocusLost => match blur_policy {
-            BlurPolicy::Hide => WindowVisibility::Hidden,
-            BlurPolicy::Preserve => current,
-        },
-        WindowInteraction::TrayClick => match current {
-            WindowVisibility::Hidden => WindowVisibility::Visible,
-            WindowVisibility::Visible => WindowVisibility::Hidden,
-        },
+impl Drop for NativeDialogGuard {
+    fn drop(&mut self) {
+        with_window_behavior(&self.0, WindowBehavior::end_dialog);
+        schedule_blur_hide(&self.0);
     }
+}
+
+#[tauri::command]
+async fn choose_codex_executable(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+) -> Result<Option<String>, String> {
+    if window.label() != "main" || !with_window_behavior(&app, WindowBehavior::begin_dialog) {
+        return Err(localization::text("Could not open file picker").to_owned());
+    }
+    let guard = NativeDialogGuard(app.clone());
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .set_parent(&window)
+        .set_title(localization::text("Select a Codex executable or macOS app"))
+        .pick_file(move |selection| {
+            let result = selection
+                .map(|file| {
+                    file.into_path()
+                        .map(|path| path.to_string_lossy().into_owned())
+                        .map_err(|_| localization::text("Could not open file picker").to_owned())
+                })
+                .transpose();
+            drop(guard);
+            let _ = sender.send(result);
+        });
+    receiver
+        .await
+        .map_err(|_| localization::text("Could not open file picker").to_owned())?
 }
 
 type RefreshState = RefreshCoordinator<UsageResponse>;
@@ -223,6 +235,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_positioner::init())
         .manage(RefreshState::default())
+        .manage(WindowBehaviorState::default())
         .manage(UniversalRelayState::default())
         .setup(|app| {
             #[cfg(target_os = "macos")]
@@ -263,15 +276,45 @@ pub fn run() {
                 })
                 .on_tray_icon_event(|tray, event| {
                     tauri_plugin_positioner::on_tray_event(tray.app_handle(), &event);
-                    if matches!(
-                        event,
+                    match event {
+                        TrayIconEvent::Enter { .. } | TrayIconEvent::Move { .. } => {
+                            with_window_behavior(tray.app_handle(), |behavior| {
+                                behavior.set_tray_hovered(true)
+                            });
+                        }
+                        TrayIconEvent::Leave { .. } => {
+                            with_window_behavior(tray.app_handle(), |behavior| {
+                                behavior.set_tray_hovered(false)
+                            });
+                            schedule_blur_hide(tray.app_handle());
+                        }
+                        TrayIconEvent::Click {
+                            button_state: MouseButtonState::Down,
+                            ..
+                        } => {
+                            with_window_behavior(tray.app_handle(), |behavior| {
+                                behavior.set_tray_pressed(true)
+                            });
+                        }
                         TrayIconEvent::Click {
                             button: MouseButton::Left,
                             button_state: MouseButtonState::Up,
                             ..
+                        } => {
+                            with_window_behavior(tray.app_handle(), |behavior| {
+                                behavior.set_tray_pressed(false)
+                            });
+                            toggle_main_window(tray.app_handle());
                         }
-                    ) {
-                        handle_window_interaction(tray.app_handle(), WindowInteraction::TrayClick);
+                        TrayIconEvent::Click {
+                            button_state: MouseButtonState::Up,
+                            ..
+                        } => {
+                            with_window_behavior(tray.app_handle(), |behavior| {
+                                behavior.set_tray_pressed(false)
+                            });
+                        }
+                        _ => {}
                     }
                 });
             #[cfg(target_os = "macos")]
@@ -302,10 +345,13 @@ pub fn run() {
             match event {
                 WindowEvent::CloseRequested { api, .. } => {
                     api.prevent_close();
-                    let _ = window.hide();
+                    hide_main_window(window.app_handle());
                 }
                 WindowEvent::Focused(false) => {
-                    handle_window_interaction(window.app_handle(), WindowInteraction::FocusLost);
+                    schedule_blur_hide(window.app_handle());
+                }
+                WindowEvent::Focused(true) => {
+                    with_window_behavior(window.app_handle(), WindowBehavior::cancel_pending);
                 }
                 _ => {}
             }
@@ -319,6 +365,7 @@ pub fn run() {
             inspect_codex,
             set_codex_path,
             clear_codex_path,
+            choose_codex_executable,
             system_language,
             frontend_ready
         ])
@@ -354,6 +401,7 @@ fn schedule_initial_window_activation(app: AppHandle) {
 }
 
 fn show_main_window(app: &AppHandle) {
+    with_window_behavior(app, WindowBehavior::cancel_pending);
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
@@ -361,11 +409,22 @@ fn show_main_window(app: &AppHandle) {
     if native_window.move_window(Position::TrayCenter).is_err() {
         let _ = native_window.move_window(Position::BottomRight);
     }
+    let _ = window.unminimize();
     let _ = window.show();
     let _ = window.set_focus();
 }
 
-fn handle_window_interaction(app: &AppHandle, interaction: WindowInteraction) {
+fn hide_main_window(app: &AppHandle) {
+    let allowed = with_window_behavior(app, |behavior| {
+        behavior.cancel_pending();
+        behavior.can_explicitly_hide()
+    });
+    if allowed && let Some(window) = app.get_webview_window("main") {
+        let _ = window.hide();
+    }
+}
+
+fn toggle_main_window(app: &AppHandle) {
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
@@ -373,24 +432,41 @@ fn handle_window_interaction(app: &AppHandle, interaction: WindowInteraction) {
     let Ok(is_visible) = window.is_visible() else {
         return;
     };
-    let current = if is_visible {
-        WindowVisibility::Visible
-    } else {
-        WindowVisibility::Hidden
-    };
-
-    match next_visibility(current, interaction, BLUR_POLICY) {
-        next if next == current => {}
-        WindowVisibility::Hidden => {
-            let _ = window.hide();
-        }
-        WindowVisibility::Visible => show_main_window(app),
+    match with_window_behavior(app, |behavior| behavior.toggle_visibility(is_visible)) {
+        Some(false) => hide_main_window(app),
+        Some(true) => show_main_window(app),
+        None => {}
     }
+}
+
+fn schedule_blur_hide(app: &AppHandle) {
+    let Some(token) = with_window_behavior(app, WindowBehavior::request_blur) else {
+        return;
+    };
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(BLUR_DELAY).await;
+        let app_for_window = app.clone();
+        // Visibility/focus are rechecked on the UI thread, after any focus or
+        // tray event that may have invalidated this delayed request.
+        let _ = app.run_on_main_thread(move || {
+            let Some(window) = app_for_window.get_webview_window("main") else {
+                return;
+            };
+            let (Ok(visible), Ok(focused)) = (window.is_visible(), window.is_focused()) else {
+                return;
+            };
+            if with_window_behavior(&app_for_window, |behavior| {
+                behavior.should_hide(token, visible, focused)
+            }) {
+                hide_main_window(&app_for_window);
+            }
+        });
+    });
 }
 
 #[cfg(test)]
 mod tray_interaction_tests {
-    use super::{BlurPolicy, WindowInteraction, WindowVisibility, next_visibility};
 
     #[cfg(target_os = "macos")]
     #[test]
@@ -410,44 +486,5 @@ mod tray_interaction_tests {
         // Reject an opaque app-icon backplate: only the segmented S is a mask.
         assert!(visible_pixels > 0 && visible_pixels < (44 * 44) / 2);
         assert_eq!(&icon.rgba()[..4], &[0, 0, 0, 0]);
-    }
-
-    #[test]
-    fn second_tray_click_should_hide_after_focus_loss() {
-        let after_first_click = next_visibility(
-            WindowVisibility::Hidden,
-            WindowInteraction::TrayClick,
-            BlurPolicy::Preserve,
-        );
-        let after_focus_loss = next_visibility(
-            after_first_click,
-            WindowInteraction::FocusLost,
-            BlurPolicy::Preserve,
-        );
-        let after_second_click = next_visibility(
-            after_focus_loss,
-            WindowInteraction::TrayClick,
-            BlurPolicy::Preserve,
-        );
-
-        assert_eq!(
-            (after_first_click, after_focus_loss, after_second_click),
-            (
-                WindowVisibility::Visible,
-                WindowVisibility::Visible,
-                WindowVisibility::Hidden,
-            )
-        );
-    }
-
-    #[test]
-    fn focus_loss_should_hide_when_blur_policy_requires_it() {
-        let visibility = next_visibility(
-            WindowVisibility::Visible,
-            WindowInteraction::FocusLost,
-            BlurPolicy::Hide,
-        );
-
-        assert_eq!(visibility, WindowVisibility::Hidden);
     }
 }

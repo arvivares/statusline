@@ -1,4 +1,6 @@
-Build 1.0.1 (5): independent widget synchronization and privacy/support links on the official website.
+Build 1.0.1 (6): fixes the missing widget relay endpoint in build 5. The app and widget now inherit the same configuration; the build validates both packaged endpoints.
+
+Priority regression check: upgrade without uninstalling or pairing again. Open Statusline once, return to the Home Screen and leave the widget visible. Verify a newer sample arrives without reopening the app. A percentage that stays the same is not proof of failure: compare sample timestamps/age as well. Record the wait time; do not force-quit Statusline during this observation.
 
 Upgrade an already paired iPhone and open Statusline once to migrate the shared reader credential. Confirm pairing and quota are preserved. Then return to the Home Screen without reopening the app: with the computer awake and Companion running, check that the widget obtains a later sample. iOS decides when to refresh; requesting 30 minutes does not guarantee an exact time.
 

@@ -1,6 +1,19 @@
 # Apple App Store release kit
 
-This directory is the versioned source of truth for Statusline iPhone releases. Bundle `inmerzion.statusline`, version `1.0.1` and build `5`, was archived, exported, verified and uploaded on 10 September 2026. At the account holder's request, it was submitted with localized copy and actual EN/ES captures; Apple now reports **Waiting for Review**. Physical-device migration/widget QA remains unconfirmed and must not be inferred from submission. The published release remains `1.0 (4)`, manually released on 9 September 2026 (Europe/Madrid). See `validation.md` for dated evidence.
+This directory is the versioned source of truth for Statusline iPhone releases. The latest upload is `inmerzion.statusline` version `1.0.1`, build `6`, accepted for processing on 10 September 2026 at 17:08 Europe/Madrid. TestFlight availability is not yet verified. The separate App Review submission still uses build `5`, last verified as **Waiting for Review**, and was not replaced by this upload. The published release remains `1.0 (4)`, manually released on 9 September 2026. See `validation.md` for dated evidence.
+
+**Do not publicly release build 5:** subsequent physical-device diagnosis and
+inspection of the exported IPA confirmed that its widget's relay endpoint is
+empty. Foreground app refresh works, but independent widget synchronization does
+not. The corrected `1.0.1 (6)` has been built locally in Release configuration,
+development-signed and installed over the existing app by USB. An independent
+widget fetch was verified with the same pairing and an unchanged app-owned cache.
+It also adds shared project configuration and a mandatory bundle-validation gate.
+Build 6 has now also been archived, distribution-signed, validated in the exported
+IPA and uploaded for TestFlight. Apple acknowledged processing; completed
+processing and internal-test availability still need verification in App Store Connect.
+The local USB test is not a test of the distribution-signed TestFlight upgrade.
+Build 6 has **not** replaced the existing App Review submission.
 
 ## App record
 
@@ -14,8 +27,8 @@ This directory is the versioned source of truth for Statusline iPhone releases. 
 - App Store release: `1.0` (`4`), **Ready for Distribution**, manually released 9 September 2026 (Europe/Madrid)
 - Published 1.0 submission ID: `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`
 - Public link: https://apps.apple.com/app/statusline/id6807851320
-- Latest verified TestFlight upload: `1.0.1` (`5`), processed and assigned to `Internal QA`
-- App Store candidate: `1.0.1` (`5`), **Waiting for Review**, submitted 10 September 2026; physical-device QA unconfirmed
+- Latest TestFlight upload: `1.0.1` (`6`), upload succeeded; processing completion and `Internal QA` assignment not yet verified
+- App Store candidate: `1.0.1` (`5`), last verified **Waiting for Review**, submitted 10 September 2026; known widget-endpoint defect, do not publicly release
 - Current submission ID: `4d9e9b63-5ccd-474a-ad90-dbae5eda8a70`
 - Price: Free
 - Availability: 174 App Store countries or regions; China mainland excluded (Hong Kong and Macau unchanged)
@@ -33,18 +46,21 @@ The App Store Connect record, product-page metadata, screenshots, age rating and
 
 ## Synchronization candidate — 10 September 2026
 
-The iPhone app and widget target `1.0.1 (5)` together. Existing-pairing migration
-must be tested on a physical iPhone: open the app once after upgrading, then
+The iPhone app and widget target `1.0.1 (6)` together. The local USB update
+preserved pairing and confirmed a first independent widget fetch. The
+distribution-signed TestFlight upgrade and recurring refresh still need testing:
+open the app once after upgrading, then
 observe a newer widget sample without reopening the app. WidgetKit controls the
 actual reload schedule. The foreground loop, offline fallback, sample age and
 disconnect/re-pair guards also require QA. EN/ES instructions are in `testflight/`.
 
-The archive, export, signature/localization checks and manual upload are complete.
-Apple processed build `5`; `Internal QA` is assigned and Spanish What to Test notes
-are saved. Apple received `1.0.1 (5)` with new captures and review notes on
-10 September and reports **Waiting for Review**. Physical-device confirmation
-remains pending before public release. Release stays manual; pricing, territories
-and the published binary are unchanged.
+Build-6 archive, export, packaged-endpoint/signature/localization checks and manual
+upload are complete. Xcode reports upload success and Apple acknowledged package
+processing. Verify TestFlight availability and `Internal QA` in App Store Connect,
+then save the prepared EN/ES What to Test notes. The earlier build-5 submission
+with localized captures and review notes remains unchanged; it must not be
+publicly released. Release stays manual; pricing, territories and the published
+binary are unchanged.
 
 ## Public release — 9 September 2026
 
