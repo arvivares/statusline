@@ -2,7 +2,7 @@
 
 Effective date: 9 September 2026
 
-Public policy: https://statusline-relay.inmerzion.workers.dev/privacy
+Public policy: https://statusline.inmerzion.io/privacy
 
 Statusline is designed to display Codex quota metadata without collecting Codex account credentials.
 
@@ -35,7 +35,7 @@ Persistent Cloudflare Worker invocation logs are disabled in the production proj
 
 The public website at `statusline.inmerzion.io` uses Plausible at `plausible.inmerzion.io` to understand visits, referral sources, page engagement and clicks on external links and downloads. The integration does not set analytics cookies or persistent visitor identifiers. Browser requests include page and referrer URLs, IP addresses and browser information; Plausible uses this information to produce aggregate statistics. Do not put private information in website URLs.
 
-This measurement applies only to the public marketing website, not to the desktop or mobile applications, their widgets, pairing flows or the relay's public pages. No Codex credentials, quota snapshots, pairing keys or conversation content are sent by Statusline to Plausible. Blocking analytics does not prevent use of the website. See [Plausible's data policy](https://plausible.io/data-policy) for its analytics processing model; hosting and operational logs of the Inmerzion instance are managed separately from the encrypted relay.
+This measurement applies only to the public marketing website, not to the desktop or mobile applications, their widgets, pairing flows, privacy/support/data-deletion pages or the relay's public pages. No Codex credentials, quota snapshots, pairing keys or conversation content are sent by Statusline to Plausible. Blocking analytics does not prevent use of the website. See [Plausible's data policy](https://plausible.io/data-policy) for its analytics processing model; hosting and operational logs of the Inmerzion instance are managed separately from the encrypted relay.
 
 ## Retention and deletion
 

@@ -60,7 +60,7 @@ Las cuotas pueden cambiar. Antes de una publicación hay que revisar la document
 
 ### Cálculo para la versión actual
 
-El publisher desktop refresca cada cinco minutos mientras está ejecutándose y emparejado. Cada ciclo correcto hace dos solicitudes al Worker:
+El publisher Tauri desktop programa una lectura cada cinco minutos desde Rust, independientemente de la ventana. El equipo debe estar despierto y la aplicación ejecutándose; los tiempos de red y la suspensión del sistema pueden retrasar la publicación. Cada ciclo correcto, estando emparejado, hace dos solicitudes al Worker:
 
 1. `PUT /v1/channels/:id/snapshot` para publicar el ciphertext.
 2. `GET /v1/channels/:id` para actualizar el estado de emparejamiento y expiración.
@@ -82,7 +82,7 @@ El `PUT` también representa aproximadamente dos filas escritas en D1 —la fila
 | 12 h/día                |                  288 |               347 |                        277 |
 | 8 h/día                 |                  192 |               520 |                        416 |
 
-Estas cifras son dispositivos publisher activos, no descargas ni cuentas registradas. Excluyen el arranque, cambios de foco, actualización manual, emparejamiento, `GET /health`, cron, pruebas y otros proyectos de la misma cuenta. Cada lectura de iOS al abrir o pulsar actualizar añade una solicitud. Una estimación operativa es:
+Estas cifras son dispositivos publisher activos, no descargas ni cuentas registradas. Excluyen el arranque, cambios de foco, actualización manual, emparejamiento, `GET /health`, cron, pruebas y otros proyectos de la misma cuenta. Cada lectura móvil añade una solicitud. Con el widget iOS independiente, la planificación de 30 minutos equivale a unas 48 lecturas por día si iOS concede todas las oportunidades; no es una frecuencia garantizada. La app visible añade hasta unas 60 lecturas por hora, además de aperturas y acciones manuales. Una estimación operativa es:
 
 ```text
 solicitudes/día ≈ publishers × horas activas × 24
@@ -90,7 +90,9 @@ solicitudes/día ≈ publishers × horas activas × 24
                  + emparejamientos, health checks y pruebas
 ```
 
-Para una beta gratuita, 138 publishers permanentemente activos es un techo de planificación razonable, no una promesa de capacidad. Configura alertas antes del 80 % y decide entre reducir la frecuencia, pasar a Workers Paid o desplegar el adaptador Linux antes de alcanzarlo.
+Como escenario orientativo, un publisher activo 24 horas con un widget iOS y la app cerrada consume aproximadamente `576 + 48 = 624` solicitudes/día: unos **160 pares** al límite matemático o **128 pares** reservando un 20 %. Es un escenario de planificación, no un máximo garantizado: las acciones del usuario, Android, otros widgets y otros proyectos también consumen presupuesto. La app abierta todo el día podría añadir unas 1.440 lecturas. La caché evita algunas lecturas duplicadas, pero no debe descontarse ese ahorro sin medirlo.
+
+Consulta la [política de sincronización](../architecture/synchronization.md), configura alertas antes del 80 % y decide entre reducir la frecuencia, pasar a Workers Paid o desplegar el adaptador Linux antes de alcanzarlo.
 
 ### Telemetría observada y sondeo de emparejamiento
 

@@ -364,19 +364,20 @@ mandatory in both modes.
 
 ## Repository map
 
-| Path                                  | Purpose                                                    |
-| ------------------------------------- | ---------------------------------------------------------- |
-| `apps/desktop/`                       | Tauri companion for Windows, Linux and macOS               |
-| `apps/android/`                       | Android app, QR scanner, widget and Play Store kit         |
-| [`apps/apple/`](apps/apple/README.md) | Xcode project for iPhone, WidgetKit and native macOS       |
-| [`apps/web/`](apps/web/README.md)     | Static presentation website and Docker/Nginx deployment    |
-| `services/relay/`                     | Worker, D1 adapter, rate limiting and public pages         |
-| `protocol/`                           | Versioned protocol, fixtures and interoperability examples |
-| `localization/`                       | Shared English/Spanish messages and locale test cases      |
-| `packaging/`                          | Public verification material for distributed packages      |
-| [`docs/`](docs/README.md)             | Architecture, operations, release and security records     |
-| [`release.json`](release.json)        | Canonical product and component release versions           |
-| `.github/workflows/`                  | Validation and distribution pipelines                      |
+| Path                                  | Purpose                                                        |
+| ------------------------------------- | -------------------------------------------------------------- |
+| `apps/desktop/`                       | Tauri companion for Windows, Linux and macOS                   |
+| `apps/android/`                       | Android app, QR scanner, widget and Play Store kit             |
+| [`apps/apple/`](apps/apple/README.md) | Xcode project for iPhone, WidgetKit and native macOS           |
+| [`apps/web/`](apps/web/README.md)     | Static presentation website and Docker/Nginx deployment        |
+| `services/relay/`                     | Worker, D1 adapter, rate limiting and public pages             |
+| `content/`                            | Shared English/Spanish privacy, support and data-deletion copy |
+| `protocol/`                           | Versioned protocol, fixtures and interoperability examples     |
+| `localization/`                       | Shared English/Spanish messages and locale test cases          |
+| `packaging/`                          | Public verification material for distributed packages          |
+| [`docs/`](docs/README.md)             | Architecture, operations, release and security records         |
+| [`release.json`](release.json)        | Canonical product and component release versions               |
+| `.github/workflows/`                  | Validation and distribution pipelines                          |
 
 Dependencies and build outputs such as `node_modules`, `target`, `dist`, `.gradle`,
 `build` and `.wrangler` are reproducible and intentionally excluded from Git.

@@ -10,6 +10,7 @@ on:
       - main
     paths:
       - "apps/web/**"
+      - "content/**"
       - "branding/**"
       - "scripts/generate-brand-assets.mjs"
       - "docs/assets/readme/app-store-qr.svg"
@@ -98,6 +99,9 @@ jobs:
 
       - name: Validate analytics initialization and security policy
         run: npm run test:analytics
+
+      - name: Validate public information pages
+        run: npm run test:public
 
       - name: Build production website
         run: npm run build

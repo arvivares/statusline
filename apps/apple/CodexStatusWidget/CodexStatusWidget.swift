@@ -7,6 +7,13 @@ struct CodexStatusEntry: TimelineEntry {
 }
 
 struct CodexStatusProvider: TimelineProvider {
+    // One loader per extension process coalesces small/medium timeline requests.
+    private static let loader = CodexWidgetSnapshotLoader(
+        reader: CodexRelayReaderRepository(configuration: .current(), isWidget: true),
+        sharedStore: CodexStatusStore(),
+        widgetStore: CodexStatusStore(defaults: .standard)
+    )
+
     func placeholder(in context: Context) -> CodexStatusEntry {
         CodexStatusEntry(date: .now, status: .example)
     }
@@ -15,7 +22,7 @@ struct CodexStatusProvider: TimelineProvider {
         in context: Context,
         completion: @escaping (CodexStatusEntry) -> Void
     ) {
-        let status = context.isPreview ? .example : CodexStatusStore().loadSaved()
+        let status = context.isPreview ? .example : Self.loader.cachedStatus()
         completion(CodexStatusEntry(date: .now, status: status))
     }
 
@@ -23,19 +30,25 @@ struct CodexStatusProvider: TimelineProvider {
         in context: Context,
         completion: @escaping (Timeline<CodexStatusEntry>) -> Void
     ) {
-        let now = Date.now
-        let status = CodexStatusStore().loadSaved()
-        let entry = CodexStatusEntry(date: now, status: status)
-        let regularRefresh = now.addingTimeInterval(60 * 60)
-        let refreshDate: Date
-
-        if let resetDate = status?.resetDate, resetDate > now {
-            refreshDate = min(resetDate, regularRefresh)
-        } else {
-            refreshDate = regularRefresh
+        if context.isPreview {
+            completion(Timeline(entries: [placeholder(in: context)], policy: .never))
+            return
         }
-
-        completion(Timeline(entries: [entry], policy: .after(refreshDate)))
+        Task { @MainActor in
+            let loader = Self.loader
+            let status = await loader.load()
+            let now = Date.now
+            var entries = [CodexStatusEntry(date: now, status: status)]
+            let refreshDate = CodexSyncPolicy.nextWidgetRefresh(after: now, status: status)
+            // Change freshness locally without spending another network reload.
+            if let status {
+                let staleAt = min(status.updatedAt.addingTimeInterval(CodexSyncPolicy.staleInterval), status.resetDate)
+                if staleAt > now, staleAt < refreshDate {
+                    entries.append(CodexStatusEntry(date: staleAt, status: status))
+                }
+            }
+            completion(Timeline(entries: entries, policy: .after(refreshDate)))
+        }
     }
 }
 
@@ -48,9 +61,9 @@ struct CodexStatusWidgetEntryView: View {
         Group {
             if let status = entry.status {
                 if widgetFamily == .systemMedium {
-                    MediumDataPlaneWidget(status: status)
+                    MediumDataPlaneWidget(status: status, date: entry.date)
                 } else {
-                    SmallDataPlaneWidget(status: status)
+                    SmallDataPlaneWidget(status: status, date: entry.date)
                 }
             } else {
                 EmptyDataPlaneWidget()
@@ -96,13 +109,14 @@ private struct EmptyDataPlaneWidget: View {
 
 private struct SmallDataPlaneWidget: View {
     let status: CodexUsageStatus
+    let date: Date
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 DataPlaneLabel(text: L10n.text("WEEKLY LIMIT"), tint: DataPlaneTheme.signal)
                 Spacer()
-                DataPlaneStatusIndicator(label: L10n.text("LIVE"))
+                WidgetSampleAge(status: status, date: date)
             }
 
             Spacer(minLength: 0)
@@ -153,6 +167,7 @@ private struct SmallDataPlaneWidget: View {
 
 private struct MediumDataPlaneWidget: View {
     let status: CodexUsageStatus
+    let date: Date
 
     var body: some View {
         HStack(spacing: 14) {
@@ -177,7 +192,7 @@ private struct MediumDataPlaneWidget: View {
                 HStack {
                     DataPlaneLabel(text: L10n.text("WEEKLY LIMIT"))
                     Spacer()
-                    DataPlaneStatusIndicator(label: L10n.text("LIVE"))
+                    WidgetSampleAge(status: status, date: date)
                 }
 
                 DataPlaneMeter(
@@ -220,6 +235,24 @@ private struct MediumDataPlaneWidget: View {
             L10n.text("{0} percent remaining. Resets {1}", status.remainingPercentage,
                       status.resetDate.formatted(.dateTime.locale(L10n.locale)))
         )
+    }
+}
+
+private struct WidgetSampleAge: View {
+    let status: CodexUsageStatus
+    let date: Date
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: CodexSyncPolicy.isStale(status, at: date) ? "clock.badge.exclamationmark" : "clock")
+            Text(status.updatedAt, style: .relative)
+        }
+        .font(.system(size: 9, weight: .medium, design: .monospaced))
+        .foregroundStyle(CodexSyncPolicy.isStale(status, at: date) ? DataPlaneTheme.muted : DataPlaneTheme.signal)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L10n.text("Last sample: {0}", L10n.relative(status.updatedAt)))
     }
 }
 

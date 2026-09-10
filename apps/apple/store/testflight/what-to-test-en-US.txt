@@ -1,4 +1,10 @@
-Build 1.0 (4): the new segmented gold Statusline icon now matches Android and Companion. Check the icon on the Home Screen and in Settings after updating; confirm existing pairing and data remain intact.
+Build 1.0.1 (5): independent widget synchronization and privacy/support links on the official website.
+
+Upgrade an already paired iPhone and open Statusline once to migrate the shared reader credential. Confirm pairing and quota are preserved. Then return to the Home Screen without reopening the app: with the computer awake and Companion running, check that the widget obtains a later sample. iOS decides when to refresh; requesting 30 minutes does not guarantee an exact time.
+
+Keep Companion hidden and check two publications about five minutes apart. Record read and publication times separately. Check that the widget displays sample age and never presents old data as current. Test network loss, restart and first unlock; disconnect and re-pair during a refresh to ensure the previous channel's data does not return.
+
+With the app open, confirm updates arrive without tapping Refresh. Open Privacy and Support: they should use statusline.inmerzion.io in the app language, independently of relay configuration. The Data Plane design and icon should be preserved.
 
 English and Spanish follow the primary system language in the app and widget. Other primary languages use English, even if Spanish is second in the language list.
 

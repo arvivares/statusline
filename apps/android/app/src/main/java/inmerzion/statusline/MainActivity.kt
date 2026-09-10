@@ -14,6 +14,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import inmerzion.statusline.ui.StatuslineApp
 import inmerzion.statusline.localization.LocalizedContext
+import inmerzion.statusline.localization.L10n
 
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
@@ -100,7 +101,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openPublicPage(path: String) {
-        val target = Uri.parse("${BuildConfig.RELAY_BASE_URL.trimEnd('/')}/$path")
+        val languagePath = if (L10n.locale.language == "es") "/es" else ""
+        val target = Uri.parse("https://statusline.inmerzion.io$languagePath/$path")
         try {
             startActivity(Intent(Intent.ACTION_VIEW, target))
         } catch (_: ActivityNotFoundException) {

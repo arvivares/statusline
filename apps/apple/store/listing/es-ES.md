@@ -44,7 +44,7 @@ cuota,límite semanal,widget,terminal,desarrollo,uso,estado,privacidad,sincroniz
 
 ## URL de soporte
 
-https://statusline-relay.inmerzion.workers.dev/support
+https://statusline.inmerzion.io/es/support
 
 ## URL de marketing
 

@@ -1,4 +1,10 @@
-Build 1.0 (4): el nuevo icono dorado y segmentado de Statusline coincide con Android y Companion. Revisa el icono en la pantalla de inicio y en Ajustes tras actualizar; confirma que el emparejamiento y los datos se conservan.
+Build 1.0.1 (5): sincronización independiente del widget y enlaces de privacidad/soporte en el sitio oficial.
+
+Actualiza un iPhone ya emparejado y abre Statusline una vez para migrar la credencial compartida. Confirma que conserva el emparejamiento y la cuota. Luego vuelve al inicio sin abrir la app: con el ordenador despierto y Companion ejecutándose, verifica que el widget obtiene una muestra posterior. iOS decide cuándo actualizar; la solicitud de 30 minutos no garantiza una hora exacta.
+
+Deja Companion oculto y comprueba dos publicaciones separadas unos cinco minutos. Anota por separado la hora de lectura y la de publicación. Verifica que el widget muestra la antigüedad de la muestra y no presenta como actuales los datos antiguos. Prueba desconexión de red, reinicio y primer desbloqueo; desconecta y vuelve a emparejar durante una actualización para comprobar que no reaparecen datos del canal anterior.
+
+Con la app abierta, confirma que llegan cambios sin pulsar Actualizar. Abre Privacidad y Soporte: deben usar statusline.inmerzion.io y el idioma de la app, sin depender del relay configurado. Conserva el diseño y el icono Data Plane.
 
 La app y el widget usan inglés o español según el idioma principal del sistema. Si es otro idioma, usan inglés, incluso si español es el segundo de la lista.
 

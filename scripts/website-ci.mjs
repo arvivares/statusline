@@ -18,6 +18,7 @@ const relevantFiles = new Set([
 export function isWebsitePath(path) {
   return (
     path.startsWith("apps/web/") ||
+    path.startsWith("content/") ||
     path.startsWith("branding/") ||
     relevantFiles.has(path)
   );

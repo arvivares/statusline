@@ -25,6 +25,6 @@ availability is coming soon.
 
 ## Support and privacy
 
-- [Support](https://statusline-relay.inmerzion.workers.dev/support): Public support information.
+- [Support](https://statusline.inmerzion.io/support): Public support information.
 - [Troubleshooting](https://github.com/arvivares/statusline/blob/main/SUPPORT.md): Installation, pairing and usage troubleshooting.
-- [Privacy policy](https://statusline-relay.inmerzion.workers.dev/privacy): Data handling, encrypted synchronization and retention.
+- [Privacy policy](https://statusline.inmerzion.io/privacy): Data handling, encrypted synchronization and retention.

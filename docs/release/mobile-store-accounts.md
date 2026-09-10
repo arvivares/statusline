@@ -6,9 +6,9 @@ before submission because platform policies can change.
 ## Shared product contact
 
 - Public support email: `founder@inmerzion.io`
-- Public privacy URL: https://statusline-relay.inmerzion.workers.dev/privacy
-- Public support URL: https://statusline-relay.inmerzion.workers.dev/support
-- Public data-deletion URL: https://statusline-relay.inmerzion.workers.dev/delete-data
+- Public privacy URL: https://statusline.inmerzion.io/privacy
+- Public support URL: https://statusline.inmerzion.io/support
+- Public data-deletion URL: https://statusline.inmerzion.io/delete-data
 
 ## Google Play
 

@@ -16,6 +16,47 @@ The source tree and maintainer-account controls are suitable for public distribu
 Repository-native security controls are enabled, and the one accepted dependency risk
 is documented below with explicit reachability evidence, ownership and exit criteria.
 
+## 10 September addendum: Dependabot alert 2 — open
+
+This targeted dependency review supersedes the historical zero-open-high count
+above for the next release. It is not a new full security audit or evidence of
+exploitation. Release preparation may continue, but the new signed-build/tag
+process is held pending remediation or an explicit risk decision.
+
+### [HIGH] Sharp/libheif in relay development tooling
+
+- **Category:** OWASP A06 Vulnerable and Outdated Components; CWE-122.
+- **File:** `services/relay/package-lock.json:2570` (`sharp 0.35.2`).
+- **Dependency path:** Wrangler `4.127.1` → Miniflare `5.20260828.0-alpha` →
+  Sharp `0.35.2`, all in the development dependency graph.
+- **Advisory:** [GHSA-rgj7-g3m4-5g8c](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c),
+  high severity (CVSS v4 8.9). Processing malicious image input through affected
+  libheif code can lead to memory corruption and possible code execution under
+  certain conditions on glibc-based Linux. Sharp versions below `0.35.4` are affected.
+- **Reachability evidence:** Miniflare imports Sharp in its local image-transform
+  implementation. Statusline configures D1 and rate-limit bindings, not Images,
+  and the relay handles encrypted JSON snapshots rather than image processing.
+  The generated Worker JavaScript contains no Sharp/Miniflare/libheif references.
+  Sharp is not declared by the desktop, mobile or website apps. No current
+  remotely reachable application path to the vulnerable decoder was identified.
+  This does not prove that a developer/CI machine cannot be exposed by other
+  tooling, future image transforms or untrusted code.
+- **Scanner evidence:** `npm audit` reports three high entries for the same
+  dependency chain (Sharp, Miniflare, Wrangler), not three independent flaws.
+  `npm audit --omit=dev` reports zero findings. No exploit was run.
+- **Upgrade constraints:** PR #14 (`wrangler 4.129.0`) still resolves Sharp
+  `0.35.2`. Registry metadata for Wrangler `4.130.0` / Miniflare
+  `5.20260908.0-alpha` also pins `0.35.2`. Those updates alone do not fix this alert.
+  Do not blindly use `npm audit fix --force`: its proposed Wrangler `4.15.2`
+  downgrade is not an appropriate validated fix for the current configuration.
+- **Recommendation:** After approval, add a scoped Miniflare → Sharp `0.35.4`
+  override, regenerate the lockfile and test a clean install, npm audit, TypeScript,
+  relay tests, local D1 migration and Worker dry-run packaging. Remove the override
+  once a validated upstream Wrangler/Miniflare dependency resolves a patched Sharp.
+- **Status/owner:** Open, `@arvivares`. No dependency, alert dismissal or live
+  deployment was changed by this review. Revalidate the lockfile and GitHub alert
+  after the remediation is merged; do not represent PR #14 as a security fix.
+
 ## 7 September addendum: explicit Windows beta preview
 
 ### [MEDIUM — accepted] Windows previews lack Authenticode publisher trust

@@ -1,4 +1,8 @@
 import { staticMessages } from "./static-messages";
+import {
+  publicPagePath,
+  type PublicPageID,
+} from "../../../content/public-pages";
 import { interfaceMessages, platformMessages } from "./messages";
 import {
   languageFromPath,
@@ -74,6 +78,11 @@ function applyLanguage(next: Language, persist: boolean) {
   }
 
   const metadata = pageMetadata(next);
+  document
+    .querySelectorAll<HTMLAnchorElement>("[data-public-page]")
+    .forEach((link) => {
+      link.href = publicPagePath(link.dataset.publicPage as PublicPageID, next);
+    });
   document
     .querySelector('link[rel="canonical"]')
     ?.setAttribute("href", metadata.canonical);

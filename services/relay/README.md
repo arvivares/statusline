@@ -4,6 +4,21 @@ Relay universal y neutral para Statusline. El servicio emite credenciales separa
 
 El token del QR caduca a los diez minutos. Al reclamarlo se invalida y se intercambia por una credencial reader distinta y duradera. El contrato normativo está en [../../protocol/statusline-relay-v1.md](../../protocol/statusline-relay-v1.md).
 
+## Información pública
+
+Privacidad, soporte y eliminación de datos se sirven desde el sitio estático
+`https://statusline.inmerzion.io`, sin depender de este servicio. Las rutas
+heredadas `/privacy`, `/support` y `/delete-data` (también con prefijo `/es`)
+devuelven HTTP 301 al sitio, activas por defecto al desplegar el código. No hay
+una variable de activación. GET y HEAD conservan el idioma; los parámetros de
+consulta no se reenvían y otros métodos reciben 405. `/health` y `/v1/*` no se
+redirigen ni cambian su contrato.
+
+Publica primero el build del sitio, o ambos componentes juntos, para evitar un
+404 temporal en el destino. La raíz del relay conserva una página informativa
+sin rastreadores. El contenido y el origen público están versionados en
+`../../content/public-pages.ts`; en un fork, adapta dominio, identidad y contacto.
+
 ## Desarrollo local
 
 1. Instala dependencias con `npm ci`.

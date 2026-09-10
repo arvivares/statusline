@@ -1,151 +1,19 @@
-interface PublicPage {
-  readonly title: string;
-  readonly eyebrow: string;
-  readonly summary: string;
-  readonly content: string;
-}
-
-const pages: Readonly<Record<string, PublicPage>> = {
-  "/": {
-    title: "Statusline",
-    eyebrow: "STL / DATA PLANE",
-    summary: "Private, cross-platform Codex quota telemetry.",
-    content: `
-      <section>
-        <h2>One status line. Every device.</h2>
-        <p>Statusline reads quota metadata from your local Codex session and can relay an end-to-end encrypted snapshot to your phone. The relay never receives your Codex credentials or encryption key.</p>
-      </section>
-      <nav class="action-grid" aria-label="Public information">
-        <a class="action" href="/privacy"><span>PRIVACY</span><strong>How data is handled</strong></a>
-        <a class="action" href="/support"><span>SUPPORT</span><strong>Setup and troubleshooting</strong></a>
-        <a class="action" href="/delete-data"><span>DATA CONTROL</span><strong>Delete Statusline data</strong></a>
-      </nav>
-    `,
-  },
-  "/privacy": {
-    title: "Privacy Policy",
-    eyebrow: "STL / PRIVACY",
-    summary: "Effective 9 September 2026",
-    content: `
-      <section>
-        <h2>Data processed locally</h2>
-        <p>The desktop companion starts the locally installed Codex App Server and reads only the fields needed to show usage windows, reset times, account type and plan. It does not read, copy or store Codex access tokens, API keys, prompts, source code or conversation content.</p>
-        <p>A manually selected Codex executable path stays in the computer's local application configuration and can be cleared from Source Settings.</p>
-      </section>
-      <section>
-        <h2>Universal encrypted relay</h2>
-        <p>Sync is optional. Pairing creates an AES-256 encryption key on the desktop and transfers it directly to the mobile device with a short-lived, single-use credential. Publisher and reader credentials are role-separated and stored in the operating system secure store.</p>
-        <p>The relay receives a random channel identifier, SHA-256 hashes of random credentials, an opaque AES-256-GCM ciphertext and timestamps required for expiration and replay protection. It cannot decrypt the quota snapshot and never receives Codex credentials, email addresses, prompts or source code.</p>
-      </section>
-      <section>
-        <h2>QR scanning on Android</h2>
-        <p>Camera frames and decoded QR contents are processed on-device. Statusline does not store or transmit them. The bundled ML Kit barcode component may collect device and app information, an installation identifier, API configuration, feature events, performance measurements and error diagnostics for Google's diagnostics and usage analytics. Statusline does not receive that telemetry.</p>
-        <p><a href="https://developers.google.com/ml-kit/android-data-disclosure" rel="noreferrer">Read Google's ML Kit data disclosure</a>.</p>
-      </section>
-      <section>
-        <h2>Hosting, abuse prevention and logs</h2>
-        <p>The Cloudflare deployment applies abuse limits using a SHA-256 digest of the source IP address. Neither the source IP nor that digest is written to the Statusline D1 database.</p>
-        <p>Persistent Worker invocation logs are disabled. Cloudflare may still process IP addresses and request metadata at its edge for delivery, security, abuse prevention, aggregate metrics and billing. The Statusline desktop and mobile applications contain no advertising SDK and no first-party product analytics SDK.</p>
-      </section>
-      <section>
-        <h2>Website analytics</h2>
-        <p>The public website at statusline.inmerzion.io uses Plausible at plausible.inmerzion.io to understand visits, referral sources, page engagement and clicks on external links and downloads. The integration does not set analytics cookies or persistent visitor identifiers. Browser requests include page and referrer URLs, IP addresses and browser information; Plausible uses this information to produce aggregate statistics. Do not put private information in website URLs.</p>
-        <p>This measurement applies only to the public marketing website, not to the desktop or mobile applications, their widgets, pairing flows or the relay's public pages. No Codex credentials, quota snapshots, pairing keys or conversation content are sent by Statusline to Plausible. Blocking analytics does not prevent use of the website.</p>
-        <p>See <a href="https://plausible.io/data-policy" rel="noreferrer">Plausible's data policy</a> for its analytics processing model; hosting and operational logs of the Inmerzion instance are managed separately from the encrypted relay.</p>
-      </section>
-      <section>
-        <h2>Retention and deletion</h2>
-        <p>Pairing links expire after ten minutes. Channels expire after thirty days without a successful publication, and a daily task removes expired rows. Rate-limit state is scoped to 60-second windows and is not stored in the relay database.</p>
-        <p>Disconnecting the desktop attempts to delete the remote channel and removes its local credential. Disconnecting the mobile reader removes its local credential and encryption key.</p>
-        <p>See <a href="/delete-data">Delete Statusline data</a> for step-by-step instructions and the complete retention details.</p>
-      </section>
-      <section>
-        <h2>Questions</h2>
-        <p>Email <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> or use the <a href="/support">Statusline support page</a> for privacy questions or reports. Never include pairing links, QR codes, API keys, access tokens or private Codex configuration.</p>
-      </section>
-    `,
-  },
-  "/support": {
-    title: "Support",
-    eyebrow: "STL / SUPPORT",
-    summary: "Setup, pairing and diagnostics",
-    content: `
-      <section>
-        <h2>Request support</h2>
-        <p>Email <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> for reproducible bugs, installation problems and privacy questions. Remove account identifiers, pairing links, QR codes, API keys, access tokens and private paths before submitting anything.</p>
-      </section>
-      <section>
-        <h2>Codex CLI not found</h2>
-        <p>Install or update the official Codex CLI, open a new terminal and run <code>codex --version</code>. Complete Sign in with ChatGPT the first time Codex opens, then use Connections → Codex Source → Scan again in Statusline Companion.</p>
-        <p>If automatic detection fails, choose Select executable. Statusline validates the selected launcher with <code>codex --version</code> before saving it.</p>
-      </section>
-      <section>
-        <h2>Phone does not receive a sample</h2>
-        <ol>
-          <li>Confirm Universal Relay shows a public HTTPS endpoint.</li>
-          <li>Create a new pairing and scan it within ten minutes.</li>
-          <li>Confirm the desktop changes from Pairing to Connected.</li>
-          <li>Refresh while Codex is authenticated, then refresh the phone.</li>
-          <li>Verify desktop and mobile builds use the same relay origin.</li>
-        </ol>
-      </section>
-      <section>
-        <h2>Useful diagnostic details</h2>
-        <ul>
-          <li>Operating system and Statusline version.</li>
-          <li>Installer format and output of <code>codex --version</code>.</li>
-          <li>Codex Source origin, version and state.</li>
-          <li>Relay hostname and state, never the full pairing URL.</li>
-        </ul>
-      </section>
-      <section>
-        <h2>Delete your data</h2>
-        <p>Statusline has no user account. Follow the steps on the <a href="/delete-data">Statusline data deletion page</a> to remove local credentials and encrypted relay data, or email support for a deletion request.</p>
-      </section>
-    `,
-  },
-  "/delete-data": {
-    title: "Delete Statusline Data",
-    eyebrow: "STL / DATA CONTROL",
-    summary: "Remove local credentials and encrypted relay data",
-    content: `
-      <section>
-        <h2>No Statusline account</h2>
-        <p>Statusline does not create a user account and does not receive your Codex credentials, email address, prompts, source code or conversation history. A paired device stores only local relay credentials, an encryption key and the latest decrypted quota snapshot.</p>
-      </section>
-      <section>
-        <h2>Delete data from Android</h2>
-        <ol>
-          <li>Open Statusline and scroll to <strong>Relay Control</strong>.</li>
-          <li>Select <strong>Disconnect</strong> and confirm.</li>
-          <li>Statusline removes the reader credential, encryption key and cached quota snapshot from the device. You can also clear the local demo with <strong>Clear Demo</strong>.</li>
-        </ol>
-        <p>Uninstalling Statusline removes its normal local application data according to Android's application-storage behavior.</p>
-      </section>
-      <section>
-        <h2>Delete the encrypted relay channel</h2>
-        <ol>
-          <li>Open Statusline Companion on the paired Windows, Linux or macOS computer.</li>
-          <li>Open <strong>Universal Relay</strong> and select <strong>Disconnect</strong>.</li>
-          <li>The Companion attempts to delete the remote channel immediately, then removes its local publisher credential.</li>
-        </ol>
-        <p>If the publisher is unavailable, stop using the channel. Pairing links expire after ten minutes and channels are automatically deleted after thirty days without a successful publication.</p>
-      </section>
-      <section>
-        <h2>Request deletion or assistance</h2>
-        <p>Email <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> with the subject <strong>Statusline data deletion</strong>. State which device or relay channel you can no longer disconnect, but never send a pairing link, QR code, API key, access token, encryption key or Codex authentication file.</p>
-        <p>Statusline support can explain local removal and retention. Because the relay stores only random identifiers, hashed random credentials and opaque ciphertext, support cannot identify a channel from your name or email and cannot decrypt its contents. Inactive channel data is retained for no longer than thirty days after its last successful publication.</p>
-      </section>
-    `,
-  },
-};
+import {
+  englishPages as pages,
+  publicPageMatch,
+  publicPagePath,
+  publicSiteOrigin,
+} from "../../../content/public-pages";
+import type { PublicPage } from "../../../content/public-pages";
 
 export function publicPageResponse(
   pathname: string,
   method: string,
 ): Response | null {
-  const page = pages[pathname];
-  if (page === undefined) {
+  const destination = publicPageMatch(pathname);
+  // Only information routes redirect; /v1 and /health never do.
+  const page = pathname === "/" ? pages["/"] : undefined;
+  if (page === undefined && destination === null) {
     return null;
   }
   if (method !== "GET" && method !== "HEAD") {
@@ -154,7 +22,16 @@ export function publicPageResponse(
       headers: publicHeaders({ Allow: "GET, HEAD" }),
     });
   }
-  return new Response(method === "HEAD" ? null : renderPage(page), {
+  if (destination) {
+    return new Response(null, {
+      status: 301,
+      // Never forward query strings, request hosts or credentials.
+      headers: publicHeaders({
+        Location: `${publicSiteOrigin}${publicPagePath(destination.id, destination.language)}`,
+      }),
+    });
+  }
+  return new Response(method === "HEAD" ? null : renderPage(page!), {
     status: 200,
     headers: publicHeaders({ "Content-Type": "text/html; charset=utf-8" }),
   });

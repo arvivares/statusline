@@ -1,0 +1,6 @@
+{
+  "name": "@statusline/public-content",
+  "private": true,
+  "type": "module",
+  "license": "MIT"
+}

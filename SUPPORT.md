@@ -1,8 +1,8 @@
 # Statusline Support
 
-Public support page: https://statusline-relay.inmerzion.workers.dev/support
+Public support page: https://statusline.inmerzion.io/support
 
-Public data deletion page: https://statusline-relay.inmerzion.workers.dev/delete-data
+Public data deletion page: https://statusline.inmerzion.io/delete-data
 
 Email [founder@inmerzion.io](mailto:founder@inmerzion.io) for reproducible bugs, installation problems and privacy questions. Before sending a report, remove account identifiers, pairing links, QR codes, API keys, access tokens and private paths.
 
@@ -57,7 +57,7 @@ Use `VIEW DEMO` in Relay Control. Statusline creates a clearly labeled local sam
 
 Statusline has no user account. On Android, use **Relay Control → Disconnect** to remove the reader credential, encryption key and cached quota snapshot. On the paired desktop Companion, use **Universal Relay → Disconnect** to request immediate deletion of the encrypted remote channel and remove the publisher credential.
 
-If the publisher is unavailable, inactive relay channels are automatically deleted after 30 days. The complete steps, retained data and support path are published at https://statusline-relay.inmerzion.workers.dev/delete-data.
+If the publisher is unavailable, relay channels expire after 30 days without a successful publication; the daily cleanup task then removes expired rows. The complete steps, retained data and support path are published at https://statusline.inmerzion.io/delete-data.
 
 ## Useful diagnostic details
 

@@ -10,10 +10,12 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- product tag: `v0.1.14`;
-- desktop and Android code version: `0.1.14`;
-- Android generated build: `versionCode 10` (Google Play submission is separate);
-- iOS App Store release: `1.0 (4)`, distributed manually through App Store Connect.
+- prepared product tag: `v0.1.15` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.15`;
+- Android candidate: `versionCode 11` (Google Play submission is separate);
+- prepared iOS candidate: `1.0.1 (5)`, for local archive and manual TestFlight
+  upload after review. It is not yet an uploaded or physically tested release.
+- currently published iOS App Store release: `1.0 (4)`, distributed manually through App Store Connect.
   Apple approved submission `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`; the account
   holder authorized public release on 9 September 2026 (Europe/Madrid).
   The delivered version reports **Ready for Distribution**; the account holder
@@ -45,7 +47,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.14`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.15`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -110,14 +112,28 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.14 -m "Statusline 0.1.14 beta"
-git push origin v0.1.14
+git tag -s v0.1.15 -m "Statusline 0.1.15 beta"
+git push origin v0.1.15
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
 targets the exact workflow commit and matches `release.json`. The signed tag is the release
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
+
+### 0.1.15 candidate gates
+
+- Resolve or explicitly assess the open Sharp development-tooling alert before
+  running the next signed-build/tag process. See the dated
+  [security review](../security/security-review.md#10-september-addendum-dependabot-alert-2--open).
+- Review and merge the preparation PR before creating the public tag. Do not
+  retarget a published tag or publish branch-QA artifacts as a verified release.
+- Publish the static website before or alongside the relay redirect update.
+  App Store Connect and Play Console URL fields are separate account-side edits.
+- Validate the [sync upgrade checklist](../architecture/synchronization.md),
+  especially paired-iPhone Keychain migration and hidden-window publications.
+- Archive iOS locally only once the candidate is ready and enough disk space is
+  available. Reuse that archive for export/upload; GitHub Actions never builds iOS.
 
 Release assets use portable ASCII filenames. Whitespace emitted by native packagers is
 normalized to `.` before checksums, provenance and upload are generated, so the names

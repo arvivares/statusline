@@ -4,6 +4,8 @@ pub mod app_server;
 pub mod codex_installation;
 #[path = "../../src-tauri/src/localization.rs"]
 pub mod localization;
+#[path = "../../src-tauri/src/refresh.rs"]
+pub mod refresh;
 #[path = "../../src-tauri/src/usage.rs"]
 pub mod usage;
 

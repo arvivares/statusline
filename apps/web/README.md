@@ -56,6 +56,7 @@ npm run check
 npm run format:check
 npm run test:dev
 npm run test:analytics
+npm run test:public
 npm run build
 npm run test:seo
 ```
@@ -86,7 +87,8 @@ npm run build -- --outDir /tmp/statusline-web-review
 El workflow [Website](../../.github/workflows/website.yml) se inicia en todos los PR
 hacia `main`, sin filtros de rutas a nivel del evento. Su primer job comprueba la
 lógica de CI y detecta cambios en `apps/web/`, el workflow, su detector, Dependabot
-o la configuración compartida de Node y formato, además del kit de marca en
+o la configuración compartida de Node y formato, además del contenido público en
+`content/`, el kit de marca en
 `branding/`, su generador y el QR compartido `docs/assets/readme/app-store-qr.svg`.
 Solo en esos casos instala desde
 el lockfile, comprueba TypeScript y formato, genera el build y valida sus artefactos
@@ -116,6 +118,8 @@ del PR y no se fusionan automáticamente.
 
 - `index.html`: contenido, navegación, metadatos y demostraciones.
 - `src/`: interacciones TypeScript y estilos adaptables a escritorio y móvil.
+- `../../content/public-pages.ts`: textos EN/ES de privacidad, soporte y eliminación de datos.
+- `scripts/render-public-pages.mjs` y `public/information.css`: documentos públicos estáticos con estilo Data Plane.
 - `public/assets/`: marca, capturas del producto y tarjetas sociales EN / ES.
 - `public/fonts/`: Manrope e IBM Plex Mono alojadas localmente, con sus licencias OFL.
 - `public/404.html` y `public/not-found*.js`: plantilla, catálogo y selector del 404.
@@ -123,9 +127,40 @@ del PR y no se fusionan automáticamente.
 - `deploy/`: configuración del servidor estático y del proxy público.
 
 Los recursos visuales se sirven desde el mismo origen, sin cargar fuentes remotas. La web
-no consulta cuotas ni crea canales de sincronización. El enlace de privacidad
-lleva a la página pública del relay; la descarga para iPhone enlaza al App Store.
+no consulta cuotas ni crea canales de sincronización. Los enlaces de privacidad
+y soporte llevan a páginas del propio sitio; la descarga para iPhone enlaza al App Store.
 Los instaladores de escritorio, la beta de Android y el código enlazan a GitHub.
+
+### Privacidad, soporte y eliminación de datos
+
+Las rutas `/privacy`, `/support` y `/delete-data` se publican en inglés. Sus
+versiones españolas son `/es/privacy`, `/es/support` y `/es/delete-data`. El
+selector EN / ES conserva la página elegida. Son documentos HTML completos,
+sin JavaScript, Plausible, formularios ni dependencias de un relay en ejecución.
+Las fuentes y los estilos se sirven desde el mismo sitio.
+
+El build genera tanto archivos `.html` como alias `ruta/index.html`. Publicar
+`dist/` activa todas las páginas con la configuración Nginx existente, sin flags
+ni activaciones manuales. La configuración versionada en `deploy/static.conf`
+añade además URLs canónicas sin barra final y cabeceras restrictivas. Los alias
+permiten que un servidor que todavía no haya recargado esa configuración siga
+sirviendo el contenido mediante sus índices de directorio.
+
+Los antiguos enlaces `/privacy`, `/support` y `/delete-data` del relay redirigen
+con HTTP 301 al sitio desde que se despliega su código actualizado. Estas
+redirecciones están activas por defecto, no reenvían parámetros de consulta y
+no afectan a `/v1/*` ni a `/health`. Publica el sitio antes o junto con el relay
+para evitar que los enlaces antiguos apunten temporalmente a un 404.
+
+Las aplicaciones iOS y Android abren el idioma correspondiente en este dominio,
+independientemente del relay elegido para sincronizar. Los kits de las tiendas
+incluyen las URLs nuevas; actualizar los campos de App Store Connect y Play
+Console es una operación separada de la publicación web. En un fork, adapta
+`publicSiteOrigin`, los enlaces nativos y la identidad/contacto de las políticas.
+
+`npm run test:public` comprueba documentos, rutas y enlaces nativos.
+`npm run test:dev` verifica también GET/HEAD/POST. El build valida los seis
+documentos publicados, sus alias, idiomas, navegación, fuentes y sitemap.
 
 ### Analítica del sitio
 
@@ -138,7 +173,8 @@ navegador o una caída de Plausible no impide usar la web.
 Solo se activa en builds de producción cuyo origen coincide exactamente con
 `siteOrigin` (`https://statusline.inmerzion.io`). `npm run dev`, localhost y los
 previews en otros dominios no cargan el tracker ni contaminan las estadísticas.
-No se carga en los 404 ni en las aplicaciones móviles, el companion o el relay.
+No se carga en los 404, las páginas de privacidad/soporte/eliminación de datos,
+las aplicaciones móviles, el companion o el relay.
 
 El script público configurado es
 `https://plausible.inmerzion.io/js/pa-I8pQQow2mmhcCJBQvq-7n.js` y envía eventos a
@@ -152,11 +188,11 @@ para los enlaces de sección. Consulta las
 [opciones oficiales de seguimiento](https://plausible.io/docs/script-extensions).
 
 La CSP en `deploy/statusline.conf` autoriza exclusivamente ese script y ese
-endpoint externo. No permite JavaScript inline, `eval` ni comodines. **Para
-activarlo en el servidor hay que publicar el build y actualizar/recargar el
-vhost Nginx** siguiendo los pasos de despliegue; hacer push no despliega la web.
-Publica también la actualización de la política de privacidad del relay,
-enlazada desde el pie, antes de activar la medición.
+endpoint externo. No permite JavaScript inline, `eval` ni comodines. Una
+instalación nueva debe publicar el build y configurar el vhost Nginx siguiendo
+los pasos de despliegue. El workflow de este repositorio valida el sitio; la
+publicación automática de producción se gestiona por separado. La política de
+privacidad enlazada desde el pie debe estar publicada antes de activar la medición.
 
 Para verificar una publicación, abre `/` y `/es/` en un navegador sin bloqueo de
 analítica y comprueba en Network que el script y los POST a `/api/event` tienen

@@ -12,6 +12,8 @@ struct CodexUsageStatus: Codable, Equatable, Sendable {
     let resetDate: Date
     let updatedAt: Date
     let sourceText: String
+    // Local cache metadata only; never part of the encrypted relay protocol.
+    var relayChannelID: UUID? = nil
 
     var remainingFraction: Double {
         Double(remainingPercentage) / 100

@@ -435,6 +435,7 @@ La [checklist de publicación del repositorio](docs/release/public-repository-ch
 | [`apps/apple/`](apps/apple/README.md) | Proyecto Xcode y targets de iPhone, WidgetKit y macOS                                       |
 | [`apps/web/`](apps/web/README.md)     | Sitio estático de presentación y despliegue Docker/Nginx                                    |
 | `services/relay/`                     | Worker, D1, rate limits y páginas públicas                                                  |
+| `content/`                            | Textos compartidos EN/ES de privacidad, soporte y eliminación de datos                      |
 | `protocol/`                           | Especificación v1, fixtures y ejemplos interoperables                                       |
 | `localization/`                       | Catálogo común inglés/español y casos de prueba de idiomas                                  |
 | `packaging/`                          | Claves públicas y recursos de verificación para los instaladores                            |
@@ -455,7 +456,7 @@ Las dependencias y salidas de build (`node_modules`, `target`, `dist`, `.gradle`
 
 ## Soporte
 
-Consulta [SUPPORT.md](SUPPORT.md), visita la [página pública de soporte](https://statusline-relay.inmerzion.workers.dev/support) o escribe a [founder@inmerzion.io](mailto:founder@inmerzion.io). Elimina identificadores, rutas privadas, QR, pairing links y credenciales antes de enviar un diagnóstico.
+Consulta [SUPPORT.md](SUPPORT.md), visita la [página pública de soporte](https://statusline.inmerzion.io/support) o escribe a [founder@inmerzion.io](mailto:founder@inmerzion.io). Elimina identificadores, rutas privadas, QR, pairing links y credenciales antes de enviar un diagnóstico.
 
 ## Contribuir
 

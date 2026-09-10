@@ -5,6 +5,11 @@ import { pathToFileURL } from "node:url";
 import { parse, parseFragment, serialize } from "parse5";
 import { nodes, attribute } from "./render-html.mjs";
 import { staticMessages } from "../src/static-messages.ts";
+import {
+  publicPageIDs,
+  publicPagePath,
+} from "../../../content/public-pages.ts";
+import { validatePublicPages } from "./check-public-pages.mjs";
 import { platformMessages } from "../src/messages.ts";
 import {
   appStoreUrl,
@@ -189,6 +194,14 @@ export async function validateSEO(outDir) {
       );
     const canonical = pageMetadata(language).canonical;
     validateIconLinks(elements);
+    for (const link of elements.filter((node) =>
+      attribute(node, "data-public-page"),
+    )) {
+      assert.equal(
+        attribute(link, "href"),
+        publicPagePath(attribute(link, "data-public-page"), language),
+      );
+    }
     assert.equal(
       attribute(
         elements.find((node) => node.tagName === "html"),
@@ -378,7 +391,19 @@ export async function validateSEO(outDir) {
   const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
     (match) => match[1],
   );
-  assert.deepEqual(locations.sort(), [`${siteOrigin}/`, `${siteOrigin}/es/`]);
+  assert.deepEqual(
+    locations.sort(),
+    [
+      `${siteOrigin}/`,
+      `${siteOrigin}/es/`,
+      ...["en", "es"].flatMap((language) =>
+        publicPageIDs.map(
+          (id) => `${siteOrigin}${publicPagePath(id, language)}`,
+        ),
+      ),
+    ].sort(),
+  );
+  await validatePublicPages(outDir);
   const robots = await readFile(resolve(outDir, "robots.txt"), "utf8");
   assert(robots.includes(`Sitemap: ${siteOrigin}/sitemap.xml`));
   assert(!/^Disallow:\s*\/$/m.test(robots));

@@ -172,6 +172,7 @@ internal object MessageCatalog {
         "INVALID SOURCE" to "ORIGEN NO VÁLIDO",
         "LAST ATTEMPT {0} · CODEX LOCAL" to "ÚLTIMO INTENTO {0} · CODEX LOCAL",
         "LAST CODEX READ" to "ÚLTIMA LECTURA DE CODEX",
+        "Last sample: {0}" to "Última muestra: {0}",
         "LAST.PUBLISH" to "ÚLTIMA.PUBLICACIÓN",
         "LEFT" to "LIBRE",
         "LIVE" to "AL DÍA",

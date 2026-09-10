@@ -20,7 +20,6 @@ import {
 import { UsageController } from "./controller";
 import { copyForState, type UsageState } from "./usage";
 
-const AUTO_REFRESH_MS = 5 * 60 * 1_000;
 const FOCUS_REFRESH_AGE_MS = 60 * 1_000;
 const SEGMENT_COUNT = 20;
 
@@ -173,17 +172,18 @@ async function startTauriRuntime(): Promise<void> {
 
   window.addEventListener("focus", () => {
     if (Date.now() - lastRefreshStartedAt >= FOCUS_REFRESH_AGE_MS) {
-      void controller.refresh();
+      lastRefreshStartedAt = Date.now();
+      void invoke<unknown>("current_usage")
+        .then((payload) => controller.accept(payload))
+        .catch(() => undefined);
     }
   });
 
-  window.setInterval(() => {
-    void controller.refresh();
-  }, AUTO_REFRESH_MS);
-
-  void listen("usage-refresh-requested", () => {
-    void controller.refresh();
-  }).catch(() => undefined);
+  // Scheduling belongs to Rust, even when this WebView is hidden/suspended.
+  await listen<unknown>("usage-updated", (event) => {
+    lastRefreshStartedAt = Date.now();
+    controller.accept(event.payload);
+  });
 
   void listen<unknown>("relay-status-changed", (event) => {
     try {
@@ -196,7 +196,9 @@ async function startTauriRuntime(): Promise<void> {
   }).catch(() => undefined);
 
   void invoke("frontend_ready").catch(() => undefined);
-  void controller.refresh();
+  void invoke<unknown>("current_usage")
+    .then((payload) => controller.accept(payload))
+    .catch(() => controller.refresh());
 }
 
 function startPreview(initialState: UsageState): void {

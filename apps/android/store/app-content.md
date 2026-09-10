@@ -4,8 +4,8 @@ Validated for Android `0.1.10` (`versionCode 6`) on 2 September 2026. Revalidate
 
 ## Public details
 
-- Privacy policy: https://statusline-relay.inmerzion.workers.dev/privacy
-- Support website: https://statusline-relay.inmerzion.workers.dev/support
+- Privacy policy: https://statusline.inmerzion.io/privacy
+- Support website: https://statusline.inmerzion.io/support
 - Contact email: `founder@inmerzion.io`
 - Category: App → Tools
 - Ads: No
