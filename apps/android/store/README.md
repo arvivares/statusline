@@ -1,6 +1,6 @@
 # Google Play release kit
 
-This directory is the versioned source of truth for the Statusline Google Play listing. The current kit targets `inmerzion.statusline` version `0.1.15` (`versionCode 11`).
+This directory is the versioned source of truth for the Statusline Google Play listing. The current Play release is `inmerzion.statusline` version `0.1.15` (`versionCode 11`). The repository prepares `0.1.16` (`versionCode 12`) for GitHub APK/AAB distribution; publishing it to Google Play is a separate step and has not been requested for this release.
 
 ## Contents
 
@@ -31,9 +31,10 @@ was uploaded and submitted as **`0.1.15-alpha.1`** to **Closed testing — Alpha
 with [English](release-notes/0.1.15-en-US.txt) and
 [Spanish](release-notes/0.1.15-es-ES.txt) release notes.
 
-Play Console confirmed **Changes in review**, with initial automated checks still
-running. This records submission, not approval or availability. The previous
-available Alpha release at submission time was `0.1.12-alpha.1` (`versionCode 8`).
+Play Console initially confirmed **Changes in review**, with automated checks still
+running. A later check on 10 September confirmed **Available to selected testers**
+on the active Alpha track. The previous available release at submission time was
+`0.1.12-alpha.1` (`versionCode 8`). This is not a production rollout.
 
 The rollout targets 100% of the existing Alpha testers across the existing 177
 countries and regions. The `Statusline Alpha` and `Statusline Internal` email

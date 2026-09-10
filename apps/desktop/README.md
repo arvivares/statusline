@@ -36,9 +36,10 @@ En Windows, el código ahora consulta los paquetes de escritorio de OpenAI
 registrados para el usuario mediante `Get-AppxPackage` y busca su
 `resources/codex.exe`, además de instalaciones convencionales. No necesita
 administrador, no cambia el PATH ni lee credenciales. Las ubicaciones y versiones
-se resuelven en cada detección. Esta mejora **todavía no está publicada ni validada
-en un Windows con solo la app de escritorio**; la guía enlazada incluye el
-diagnóstico de solo lectura y la prueba requerida antes de release.
+se resuelven en cada detección. Esta mejora se incluye en la candidata `0.1.16`;
+los tests de Rust y PowerShell pasaron en CI de Windows, pero sigue **pendiente
+la prueba en un Windows real con solo la app de escritorio**. La guía enlazada
+incluye el diagnóstico de solo lectura y la lista de comprobaciones.
 
 ## Desarrollo
 

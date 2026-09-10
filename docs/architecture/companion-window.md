@@ -64,7 +64,8 @@ Windows target and all test targets passed cross-target type checking. Desktop
 tests passed (141 passed, one existing skip), as did TypeScript, formatting,
 localization (413 messages) and 236 local Markdown links. Clippy reports only the
 existing `refresh.rs` `collapsible_if` warning. This is **not** physical
-click/OS-window-manager validation or a new installer release. The companion
-changes do not bump its release version. Separately, `release.json` now records
+click/OS-window-manager validation. The subsequent CI run passed the production
+Rust tests on Windows, Linux and macOS, plus the Windows PowerShell fixture test.
+Release preparation includes these changes in companion `0.1.16`. Separately, `release.json` records
 iOS build 6 to match the project and the already-uploaded TestFlight candidate;
 this metadata alignment does not upload a new build or replace App Review.
