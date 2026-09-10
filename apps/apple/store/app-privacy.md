@@ -2,10 +2,12 @@
 
 Validated against the iPhone source, Apple frameworks and the production relay on 2 September 2026. Revalidate before every submission when the relay, logging, dependencies or retention policy changes.
 
-## Published App Store Connect answers
+## Current App Store Connect record
 
 - Privacy Policy URL: https://statusline.inmerzion.io/privacy
 - Privacy Choices URL: https://statusline.inmerzion.io/delete-data
+- Spanish policy: https://statusline.inmerzion.io/es/privacy
+- Spanish choices: https://statusline.inmerzion.io/es/delete-data
 - Does this app or its third-party partners collect data? **Yes**
 - Data type: **Other Data → Other Data Types**
 - Purpose: **App Functionality**
@@ -28,4 +30,4 @@ The conservative **Other Data Types** declaration covers the random channel iden
 
 Reclassify this record before submission if production logging is enabled or analytics, crash reporting, push-token storage or other SDK telemetry is added.
 
-These answers and both public privacy URLs were published in App Store Connect on 2 September 2026. The resulting product-page preview reports **Data Not Linked to You → Other Data**.
+The data-disclosure answers were published on 2 September 2026, originally with relay-hosted URLs. On 10 September, the localized website URLs above were saved for the next app version, after their public destinations returned HTTP 200. Apple explicitly states URL edits are released with the next version. The data declarations were not changed; the product-page preview still reports **Data Not Linked to You → Other Data**. Do not describe the new URLs as already present on the published 1.0 listing.

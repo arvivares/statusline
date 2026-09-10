@@ -2,7 +2,105 @@
 
 This file records reproducible readiness evidence without storing credentials or personal account data. The 2–3 September evidence applies to `1.0 (2)`; the separate 6 September sections track the localized `1.0 (3)` and unified-brand `1.0 (4)` TestFlight candidates.
 
-## Prepared source — 10 September 2026: 1.0.1 (5), not uploaded
+## App Review submission — 10 September 2026: 1.0.1 (5)
+
+- At the account holder's explicit request to add the update for review, verified
+  the selected `1.0.1 (5)` build, localized screenshots, saved review notes,
+  no-login access and manual-release setting.
+- Completed **Add for Review** and confirmed **Continue** in Apple's shared-app
+  information dialog. Apple included the Spanish subtitle/privacy links and the
+  new English name, subtitle and privacy localization. It acknowledged
+  **1 Item Submitted**; no second submission or new binary upload was needed.
+- Submission `4d9e9b63-5ccd-474a-ad90-dbae5eda8a70` records 10 September 2026 at
+  12:12 PM in the console's displayed time zone. Both the submission and its
+  sole item, **iOS App 1.0.1 (5)**, report **Waiting for Review**.
+- Reloaded the version page to verify the queued status, build `5`, existing
+  3,759-character notes and manual release. Published `1.0 (4)` remains available;
+  this submission is not approval or public release of `1.0.1`.
+- No new physical-device QA confirmation was supplied with the submission
+  request. The earlier pending migration/widget checks remain unverified;
+  neither this record nor the review notes claims they passed. Preserve these
+  checks before the separately authorized public release. The earlier capture
+  limitations and absence of a new physical-device recording are unchanged.
+
+## Upload and listing preparation — 10 September 2026: 1.0.1 (5)
+
+- Archived the approved source at `062f621440751503fa1235607ef1cb850822a330`
+  once with Xcode 26.3, reusing the existing derived data. Export and upload reused
+  that archive without rebuilding. Xcode reported **Upload succeeded** at 10:58
+  Europe/Madrid. App Store Connect subsequently reported **Complete** processing
+  and assigned build `5` to `Internal QA`; its UUID is
+  `1eea9a0b-6ece-48e2-8df4-11225795b844`. The external-beta label **Ready to Submit**
+  is not an App Review submission or a physical-device test result.
+- The app and widget report `1.0.1 (5)`. The app is iPhone-only, requires iOS 17,
+  retains the production HTTPS relay and contains the private Keychain group
+  needed to migrate an existing pairing.
+- The exported app and extension passed code-signature validation; both retain
+  `group.inmerzion.statusline`, `get-task-allow=false` and
+  `beta-reports-active=true`. Both passed the compiled localization check:
+  412 messages across English, Spanish and unsupported-language fallback, plus
+  16 language-resolution cases.
+- Exported IPA SHA-256:
+  `a2e8b7630fa8df2a9ad7c408730b04c684198b0e2f8ce4a901c17672c93e437d`.
+  Upload export can re-sign the package and need not preserve that local checksum.
+- Created the `1.0.1` **Prepare for Submission** record. New bilingual copy is
+  versioned in `listing/`, including explicit desktop prerequisites, widget
+  scheduling limits and upgrade instructions. At that preparation stage no App
+  Review submission had been made; the later submission is recorded above.
+  `1.0 (4)` remains published.
+- Saved the 2,108-character Spanish What to Test notes on build `5` and verified
+  their persistence after reloading. The English equivalent remains versioned;
+  no external TestFlight group was added.
+- Saved both version localizations and verified all six fields after reloading:
+  promotional text, description, what's new, keywords, support and marketing URLs.
+  English description is 1,998 characters; Spanish is 2,211. English initially
+  failed because Apple rejected the already-used name `Statusline`. With explicit
+  account-holder approval, the final English name is **Statusline: Agent Quota**.
+  Both names/subtitles persisted after reload; Spanish remains primary and its
+  name stays `Statusline`. The installed app name is unchanged, and the copy
+  describes Codex-only support rather than promising future agents.
+- Selected build `5` in the `1.0.1` draft. Saved and reloaded the exact
+  3,759-character review notes from `app-review.md`, preserving no-login access,
+  manual release, immediate update rollout and existing ratings. The original
+  physical-device video predates this build; no new recording is claimed, and
+  the current draft has no new video attachment.
+- Disk space was freed by the account holder. The initial failed capture attempts
+  were followed by a successful Release simulator run: 2 passed, 0 failed,
+  0 skipped on iPhone 17 Pro Max / iOS 26.3.1. `ENABLE_TESTABILITY=YES` was used
+  only for the simulator test build; the uploaded archive was not rebuilt.
+- Uploaded the two visually reviewed 1320 × 2868 opaque PNG overview captures,
+  one per language, to the 6.9-inch Media Manager class. Removed the three old
+  6.5-inch images from the draft; original files remain in Git. Smaller sizes
+  use the matching locale's 6.9-inch capture. English no longer inherits Spanish.
+  Rejected the scrolled manual-editor attachments for status-bar overlap and the
+  pairing sheet for its simulator-only camera-unavailable message. Passing UI
+  assertions alone did not qualify these rejected images for the store.
+- The website deployment became available: privacy, support and delete-data pages
+  returned HTTP 200 in both languages. Saved localized Privacy Policy / Privacy
+  Choices URLs in Apple and verified them after reload. Apple says these URL
+  edits take effect with the next version; the existing data disclosures remain
+  **Other Data / App Functionality / Not Linked / No Tracking**.
+- Remaining gates at that preparation stage: physical-iPhone upgrade/pairing migration and independent
+  widget-refresh confirmation, then App Review submission. A clean physical
+  widget screenshot and the scrolled editor's safe-area visual defect remain
+  follow-ups. That preparation did not establish physical QA or review status;
+  the subsequent submission is recorded above.
+
+## Multiplatform release — 10 September 2026: v0.1.15
+
+- Created and pushed the signed annotated tag `v0.1.15` at the same approved
+  source `062f621440751503fa1235607ef1cb850822a330`. GitHub verified the tag signature.
+- [Official release workflow](https://github.com/arvivares/statusline/actions/runs/34460364954)
+  completed successfully, including installer validation, Linux smoke tests,
+  inventory checks, signed checksums and build-provenance attestations.
+- [v0.1.15](https://github.com/arvivares/statusline/releases/tag/v0.1.15) is public
+  as a **pre-release** with 16 assets: nine installers plus verification files.
+  macOS DMG/PKG are signed/notarized; Linux AppImage/DEB/RPM have detached
+  OpenPGP signatures; Android APK/AAB are signed. Windows MSI/NSIS are explicitly
+  **unsigned preview** builds, not Authenticode-signed releases. iOS was uploaded
+  manually and is not distributed by this workflow.
+
+## Source preparation before upload — 10 September 2026: 1.0.1 (5)
 
 - App and widget Debug/Release versions advance together to `1.0.1 (5)` for the
   next candidate; the published App Store binary remains `1.0 (4)`.
@@ -10,9 +108,9 @@ This file records reproducible readiness evidence without storing credentials or
   age/fallback handling, foreground refresh and localized website information links.
 - Targeted synchronization tests passed before the version bump. That evidence is
   not a device test of build 5 or proof of production Keychain entitlements.
-- EN/ES What to Test instructions are prepared. No new archive, exported IPA,
+- At this earlier preparation stage, EN/ES What to Test instructions were prepared. No new archive, exported IPA,
   upload, TestFlight assignment, review submission or store metadata edit is claimed.
-- Pending: enough local disk space for one archive/export; signed entitlement and
+- Pending at that stage: enough local disk space for one archive/export; signed entitlement and
   provisioning checks; manual upload; paired physical-iPhone upgrade and independent
   widget refresh QA. See [synchronization](../../../docs/architecture/synchronization.md).
 
