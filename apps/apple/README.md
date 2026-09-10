@@ -11,7 +11,20 @@ Proyecto Xcode con la app reader de iPhone, su widget WidgetKit y un publisher S
 
 ## Desarrollo
 
-Abre `statusline.xcodeproj` con una versión actual de Xcode. En Build Settings, asigna `STATUSLINE_RELAY_BASE_URL` al mismo origen usado por desktop y Android; Debug admite loopback y Release requiere HTTPS.
+Abre `statusline.xcodeproj` con una versión actual de Xcode. En **Project → Build Settings** (no en un target individual), asigna `STATUSLINE_RELAY_BASE_URL` al mismo origen usado por desktop y Android. App, widget y companion SwiftUI heredan ese valor para Debug y Release; Debug admite loopback y Release requiere HTTPS. Para una compilación puntual también puedes pasar `STATUSLINE_RELAY_BASE_URL=https://tu-relay.example` a `xcodebuild`.
+
+La fase **Validate app and widget relay** comprueba los `Info.plist` procesados de la app y del widget incluido. Falla si falta el endpoint, difiere entre ambos, no es un origen permitido o las versiones no coinciden. No requiere Node ni acceso a red durante la compilación.
+
+Antes de subir un IPA, extráelo en una carpeta privada y repite la validación sobre el contenido exportado:
+
+```sh
+sh scripts/validate-relay-bundle.sh \
+  /ruta/Payload/statusline.app/Info.plist \
+  /ruta/Payload/statusline.app/PlugIns/CodexStatusWidgetExtension.appex/Info.plist \
+  Release
+```
+
+Desde la raíz del repositorio, `node --test apps/apple/scripts/validate-relay-bundle.test.mjs` ejecuta las comprobaciones ligeras en macOS sin compilar iOS. `BundleConfigurationTests` comprueba además el bundle real usando el lector de configuración de producción.
 
 La distribución de iOS es manual en esta etapa: selecciona un Team válido, archiva el target `statusline` y súbelo a TestFlight/App Store desde Xcode. El pipeline del repositorio no genera un `.ipa` ni almacena credenciales de firma de iOS.
 

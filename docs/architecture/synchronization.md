@@ -3,6 +3,14 @@
 This describes the implementation in source, not a promise that an older installed
 release has these changes. No relay protocol, pairing QR or server migration is needed.
 
+**Build 5 regression, confirmed 10 September 2026:** the distributed iOS
+`1.0.1 (5)` widget had an empty relay endpoint, while the app was configured.
+It therefore returned the shared cache without making an independent request.
+Build `6` moves the relay setting to project scope and adds a mandatory build
+guard over the app and embedded-widget plists. Do not treat build 5 as evidence
+that independent widget synchronization works. See the dated
+[validation record](../../apps/apple/store/validation.md) for verification status.
+
 ## Refresh ownership
 
 | Component                               | Trigger                                                                            | Work performed                                         | Important limit                                                                              |
@@ -82,15 +90,19 @@ or production Keychain provisioning.
 
 Before distributing the next build:
 
-1. Upgrade a **paired physical iPhone**; open the app once. Verify the old pairing
+1. Validate the processed app and embedded-widget `Info.plist` files in the
+   exported IPA with `apps/apple/scripts/validate-relay-bundle.sh`. Both must have
+   the same nonempty relay endpoint and version; passing source/unit tests alone
+   does not establish this. Keep any environment override out of bundle tests.
+2. Upgrade a **paired physical iPhone**; open the app once. Verify the old pairing
    survives, then close the app and leave the widget on the home screen.
-2. On each desktop OS, hide/close the companion window without quitting. With the
+3. On each desktop OS, hide/close the companion window without quitting. With the
    computer awake, confirm two successful publications around five minutes apart.
    Record Codex read time and relay publication time separately. Opening the window
    may trigger a refresh, so it is not evidence of the hidden-window interval.
-3. Observe the phone widget obtain a newer sample without opening the app. Allow for
+4. Observe the phone widget obtain a newer sample without opening the app. Allow for
    iOS scheduling rather than expecting an exact 30-minute deadline.
-4. Test network loss, first unlock after reboot, sleep/wake, and disconnect/re-pair
+5. Test network loss, first unlock after reboot, sleep/wake, and disconnect/re-pair
    during a pending fetch. Old samples must remain clearly old or be removed on
    disconnect, never turn into a fabricated current quota.
 

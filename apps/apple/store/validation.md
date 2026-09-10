@@ -2,7 +2,96 @@
 
 This file records reproducible readiness evidence without storing credentials or personal account data. The 2–3 September evidence applies to `1.0 (2)`; the separate 6 September sections track the localized `1.0 (3)` and unified-brand `1.0 (4)` TestFlight candidates.
 
+## TestFlight upload — 10 September 2026: 1.0.1 (6)
+
+- At the account holder's request, archived the local widget-endpoint correction
+  once with Xcode 26.3, reusing the existing derived data. The archive was generated
+  from the then-uncommitted working tree, not a new Git tag or merged commit.
+- The mandatory processed-bundle relay guard passed during archive and again
+  against the extracted distribution IPA. Both app and widget report `1.0.1 (6)`
+  and contain `https://statusline-relay.inmerzion.workers.dev`. The app remains
+  iPhone-only with iOS 17 minimum and non-exempt encryption set to false.
+- Distribution signatures passed verification. Both bundles retain their team,
+  application identifiers and `group.inmerzion.statusline`, with
+  `get-task-allow=false` and `beta-reports-active=true`. Both passed the compiled
+  localization check: 412 messages across English, Spanish and fallback, plus
+  16 language-resolution cases. All 23 configuration/guard tests passed again.
+- Local exported IPA SHA-256:
+  `2c6ba4562e0861b1893e1a89f1288b87291ed31799c12fa89e8af874198f3f0e`.
+  Upload reused the same archive without rebuilding; the upload export can
+  re-sign the package and need not preserve this local checksum.
+- Xcode reported **Upload succeeded** at 17:08 Europe/Madrid on 10 September;
+  Apple acknowledged **Uploaded package is processing**. Completed processing,
+  `Internal QA` assignment and availability in TestFlight are **not yet verified**.
+  Build-6 EN/ES What to Test notes are
+  prepared locally but have not been saved in App Store Connect.
+- This upload did not withdraw or replace the existing build-5 App Review
+  submission, change external-beta groups, install the distribution build on a
+  device or release anything publicly. Do not manually release build 5. After
+  processing, test the build-6 TestFlight upgrade and a later independent widget
+  refresh before separately authorizing a replacement App Review submission.
+
+## Widget endpoint correction — 10 September 2026: build 6 preparation
+
+- USB inspection confirmed `1.0.1 (5)` on the paired physical iPhone. The account
+  holder reported that opening the app refreshed the data but the widget did not
+  update independently. No pairing or credentials were removed.
+- Direct inspection of the exported build-5 IPA (SHA-256
+  `a2e8b7630fa8df2a9ad7c408730b04c684198b0e2f8ce4a901c17672c93e437d`)
+  confirmed a production HTTPS origin in the app's `StatuslineRelayBaseURL` and
+  an **empty string** in the embedded widget. The loader returns cached data
+  when that configuration is absent, explaining the foreground-only behavior.
+- The relay build setting existed only on app/SwiftUI-companion targets. It now
+  lives at project scope in both configurations, inherited by all targets.
+  App and widget source advance together to `1.0.1 (6)`. The protocol, reader
+  credentials, App Groups, Keychain access and 30-minute request policy are unchanged.
+- A mandatory Xcode build phase validates the **processed** app and embedded
+  widget plists, including nonempty/matching endpoints and matching versions.
+  The same read-only guard can validate extracted IPA contents. Hosted Swift
+  Testing also resolves both real bundles with `environment: [:]`, so an injected
+  environment value cannot hide a missing packaged setting.
+- All 23 lightweight guard/configuration tests passed on macOS. The guard rejects
+  the real build-5 IPA contents with the expected empty-widget-endpoint error.
+  ShellCheck, shell syntax, project plist syntax, localization validation and
+  local Markdown links also passed. This is not evidence that build 6 has been
+  installed or that WidgetKit performed a successful background fetch.
+- Xcode's scheme destination check reported iOS 26.2 not installed, despite the
+  SDK being present, and no simulator runtime/device was available. Direct target
+  settings resolved the widget's correct endpoint and build 6. The first direct
+  build then failed in `actool` because no simulator runtime was available.
+  With permission, downloaded and installed only the iOS 26.3.1 ARM64 runtime
+  (8.39 GB download), then resumed the incremental build successfully.
+- The local **Release-configuration, development-signed** build 6 passed code
+  signature and embedded-bundle validation. Both retain the same application
+  identifiers, team and `group.inmerzion.statusline`; `get-task-allow=true` is
+  expected for this local development installation, not distribution signing.
+  The mandatory relay guard ran successfully inside the Xcode build.
+- Targeted Release simulator tests passed: 11 test definitions in 3 suites,
+  17 executions including the seven parameterized network cases; zero failures
+  and skips. `ENABLE_TESTABILITY=YES` and unsigned code were used only for these
+  simulator tests. No live pairing was used by the tests.
+- Installed the local build 6 by USB **over** the existing app without uninstalling
+  it. Device metadata confirmed `1.0.1 (6)`. The containing app was not launched
+  after installation; a filtered process inspection found the widget extension
+  alone, and its previously absent private snapshot cache was created.
+- Compared the pre-update shared cache with the post-update shared and widget
+  caches: the app-owned cache remained byte-for-byte equivalent at the decoded
+  snapshot level; the widget had a **newer** relay sample with the **same channel**.
+  This confirms a successful independent physical-device widget read/decryption
+  with the existing pairing, without an app-triggered refresh. Private cache
+  copies, channel identifiers and quota values are not committed to the repo.
+- This observation confirms the first independent fetch, not an exact recurring
+  30-minute cadence or the behavior of an App Store-signed build. A later
+  scheduled refresh and the distribution-signed upgrade still need verification.
+- No Apple upload, review withdrawal/replacement or public release was performed
+  as part of these source and configuration changes. Build 5 remains the last
+  verified submission; do not approve its manual public release.
+
 ## App Review submission — 10 September 2026: 1.0.1 (5)
+
+**Later diagnosis:** build 5 must not be publicly released. Its widget has no
+configured relay endpoint; see the correction record above. The existing
+submission was not withdrawn or replaced during diagnosis or source preparation.
 
 - At the account holder's explicit request to add the update for review, verified
   the selected `1.0.1 (5)` build, localized screenshots, saved review notes,
@@ -33,13 +122,17 @@ This file records reproducible readiness evidence without storing credentials or
   `1eea9a0b-6ece-48e2-8df4-11225795b844`. The external-beta label **Ready to Submit**
   is not an App Review submission or a physical-device test result.
 - The app and widget report `1.0.1 (5)`. The app is iPhone-only, requires iOS 17,
-  retains the production HTTPS relay and contains the private Keychain group
+  the app retains the production HTTPS relay and contains the private Keychain group
   needed to migrate an existing pairing.
 - The exported app and extension passed code-signature validation; both retain
   `group.inmerzion.statusline`, `get-task-allow=false` and
   `beta-reports-active=true`. Both passed the compiled localization check:
   412 messages across English, Spanish and unsupported-language fallback, plus
   16 language-resolution cases.
+- Correction to the original readiness assessment: signature and localization
+  checks did **not** verify a nonempty relay value in the widget. Subsequent
+  direct IPA inspection found an empty string there. The earlier wording must
+  not be interpreted as successful widget-endpoint validation.
 - Exported IPA SHA-256:
   `a2e8b7630fa8df2a9ad7c408730b04c684198b0e2f8ce4a901c17672c93e437d`.
   Upload export can re-sign the package and need not preserve that local checksum.

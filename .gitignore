@@ -12,6 +12,7 @@
 DerivedData/
 *.xcresult
 .build/
+apps/apple/build/
 
 # Local environment and signing material
 .env

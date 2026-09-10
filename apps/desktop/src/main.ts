@@ -7,7 +7,6 @@ import {
 } from "./localization";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { open } from "@tauri-apps/plugin-dialog";
 import QRCode from "qrcode";
 
 import { parseRelayStatus, type RelayStatus } from "./relay";
@@ -462,23 +461,12 @@ async function chooseCodexExecutable(): Promise<void> {
     return;
   }
 
-  let selected: string | string[] | null;
+  setSourceControlsDisabled(true);
   try {
-    selected = await open({
-      multiple: false,
-      directory: false,
-      title: t("Select a Codex executable or macOS app"),
-    });
-  } catch (error: unknown) {
-    renderSourceFailure(error);
-    return;
-  }
-  if (typeof selected !== "string") {
-    return;
-  }
-
-  setSourceBusy(t("VERIFYING CODEX --VERSION"));
-  try {
+    // Native code protects the parent against blur while the OS picker is open.
+    const selected = await invoke<string | null>("choose_codex_executable");
+    if (selected === null) return;
+    setSourceBusy(t("VERIFYING CODEX --VERSION"));
     const diagnostic = parseCodexDiagnostic(await sourceRuntime.save(selected));
     renderCodexDiagnostic(diagnostic);
     sourceFeedback.textContent = t(

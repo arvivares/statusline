@@ -8,6 +8,8 @@ pub mod localization;
 pub mod refresh;
 #[path = "../../src-tauri/src/usage.rs"]
 pub mod usage;
+#[path = "../../src-tauri/src/window_behavior.rs"]
+pub mod window_behavior;
 
 // Reuse the production protocol/normalization contracts without copying tests.
 #[cfg(test)]

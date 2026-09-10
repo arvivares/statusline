@@ -6,7 +6,7 @@ Companion de bandeja para consultar la cuota de Codex en Windows, Linux y macOS.
 
 - Consulta la sesión local mediante Codex App Server y muestra límite semanal, reinicio, ventana corta y plan.
 - No copia ni persiste tokens de Codex, API keys o correo.
-- Source Settings detecta el Codex integrado en ChatGPT/Codex.app en macOS o la CLI, valida codex --version y permite guardar una ruta local.
+- Source Settings detecta el Codex integrado en apps compatibles de ChatGPT/Codex en macOS y Windows o la CLI, valida codex --version y permite guardar una ruta local. La detección de escritorio en Windows está pendiente de QA en el dispositivo afectado.
 - Universal Relay publica sólo el snapshot mínimo cifrado de extremo a extremo para iOS y futuros clientes Android.
 - La credencial publisher y la clave AES permanecen en Keychain, Windows Credential Manager o Secret Service.
 - El frontend recibe estado operacional y el vínculo de emparejamiento mientras está vigente; nunca recibe la credencial publisher.
@@ -21,7 +21,7 @@ La interfaz conserva canvas #0D0E0B, surface #14150F, texto #ECE9DC, señal #EFC
 
 1. Node.js 24 o posterior.
 2. Rust 1.98 mediante rustup, con rustfmt y clippy.
-3. Codex autenticado mediante Sign in with ChatGPT: app de escritorio en macOS o CLI.
+3. Codex autenticado mediante Sign in with ChatGPT: app de escritorio compatible o CLI; consulta las limitaciones y el estado de validación abajo.
 4. Los [prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/) del sistema.
 5. Un Statusline Relay local o un origen HTTPS desplegado según [SETUP.md](../../SETUP.md).
 
@@ -31,6 +31,14 @@ En macOS también busca ChatGPT.app y Codex.app en `/Applications` y en la carpe
 Applications del usuario. Puedes seleccionar un paquete `.app` instalado en otra
 ubicación. La [guía de origen Codex](../../docs/architecture/codex-sources.md)
 describe la prioridad, las limitaciones de sesión y la prueba en un Mac sin CLI.
+
+En Windows, el código ahora consulta los paquetes de escritorio de OpenAI
+registrados para el usuario mediante `Get-AppxPackage` y busca su
+`resources/codex.exe`, además de instalaciones convencionales. No necesita
+administrador, no cambia el PATH ni lee credenciales. Las ubicaciones y versiones
+se resuelven en cada detección. Esta mejora **todavía no está publicada ni validada
+en un Windows con solo la app de escritorio**; la guía enlazada incluye el
+diagnóstico de solo lectura y la prueba requerida antes de release.
 
 ## Desarrollo
 
@@ -50,6 +58,13 @@ export STATUSLINE_RELAY_BASE_URL="https://statusline-relay.inmerzion.workers.dev
 ```
 
 En macOS funciona como agente de barra de menú: no aparece en el Dock ni en `⌘ Tab`, la ventana comienza oculta y se abre desde el icono superior. Windows espera una confirmación explícita del frontend antes de revelar y enfocar la ventana; Linux la muestra en el primer inicio. Cerrar oculta el companion sin finalizarlo; sólo **Salir** desde su menú termina el proceso. Los instaladores de Windows no inician la aplicación por defecto: el primer arranque normal debe hacerse desde Inicio o el acceso directo para no heredar el contexto transitorio del instalador.
+
+El comportamiento común ahora oculta la ventana al perder el foco en macOS,
+Windows y Linux. Un margen de 180 ms permite resolver primero un clic en la
+bandeja o el retorno del foco; no pausa la sincronización ni borra el formulario.
+El selector nativo de archivos conserva su ventana padre hasta seleccionar o
+cancelar. La mejora está en el código, pendiente de validación visual de los
+instaladores; consulta [comportamiento de ventana](../../docs/architecture/companion-window.md).
 
 ### Preview visual sin Rust
 

@@ -109,6 +109,7 @@
 "Could not access this device’s secure storage." = "Could not access this device’s secure storage.";
 "Could not connect to the relay. Check your connection and try again." = "Could not connect to the relay. Check your connection and try again.";
 "Could not encrypt or decrypt the snapshot." = "Could not encrypt or decrypt the snapshot.";
+"Could not open file picker" = "Could not open file picker";
 "Could not open the browser on this device." = "Could not open the browser on this device.";
 "Could not open the scanner. You can paste the link manually." = "Could not open the scanner. You can paste the link manually.";
 "Could not render the QR. Copy the private pairing link instead." = "Could not render the QR. Copy the private pairing link instead.";
@@ -205,7 +206,6 @@
 "OFFICIAL SETUP" = "OFFICIAL SETUP";
 "OFFLINE" = "OFFLINE";
 "OFFLINE · NO SAMPLE AVAILABLE" = "OFFLINE · NO SAMPLE AVAILABLE";
-"On macOS, use Codex in ChatGPT or Codex.app. Alternatively, install the CLI below. Sign in with ChatGPT, then refresh." = "On macOS, use Codex in ChatGPT or Codex.app. Alternatively, install the CLI below. Sign in with ChatGPT, then refresh.";
 "Open OpenAI" = "Open OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Open Source Settings to detect or select a local Codex runtime.";
 "Open Source Settings to detect or select the local CLI." = "Open Source Settings to detect or select the local CLI.";
@@ -388,6 +388,7 @@
 "Update Statusline Companion or check your CLI version." = "Update Statusline Companion or check your CLI version.";
 "Update Statusline Companion or your Codex installation." = "Update Statusline Companion or your Codex installation.";
 "Update Statusline Companion to read this response." = "Update Statusline Companion to read this response.";
+"Use a compatible ChatGPT or Codex desktop app on Windows or macOS, or install the CLI below. Sign in with ChatGPT, then refresh." = "Use a compatible ChatGPT or Codex desktop app on Windows or macOS, or install the CLI below. Sign in with ChatGPT, then refresh.";
 "USE AUTOMATIC DETECTION" = "USE AUTOMATIC DETECTION";
 "Use device code" = "Use device code";
 "Use example" = "Use example";

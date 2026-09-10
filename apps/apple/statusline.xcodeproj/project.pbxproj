@@ -233,6 +233,7 @@
 				EF6DA025303FA260007F6F4C /* Frameworks */,
 				EF6DA026303FA260007F6F4C /* Resources */,
 				A1000000000000000000000C /* Embed Foundation Extensions */,
+				C30000000000000000000001 /* Validate app and widget relay */,
 			);
 			buildRules = (
 			);
@@ -397,6 +398,25 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		C30000000000000000000001 /* Validate app and widget relay */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = ();
+			inputPaths = (
+				"$(SRCROOT)/scripts/validate-relay-bundle.sh",
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+				"$(TARGET_BUILD_DIR)/$(PLUGINS_FOLDER_PATH)/CodexStatusWidgetExtension.appex/Info.plist",
+			);
+			name = "Validate app and widget relay";
+			outputPaths = ();
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"${SRCROOT}/scripts/validate-relay-bundle.sh\" \"${SCRIPT_INPUT_FILE_1}\" \"${SCRIPT_INPUT_FILE_2}\" \"${CONFIGURATION}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		A10000000000000000000006 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -460,7 +480,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = CodexStatusWidget/CodexStatusWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = F3HRL896HJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CodexStatusWidget/Info.plist;
@@ -491,7 +511,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = CodexStatusWidget/CodexStatusWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = F3HRL896HJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CodexStatusWidget/Info.plist;
@@ -541,7 +561,6 @@
 				PRODUCT_NAME = "Statusline Companion";
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
@@ -576,7 +595,6 @@
 				PRODUCT_NAME = "Statusline Companion";
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
@@ -593,7 +611,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = statusline/statusline.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = F3HRL896HJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -614,7 +632,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = inmerzion.statusline;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -631,7 +648,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = statusline/statusline.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = F3HRL896HJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -652,7 +669,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = inmerzion.statusline;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -722,6 +738,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -779,6 +796,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

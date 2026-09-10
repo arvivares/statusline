@@ -178,6 +178,11 @@ En macOS puedes usar **Codex integrado en ChatGPT o Codex.app**, sin instalar un
 CLI por separado. Instala la app de escritorio en Aplicaciones, abre Codex e inicia
 sesión con ChatGPT. Statusline detecta automáticamente su ejecutable integrado.
 
+La detección de apps de escritorio en Windows está implementada en el código para
+paquetes MSIX de OpenAI e instalaciones convencionales. **Faltan la validación en
+un Windows sin CLI y una nueva release de instaladores**; consulta la
+[guía de orígenes](docs/architecture/codex-sources.md#windows-desktop-discovery).
+
 Como alternativa en macOS, Windows o Linux, instala Codex CLI y completa
 **Sign in with ChatGPT**:
 

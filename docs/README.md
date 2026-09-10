@@ -25,6 +25,8 @@ requests are welcome.
   CLI fallback, session boundaries and clean-device validation.
 - [Synchronization and freshness](architecture/synchronization.md): native desktop
   scheduling, independent iOS widgets, cache safety and verification limits.
+- [Companion window behavior](architecture/companion-window.md): cross-platform
+  focus dismissal, tray interactions, native dialogs and release QA.
 - [Statusline Relay Protocol v1](../protocol/statusline-relay-v1.md): normative wire and
   credential contract.
 - [AES-GCM fixture](../protocol/fixtures/aes-gcm-v1.json): shared interoperability vector.

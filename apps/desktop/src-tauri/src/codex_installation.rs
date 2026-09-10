@@ -10,6 +10,10 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tokio::{process::Command, time::timeout};
 
+#[cfg(any(windows, test))]
+#[path = "windows_desktop.rs"]
+mod windows_desktop;
+
 const SETTINGS_FILE: &str = "settings.json";
 const VERSION_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_SCANNED_VERSIONS: usize = 64;
@@ -270,7 +274,7 @@ pub async fn inspect_codex(
     settings_directory: Option<&Path>,
 ) -> Result<CodexDiagnostic, CodexConfigurationError> {
     let (saved_path, settings_warning) = read_saved_path(settings_directory)?;
-    let candidates = collect_candidates(saved_path.as_deref());
+    let candidates = collect_candidates(saved_path.as_deref()).await;
     let (verified, first_failure) = select_verified_candidate(&candidates).await;
     if let Some(VerifiedCandidate {
         candidate,
@@ -380,14 +384,14 @@ pub(crate) async fn resolve_codex_launch(settings_directory: Option<&Path>) -> O
     let saved_path = read_saved_path(settings_directory)
         .ok()
         .and_then(|(path, _warning)| path);
-    let candidates = collect_candidates(saved_path.as_deref());
+    let candidates = collect_candidates(saved_path.as_deref()).await;
     select_verified_candidate(&candidates)
         .await
         .0
         .map(|verified| verified.launch)
 }
 
-fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
+async fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
     let mut candidates = Vec::new();
 
     if let Some(path) = env::var_os("STATUSLINE_CODEX_PATH").map(PathBuf::from) {
@@ -397,7 +401,7 @@ fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
         push_candidate(&mut candidates, path.to_path_buf(), CodexSource::Saved);
     }
 
-    // Only macOS layouts have been verified. Never guess Windows Store/Linux bundles.
+    // Desktop runtimes precede standalone installs; explicit user choices win.
     #[cfg(target_os = "macos")]
     for path in macos_desktop_app_paths(
         Path::new("/Applications"),
@@ -407,7 +411,17 @@ fn collect_candidates(saved_path: Option<&Path>) -> Vec<Candidate> {
     }
 
     #[cfg(windows)]
-    collect_windows_candidates(&mut candidates);
+    {
+        let program_files = ["ProgramFiles", "ProgramFiles(x86)"]
+            .into_iter()
+            .filter_map(|name| env::var_os(name).map(PathBuf::from))
+            .collect::<Vec<_>>();
+        for path in windows_desktop::discover(&windows_local_app_data_roots(), &program_files).await
+        {
+            push_candidate(&mut candidates, path, CodexSource::DesktopApp);
+        }
+        collect_windows_candidates(&mut candidates);
+    }
     #[cfg(not(windows))]
     collect_unix_candidates(&mut candidates);
 
@@ -1195,7 +1209,11 @@ mod tests {
     #[test]
     fn saved_paths_precede_automatic_bundles_in_the_production_collector() {
         let saved = PathBuf::from("/explicit/test/codex");
-        let candidates = super::collect_candidates(Some(&saved));
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let candidates = runtime.block_on(super::collect_candidates(Some(&saved)));
         let saved_index = candidates
             .iter()
             .position(|candidate| candidate.path == saved)
@@ -1303,7 +1321,7 @@ mod tests {
         fs::remove_dir_all(directory).expect("test directory should be removable");
     }
 
-    fn test_directory(label: &str) -> PathBuf {
+    pub(super) fn test_directory(label: &str) -> PathBuf {
         let directory = env::temp_dir().join(format!(
             "statusline-codex-{label}-{}-{:?}",
             process::id(),

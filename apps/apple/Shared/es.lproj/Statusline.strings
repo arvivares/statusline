@@ -109,6 +109,7 @@
 "Could not access this device’s secure storage." = "No se pudo acceder al almacén seguro del dispositivo.";
 "Could not connect to the relay. Check your connection and try again." = "No se pudo conectar con el relay. Comprueba la conexión e inténtalo de nuevo.";
 "Could not encrypt or decrypt the snapshot." = "No se pudo cifrar o descifrar la muestra.";
+"Could not open file picker" = "No se pudo abrir el selector de archivos";
 "Could not open the browser on this device." = "No se pudo abrir el navegador en este dispositivo.";
 "Could not open the scanner. You can paste the link manually." = "No se pudo abrir el escáner. Puedes pegar el vínculo manualmente.";
 "Could not render the QR. Copy the private pairing link instead." = "No se pudo generar el QR. Copia el vínculo privado para emparejar el dispositivo.";
@@ -205,7 +206,6 @@
 "OFFICIAL SETUP" = "INSTALACIÓN OFICIAL";
 "OFFLINE" = "SIN CONEXIÓN";
 "OFFLINE · NO SAMPLE AVAILABLE" = "SIN CONEXIÓN · SIN MUESTRA DISPONIBLE";
-"On macOS, use Codex in ChatGPT or Codex.app. Alternatively, install the CLI below. Sign in with ChatGPT, then refresh." = "En macOS, usa Codex en ChatGPT o Codex.app. También puedes instalar la CLI indicada abajo. Inicia sesión con ChatGPT y actualiza.";
 "Open OpenAI" = "Abrir OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Abre la configuración de origen para detectar o seleccionar un ejecutable local de Codex.";
 "Open Source Settings to detect or select the local CLI." = "Abre la configuración de origen para detectar o seleccionar la CLI local.";
@@ -388,6 +388,7 @@
 "Update Statusline Companion or check your CLI version." = "Actualiza Statusline Companion o revisa la versión de la CLI.";
 "Update Statusline Companion or your Codex installation." = "Actualiza Statusline Companion o tu instalación de Codex.";
 "Update Statusline Companion to read this response." = "Actualiza Statusline Companion para interpretar esta respuesta.";
+"Use a compatible ChatGPT or Codex desktop app on Windows or macOS, or install the CLI below. Sign in with ChatGPT, then refresh." = "Usa una app de escritorio compatible de ChatGPT o Codex en Windows o macOS, o instala la CLI indicada abajo. Inicia sesión con ChatGPT y actualiza.";
 "USE AUTOMATIC DETECTION" = "USAR DETECCIÓN AUTOMÁTICA";
 "Use device code" = "Usar código de dispositivo";
 "Use example" = "Usar ejemplo";
