@@ -4,6 +4,11 @@ import { fileURLToPath } from "node:url";
 import { createServer } from "vite";
 import { parse } from "parse5";
 import { nodes, attribute } from "./render-html.mjs";
+import {
+  publicPageIDs,
+  publicPagePath,
+} from "../../../content/public-pages.ts";
+import { validatePublicDocument } from "./check-public-pages.mjs";
 
 const server = await createServer({
   root: fileURLToPath(new URL("../", import.meta.url)),
@@ -29,7 +34,23 @@ try {
     assert.match(image.headers.get("content-type"), /^image\/svg\+xml/);
     assert.deepEqual(Buffer.from(await image.arrayBuffer()), original);
   }
-  console.log("Dev checks passed: shared QR loads unchanged from / and /es/.");
+  for (const language of ["en", "es"]) {
+    for (const id of publicPageIDs) {
+      const url = new URL(publicPagePath(id, language), origin);
+      const response = await fetch(url);
+      assert.equal(response.status, 200);
+      validatePublicDocument(await response.text(), id, language);
+      const head = await fetch(url, { method: "HEAD" });
+      assert.equal(head.status, 200);
+      assert.equal(await head.text(), "");
+      const post = await fetch(url, { method: "POST" });
+      assert.equal(post.status, 405);
+      assert.equal(post.headers.get("allow"), "GET, HEAD");
+    }
+  }
+  console.log(
+    "Dev checks passed: shared QR and six static information pages (GET/HEAD/POST).",
+  );
 } finally {
   await server.close();
 }

@@ -58,10 +58,10 @@ struct ContentView: View {
                     .ignoresSafeArea()
             }
             .toolbar(.hidden, for: .navigationBar)
-            .task {
-                await viewModel.start()
+            .task(id: scenePhase) {
+                guard scenePhase == .active else { return }
+                await viewModel.runForegroundRefresh()
             }
-            .onChange(of: scenePhase, handleScenePhaseChange)
             .sheet(isPresented: $isPairingPresented) {
                 RelayPairingSheet { uri in
                     await viewModel.pair(using: uri)
@@ -89,24 +89,15 @@ struct ContentView: View {
         viewModel.loadLocalDemo()
     }
 
-    private func handleScenePhaseChange(_ oldPhase: ScenePhase, _ newPhase: ScenePhase) {
-        guard newPhase == .active else {
-            return
-        }
-
-        Task {
-            await viewModel.refreshFromRelay()
-        }
-    }
 }
 
 private enum StatuslinePublicPage {
-    private static let fallbackBaseURL = URL(
-        string: "https://statusline-relay.inmerzion.workers.dev"
+    private static let websiteURL = URL(
+        string: "https://statusline.inmerzion.io"
     )!
 
     static func url(path: String) -> URL {
-        let baseURL = StatusRelayConfiguration.current()?.baseURL ?? fallbackBaseURL
+        let baseURL = L10n.language == "es" ? websiteURL.appending(path: "es") : websiteURL
         return baseURL.appending(path: path)
     }
 }

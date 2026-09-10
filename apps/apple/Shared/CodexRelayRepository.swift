@@ -279,16 +279,17 @@ private final class StatusRelayAPIClient {
 
     init(
         configuration: StatusRelayConfiguration,
-        session: URLSession? = nil
+        session: URLSession? = nil,
+        isWidget: Bool = false
     ) {
         self.configuration = configuration
         if let session {
             self.session = session
         } else {
             let sessionConfiguration = URLSessionConfiguration.ephemeral
-            sessionConfiguration.timeoutIntervalForRequest = 20
-            sessionConfiguration.timeoutIntervalForResource = 30
-            sessionConfiguration.waitsForConnectivity = true
+            sessionConfiguration.timeoutIntervalForRequest = isWidget ? 8 : 20
+            sessionConfiguration.timeoutIntervalForResource = isWidget ? 10 : 30
+            sessionConfiguration.waitsForConnectivity = !isWidget
             sessionConfiguration.requestCachePolicy = .reloadIgnoringLocalCacheData
             sessionConfiguration.httpShouldSetCookies = false
             sessionConfiguration.urlCredentialStorage = nil
@@ -512,21 +513,64 @@ enum StatusRelayCrypto {
     }
 }
 
-private struct StatusRelayCredentialStore {
+@MainActor
+protocol StatusRelayReaderCredentialStoring {
+    func loadReader() throws -> StatusRelayReaderCredentials?
+    func saveReader(_ credentials: StatusRelayReaderCredentials) throws
+    func deleteReader() throws
+}
+
+struct StatusRelayCredentialStore: StatusRelayReaderCredentialStoring {
     private static let service = "inmerzion.statusline.relay"
     private static let readerAccount = "universal-reader-v1"
     private static let publisherAccount = "universal-publisher-v1"
 
+    // App Groups also grant keychain access on iOS. Explicitly scope ONLY the
+    // reader item; publisher credentials retain their existing private storage.
+    private var readerAccessGroup: String? {
+        #if os(iOS)
+        CodexStatusConstants.appGroupIdentifier
+        #else
+        nil
+        #endif
+    }
+
+    private var legacyReaderAccessGroup: String? {
+        #if os(iOS)
+        // Only the containing app has this Info.plist key. The widget must
+        // never attempt migration from an application's private access group.
+        Bundle.main.object(forInfoDictionaryKey: "StatuslinePrivateKeychainGroup") as? String
+        #else
+        nil
+        #endif
+    }
+
     func loadReader() throws -> StatusRelayReaderCredentials? {
-        try load(StatusRelayReaderCredentials.self, account: Self.readerAccount)
+        if let shared = try load(StatusRelayReaderCredentials.self, account: Self.readerAccount, group: readerAccessGroup) {
+            return shared
+        }
+        guard let legacyReaderAccessGroup,
+              let legacy = try load(StatusRelayReaderCredentials.self, account: Self.readerAccount, group: legacyReaderAccessGroup) else {
+            return nil
+        }
+        // Copy first. If secure storage fails, the original pairing survives.
+        try saveReader(legacy)
+        return legacy
     }
 
     func saveReader(_ credentials: StatusRelayReaderCredentials) throws {
-        try save(credentials, account: Self.readerAccount)
+        try save(credentials, account: Self.readerAccount, group: readerAccessGroup)
+        if let legacyReaderAccessGroup {
+            try delete(account: Self.readerAccount, group: legacyReaderAccessGroup)
+        }
     }
 
     func deleteReader() throws {
-        try delete(account: Self.readerAccount)
+        // Remove the legacy copy first so it can never resurrect a disconnect.
+        if let legacyReaderAccessGroup {
+            try delete(account: Self.readerAccount, group: legacyReaderAccessGroup)
+        }
+        try delete(account: Self.readerAccount, group: readerAccessGroup)
     }
 
     func loadPublisher() throws -> StatusRelayPublisherCredentials? {
@@ -541,8 +585,8 @@ private struct StatusRelayCredentialStore {
         try delete(account: Self.publisherAccount)
     }
 
-    private func load<T: Decodable>(_ type: T.Type, account: String) throws -> T? {
-        var query = baseQuery(account: account)
+    private func load<T: Decodable>(_ type: T.Type, account: String, group: String? = nil) throws -> T? {
+        var query = baseQuery(account: account, group: group)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
         var item: CFTypeRef?
@@ -560,15 +604,18 @@ private struct StatusRelayCredentialStore {
         }
     }
 
-    private func save<T: Encodable>(_ value: T, account: String) throws {
+    private func save<T: Encodable>(_ value: T, account: String, group: String? = nil) throws {
         let data: Data
         do {
             data = try JSONEncoder().encode(value)
         } catch {
             throw CodexRelayError.secureStorage
         }
-        let query = baseQuery(account: account)
-        let update = [kSecValueData as String: data]
+        let query = baseQuery(account: account, group: group)
+        let update: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+        ]
         let updateStatus = SecItemUpdate(query as CFDictionary, update as CFDictionary)
         if updateStatus == errSecSuccess {
             return
@@ -584,26 +631,38 @@ private struct StatusRelayCredentialStore {
         }
     }
 
-    private func delete(account: String) throws {
-        let status = SecItemDelete(baseQuery(account: account) as CFDictionary)
+    private func delete(account: String, group: String? = nil) throws {
+        let status = SecItemDelete(baseQuery(account: account, group: group) as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw CodexRelayError.secureStorage
         }
     }
 
-    private func baseQuery(account: String) -> [String: Any] {
-        [
+    private func baseQuery(account: String, group: String? = nil) -> [String: Any] {
+        var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.service,
             kSecAttrAccount as String: account,
         ]
+        if let group { query[kSecAttrAccessGroup as String] = group }
+        return query
     }
 }
 
 @MainActor
-final class CodexRelayReaderRepository {
+protocol CodexRelayReading {
+    var endpoint: String? { get }
+    func isPaired() throws -> Bool
+    func pairedChannelID() throws -> UUID?
+    func pair(using uri: String) async throws
+    func fetchStatus() async throws -> CodexUsageStatus?
+    func disconnect() throws
+}
+
+@MainActor
+final class CodexRelayReaderRepository: CodexRelayReading {
     private let configuration: StatusRelayConfiguration?
-    private let store: StatusRelayCredentialStore
+    private let store: any StatusRelayReaderCredentialStoring
     private let client: StatusRelayAPIClient?
 
     convenience init() {
@@ -612,17 +671,23 @@ final class CodexRelayReaderRepository {
 
     init(
         configuration: StatusRelayConfiguration?,
-        session: URLSession? = nil
+        session: URLSession? = nil,
+        credentialStore: (any StatusRelayReaderCredentialStoring)? = nil,
+        isWidget: Bool = false
     ) {
         self.configuration = configuration
-        store = StatusRelayCredentialStore()
-        client = configuration.map { StatusRelayAPIClient(configuration: $0, session: session) }
+        store = credentialStore ?? StatusRelayCredentialStore()
+        client = configuration.map { StatusRelayAPIClient(configuration: $0, session: session, isWidget: isWidget) }
     }
 
     var endpoint: String? { configuration?.origin }
 
     func isPaired() throws -> Bool {
         try store.loadReader() != nil
+    }
+
+    func pairedChannelID() throws -> UUID? {
+        try store.loadReader()?.channelID
     }
 
     func pair(using uri: String) async throws {
@@ -657,10 +722,18 @@ final class CodexRelayReaderRepository {
               credentials.relayOrigin == configuration.origin else {
             throw CodexRelayError.endpointMismatch
         }
-        guard let envelope = try await client.fetch(credentials) else {
+        let envelope = try await client.fetch(credentials)
+        try Task.checkCancellation()
+        // A suspended request must not restore data after disconnect/re-pair.
+        guard try store.loadReader() == credentials else {
+            throw CancellationError()
+        }
+        guard let envelope else {
             return nil
         }
-        return try StatusRelayCrypto.decrypt(envelope: envelope, credentials: credentials)
+        var status = try StatusRelayCrypto.decrypt(envelope: envelope, credentials: credentials)
+        status.relayChannelID = credentials.channelID
+        return status
     }
 
     func disconnect() throws {

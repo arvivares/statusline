@@ -8,11 +8,12 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "check": "tsc --noEmit",
-    "format": "prettier --write src scripts index.html vite.config.mjs package.json tsconfig.json compose.yml README.md public/404.html public/not-found.js public/not-found-messages.js",
-    "format:check": "prettier --check src scripts index.html vite.config.mjs package.json tsconfig.json compose.yml README.md public/404.html public/not-found.js public/not-found-messages.js",
+    "format": "prettier --write src scripts ../../content index.html vite.config.mjs package.json tsconfig.json compose.yml README.md public/404.html public/information.css public/not-found.js public/not-found-messages.js",
+    "format:check": "prettier --check src scripts ../../content index.html vite.config.mjs package.json tsconfig.json compose.yml README.md public/404.html public/information.css public/not-found.js public/not-found-messages.js",
     "build": "npm run check && node --experimental-strip-types scripts/build.mjs",
     "test:dev": "node --experimental-strip-types scripts/check-dev.mjs",
     "test:analytics": "node --experimental-strip-types --test scripts/analytics.test.mjs",
+    "test:public": "node --experimental-strip-types --test scripts/public-pages.test.mjs",
     "test:seo": "node --experimental-strip-types scripts/check-seo.mjs",
     "preview": "vite preview --host 0.0.0.0"
   },

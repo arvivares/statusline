@@ -2,7 +2,21 @@
 
 This file records reproducible readiness evidence without storing credentials or personal account data. The 2–3 September evidence applies to `1.0 (2)`; the separate 6 September sections track the localized `1.0 (3)` and unified-brand `1.0 (4)` TestFlight candidates.
 
-## Current status — 9 September 2026: build 4 released, public listing visible
+## Prepared source — 10 September 2026: 1.0.1 (5), not uploaded
+
+- App and widget Debug/Release versions advance together to `1.0.1 (5)` for the
+  next candidate; the published App Store binary remains `1.0 (4)`.
+- Source includes independent widget relay reads, shared-reader Keychain migration,
+  age/fallback handling, foreground refresh and localized website information links.
+- Targeted synchronization tests passed before the version bump. That evidence is
+  not a device test of build 5 or proof of production Keychain entitlements.
+- EN/ES What to Test instructions are prepared. No new archive, exported IPA,
+  upload, TestFlight assignment, review submission or store metadata edit is claimed.
+- Pending: enough local disk space for one archive/export; signed entitlement and
+  provisioning checks; manual upload; paired physical-iPhone upgrade and independent
+  widget refresh QA. See [synchronization](../../../docs/architecture/synchronization.md).
+
+## Published status — 9 September 2026: build 4 released, public listing visible
 
 - Apple approved submission `9de1d3a4-27a7-403f-aa7f-12de04c9db4f` for
   `1.0 (4)`. The authenticated version page confirmed **Pending Developer

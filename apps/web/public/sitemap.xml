@@ -13,4 +13,40 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://statusline.inmerzion.io/es/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://statusline.inmerzion.io/" />
   </url>
+  <url>
+    <loc>https://statusline.inmerzion.io/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://statusline.inmerzion.io/privacy" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://statusline.inmerzion.io/es/privacy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://statusline.inmerzion.io/privacy" />
+  </url>
+  <url>
+    <loc>https://statusline.inmerzion.io/es/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://statusline.inmerzion.io/privacy" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://statusline.inmerzion.io/es/privacy" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://statusline.inmerzion.io/privacy" />
+  </url>
+  <url>
+    <loc>https://statusline.inmerzion.io/support</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://statusline.inmerzion.io/support" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://statusline.inmerzion.io/es/support" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://statusline.inmerzion.io/support" />
+  </url>
+  <url>
+    <loc>https://statusline.inmerzion.io/es/support</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://statusline.inmerzion.io/support" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://statusline.inmerzion.io/es/support" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://statusline.inmerzion.io/support" />
+  </url>
+  <url>
+    <loc>https://statusline.inmerzion.io/delete-data</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://statusline.inmerzion.io/delete-data" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://statusline.inmerzion.io/es/delete-data" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://statusline.inmerzion.io/delete-data" />
+  </url>
+  <url>
+    <loc>https://statusline.inmerzion.io/es/delete-data</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://statusline.inmerzion.io/delete-data" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://statusline.inmerzion.io/es/delete-data" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://statusline.inmerzion.io/delete-data" />
+  </url>
 </urlset>

@@ -26,6 +26,11 @@
   "devDependencies": {
     "typescript": "7.0.2",
     "vitest": "4.1.11",
-    "wrangler": "4.127.1"
+    "wrangler": "4.129.0"
+  },
+  "overrides": {
+    "miniflare": {
+      "sharp": "0.35.4"
+    }
   }
 }

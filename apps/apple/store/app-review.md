@@ -55,5 +55,5 @@ Statusline is not distributed on the China mainland App Store. Within the select
 Regulated industry / protected third-party material
 Statusline is not a regulated-industry app and does not distribute protected third-party content. It is an independent interoperability utility and is not affiliated with, sponsored by, or endorsed by OpenAI. "OpenAI," "ChatGPT," and "Codex" identify compatibility with the user's locally installed software.
 
-Privacy policy: https://statusline-relay.inmerzion.workers.dev/privacy
+Privacy policy: https://statusline.inmerzion.io/privacy
 Source and setup documentation: https://github.com/arvivares/statusline

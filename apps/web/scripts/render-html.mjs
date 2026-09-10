@@ -1,5 +1,6 @@
 import { parse, parseFragment, serialize } from "parse5";
 import { staticMessages } from "../src/static-messages.ts";
+import { publicPagePath } from "../../../content/public-pages.ts";
 import { interfaceMessages, platformMessages } from "../src/messages.ts";
 import {
   languagePaths,
@@ -73,6 +74,15 @@ export function renderPage(html, language) {
     "lang",
     language,
   );
+  for (const link of elements.filter((node) =>
+    attribute(node, "data-public-page"),
+  )) {
+    setAttribute(
+      link,
+      "href",
+      publicPagePath(attribute(link, "data-public-page"), language),
+    );
+  }
   const byId = (id) => elements.find((node) => attribute(node, "id") === id);
   const platform = platformMessages[language].macos;
   for (const [id, content] of Object.entries({

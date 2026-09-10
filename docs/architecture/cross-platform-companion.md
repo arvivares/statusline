@@ -33,7 +33,8 @@ Universal StatusPublisher
    ▼
 Relay HTTPS ── blob opaco ──► Universal StatusReader
                                   │
-                                  ├──► iOS ─────► caché App Group ──► widget
+                                  ├──► iOS ─────► caché App Group
+                                  ├──► widget iOS (reader independiente + caché)
                                   └──► Android ─► caché privada ────► widget
 ```
 
@@ -60,7 +61,7 @@ La credencial pairing sólo puede reclamarse una vez; reader sólo puede leer. L
 | Windows Tauri  |          Sí |      Rust |                — | Implementado |
 | Linux Tauri    |          Sí |      Rust |                — | Implementado |
 | iOS            |           — |         — |            Swift | Implementado |
-| Widget iOS     |           — |         — |     Caché de iOS | Implementado |
+| Widget iOS     |           — |         — |    Swift + caché | Implementado |
 | Android        |           — |         — |           Kotlin | Implementado |
 | Widget Android |           — |         — | Caché de Android | Implementado |
 
@@ -83,7 +84,9 @@ Las opciones de hosting, el estado real de cada adaptador y el cálculo de capac
 
 ## Actualización móvil
 
-El transporte universal ya resuelve Windows/Linux/macOS → iOS y Android sin una cuenta compartida. En la versión actual cada app móvil obtiene el snapshot al abrir o actualizar manualmente y después recarga su widget desde una caché privada local.
+El transporte universal ya resuelve Windows/Linux/macOS → iOS y Android sin una cuenta compartida. El companion Tauri consulta y publica desde un temporizador nativo de Rust cada cinco minutos con el equipo despierto, sin depender de su ventana. iOS consulta al activarse y aproximadamente cada minuto en primer plano. Su widget también puede consultar directamente el relay usando la credencial reader del Keychain compartido, y solicita un nuevo timeline cada 30 minutos; iOS determina el momento real. Android mantiene su programación actual.
+
+La política de caché, migración de credenciales y validación en dispositivos está en [sincronización](synchronization.md).
 
 Para refresco casi inmediato en segundo plano se añadirá una capa de señalización:
 

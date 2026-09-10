@@ -36,7 +36,7 @@ function makeApp(store = new MemoryRelayStore(), limiters: TestLimiters = {}) {
 }
 
 describe("Statusline universal relay", () => {
-  it("serves tracker-free public pages without invoking API limits", async () => {
+  it("serves the relay landing page and redirects information pages by default without API limits", async () => {
     const mustNotRun: RateLimitBinding = {
       limit: async () => {
         throw new Error("API limiter must not run for a public page");
@@ -48,21 +48,63 @@ describe("Statusline universal relay", () => {
       channel: mustNotRun,
     });
 
-    for (const path of ["/", "/privacy", "/support", "/delete-data"]) {
-      const response = await app(new Request(`https://relay.test${path}`));
-      expect(response.status).toBe(200);
-      expect(response.headers.get("Content-Type")).toContain("text/html");
-      expect(response.headers.get("Content-Security-Policy")).toContain(
-        "default-src 'none'",
-      );
-      expect(await response.text()).not.toContain("<script");
+    const root = await app(new Request("https://relay.test/"));
+    expect(root.status).toBe(200);
+    expect(root.headers.get("Content-Type")).toContain("text/html");
+    expect(await root.text()).not.toContain("<script");
+
+    for (const prefix of ["", "/es"]) {
+      for (const id of ["privacy", "support", "delete-data"]) {
+        for (const suffix of ["", "/"]) {
+          for (const method of ["GET", "HEAD"]) {
+            const response = await app(
+              new Request(
+                `https://relay.test${prefix}/${id}${suffix}?token=not-a-real-secret&next=https://example.com`,
+                { method },
+              ),
+            );
+            expect(response.status).toBe(301);
+            expect(response.headers.get("Location")).toBe(
+              `https://statusline.inmerzion.io${prefix}/${id}`,
+            );
+            expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
+            expect(response.headers.get("Content-Security-Policy")).toContain(
+              "default-src 'none'",
+            );
+            expect(await response.text()).toBe("");
+          }
+        }
+      }
     }
 
     const head = await app(
-      new Request("https://relay.test/privacy", { method: "HEAD" }),
+      new Request("https://relay.test/", { method: "HEAD" }),
     );
     expect(head.status).toBe(200);
     expect(await head.text()).toBe("");
+  });
+
+  it("does not redirect writes, unknown paths, health checks or the API", async () => {
+    const { app } = makeApp();
+    for (const path of ["/privacy", "/es/support", "/delete-data/"]) {
+      const response = await app(
+        new Request(`https://relay.test${path}`, { method: "POST" }),
+      );
+      expect(response.status).toBe(405);
+      expect(response.headers.get("Allow")).toBe("GET, HEAD");
+      expect(response.headers.has("Location")).toBe(false);
+    }
+    for (const path of [
+      "/privacy/other",
+      "/constructor",
+      "/__proto__",
+      "/health",
+      "/v1/channels",
+    ]) {
+      const response = await app(new Request(`https://relay.test${path}`));
+      expect(response.headers.has("Location")).toBe(false);
+      expect(response.status).toBe(path === "/health" ? 200 : 404);
+    }
   });
 
   it("creates independent publisher and reader credentials", async () => {

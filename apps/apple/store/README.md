@@ -1,6 +1,6 @@
 # Apple App Store release kit
 
-This directory is the versioned source of truth for the first Statusline iPhone release. The current source targets bundle `inmerzion.statusline`, version `1.0` and build `4`. Apple approved the 7 September submission, and the account holder authorized its manual public release on 9 September 2026 (Europe/Madrid). App Store Connect confirms **Ready for Distribution** after reloading; the account holder subsequently confirmed the public listing is visible. See the current-status section in `validation.md`.
+This directory is the versioned source of truth for Statusline iPhone releases. The current source prepares bundle `inmerzion.statusline`, version `1.0.1` and build `5`; it has not yet been archived or uploaded. The published release remains `1.0 (4)`: Apple approved the 7 September submission and the account holder authorized its manual release on 9 September 2026 (Europe/Madrid). App Store Connect confirmed **Ready for Distribution** and the account holder subsequently confirmed the public listing is visible. See `validation.md` for dated evidence.
 
 ## App record
 
@@ -13,20 +13,34 @@ This directory is the versioned source of truth for the first Statusline iPhone 
 - App Store release: `1.0` (`4`), **Ready for Distribution**, manually released 9 September 2026 (Europe/Madrid)
 - Submission ID: `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`
 - Public link: https://apps.apple.com/app/statusline/id6807851320
-- Latest TestFlight candidate: `1.0` (`4`), unified icon and English/Spanish localization
+- Latest verified TestFlight upload: `1.0` (`4`), unified icon and English/Spanish localization
+- Prepared candidate: `1.0.1` (`5`), independent widget refresh and website privacy/support links; not uploaded
 - Price: Free
 - Availability: 174 App Store countries or regions; China mainland excluded (Hong Kong and Macau unchanged)
 - Distribution: Public, iPhone only
 - Primary category: Developer Tools
 - Secondary category: Utilities
 - Copyright: `2026 Alan Rodrigo Vivares`
-- Privacy policy: https://statusline-relay.inmerzion.workers.dev/privacy
-- Support URL: https://statusline-relay.inmerzion.workers.dev/support
+- Privacy policy: https://statusline.inmerzion.io/privacy
+- Support URL: https://statusline.inmerzion.io/support
 - Marketing URL: https://github.com/arvivares/statusline
 
 The product page retains Spanish (Spain) as its primary localization and its three existing screenshots. The submitted build `4` supports English and Spanish according to the primary system language, with English as the fallback. English product-page metadata is prepared in `listing/en-US.md` but was not enabled during this build replacement; localized listing assets remain a separate follow-up.
 
 The App Store Connect record, product-page metadata, screenshots, age rating and published privacy label were configured on 2 September 2026. Build `1` passed physical TestFlight QA and entered Beta App Review for `External Beta`. On 3 September, build `2` replaced the iOS icon with the shared Data Plane artwork, processed as valid, was attached to version `1.0` and was submitted to App Review. The same build was installed and confirmed operational on the physical iPhone. As verified on 6 September, both builds are **Testing** in `Internal QA` and `External Beta`; the App Store submission is **Waiting for Review** with manual release selected. Private review contacts and notes are saved in App Store Connect; tester identities and phone numbers remain outside the repository. Remaining follow-ups are recorded in `validation.md`.
+
+## Synchronization candidate — 10 September 2026
+
+The iPhone app and widget target `1.0.1 (5)` together. Existing-pairing migration
+must be tested on a physical iPhone: open the app once after upgrading, then
+observe a newer widget sample without reopening the app. WidgetKit controls the
+actual reload schedule. The foreground loop, offline fallback, sample age and
+disconnect/re-pair guards also require QA. EN/ES instructions are in `testflight/`.
+
+This is source and metadata preparation only. Archive, entitlement/profile
+verification, export, manual TestFlight upload and physical-device confirmation
+are still pending. No existing TestFlight group, App Store version, screenshots,
+price, country or public URL field was changed by preparing this candidate.
 
 ## Public release — 9 September 2026
 

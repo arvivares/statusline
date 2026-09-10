@@ -17,6 +17,10 @@ export class UsageController {
     private readonly clock: Clock,
   ) {}
 
+  public accept(payload: unknown): void {
+    this.renderUsage(parseUsageResponse(payload));
+  }
+
   public refresh(): Promise<void> {
     if (this.pendingRefresh !== null) {
       return this.pendingRefresh;
@@ -26,7 +30,7 @@ export class UsageController {
     const operation = Promise.resolve()
       .then(() => this.loadUsage())
       .then((payload) => {
-        this.renderUsage(parseUsageResponse(payload));
+        this.accept(payload);
       })
       .catch((error: unknown) => {
         const invalidPayload = error instanceof UsagePayloadError;

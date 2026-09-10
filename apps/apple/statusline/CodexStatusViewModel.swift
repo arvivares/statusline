@@ -99,7 +99,9 @@ final class CodexStatusViewModel {
 
     private let parser: CodexStatusParser
     private let store: CodexStatusStore
-    private let relayRepository: CodexRelayReaderRepository
+    private let relayRepository: any CodexRelayReading
+    private var isRefreshing = false
+    private var pairingGeneration = 0
 
     convenience init() {
         self.init(
@@ -112,7 +114,7 @@ final class CodexStatusViewModel {
     init(
         parser: CodexStatusParser,
         store: CodexStatusStore,
-        relayRepository: CodexRelayReaderRepository
+        relayRepository: any CodexRelayReading
     ) {
         self.parser = parser
         self.store = store
@@ -127,7 +129,20 @@ final class CodexStatusViewModel {
 
     var relayEndpoint: String? { relayRepository.endpoint }
 
+    /// Owned by ContentView.task(id: scenePhase); cancels when no longer active.
+    func runForegroundRefresh(
+        sleep: (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+    ) async {
+        reloadLocalStatus()
+        while !Task.isCancelled {
+            await start()
+            do { try await sleep(CodexSyncPolicy.foregroundInterval) }
+            catch { return }
+        }
+    }
+
     func start() async {
+        guard relaySyncState != .pairing, !Task.isCancelled else { return }
         guard relayRepository.endpoint != nil else {
             relaySyncState = .notConfigured
             return
@@ -148,10 +163,15 @@ final class CodexStatusViewModel {
             return
         }
         relaySyncState = .pairing
+        pairingGeneration += 1
         feedback = nil
         do {
             try await relayRepository.pair(using: uri)
+            store.clear()
+            status = nil
+            WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
             feedback = .success(L10n.text("Device connected with encryption."))
+            relaySyncState = .waitingForDesktop
             await refreshFromRelay()
         } catch {
             relaySyncState = .failed(L10n.error(error))
@@ -160,7 +180,7 @@ final class CodexStatusViewModel {
     }
 
     func refreshFromRelay(userInitiated: Bool = false) async {
-        guard relaySyncState != .syncing else {
+        guard !isRefreshing, relaySyncState != .pairing, !Task.isCancelled else {
             return
         }
         guard relayRepository.endpoint != nil else {
@@ -168,32 +188,41 @@ final class CodexStatusViewModel {
             return
         }
 
+        let generation = pairingGeneration
+        let previousState = relaySyncState
+        isRefreshing = true
+        defer { isRefreshing = false }
         relaySyncState = .syncing
         do {
-            guard let relayStatus = try await relayRepository.fetchStatus() else {
-                store.clear()
-                status = nil
+            let fetched = try await relayRepository.fetchStatus()
+            try Task.checkCancellation()
+            guard generation == pairingGeneration else { return }
+            guard let relayStatus = fetched else {
+                // Keep a last successful sample if the relay is temporarily empty.
                 relaySyncState = .waitingForDesktop
-                WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
                 return
             }
+            let changed = status != relayStatus
             try store.save(relayStatus)
             status = relayStatus
             relaySyncState = .synced(relayStatus.updatedAt)
-            WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
+            if changed { WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind) }
             if userInitiated {
                 feedback = .success(L10n.text("Encrypted snapshot updated."))
             }
+        } catch is CancellationError {
+            if generation == pairingGeneration { relaySyncState = previousState }
         } catch CodexRelayError.notPaired {
-            relaySyncState = .unpaired
+            if generation == pairingGeneration { relaySyncState = .unpaired }
         } catch {
-            relaySyncState = .failed(L10n.error(error))
+            if generation == pairingGeneration { relaySyncState = .failed(L10n.error(error)) }
         }
     }
 
     func disconnectRelay() {
         do {
             try relayRepository.disconnect()
+            pairingGeneration += 1
             store.clear()
             status = nil
             relaySyncState = .unpaired

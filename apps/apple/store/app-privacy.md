@@ -4,8 +4,8 @@ Validated against the iPhone source, Apple frameworks and the production relay o
 
 ## Published App Store Connect answers
 
-- Privacy Policy URL: https://statusline-relay.inmerzion.workers.dev/privacy
-- Privacy Choices URL: https://statusline-relay.inmerzion.workers.dev/delete-data
+- Privacy Policy URL: https://statusline.inmerzion.io/privacy
+- Privacy Choices URL: https://statusline.inmerzion.io/delete-data
 - Does this app or its third-party partners collect data? **Yes**
 - Data type: **Other Data → Other Data Types**
 - Purpose: **App Functionality**

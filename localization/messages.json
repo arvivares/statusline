@@ -110,6 +110,7 @@
   "REMAINING": "RESTANTE",
   "STATUS": "ESTADO",
   "SAMPLE": "MUESTRA",
+  "Last sample: {0}": "Última muestra: {0}",
   "AVAILABLE": "DISPONIBLE",
   "READING": "LEYENDO",
   "LIVE": "AL DÍA",

@@ -22,7 +22,7 @@ Source: https://developers.google.com/ml-kit/android-data-disclosure
 
 - Does the app collect or share required user data types? **Yes**, due to ML Kit diagnostics and analytics.
 - Is all collected user data encrypted in transit? **Yes**.
-- Can users request deletion? **Yes**. Disconnection provides in-product deletion for credentials/channel data, and the public deletion instructions are available at https://statusline-relay.inmerzion.workers.dev/delete-data.
+- Can users request deletion? **Yes**. Disconnection provides in-product deletion for credentials/channel data, and the public deletion instructions are available at https://statusline.inmerzion.io/delete-data.
 - Data sharing: **No** for the identified ML Kit telemetry; Google documents it as service-provider processing rather than sale or transfer to third parties.
 - Camera photos/video and QR content: **Not collected**, because processing is on-device and the data does not leave the device.
 

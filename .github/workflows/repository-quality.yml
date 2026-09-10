@@ -12,6 +12,7 @@ on:
       - ".github/**"
       - "apps/android/**"
       - "apps/apple/**"
+      - "content/**"
       - "apps/desktop/**"
       - "branding/**"
       - "docs/**"

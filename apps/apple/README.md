@@ -5,7 +5,7 @@ Proyecto Xcode con la app reader de iPhone, su widget WidgetKit y un publisher S
 ## Targets
 
 - `statusline`: app para iPhone, emparejamiento y caché privada del snapshot.
-- `CodexStatusWidgetExtension`: widget de iOS alimentado desde el App Group.
+- `CodexStatusWidgetExtension`: reader independiente del relay, con caché de respaldo.
 - `StatuslineCompanion`: companion nativo de barra de menú para macOS.
 - `statuslineTests` y `statuslineUITests`: pruebas de la app móvil.
 
@@ -25,5 +25,11 @@ La distribución de iOS es manual en esta etapa: selecciona un Team válido, arc
 - `statusline.xcodeproj/`: configuración de targets, firma y builds.
 
 Consulta la [configuración universal](../../SETUP.md), la [arquitectura](../../docs/architecture/cross-platform-companion.md) y la [política de privacidad](../../PRIVACY.md).
+
+La app consulta al activarse y aproximadamente cada minuto mientras está visible.
+El widget solicita nuevas oportunidades de lectura cada 30 minutos, sujetas a iOS,
+sin necesitar abrir la app. Tras actualizar, abre la app una vez para migrar el
+emparejamiento existente al Keychain compartido. Consulta los límites y las pruebas
+en [sincronización](../../docs/architecture/synchronization.md).
 
 La fuente de verdad de la primera publicación iOS está en [`store/README.md`](store/README.md). Antes de cada envío deben actualizarse allí la versión, Review Notes, App Privacy, clasificación por edades, decisión DSA, capturas y resultados de TestFlight.

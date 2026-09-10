@@ -44,7 +44,7 @@ quota,weekly limit,widget,terminal,developer,usage,status,privacy,encrypted sync
 
 ## Support URL
 
-https://statusline-relay.inmerzion.workers.dev/support
+https://statusline.inmerzion.io/support
 
 ## Marketing URL
 

@@ -5,6 +5,11 @@ import { fileURLToPath } from "node:url";
 import { renderPage, renderNotFound } from "./render-html.mjs";
 import { notFoundMessages } from "../public/not-found-messages.js";
 import { validateSEO } from "./check-seo.mjs";
+import { renderPublicPage } from "./render-public-pages.mjs";
+import {
+  publicPageIDs,
+  publicPagePath,
+} from "../../../content/public-pages.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -39,5 +44,16 @@ await Promise.all([
     renderNotFound(notFound, "es", notFoundMessages.es),
   ),
 ]);
+for (const language of ["en", "es"]) {
+  for (const id of publicPageIDs) {
+    const path = publicPagePath(id, language);
+    const document = renderPublicPage(id, language);
+    await writeFile(resolve(outDir, `.${path}.html`), document);
+    // Older deployments already serve directory indexes. Keep these aliases
+    // so publishing dist activates the pages even before Nginx is reloaded.
+    await mkdir(resolve(outDir, `.${path}`), { recursive: true });
+    await writeFile(resolve(outDir, `.${path}/index.html`), document);
+  }
+}
 await validateSEO(outDir);
 console.log(`Generated and validated English / and Spanish /es/ in ${outDir}`);

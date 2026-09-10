@@ -1,8 +1,19 @@
 import { readFile } from "node:fs/promises";
 import { defineConfig } from "vite";
+import { renderPublicPage } from "./scripts/render-public-pages.mjs";
+import { publicPageMatch } from "../../content/public-pages.ts";
 
 export default defineConfig({
   plugins: [
+    {
+      name: "public-information-pages",
+      configureServer(server) {
+        server.middlewares.use(servePublicPage);
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(servePublicPage);
+      },
+    },
     {
       name: "shared-download-qr",
       apply: "serve",
@@ -36,3 +47,22 @@ export default defineConfig({
     },
   ],
 });
+
+function servePublicPage(request, response, next) {
+  const pathname = request.url?.split("?")[0] ?? "";
+  const page = publicPageMatch(pathname);
+  if (!page) return next();
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    response.writeHead(405, { Allow: "GET, HEAD" });
+    return response.end();
+  }
+  response.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-cache",
+  });
+  response.end(
+    request.method === "HEAD"
+      ? undefined
+      : renderPublicPage(page.id, page.language),
+  );
+}

@@ -54,7 +54,7 @@ npm run deploy
 
 4. El despliegue gratuito actual usa https://statusline-relay.inmerzion.workers.dev.
 5. Verifica GET /health antes de compilar clientes públicos.
-6. Verifica las páginas públicas de [privacidad](https://statusline-relay.inmerzion.workers.dev/privacy) y [soporte](https://statusline-relay.inmerzion.workers.dev/support).
+6. Verifica las páginas públicas de [privacidad](https://statusline.inmerzion.io/privacy) y [soporte](https://statusline.inmerzion.io/support).
 
 Para desarrollo local:
 

@@ -110,6 +110,7 @@ Windows produce NSIS y MSI; Linux produce DEB, RPM y AppImage con firmas OpenPGP
 - src-tauri/src/app_server.rs: proceso codex app-server, JSONL y timeouts.
 - src-tauri/src/codex_installation.rs: detección y validación multiplataforma.
 - src-tauri/src/relay_protocol.rs: snapshot, AES-256-GCM, AAD y pairing URI.
+- src-tauri/src/refresh.rs: temporizador nativo de cinco minutos y coordinación de lecturas/publicaciones, independiente de la ventana. [Política y pruebas](../../docs/architecture/synchronization.md).
 - src-tauri/src/universal_relay.rs: cliente HTTPS, secure storage y StatusPublisher.
 - src-tauri/src/usage.rs: normalización de cuota.
 - src-tauri/src/lib.rs: bandeja, ventana, instancia única y comandos Tauri.

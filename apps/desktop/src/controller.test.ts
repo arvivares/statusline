@@ -20,6 +20,20 @@ const READY_PAYLOAD = {
 };
 
 describe("UsageController", () => {
+  it("renders a native periodic update without starting another request", () => {
+    const rendered: UsageState[] = [];
+    const controller = new UsageController(
+      async () => {
+        throw new Error("must not fetch from an update event");
+      },
+      (state) => rendered.push(state),
+      () => 1_900_000_001,
+    );
+    controller.accept(READY_PAYLOAD);
+    expect(rendered).toHaveLength(1);
+    expect(rendered[0]?.status).toBe("ready");
+  });
+
   it("renders loading before the parsed ready state", async () => {
     const rendered: UsageState[] = [];
     const controller = new UsageController(

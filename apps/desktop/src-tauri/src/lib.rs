@@ -1,6 +1,7 @@
 pub mod app_server;
 pub mod codex_installation;
 pub mod localization;
+pub mod refresh;
 pub mod relay_protocol;
 pub mod universal_relay;
 pub mod usage;
@@ -12,20 +13,18 @@ use std::{
     fs,
     path::{Path, PathBuf},
     sync::OnceLock,
-};
-
-#[cfg(target_os = "windows")]
-use std::{
-    sync::atomic::{AtomicBool, Ordering},
     time::Duration,
 };
+
+use refresh::{FOCUS_REFRESH_AGE, RefreshCoordinator, refresh_interval};
+#[cfg(target_os = "windows")]
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{
     AppHandle, Emitter, Manager, State, WindowEvent,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
 use tauri_plugin_positioner::{Position, WindowExt};
-use tokio::sync::Mutex;
 
 use codex_installation::CodexDiagnostic;
 use universal_relay::{RelayStatus, UniversalRelayState};
@@ -108,27 +107,37 @@ fn next_visibility(
     }
 }
 
-#[derive(Default)]
-struct RefreshState {
-    lock: Mutex<()>,
+type RefreshState = RefreshCoordinator<UsageResponse>;
+
+#[tauri::command]
+async fn refresh_usage(app: AppHandle) -> Result<UsageResponse, String> {
+    Ok(refresh_native(&app, Duration::ZERO).await)
 }
 
 #[tauri::command]
-async fn refresh_usage(
-    app: AppHandle,
-    state: State<'_, RefreshState>,
-    relay: State<'_, UniversalRelayState>,
-) -> Result<UsageResponse, String> {
-    let _refresh_guard = state.lock.lock().await;
-    let settings_directory = app.path().app_config_dir().ok();
-    let response =
-        app_server::fetch_usage(env!("CARGO_PKG_VERSION"), settings_directory.as_deref()).await;
-    if let Some(tray) = app.tray_by_id(TRAY_ID) {
-        let _ = tray.set_tooltip(Some(response.tray_tooltip()));
-    }
-    let relay_status = relay.publish_usage(&response).await;
-    let _ = app.emit("relay-status-changed", relay_status);
-    Ok(response)
+async fn current_usage(app: AppHandle) -> Result<UsageResponse, String> {
+    Ok(refresh_native(&app, FOCUS_REFRESH_AGE).await)
+}
+
+async fn refresh_native(app: &AppHandle, minimum_age: Duration) -> UsageResponse {
+    app.state::<RefreshState>()
+        .refresh(minimum_age, || async {
+            let settings_directory = app.path().app_config_dir().ok();
+            let response =
+                app_server::fetch_usage(env!("CARGO_PKG_VERSION"), settings_directory.as_deref())
+                    .await;
+            if let Some(tray) = app.tray_by_id(TRAY_ID) {
+                let _ = tray.set_tooltip(Some(response.tray_tooltip()));
+            }
+            let relay_status = app
+                .state::<UniversalRelayState>()
+                .publish_usage(&response)
+                .await;
+            let _ = app.emit("relay-status-changed", relay_status);
+            let _ = app.emit("usage-updated", &response);
+            response
+        })
+        .await
 }
 
 #[tauri::command]
@@ -244,7 +253,10 @@ pub fn run() {
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => show_main_window(app),
                     "refresh" => {
-                        let _ = app.emit("usage-refresh-requested", ());
+                        let app = app.clone();
+                        tauri::async_runtime::spawn(async move {
+                            refresh_native(&app, Duration::ZERO).await;
+                        });
                     }
                     "quit" => app.exit(0),
                     _ => {}
@@ -273,6 +285,14 @@ pub fn run() {
                 tray_builder = tray_builder.icon(icon.clone());
             }
             tray_builder.build(app)?;
+            let refresh_app = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let mut interval = refresh_interval();
+                loop {
+                    interval.tick().await;
+                    refresh_native(&refresh_app, Duration::ZERO).await;
+                }
+            });
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -292,6 +312,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             refresh_usage,
+            current_usage,
             relay_status,
             create_relay_pairing,
             disconnect_relay,
