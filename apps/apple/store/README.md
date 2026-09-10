@@ -1,11 +1,12 @@
 # Apple App Store release kit
 
-This directory is the versioned source of truth for Statusline iPhone releases. The current source prepares bundle `inmerzion.statusline`, version `1.0.1` and build `5`; it has not yet been archived or uploaded. The published release remains `1.0 (4)`: Apple approved the 7 September submission and the account holder authorized its manual release on 9 September 2026 (Europe/Madrid). App Store Connect confirmed **Ready for Distribution** and the account holder subsequently confirmed the public listing is visible. See `validation.md` for dated evidence.
+This directory is the versioned source of truth for Statusline iPhone releases. Bundle `inmerzion.statusline`, version `1.0.1` and build `5`, was archived, exported, verified and uploaded on 10 September 2026. Apple completed processing and assigned it to `Internal QA`. The App Store draft now selects build `5` and has localized copy and actual EN/ES captures. Physical-device migration/widget QA and App Review submission remain pending. The published release remains `1.0 (4)`, manually released on 9 September 2026 (Europe/Madrid). See `validation.md` for dated evidence.
 
 ## App record
 
 - Platform: iOS
 - Name: Statusline
+- English product-page name: `Statusline: Agent Quota`, authorized by the account holder because `Statusline` was unavailable in that localization. The installed app name and Spanish listing remain `Statusline`; this version supports Codex only.
 - Primary language: Spanish (Spain)
 - Bundle ID: `inmerzion.statusline`
 - SKU: `statusline-ios`
@@ -13,8 +14,8 @@ This directory is the versioned source of truth for Statusline iPhone releases. 
 - App Store release: `1.0` (`4`), **Ready for Distribution**, manually released 9 September 2026 (Europe/Madrid)
 - Submission ID: `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`
 - Public link: https://apps.apple.com/app/statusline/id6807851320
-- Latest verified TestFlight upload: `1.0` (`4`), unified icon and English/Spanish localization
-- Prepared candidate: `1.0.1` (`5`), independent widget refresh and website privacy/support links; not uploaded
+- Latest verified TestFlight upload: `1.0.1` (`5`), processed and assigned to `Internal QA`
+- App Store candidate: `1.0.1` (`5`), **Prepare for Submission**, independent widget refresh and website privacy/support links; physical-device QA pending
 - Price: Free
 - Availability: 174 App Store countries or regions; China mainland excluded (Hong Kong and Macau unchanged)
 - Distribution: Public, iPhone only
@@ -23,9 +24,9 @@ This directory is the versioned source of truth for Statusline iPhone releases. 
 - Copyright: `2026 Alan Rodrigo Vivares`
 - Privacy policy: https://statusline.inmerzion.io/privacy
 - Support URL: https://statusline.inmerzion.io/support
-- Marketing URL: https://github.com/arvivares/statusline
+- Candidate marketing URL: https://statusline.inmerzion.io/
 
-The product page retains Spanish (Spain) as its primary localization and its three existing screenshots. The submitted build `4` supports English and Spanish according to the primary system language, with English as the fallback. English product-page metadata is prepared in `listing/en-US.md` but was not enabled during this build replacement; localized listing assets remain a separate follow-up.
+The published product page retains its original metadata until the new version is released. The separate `1.0.1` draft has Spanish (Spain) and English (U.S.) descriptions, promotional text, keywords, what's new and version URLs from `listing/`, plus localized names/subtitles and privacy links. Each locale has one reviewed, native-size build-5 overview screenshot; smaller iPhone sizes use the matching language's 6.9-inch image. The three old Spanish screenshots were removed from the draft, not from the historical files. The scrolled editor's status-bar overlap and simulator camera-unavailable screen were excluded during visual review. See [capture provenance](assets/README.md).
 
 The App Store Connect record, product-page metadata, screenshots, age rating and published privacy label were configured on 2 September 2026. Build `1` passed physical TestFlight QA and entered Beta App Review for `External Beta`. On 3 September, build `2` replaced the iOS icon with the shared Data Plane artwork, processed as valid, was attached to version `1.0` and was submitted to App Review. The same build was installed and confirmed operational on the physical iPhone. As verified on 6 September, both builds are **Testing** in `Internal QA` and `External Beta`; the App Store submission is **Waiting for Review** with manual release selected. Private review contacts and notes are saved in App Store Connect; tester identities and phone numbers remain outside the repository. Remaining follow-ups are recorded in `validation.md`.
 
@@ -37,10 +38,11 @@ observe a newer widget sample without reopening the app. WidgetKit controls the
 actual reload schedule. The foreground loop, offline fallback, sample age and
 disconnect/re-pair guards also require QA. EN/ES instructions are in `testflight/`.
 
-This is source and metadata preparation only. Archive, entitlement/profile
-verification, export, manual TestFlight upload and physical-device confirmation
-are still pending. No existing TestFlight group, App Store version, screenshots,
-price, country or public URL field was changed by preparing this candidate.
+The archive, export, signature/localization checks and manual upload are complete.
+Apple processed build `5`; `Internal QA` is assigned and Spanish What to Test notes
+are saved. The `1.0.1` draft selects build `5` with new captures and review notes.
+Physical-device confirmation remains required before App Review. Release stays
+manual; pricing, territories and the published binary are unchanged.
 
 ## Public release — 9 September 2026
 
@@ -119,8 +121,8 @@ exported, validated and manually uploaded. App Store Connect reports **Validated
 and `Internal QA` lists `1.0 (4)` as **Testing**. Physical-device QA was pending
 at upload time; the later account-holder confirmation is recorded above.
 
-The current What to Test files in `testflight/` target build `4`; the Spanish notes
-are saved in App Store Connect and verified after reloading. Verify the new
+At that stage, the What to Test files targeted build `4`; those Spanish notes
+were saved in App Store Connect and verified after reloading. Verify the new
 Home Screen and Settings icon, then recheck localization, pairing persistence and
 widget updates on a physical iPhone. This internal test itself did not authorize
 replacing build `2` or changing review metadata; that separate authorization and

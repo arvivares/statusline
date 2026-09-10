@@ -2,45 +2,49 @@
 
 ## Name
 
-Statusline
+Statusline: Agent Quota
 
 ## Subtitle
 
-Weekly quota at a glance
+Codex limits, at a glance
 
 ## Promotional text
 
-See your weekly limit and reset time in the app or widget, with local input or optional encrypted sync.
+Check your remaining Codex quota and reset time from your iPhone or Home Screen. Pair with your computer for encrypted sync, or use manual updates.
 
 ## Description
 
-See your weekly Codex usage at a glance. Statusline turns the quota reported by your local installation into a focused iPhone dashboard and home-screen widget.
+Know how much Codex quota you have left without returning to your computer. Statusline brings your remaining weekly limit, reset time and latest sample to a focused iPhone dashboard and Home Screen widget.
 
 AT A GLANCE
 
-• Remaining weekly limit
-• Next reset date and time
-• Last successful update
-• Compact Data Plane widget
-• Local demo without an account, desktop or network
+• See your remaining weekly quota as a percentage and segmented meter.
+• Check the next reset date and time.
+• See how old your sample is, so you can tell when data needs refreshing.
+• Keep your quota visible in a Home Screen widget.
+• Use the app and widget in English or Spanish, following your system language. Other languages fall back to English.
 
 WORKS ON ITS OWN
 
-Paste the quota line returned by /status, save the sample on your iPhone and update the widget without installing another app or creating an account.
+Try the built-in demo without an account or network connection. You can also paste the weekly quota line from Codex /status and save it locally to update the app and widget. Manual samples change only when you update them.
 
 OPTIONAL PRIVATE SYNC
 
-For automatic updates, install the open-source Statusline Companion on Windows, Linux or macOS and pair your phone with a one-time QR code or manual link. Companion reads only quota metadata from the local Codex App Server and encrypts every sample before synchronization. The relay never receives the encryption key and cannot read your status.
+For synchronized samples, install the free, open-source Statusline Companion on Windows, Linux or macOS. You need a compatible local Codex installation signed in to your own account. Pair your iPhone using a one-time QR code or a private link.
+
+Companion reads quota metadata locally and encrypts it before sending it to the relay. The relay cannot read your quota or receive the encryption key. Your computer must be awake and Companion running to publish new samples. The widget can request updates without opening the iPhone app; iOS controls when it refreshes, so updates are not real-time.
 
 BUILT FOR CONTROL
 
-Statusline does not request your Codex credentials, API keys, prompts, source code or conversation history. It contains no ads, requires no Statusline account and has no paid features. The project and relay protocol are open source.
+Statusline does not ask for your Codex password or API key, and does not upload your prompts, code or conversations. There are no ads, no Statusline account and no in-app purchases. You can disconnect your iPhone at any time. The project and relay protocol are open source.
+
+Statusline displays quota information; it does not run coding tasks, increase your limits or replace a Codex subscription.
 
 Statusline is an independent project and is not affiliated with, endorsed by or sponsored by OpenAI. Codex is a trademark of its respective owner.
 
 ## Keywords
 
-quota,weekly limit,widget,terminal,developer,usage,status,privacy,encrypted sync
+quota,usage,weekly,widget,developer,remaining,reset,terminal,privacy,companion
 
 ## Support URL
 
@@ -48,4 +52,12 @@ https://statusline.inmerzion.io/support
 
 ## Marketing URL
 
-https://github.com/arvivares/statusline
+https://statusline.inmerzion.io/
+
+## What's new — 1.0.1
+
+• The widget can now request the latest synchronized sample without opening the app. iOS determines the refresh schedule.
+• Automatic refresh while the app is open, clearer sample age, and safer offline and re-pairing behavior.
+• Privacy and support pages on the official website, in English and Spanish.
+
+After updating, open Statusline once to preserve your existing pairing and enable shared widget access.
