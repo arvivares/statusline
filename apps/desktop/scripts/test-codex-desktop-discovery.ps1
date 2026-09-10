@@ -15,7 +15,14 @@ function Invoke-DiscoveryFixture {
     if (-not $json.StartsWith('[') -or -not $json.EndsWith(']')) {
         throw 'Discovery must always emit a JSON array, including zero/one package'
     }
-    ConvertFrom-Json -InputObject $json
+    # Windows PowerShell 5.1 emits the parsed array as one pipeline object.
+    # Enumerate explicitly so @() counts packages, not an empty/nested array.
+    # https://github.com/PowerShell/PowerShell/issues/3424
+    foreach ($package in (ConvertFrom-Json -InputObject $json)) {
+        if ($null -ne $package) {
+            Write-Output $package
+        }
+    }
 }
 
 if (@(Invoke-DiscoveryFixture -Fixture @()).Count -ne 0) {
