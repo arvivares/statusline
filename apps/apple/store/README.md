@@ -1,6 +1,6 @@
 # Apple App Store release kit
 
-This directory is the versioned source of truth for Statusline iPhone releases. Bundle `inmerzion.statusline`, version `1.0.1` and build `5`, was archived, exported, verified and uploaded on 10 September 2026. Apple completed processing and assigned it to `Internal QA`. The App Store draft now selects build `5` and has localized copy and actual EN/ES captures. Physical-device migration/widget QA and App Review submission remain pending. The published release remains `1.0 (4)`, manually released on 9 September 2026 (Europe/Madrid). See `validation.md` for dated evidence.
+This directory is the versioned source of truth for Statusline iPhone releases. Bundle `inmerzion.statusline`, version `1.0.1` and build `5`, was archived, exported, verified and uploaded on 10 September 2026. At the account holder's request, it was submitted with localized copy and actual EN/ES captures; Apple now reports **Waiting for Review**. Physical-device migration/widget QA remains unconfirmed and must not be inferred from submission. The published release remains `1.0 (4)`, manually released on 9 September 2026 (Europe/Madrid). See `validation.md` for dated evidence.
 
 ## App record
 
@@ -12,10 +12,11 @@ This directory is the versioned source of truth for Statusline iPhone releases. 
 - SKU: `statusline-ios`
 - Apple ID: `6807851320`
 - App Store release: `1.0` (`4`), **Ready for Distribution**, manually released 9 September 2026 (Europe/Madrid)
-- Submission ID: `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`
+- Published 1.0 submission ID: `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`
 - Public link: https://apps.apple.com/app/statusline/id6807851320
 - Latest verified TestFlight upload: `1.0.1` (`5`), processed and assigned to `Internal QA`
-- App Store candidate: `1.0.1` (`5`), **Prepare for Submission**, independent widget refresh and website privacy/support links; physical-device QA pending
+- App Store candidate: `1.0.1` (`5`), **Waiting for Review**, submitted 10 September 2026; physical-device QA unconfirmed
+- Current submission ID: `4d9e9b63-5ccd-474a-ad90-dbae5eda8a70`
 - Price: Free
 - Availability: 174 App Store countries or regions; China mainland excluded (Hong Kong and Macau unchanged)
 - Distribution: Public, iPhone only
@@ -26,7 +27,7 @@ This directory is the versioned source of truth for Statusline iPhone releases. 
 - Support URL: https://statusline.inmerzion.io/support
 - Candidate marketing URL: https://statusline.inmerzion.io/
 
-The published product page retains its original metadata until the new version is released. The separate `1.0.1` draft has Spanish (Spain) and English (U.S.) descriptions, promotional text, keywords, what's new and version URLs from `listing/`, plus localized names/subtitles and privacy links. Each locale has one reviewed, native-size build-5 overview screenshot; smaller iPhone sizes use the matching language's 6.9-inch image. The three old Spanish screenshots were removed from the draft, not from the historical files. The scrolled editor's status-bar overlap and simulator camera-unavailable screen were excluded during visual review. See [capture provenance](assets/README.md).
+The published product page retains its original metadata until the new version is released. The `1.0.1` submission has Spanish (Spain) and English (U.S.) descriptions, promotional text, keywords, what's new and version URLs from `listing/`, plus localized names/subtitles and privacy links. Each locale has one reviewed, native-size build-5 overview screenshot; smaller iPhone sizes use the matching language's 6.9-inch image. The three old Spanish screenshots were removed from the draft, not from the historical files. The scrolled editor's status-bar overlap and simulator camera-unavailable screen were excluded during visual review. See [capture provenance](assets/README.md).
 
 The App Store Connect record, product-page metadata, screenshots, age rating and published privacy label were configured on 2 September 2026. Build `1` passed physical TestFlight QA and entered Beta App Review for `External Beta`. On 3 September, build `2` replaced the iOS icon with the shared Data Plane artwork, processed as valid, was attached to version `1.0` and was submitted to App Review. The same build was installed and confirmed operational on the physical iPhone. As verified on 6 September, both builds are **Testing** in `Internal QA` and `External Beta`; the App Store submission is **Waiting for Review** with manual release selected. Private review contacts and notes are saved in App Store Connect; tester identities and phone numbers remain outside the repository. Remaining follow-ups are recorded in `validation.md`.
 
@@ -40,9 +41,10 @@ disconnect/re-pair guards also require QA. EN/ES instructions are in `testflight
 
 The archive, export, signature/localization checks and manual upload are complete.
 Apple processed build `5`; `Internal QA` is assigned and Spanish What to Test notes
-are saved. The `1.0.1` draft selects build `5` with new captures and review notes.
-Physical-device confirmation remains required before App Review. Release stays
-manual; pricing, territories and the published binary are unchanged.
+are saved. Apple received `1.0.1 (5)` with new captures and review notes on
+10 September and reports **Waiting for Review**. Physical-device confirmation
+remains pending before public release. Release stays manual; pricing, territories
+and the published binary are unchanged.
 
 ## Public release — 9 September 2026
 

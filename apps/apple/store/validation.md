@@ -2,6 +2,27 @@
 
 This file records reproducible readiness evidence without storing credentials or personal account data. The 2–3 September evidence applies to `1.0 (2)`; the separate 6 September sections track the localized `1.0 (3)` and unified-brand `1.0 (4)` TestFlight candidates.
 
+## App Review submission — 10 September 2026: 1.0.1 (5)
+
+- At the account holder's explicit request to add the update for review, verified
+  the selected `1.0.1 (5)` build, localized screenshots, saved review notes,
+  no-login access and manual-release setting.
+- Completed **Add for Review** and confirmed **Continue** in Apple's shared-app
+  information dialog. Apple included the Spanish subtitle/privacy links and the
+  new English name, subtitle and privacy localization. It acknowledged
+  **1 Item Submitted**; no second submission or new binary upload was needed.
+- Submission `4d9e9b63-5ccd-474a-ad90-dbae5eda8a70` records 10 September 2026 at
+  12:12 PM in the console's displayed time zone. Both the submission and its
+  sole item, **iOS App 1.0.1 (5)**, report **Waiting for Review**.
+- Reloaded the version page to verify the queued status, build `5`, existing
+  3,759-character notes and manual release. Published `1.0 (4)` remains available;
+  this submission is not approval or public release of `1.0.1`.
+- No new physical-device QA confirmation was supplied with the submission
+  request. The earlier pending migration/widget checks remain unverified;
+  neither this record nor the review notes claims they passed. Preserve these
+  checks before the separately authorized public release. The earlier capture
+  limitations and absence of a new physical-device recording are unchanged.
+
 ## Upload and listing preparation — 10 September 2026: 1.0.1 (5)
 
 - Archived the approved source at `062f621440751503fa1235607ef1cb850822a330`
@@ -24,8 +45,9 @@ This file records reproducible readiness evidence without storing credentials or
   Upload export can re-sign the package and need not preserve that local checksum.
 - Created the `1.0.1` **Prepare for Submission** record. New bilingual copy is
   versioned in `listing/`, including explicit desktop prerequisites, widget
-  scheduling limits and upgrade instructions. No App Review submission or public
-  release has been made for this version; `1.0 (4)` remains published.
+  scheduling limits and upgrade instructions. At that preparation stage no App
+  Review submission had been made; the later submission is recorded above.
+  `1.0 (4)` remains published.
 - Saved the 2,108-character Spanish What to Test notes on build `5` and verified
   their persistence after reloading. The English equivalent remains versioned;
   no external TestFlight group was added.
@@ -58,10 +80,11 @@ This file records reproducible readiness evidence without storing credentials or
   Choices URLs in Apple and verified them after reload. Apple says these URL
   edits take effect with the next version; the existing data disclosures remain
   **Other Data / App Functionality / Not Linked / No Tracking**.
-- Remaining gates: physical-iPhone upgrade/pairing migration and independent
+- Remaining gates at that preparation stage: physical-iPhone upgrade/pairing migration and independent
   widget-refresh confirmation, then App Review submission. A clean physical
   widget screenshot and the scrolled editor's safe-area visual defect remain
-  follow-ups. No claim is made that build `5` passed physical QA or is in review.
+  follow-ups. That preparation did not establish physical QA or review status;
+  the subsequent submission is recorded above.
 
 ## Multiplatform release — 10 September 2026: v0.1.15
 
