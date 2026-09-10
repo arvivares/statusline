@@ -28,6 +28,24 @@ sin rastreadores. El contenido y el origen público están versionados en
 
 Wrangler carga secretos locales desde `.dev.vars`. El servicio no necesita ninguno actualmente; si una extensión futura los requiere, copia `.dev.vars.example` a `.dev.vars` y conserva los valores reales fuera de Git. La autenticación de Cloudflare se gestiona con `npx wrangler login` o con variables `CLOUDFLARE_*` cargadas desde el `.env` privado de la raíz.
 
+### Parche temporal de las herramientas
+
+Wrangler `4.129.0` utiliza Miniflare `5.20260903.0-alpha`, que todavía solicita
+Sharp `0.35.2`. El override limitado a `miniflare.sharp` fija `0.35.4` para corregir
+[GHSA-rgj7-g3m4-5g8c](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c).
+Es una dependencia de desarrollo: el Worker de producción no procesa imágenes
+ni incorpora Sharp. No añadas un `npm audit fix --force` ni elimines el override
+sin validar la dependencia que lo sustituye.
+
+`npm test` verifica el lockfile y el binario nativo corregido, incluida una
+conversión AVIF de prueba generada en memoria. No utiliza imágenes externas ni
+datos de usuarios. Tras actualizar dependencias, ejecuta `npm ci`, `npm audit`,
+`npm test`, `npm run check`, migraciones locales y un empaquetado `--dry-run`.
+Retira el override y su comprobación de versión exacta cuando Miniflare incluya
+una versión corregida por sí mismo y esas verificaciones vuelvan a pasar.
+La evidencia y los límites de la validación están en la
+[revisión de seguridad](../../docs/security/security-review.md#10-september-addendum-dependabot-alert-2).
+
 ## Despliegue en Cloudflare
 
 1. Crea una base D1: `npx wrangler d1 create statusline-relay`.

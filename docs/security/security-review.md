@@ -16,18 +16,20 @@ The source tree and maintainer-account controls are suitable for public distribu
 Repository-native security controls are enabled, and the one accepted dependency risk
 is documented below with explicit reachability evidence, ownership and exit criteria.
 
-## 10 September addendum: Dependabot alert 2 — open
+## 10 September addendum: Dependabot alert 2
 
-This targeted dependency review supersedes the historical zero-open-high count
-above for the next release. It is not a new full security audit or evidence of
-exploitation. Release preparation may continue, but the new signed-build/tag
-process is held pending remediation or an explicit risk decision.
+This targeted review identified a high-severity development-tooling dependency
+finding and validated its fix in the 0.1.15 candidate. It is not a new full
+security audit or evidence of exploitation. The tooling hold is lifted for
+candidate validation; public tagging still requires the reviewed merge and
+normal release preflight. GitHub's alert on main remains open until the fix is
+merged and its dependency graph is rescanned; it has not been dismissed.
 
-### [HIGH] Sharp/libheif in relay development tooling
+### [HIGH — fixed in candidate] Sharp/libheif in relay development tooling
 
 - **Category:** OWASP A06 Vulnerable and Outdated Components; CWE-122.
-- **File:** `services/relay/package-lock.json:2570` (`sharp 0.35.2`).
-- **Dependency path:** Wrangler `4.127.1` → Miniflare `5.20260828.0-alpha` →
+- **Affected file at discovery:** `services/relay/package-lock.json` (`sharp 0.35.2`).
+- **Original dependency path:** Wrangler `4.127.1` → Miniflare `5.20260828.0-alpha` →
   Sharp `0.35.2`, all in the development dependency graph.
 - **Advisory:** [GHSA-rgj7-g3m4-5g8c](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c),
   high severity (CVSS v4 8.9). Processing malicious image input through affected
@@ -41,7 +43,7 @@ process is held pending remediation or an explicit risk decision.
   remotely reachable application path to the vulnerable decoder was identified.
   This does not prove that a developer/CI machine cannot be exposed by other
   tooling, future image transforms or untrusted code.
-- **Scanner evidence:** `npm audit` reports three high entries for the same
+- **Scanner evidence before correction:** `npm audit` reported three high entries for the same
   dependency chain (Sharp, Miniflare, Wrangler), not three independent flaws.
   `npm audit --omit=dev` reports zero findings. No exploit was run.
 - **Upgrade constraints:** PR #14 (`wrangler 4.129.0`) still resolves Sharp
@@ -49,13 +51,38 @@ process is held pending remediation or an explicit risk decision.
   `5.20260908.0-alpha` also pins `0.35.2`. Those updates alone do not fix this alert.
   Do not blindly use `npm audit fix --force`: its proposed Wrangler `4.15.2`
   downgrade is not an appropriate validated fix for the current configuration.
-- **Recommendation:** After approval, add a scoped Miniflare → Sharp `0.35.4`
-  override, regenerate the lockfile and test a clean install, npm audit, TypeScript,
-  relay tests, local D1 migration and Worker dry-run packaging. Remove the override
-  once a validated upstream Wrangler/Miniflare dependency resolves a patched Sharp.
-- **Status/owner:** Open, `@arvivares`. No dependency, alert dismissal or live
-  deployment was changed by this review. Revalidate the lockfile and GitHub alert
-  after the remediation is merged; do not represent PR #14 as a security fix.
+- **Approved correction:** A scoped `overrides.miniflare.sharp = "0.35.4"`
+  keeps the patched native packages in the lockfile. The candidate also includes
+  the Wrangler `4.129.0` update from PR #14, resolving Miniflare
+  `5.20260903.0-alpha` and workerd `1.20260903.1`. Wrangler alone is not the fix.
+- **Verification:** A clean `npm ci` and full `npm audit` complete with zero
+  npm vulnerability findings. TypeScript and all 12 relay/tooling tests pass.
+  The new regression tests check every locked Sharp copy and the scoped override,
+  load Sharp `0.35.4` / libheif `1.23.2`, and encode/decode a benign generated AVIF
+  entirely in memory. No untrusted image or exploit payload is used.
+  Both migrations apply to a new temporary local D1. Wrangler dry-run packaging
+  succeeds; a localhost workerd/D1 smoke test passes health, safe redirect,
+  channel creation/claim, snapshot publication/read and channel deletion.
+  These are local checks, not claims about a production deployment or incident.
+- **Exit criteria/owner:** `@arvivares` should remove the override and its
+  temporary exact-version guard once a validated upstream dependency resolves a
+  patched Sharp, then rerun clean install, audit and relay compatibility checks.
+  Check the GitHub alert after merge; do not dismiss it to suppress the finding.
+
+### PR #14 compatibility review
+
+- Reviewed head `aef2bd4f15e517fc778c9298270fe001e9ee4f33` in an isolated
+  worktree. Its diff changes only the relay package manifest and lockfile.
+  The original PR's relevant CI checks passed, but predate the Sharp advisory fix.
+- Validated the **combined** candidate (Wrangler `4.129.0` plus patched Sharp)
+  against the current relay source using the clean install and checks above.
+  No dependency outside the Wrangler/workerd or Sharp/native-binary families
+  changes version, and all resolved package URLs remain on registry.npmjs.org.
+- No new compatibility blocker was identified in the paths Statusline uses.
+  The worker's public API, migrations, bindings, credentials and production
+  configuration are unchanged. Remote permission/provisioning behavior was not
+  exercised by these local tests. The PR #14 update is included in PR #26 rather
+  than merged independently without the security override.
 
 ## 7 September addendum: explicit Windows beta preview
 

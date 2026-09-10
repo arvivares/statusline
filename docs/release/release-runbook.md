@@ -123,9 +123,11 @@ draft is published automatically with GitHub's **Pre-release** flag.
 
 ### 0.1.15 candidate gates
 
-- Resolve or explicitly assess the open Sharp development-tooling alert before
-  running the next signed-build/tag process. See the dated
-  [security review](../security/security-review.md#10-september-addendum-dependabot-alert-2--open).
+- The candidate includes the validated Sharp development-tooling fix and PR #14's
+  Wrangler update. Keep the clean-install, audit and tooling regression checks
+  passing before signing/tagging. See the dated
+  [security review](../security/security-review.md#10-september-addendum-dependabot-alert-2).
+  Confirm Dependabot rescans main after merge; the alert has not been dismissed.
 - Review and merge the preparation PR before creating the public tag. Do not
   retarget a published tag or publish branch-QA artifacts as a verified release.
 - Publish the static website before or alongside the relay redirect update.
