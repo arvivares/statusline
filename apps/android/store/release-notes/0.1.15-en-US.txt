@@ -1,0 +1,1 @@
+Privacy and support now open on the official Statusline website in English or Spanish, independently of your relay settings. This update keeps the existing pairing flow and widget refresh schedule. Install Companion 0.1.15 on your computer for its improved background quota updates. Please check that Google Play updates preserve your pairing, quota display and widget.
