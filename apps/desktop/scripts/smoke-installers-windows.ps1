@@ -6,6 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot "windows-msi-arguments.ps1")
 
 function Assert-InstalledUpdaterTrust {
     param([Parameter(Mandatory = $true)][string]$Executable)
@@ -38,6 +39,7 @@ function Invoke-CheckedProcess {
     param(
         [Parameter(Mandatory = $true)][string]$FilePath,
         [string[]]$Arguments = @(),
+        [switch]$WindowsInstallerArguments,
         [int[]]$AllowedExitCodes = @(0),
         [string[]]$RemoveEnvironmentVariables = @(),
         [ValidateRange(1, 600)][int]$TimeoutSeconds = 120
@@ -49,8 +51,15 @@ function Invoke-CheckedProcess {
     foreach ($variable in $RemoveEnvironmentVariables) {
         $startInfo.Environment.Remove($variable) | Out-Null
     }
-    foreach ($argument in $Arguments) {
-        $startInfo.ArgumentList.Add($argument)
+    if ($WindowsInstallerArguments) {
+        # Pass MSI's documented grammar directly, without cmd.exe or PowerShell
+        # evaluation. ArgumentList would rewrite quotes using incompatible rules.
+        $startInfo.Arguments = ConvertTo-WindowsInstallerArguments -Arguments $Arguments
+    }
+    else {
+        foreach ($argument in $Arguments) {
+            $startInfo.ArgumentList.Add($argument)
+        }
     }
 
     $process = [System.Diagnostics.Process]::new()
@@ -123,6 +132,7 @@ function Invoke-MsiPackage {
     try {
         Invoke-CheckedProcess `
             -FilePath "msiexec.exe" `
+            -WindowsInstallerArguments `
             -Arguments (@($mode, $PackagePath, "/qn", "/norestart", "/l*v", $LogPath) + $Properties) `
             -AllowedExitCodes $AllowedExitCodes `
             -TimeoutSeconds 180

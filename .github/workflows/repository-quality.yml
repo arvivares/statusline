@@ -95,6 +95,11 @@ jobs:
         shell: powershell
         run: "& ./apps/desktop/scripts/test-codex-desktop-discovery.ps1"
 
+      - name: Test Windows Installer argument encoding
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: "& ./apps/desktop/scripts/test-windows-msi-arguments.ps1"
+
       - name: Test Apple bundle configuration guard without compiling iOS
         if: runner.os == 'macOS'
         run: node --test apps/apple/scripts/validate-relay-bundle.test.mjs
