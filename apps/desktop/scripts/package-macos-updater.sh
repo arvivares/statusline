@@ -4,6 +4,7 @@ set -euo pipefail
 dmg_path=${1:?'Usage: package-macos-updater.sh <final-dmg> <output-directory> <version>'}
 output_directory=${2:?'Missing output directory'}
 version=${3:?'Missing version'}
+script_directory=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo "Invalid updater version." >&2; exit 1; }
 [[ "$dmg_path" == *.dmg && -f "$dmg_path" && ! -L "$dmg_path" ]] || { echo "Expected final DMG." >&2; exit 1; }
 
@@ -35,7 +36,7 @@ verify_app() {
   local executable
   executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")
   [[ "$executable" != */* && -n "$executable" ]] || exit 1
-  lipo -verify_arch arm64 x86_64 "$app/Contents/MacOS/$executable"
+  bash "$script_directory/verify-macos-architectures.sh" "$app/Contents/MacOS/$executable"
   codesign --verify --deep --strict --verbose=2 "$app"
   xcrun stapler validate "$app"
   spctl --assess --type execute --verbose=4 "$app"

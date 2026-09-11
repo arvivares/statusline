@@ -61,6 +61,10 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
         working-directory: apps/desktop
+      - name: Test the macOS updater architecture guard without compiling installers
+        if: runner.os == 'macOS'
+        run: npm test -- scripts/verify-macos-architectures.test.mjs
+        working-directory: apps/desktop
       - name: Install Linux typecheck dependencies
         if: runner.os == 'Linux'
         run: |
