@@ -1,10 +1,25 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)][string]$BundleRoot
+    [Parameter(Mandatory = $true)][string]$BundleRoot,
+    [string]$ExpectedSignerSubject = ""
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+
+function Assert-InstalledUpdaterTrust {
+    param([Parameter(Mandatory = $true)][string]$Executable)
+    if ([string]::IsNullOrWhiteSpace($ExpectedSignerSubject)) { return }
+    # Tauri patches bundle-type markers in the packaged EXE. Verifying only the
+    # pre-bundle EXE and outer installers does not establish installed app trust.
+    $signature = Get-AuthenticodeSignature -LiteralPath $Executable
+    if ($signature.Status -ne "Valid" -or
+        $null -eq $signature.SignerCertificate -or
+        $signature.SignerCertificate.Subject -notlike "*$ExpectedSignerSubject*" -or
+        $null -eq $signature.TimeStamperCertificate) {
+        throw "Installed updater executable lacks a valid expected Authenticode signer and timestamp. Sign after Tauri bundle-type patching."
+    }
+}
 
 function Get-SingleBundle {
     param(
@@ -100,14 +115,15 @@ function Invoke-MsiPackage {
         [Parameter(Mandatory = $true)][ValidateSet("install", "uninstall")][string]$Action,
         [Parameter(Mandatory = $true)][string]$PackagePath,
         [Parameter(Mandatory = $true)][string]$LogPath,
-        [int[]]$AllowedExitCodes = @(0, 3010)
+        [int[]]$AllowedExitCodes = @(0, 3010),
+        [string[]]$Properties = @()
     )
 
     $mode = if ($Action -eq "install") { "/i" } else { "/x" }
     try {
         Invoke-CheckedProcess `
             -FilePath "msiexec.exe" `
-            -Arguments @($mode, $PackagePath, "/qn", "/norestart", "/l*v", $LogPath) `
+            -Arguments (@($mode, $PackagePath, "/qn", "/norestart", "/l*v", $LogPath) + $Properties) `
             -AllowedExitCodes $AllowedExitCodes `
             -TimeoutSeconds 180
     }
@@ -302,6 +318,60 @@ function Assert-AppReady {
     }
 }
 
+function Assert-MsiUpdaterReady {
+    param(
+        [Parameter(Mandatory = $true)][string]$PackagePath,
+        [Parameter(Mandatory = $true)][string]$LogPath
+    )
+
+    $markerPath = Join-Path ([IO.Path]::GetTempPath()) "statusline-msi-updater-ready-$PID.txt"
+    Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+    $ownedProcesses = @()
+    try {
+        # Match the properties used by the native updater; do NOT start the EXE
+        # ourselves. This verifies the installer-initiated frontend handshake.
+        Invoke-MsiPackage -Action "install" -PackagePath $PackagePath -LogPath $LogPath `
+            -Properties @("STATUSLINE_UPDATER=1", "AUTOLAUNCHAPP=True", "LAUNCHAPPARGS=--statusline-window-smoke `"$markerPath`"")
+        $entry = Wait-ForStatuslineEntry -Present $true
+        $executable = Get-StatuslineExecutable -Entry $entry
+        Assert-CurrentUserInstall -Entry $entry -Executable $executable
+        Assert-InstalledUpdaterTrust -Executable $executable
+        $deadline = [DateTime]::UtcNow.AddSeconds(20)
+        while (-not (Test-Path -LiteralPath $markerPath -PathType Leaf)) {
+            if ([DateTime]::UtcNow -ge $deadline) {
+                throw "MSI updater did not relaunch a ready frontend within 20 seconds"
+            }
+            Start-Sleep -Milliseconds 250
+        }
+        if ((Get-Content -LiteralPath $markerPath -Raw).Trim() -ne "ready") {
+            throw "MSI updater wrote an invalid frontend-ready marker"
+        }
+        $ownedProcesses = @(Get-CimInstance Win32_Process | Where-Object {
+            $_.ExecutablePath -eq $executable -and $null -ne $_.CommandLine -and
+            $_.CommandLine.Contains($markerPath)
+        })
+        if ($ownedProcesses.Count -ne 1) {
+            throw "Expected exactly one MSI-updater-owned application process"
+        }
+        $process = Get-Process -Id $ownedProcesses[0].ProcessId
+        if (-not $process.Responding) {
+            throw "MSI updater relaunched an unresponsive native message loop"
+        }
+        Write-Host "MSI updater relaunched a ready and responsive frontend."
+    }
+    finally {
+        # Clean up only the process bearing our unique diagnostic argument.
+        $ownedProcesses = @(Get-CimInstance Win32_Process | Where-Object {
+            $null -ne $_.CommandLine -and $_.CommandLine.Contains($markerPath) -and
+            $_.Name -like "*statusline*.exe"
+        })
+        foreach ($owned in $ownedProcesses) {
+            Stop-Process -Id $owned.ProcessId -Force -ErrorAction SilentlyContinue
+        }
+        Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Assert-CurrentUserInstall {
     param(
         [Parameter(Mandatory = $true)]$Entry,
@@ -388,6 +458,7 @@ try {
     Invoke-CheckedProcess -FilePath $nsis -Arguments @("/S")
     $nsisEntry = Wait-ForStatuslineEntry -Present $true
     $nsisExecutable = Get-StatuslineExecutable -Entry $nsisEntry
+    Assert-InstalledUpdaterTrust -Executable $nsisExecutable
     Assert-CurrentUserInstall -Entry $nsisEntry -Executable $nsisExecutable
     Assert-CodexDetected `
         -StatuslineExecutable $nsisExecutable `
@@ -407,6 +478,7 @@ try {
     Write-MsiInstallContext -LogPath $msiInstallLog
     $msiEntry = Wait-ForStatuslineEntry -Present $true
     $msiExecutable = Get-StatuslineExecutable -Entry $msiEntry
+    Assert-InstalledUpdaterTrust -Executable $msiExecutable
     Assert-CodexDetected `
         -StatuslineExecutable $msiExecutable `
         -CodexExecutable $codexFixture `
@@ -417,6 +489,13 @@ try {
         -Action "uninstall" `
         -PackagePath $msi `
         -LogPath $msiUninstallLog
+    $msiInstalled = $false
+    Wait-ForStatuslineEntry -Present $false | Out-Null
+
+    Write-Host "Smoke testing the explicit MSI updater restart."
+    $msiInstalled = $true
+    Assert-MsiUpdaterReady -PackagePath $msi -LogPath $msiInstallLog
+    Invoke-MsiPackage -Action "uninstall" -PackagePath $msi -LogPath $msiUninstallLog
     $msiInstalled = $false
     Wait-ForStatuslineEntry -Present $false | Out-Null
 }

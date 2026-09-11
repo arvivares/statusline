@@ -4,8 +4,17 @@ pub mod app_server;
 pub mod codex_installation;
 #[path = "../../src-tauri/src/localization.rs"]
 pub mod localization;
+#[cfg(target_os = "macos")]
+#[path = "../../src-tauri/src/macos_update.rs"]
+pub mod macos_update;
 #[path = "../../src-tauri/src/refresh.rs"]
 pub mod refresh;
+#[path = "../../src-tauri/src/update_policy.rs"]
+pub mod update_policy;
+#[path = "../../src-tauri/src/update_signature.rs"]
+pub mod update_signature;
+#[path = "../../src-tauri/src/update_transaction.rs"]
+pub mod update_transaction;
 #[path = "../../src-tauri/src/usage.rs"]
 pub mod usage;
 #[path = "../../src-tauri/src/window_behavior.rs"]

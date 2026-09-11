@@ -26,7 +26,7 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
   "/privacy": {
     title: "Privacy Policy",
     eyebrow: "STL / PRIVACY",
-    summary: "Effective 9 September 2026",
+    summary: "Effective 11 September 2026",
     content: `
       <section>
         <h2>Data processed locally</h2>
@@ -47,6 +47,11 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
         <h2>Hosting, abuse prevention and logs</h2>
         <p>The Cloudflare deployment applies abuse limits using a SHA-256 digest of the source IP address. Neither the source IP nor that digest is written to the Statusline D1 database.</p>
         <p>Persistent Worker invocation logs are disabled. Cloudflare may still process IP addresses and request metadata at its edge for delivery, security, abuse prevention, aggregate metrics and billing. The Statusline desktop and mobile applications contain no advertising SDK and no first-party product analytics SDK.</p>
+      </section>
+      <section>
+        <h2>Desktop update checks</h2>
+        <p>Starting with companion 0.1.17, the desktop checks the public GitHub releases of arvivares/statusline after startup and every six hours while running. Automatic checks can be disabled in Updates; manual checks remain available. Downloading and installing requires confirmation.</p>
+        <p>GitHub and its delivery network receive normal HTTPS request metadata, such as the IP address and a user agent. Statusline sends no Codex credentials, quota snapshots, pairing keys, account email or persistent device identifier. Preferences and the dismissed version stay in the local application configuration. These requests deliver software updates, not product analytics.</p>
       </section>
       <section>
         <h2>Website analytics</h2>
@@ -154,7 +159,7 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
   privacy: {
     title: "Política de privacidad",
     eyebrow: "STL / PRIVACIDAD",
-    summary: "En vigor desde el 9 de septiembre de 2026",
+    summary: "En vigor desde el 11 de septiembre de 2026",
     content: `
       <section>
         <h2>Datos procesados localmente</h2>
@@ -175,6 +180,11 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
         <h2>Alojamiento, prevención de abusos y registros</h2>
         <p>El despliegue de Cloudflare limita los abusos usando un hash SHA-256 de la dirección IP de origen. Ni la IP ni ese hash se escriben en la base de datos D1 de Statusline.</p>
         <p>Los registros persistentes de invocaciones del Worker están desactivados. Cloudflare puede procesar direcciones IP y metadatos de las peticiones para la entrega, la seguridad, la prevención de abusos, las métricas agregadas y la facturación. Las aplicaciones de escritorio y móviles de Statusline no incluyen SDK de publicidad ni de analítica propia del producto.</p>
+      </section>
+      <section>
+        <h2>Búsqueda de actualizaciones de escritorio</h2>
+        <p>Desde la versión 0.1.17, el companion consulta las releases públicas de arvivares/statusline en GitHub al iniciar y cada seis horas mientras está en ejecución. Puedes desactivar la búsqueda automática en Actualizaciones y seguir buscando manualmente. La descarga e instalación requieren confirmación.</p>
+        <p>GitHub y su red de distribución reciben los metadatos HTTPS habituales, como la dirección IP y el agente de usuario. Statusline no envía credenciales de Codex, muestras de cuota, claves de emparejamiento, correos de cuenta ni identificadores persistentes del dispositivo. Las preferencias y la versión pospuesta se guardan solo en la configuración local. Estas consultas distribuyen actualizaciones de software; no son analítica del producto.</p>
       </section>
       <section>
         <h2>Analítica del sitio web</h2>

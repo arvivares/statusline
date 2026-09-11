@@ -75,6 +75,8 @@ once the app is approved. Android beta APKs are already available on
 - Native SwiftUI and Kotlin applications with QR or private-link pairing.
 - Native WidgetKit and Android App Widget extensions backed by a private local cache.
 - System-language UI in English or Spanish, with English fallback for other languages.
+- Companion update notices from GitHub Releases, with verified downloads and
+  installation on confirmation; see [update support](docs/architecture/companion-updates.md).
 - Provider-neutral relay protocol with separate publisher, pairing and reader credentials.
 - AES-256-GCM encryption interoperable across Rust, Swift and Kotlin.
 - Reproducible installers, checksums, signing gates and automated validation.

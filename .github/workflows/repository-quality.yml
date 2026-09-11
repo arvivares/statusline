@@ -40,6 +40,37 @@ env:
   RUST_VERSION: "1.98.0"
 
 jobs:
+  native-companion:
+    name: Companion typecheck (${{ matrix.os }})
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-14, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: apps/desktop
+      - name: Install Linux typecheck dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libayatana-appindicator3-dev librsvg2-dev libssl-dev libwebkit2gtk-4.1-dev libxdo-dev
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.98.0 --profile minimal
+      - name: Check native companion without producing installers or signing
+        run: cargo +1.98.0 check --locked --manifest-path apps/desktop/src-tauri/Cargo.toml
+
   codex-runtime:
     name: Codex runtime (${{ matrix.os }})
     strategy:
@@ -109,17 +140,18 @@ jobs:
         run: node scripts/generate-download-qr.mjs --check
 
       - name: Validate documentation and desktop release policy
+        # Release signature fixtures use the same pinned Rust verifier as CI.
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt
+          rustup default "$RUST_VERSION"
+
+      - name: Check documentation and desktop release policy
         run: npm run release:check
         working-directory: apps/desktop
 
       - name: Validate relay
         run: npm run db:migrate:local && npm test && npm run check
         working-directory: services/relay
-
-      - name: Install pinned Rust formatter
-        run: |
-          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt
-          rustup default "$RUST_VERSION"
 
       - name: Check Rust formatting
         run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check

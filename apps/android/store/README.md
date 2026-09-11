@@ -1,6 +1,6 @@
 # Google Play release kit
 
-This directory is the versioned source of truth for the Statusline Google Play listing. The current Play release is `inmerzion.statusline` version `0.1.15` (`versionCode 11`). The repository prepares `0.1.16` (`versionCode 12`) for GitHub APK/AAB distribution; publishing it to Google Play is a separate step and has not been requested for this release.
+This directory is the versioned source of truth for the Statusline Google Play listing. The current Play release is `inmerzion.statusline` version `0.1.15` (`versionCode 11`). The repository prepares `0.1.17` (`versionCode 13`) for GitHub APK/AAB distribution; publishing it to Google Play is a separate step and has not been requested for this release.
 
 ## Contents
 

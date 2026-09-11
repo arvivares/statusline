@@ -68,6 +68,8 @@ cuando la app esté aprobada. Los APK de la beta de Android ya están disponible
 
 - Estado semanal de Codex, porcentaje restante, fecha de reinicio, ventana corta y plan.
 - Companion de bandeja/barra de menú para Windows, Linux y macOS, construido con Tauri, Rust y TypeScript.
+- Avisos de nuevas versiones desde GitHub, descargas verificadas e instalación con
+  confirmación; consulta el [soporte de actualizaciones](docs/architecture/companion-updates.md).
 - Aplicaciones nativas para iPhone y Android con emparejamiento mediante QR o vínculo privado.
 - Widgets Data Plane para iOS y Android alimentados desde caché local.
 - Relay universal con credenciales separadas de publicación, emparejamiento y lectura.

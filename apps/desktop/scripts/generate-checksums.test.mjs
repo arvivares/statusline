@@ -47,4 +47,31 @@ describe("generateChecksums", () => {
       "No installer files found",
     );
   });
+
+  it("covers all updater payloads, signatures and the channel manifest", async () => {
+    testDirectory = await mkdtemp(
+      join(tmpdir(), "statusline-updater-checksums-"),
+    );
+    const names = [
+      "Statusline_universal.app.tar.gz",
+      "Statusline_universal.app.tar.gz.sig",
+      "Statusline.AppImage",
+      "Statusline.AppImage.sig",
+      "Statusline.unsigned.exe",
+      "Statusline.unsigned.exe.sig",
+      "Statusline.unsigned.msi",
+      "Statusline.unsigned.msi.sig",
+      "updater.json",
+    ];
+    for (const name of names)
+      await writeFile(join(testDirectory, name), "final");
+    const checksums = await generateChecksums(testDirectory);
+    expect(
+      checksums
+        .trim()
+        .split("\n")
+        .map((line) => line.slice(66))
+        .sort(),
+    ).toEqual(names.sort());
+  });
 });

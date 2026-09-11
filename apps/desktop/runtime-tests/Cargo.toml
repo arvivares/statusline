@@ -9,6 +9,8 @@ license = "MIT"
 # Compile the real Codex modules without Tauri/WebView or installer dependencies.
 # Keep these versions aligned with ../src-tauri/Cargo.toml.
 [dependencies]
+base64 = { version = "=0.23.1", default-features = false, features = ["std"] }
+minisign-verify = "=0.2.5"
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
 sys-locale = "=0.3.2"
@@ -18,3 +20,9 @@ tokio = { version = "=1.53.1", features = ["io-util", "process", "rt", "time", "
 [target.'cfg(windows)'.dependencies]
 dirs = "=6.0.0"
 winreg = "=0.56.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+flate2 = "=1.1.9"
+libc = "=0.2.189"
+tar = "=0.4.46"
+tempfile = "=3.27.0"

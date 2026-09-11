@@ -444,6 +444,281 @@ h1 {
   gap: 7px;
 }
 
+.footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px 8px;
+}
+
+.footer-meta .updated {
+  min-width: 0;
+  flex: 1 1 155px;
+  text-align: left;
+}
+
+.update-button {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-left: auto;
+  padding: 3px 0 3px 4px;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 8.5px;
+  cursor: pointer;
+}
+
+.update-button > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.update-button:hover,
+.update-button[aria-expanded="true"],
+.update-button[data-phase="available"],
+.update-button[data-phase="downloading"],
+.update-button[data-phase="installing"] {
+  color: var(--signal);
+}
+
+.update-button[data-phase="error"] {
+  color: var(--critical);
+}
+
+.update-footer-dot {
+  color: var(--line);
+}
+
+.update-button:focus-visible,
+.update-dialog input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.update-dialog {
+  width: min(368px, calc(100vw - 30px));
+  max-width: none;
+  max-height: calc(100dvh - 30px);
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--signal);
+  border-radius: 0;
+  color: var(--ink);
+  background: var(--canvas);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.58);
+  scrollbar-color: var(--line) transparent;
+  scrollbar-width: thin;
+}
+
+.update-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.update-dialog [hidden] {
+  display: none;
+}
+
+.update-heading {
+  min-height: 53px;
+  padding: 10px 14px;
+}
+
+.update-heading p {
+  margin: 0;
+}
+
+.update-content {
+  display: grid;
+  gap: 14px;
+  padding: 16px 14px 14px;
+}
+
+.update-state h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.update-state p,
+.update-note,
+.update-feedback {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.update-versions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.update-versions > div {
+  min-width: 0;
+  padding: 11px 12px;
+}
+
+.update-versions > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.update-versions:has(> [hidden]) {
+  grid-template-columns: 1fr;
+}
+
+.update-versions dt {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.update-versions dd {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+#update-new-version {
+  color: var(--signal);
+}
+
+.update-note {
+  margin: 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--signal);
+}
+
+.update-preference {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.update-preference input {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  margin: 1px 0 0;
+  accent-color: var(--signal);
+}
+
+.update-preference:has(input:disabled) {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.update-preference > span {
+  display: grid;
+  gap: 4px;
+}
+
+.update-preference strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.update-preference span span {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.update-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.update-actions button {
+  min-height: 36px;
+  padding: 8px 11px;
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.update-actions:has(#update-downloads:not([hidden])) #update-later {
+  flex: 0 0 auto;
+}
+
+.update-progress-group {
+  display: grid;
+  gap: 7px;
+  color: var(--signal);
+  font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+}
+
+.update-progress-group progress {
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border: 0;
+  border-radius: 0;
+  accent-color: var(--signal);
+  background: var(--line);
+}
+
+.update-progress-group progress::-webkit-progress-bar {
+  background: var(--line);
+}
+
+.update-progress-group progress::-webkit-progress-value {
+  background: var(--signal);
+}
+
+.update-progress-group progress::-moz-progress-bar {
+  background: var(--signal);
+}
+
+.update-progress-group progress:indeterminate {
+  animation: status-pulse 1.25s ease-in-out infinite alternate;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--signal) 0 12px,
+    var(--line) 12px 24px
+  );
+}
+
+.update-progress-group progress:indeterminate::-webkit-progress-bar {
+  background: transparent;
+}
+
+.update-feedback {
+  margin: 0;
+  color: var(--critical);
+}
+
+.update-preview {
+  margin: 0;
+  color: var(--muted);
+  font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", monospace;
+  font-size: 8px;
+  text-align: right;
+}
+
 .source-panel {
   position: absolute;
   inset: 48px 15px 13px;

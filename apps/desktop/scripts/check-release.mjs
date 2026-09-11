@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { windowsReleasePolicy } from "./windows-release-policy.mjs";
+import { parseUpdaterPublicKey } from "./updater-artifacts.mjs";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -251,6 +252,22 @@ assert(
   `Tauri identifier must be ${expectedIdentifier}`,
 );
 assert(tauriConfig.bundle?.active === true, "Tauri bundling must stay enabled");
+parseUpdaterPublicKey(tauriConfig.plugins?.updater?.pubkey);
+assert(
+  tauriConfig.bundle?.createUpdaterArtifacts === undefined ||
+    tauriConfig.bundle.createUpdaterArtifacts === false,
+  "automatic updater artifacts must stay disabled: release scripts sign final postprocessed payloads",
+);
+assert(
+  !Object.entries(tauriConfig.plugins?.updater ?? {}).some(
+    ([name, value]) => name.startsWith("dangerous") && value === true,
+  ) &&
+    !capabilities.permissions?.some(
+      (permission) =>
+        typeof permission === "string" && permission.startsWith("updater:"),
+    ),
+  "updater must retain TLS verification and native-only access",
+);
 assert(
   packageJson.author === "Inmerzion" &&
     cargoToml.includes('authors = ["Inmerzion"]'),
@@ -402,9 +419,13 @@ assert(
     windowsMsiTemplate.includes('<Directory Id="LocalAppDataFolder">') &&
     windowsMsiTemplate.includes('Name="MainExecutable"') &&
     windowsMsiTemplate.includes('Root="HKCU"') &&
-    !windowsMsiTemplate.includes("LaunchApplication") &&
-    !windowsMsiTemplate.includes("AUTOLAUNCHAPP"),
-  "MSI must install in the current user's LocalAppData without launching from Windows Installer",
+    !windowsMsiTemplate.includes("WIXUI_EXITDIALOGOPTIONALCHECKBOX") &&
+    windowsMsiTemplate.includes('Impersonate="yes" FileKey="Path"') &&
+    windowsMsiTemplate.includes(
+      'After="InstallFinalize">STATUSLINE_UPDATER = "1" AND AUTOLAUNCHAPP = "True" AND NOT Installed AND NOT REMOVE',
+    ) &&
+    windowsSmokeScript.includes("Assert-MsiUpdaterReady"),
+  "MSI must install per-user; only a confirmed updater transaction may restart the app, with a Windows readiness smoke test",
 );
 assert(
   windowsConfig.bundle?.windows?.webviewInstallMode?.type ===
@@ -442,6 +463,15 @@ for (const relativePath of [
   "scripts/generate-checksums.mjs",
   "scripts/prepare-release-assets.mjs",
   "scripts/prepare-release-assets.test.mjs",
+  "scripts/updater-artifacts.mjs",
+  "scripts/build-updater-verifier.mjs",
+  "scripts/updater-verifier/Cargo.toml",
+  "scripts/updater-verifier/Cargo.lock",
+  "scripts/updater-verifier/src/main.rs",
+  "scripts/updater-artifacts.test.mjs",
+  "scripts/sign-updater-artifacts.mjs",
+  "scripts/package-macos-updater.sh",
+  "scripts/verify-release-download.mjs",
   "scripts/smoke-installers-windows.ps1",
   "scripts/smoke-installers-linux.sh",
   "scripts/smoke-frontend-linux.sh",
@@ -584,6 +614,8 @@ assert(
     checksumScript.includes('".apk"') &&
     checksumScript.includes('".aab"') &&
     checksumScript.includes('"RELEASE-MANIFEST.json"') &&
+    checksumScript.includes('"updater.json"') &&
+    checksumScript.includes('".app.tar.gz"') &&
     !workflow.includes("archive: false"),
   "checksums must cover desktop, Android and release provenance artifacts",
 );
@@ -597,6 +629,55 @@ assert(
     releaseAssetScript.includes("RELEASE-MANIFEST.json"),
   "release inventory must fail closed and bind selected platforms to workflow provenance",
 );
+assert(
+  releaseAssetScript.includes("verifyUpdaterSignature") &&
+    releaseAssetScript.includes("createUpdaterManifest") &&
+    releaseAssetScript.includes("recovered updater manifest differs") &&
+    workflow.includes('TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""') &&
+    workflow.includes("Require updater signing key for public releases") &&
+    releaseWorkflow.includes("TAURI_SIGNING_PRIVATE_KEY") &&
+    releaseWorkflow.includes("verify-release-download.mjs") &&
+    recoveryWorkflow.includes("verify-release-download.mjs") &&
+    releaseWorkflow.includes("build-updater-verifier.mjs") &&
+    recoveryWorkflow.includes("build-updater-verifier.mjs") &&
+    recoveryWorkflow.includes(
+      "Verify original candidate checksums before recovery",
+    ),
+  "public updater assets require dedicated signing, verified inventory, recovery validation and remote byte verification",
+);
+for (const [before, after] of [
+  [
+    "Prepare AppImage compatibility policy before signing",
+    "Sign final prepared AppImage updater payload",
+  ],
+  [
+    "Verify Linux installer signatures independently",
+    "Sign final prepared AppImage updater payload",
+  ],
+  [
+    "Smoke test unsigned Windows preview installers",
+    "Sign final Windows preview updater payloads",
+  ],
+  [
+    "Smoke test signed Windows install and uninstall",
+    "Sign final SignPath Windows updater payloads",
+  ],
+  [
+    "Notarize and staple macOS artifacts",
+    "Package final stapled macOS updater app",
+  ],
+  [
+    "Package final stapled macOS updater app",
+    "Sign final macOS updater archive",
+  ],
+]) {
+  assert(
+    workflow.indexOf(`- name: ${before}`) >= 0 &&
+      workflow.indexOf(`- name: ${after}`) >
+        workflow.indexOf(`- name: ${before}`),
+    "updater signing must follow final platform preparation and native verification",
+  );
+}
 assert(
   windowsSignPathScript.includes("RestoreApplication") &&
     windowsSignPathScript.includes("StageInstallers") &&

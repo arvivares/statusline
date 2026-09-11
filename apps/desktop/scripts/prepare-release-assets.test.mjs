@@ -11,7 +11,15 @@ import { tmpdir } from "node:os";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { prepareReleaseAssets } from "./prepare-release-assets.mjs";
+import { prepareReleaseAssets as prepare } from "./prepare-release-assets.mjs";
+import { updaterTestKey } from "./updater-test-fixtures.mjs";
+import { buildUpdaterVerifier } from "./build-updater-verifier.mjs";
+
+buildUpdaterVerifier();
+const updaterKey = updaterTestKey();
+function prepareReleaseAssets(options) {
+  return prepare({ ...options, publicKey: updaterKey.pubkey });
+}
 
 const { version } = JSON.parse(
   await readFile(new URL("../../../release.json", import.meta.url), "utf8"),
@@ -22,6 +30,7 @@ const fixtureNames = [
   `Statusline Companion_${version}_amd64.AppImage`,
   `Statusline Companion_${version}_universal.dmg`,
   `Statusline Companion_${version}_universal.pkg`,
+  `Statusline Companion_${version}_universal.app.tar.gz`,
   `Statusline_${version}_android.apk`,
   `Statusline_${version}_android.aab`,
 ];
@@ -52,6 +61,9 @@ async function makeFixture({ includeWindows = true } = {}) {
     if (/\.(?:deb|rpm|AppImage)$/u.test(name)) {
       await writeFile(join(input, `${name}.asc`), `signature:${name}`);
     }
+    if (/\.(?:AppImage|exe|msi|app\.tar\.gz)$/u.test(name)) {
+      await writeFile(join(input, `${name}.sig`), updaterKey.signature(name));
+    }
   }
   return { input, output };
 }
@@ -79,7 +91,7 @@ describe("prepareReleaseAssets", () => {
     });
 
     expect(manifest.version).toBe(version);
-    expect(manifest.assets).toHaveLength(12);
+    expect(manifest.assets).toHaveLength(18);
     expect(manifest.source.commit).toBe("a".repeat(40));
     expect(
       manifest.assets.every((asset) => /^[0-9a-f]{64}$/u.test(asset.sha256)),
@@ -146,6 +158,23 @@ describe("prepareReleaseAssets", () => {
         context: context(),
       }),
     ).rejects.toThrow("filename is not portable across release hosts");
+  });
+
+  it("rejects a version that only contains the expected version as a prefix", async () => {
+    const { input, output } = await makeFixture();
+    const oldName = `Statusline_${version}_android.apk`;
+    await rm(join(input, oldName));
+    await writeFile(
+      join(input, `Statusline_${version}0_android.apk`),
+      "wrong version",
+    );
+    await expect(
+      prepareReleaseAssets({
+        inputDirectory: input,
+        outputDirectory: output,
+        context: context(),
+      }),
+    ).rejects.toThrow("does not include product version");
   });
 
   it("rejects a tag that does not match the release manifest", async () => {
@@ -250,7 +279,7 @@ describe("prepareReleaseAssets", () => {
       context: context(),
     });
 
-    expect(manifest.assets).toHaveLength(12);
+    expect(manifest.assets).toHaveLength(18);
     expect(
       manifest.assets
         .filter((asset) => asset.platform === "windows")
@@ -274,7 +303,9 @@ describe("prepareReleaseAssets", () => {
     );
     expect(windows.map((asset) => asset.name).sort()).toEqual([
       `Statusline.Companion_${version}_x64-setup.unsigned.exe`,
+      `Statusline.Companion_${version}_x64-setup.unsigned.exe.sig`,
       `Statusline.Companion_${version}_x64.unsigned.msi`,
+      `Statusline.Companion_${version}_x64.unsigned.msi.sig`,
     ]);
     expect(
       windows.every((asset) => asset.windowsSigning === "unsigned-preview"),
@@ -340,5 +371,110 @@ describe("prepareReleaseAssets", () => {
         context: context(),
       }),
     ).rejects.toThrow("expected exactly one windows-msi");
+  });
+
+  it("creates only the five supported updater targets with final portable names and inline signatures", async () => {
+    const { input, output } = await makeFixture();
+    const manifest = await prepareReleaseAssets({
+      inputDirectory: input,
+      outputDirectory: output,
+      context: context(),
+    });
+    const updater = JSON.parse(
+      await readFile(join(output, "updater.json"), "utf8"),
+    );
+    expect(updater.version).toBe(version);
+    expect(updater.channel).toBe("beta");
+    expect(Object.keys(updater.platforms)).toEqual([
+      "darwin-aarch64",
+      "darwin-x86_64",
+      "windows-x86_64-nsis",
+      "windows-x86_64-msi",
+      "linux-x86_64-appimage",
+    ]);
+    expect(updater.platforms["darwin-aarch64"]).toEqual(
+      updater.platforms["darwin-x86_64"],
+    );
+    expect(updater.platforms["windows-x86_64-msi"].url).toBe(
+      `https://github.com/arvivares/statusline/releases/download/v${version}/Statusline.Companion_${version}_x64.unsigned.msi`,
+    );
+    for (const entry of Object.values(updater.platforms)) {
+      const name = new URL(entry.url).pathname.split("/").at(-1);
+      expect(entry.signature).toBe(
+        await readFile(join(output, `${name}.sig`), "utf8"),
+      );
+    }
+    expect(
+      manifest.assets.some(
+        (asset) =>
+          asset.name === "updater.json" && asset.kind === "updater-manifest",
+      ),
+    ).toBe(true);
+  });
+
+  it("does not publish an updater manifest when any signature is missing", async () => {
+    const { input, output } = await makeFixture();
+    await rm(join(input, `${windowsFixtureNames[0]}.sig`));
+    await expect(
+      prepareReleaseAssets({
+        inputDirectory: input,
+        outputDirectory: output,
+        context: context(),
+      }),
+    ).rejects.toThrow("expected one updater signature");
+    await expect(readFile(join(output, "updater.json"))).rejects.toThrow();
+  });
+
+  it("rejects signatures copied to a different asset name and leaves the updater unpublished", async () => {
+    const { input, output } = await makeFixture();
+    await writeFile(
+      join(input, `${windowsFixtureNames[1]}.sig`),
+      await readFile(join(input, `${windowsFixtureNames[0]}.sig`)),
+    );
+    await expect(
+      prepareReleaseAssets({
+        inputDirectory: input,
+        outputDirectory: output,
+        context: context(),
+      }),
+    ).rejects.toThrow("signature verification failed");
+    await expect(readFile(join(output, "updater.json"))).rejects.toThrow();
+  });
+
+  it("rejects orphan updater signatures", async () => {
+    const { input, output } = await makeFixture();
+    await writeFile(join(input, "orphan.exe.sig"), "unused");
+    await expect(
+      prepareReleaseAssets({
+        inputDirectory: input,
+        outputDirectory: output,
+        context: context(),
+      }),
+    ).rejects.toThrow("orphan updater signature");
+  });
+
+  it("rejects recovery when updater metadata disagrees with its verified artifacts", async () => {
+    const { input, output } = await makeFixture();
+    await prepareReleaseAssets({
+      inputDirectory: input,
+      outputDirectory: output,
+      context: context(),
+    });
+    const updater = JSON.parse(
+      await readFile(join(output, "updater.json"), "utf8"),
+    );
+    updater.platforms["windows-x86_64-msi"].url =
+      "https://example.com/other.msi";
+    await writeFile(
+      join(output, "updater.json"),
+      `${JSON.stringify(updater, null, 2)}\n`,
+    );
+    await expect(
+      prepareReleaseAssets({
+        inputDirectory: output,
+        outputDirectory: join(testRoot, "recovered"),
+        context: context(),
+      }),
+    ).rejects.toThrow("recovered updater manifest differs");
   });
 });

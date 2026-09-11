@@ -13,6 +13,12 @@ import {
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { windowsReleasePolicy } from "./windows-release-policy.mjs";
+import {
+  configuredUpdaterPublicKey,
+  createUpdaterManifest,
+  updaterKinds,
+  verifyUpdaterSignature,
+} from "./updater-artifacts.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(scriptDirectory, "../../..");
@@ -25,6 +31,7 @@ const availableKinds = new Map([
   ["linux-appimage", ".appimage"],
   ["macos-dmg", ".dmg"],
   ["macos-pkg", ".pkg"],
+  ["macos-updater", ".app.tar.gz"],
   ["android-apk", ".apk"],
   ["android-aab", ".aab"],
 ]);
@@ -55,6 +62,7 @@ async function collectFiles(directory) {
 }
 
 function classify(path) {
+  if (path.endsWith(".app.tar.gz")) return "macos-updater";
   return extensionToKind.get(extname(path).toLowerCase());
 }
 
@@ -101,6 +109,7 @@ export async function prepareReleaseAssets({
   inputDirectory,
   outputDirectory,
   metadataPath = join(repositoryRoot, "release.json"),
+  publicKey,
   context,
 }) {
   const input = resolve(inputDirectory);
@@ -150,7 +159,10 @@ export async function prepareReleaseAssets({
       `${name} belongs to a platform not enabled for ${metadata.tag}`,
     );
     assert(
-      name.includes(metadata.version),
+      new RegExp(
+        `(?:^|[_-])${metadata.version.replaceAll(".", "\\.")}(?=[_.-]|$)`,
+        "u",
+      ).test(name),
       `${name} does not include product version ${metadata.version}`,
     );
     seenNames.add(name);
@@ -175,6 +187,7 @@ export async function prepareReleaseAssets({
     classify(path).startsWith("linux-"),
   );
   const signatures = [];
+  const signatureParents = new Map();
   for (const installer of linuxInstallers) {
     const signatureName = `${basename(installer)}.asc`;
     const matches = files.filter((path) => basename(path) === signatureName);
@@ -183,17 +196,55 @@ export async function prepareReleaseAssets({
       `expected one detached signature for ${basename(installer)}, found ${matches.length}`,
     );
     signatures.push(matches[0]);
+    signatureParents.set(matches[0], { installer, suffix: ".asc" });
   }
+
+  const updaterSignatures = new Map();
+  const updaterInstallers = distributables.filter((path) =>
+    updaterKinds.has(classify(path)),
+  );
+  const trustedPublicKey = publicKey ?? (await configuredUpdaterPublicKey());
+  for (const installer of updaterInstallers) {
+    const matches = files.filter(
+      (path) => basename(path) === `${basename(installer)}.sig`,
+    );
+    assert(
+      matches.length === 1,
+      `expected one updater signature for ${basename(installer)}, found ${matches.length}`,
+    );
+    const signature = matches[0];
+    updaterSignatures.set(
+      installer,
+      await verifyUpdaterSignature(
+        installer,
+        await readFile(signature, "utf8"),
+        trustedPublicKey,
+      ),
+    );
+    signatures.push(signature);
+    signatureParents.set(signature, { installer, suffix: ".sig" });
+  }
+  assert(
+    files.filter((path) => path.endsWith(".sig")).length ===
+      updaterInstallers.length,
+    "unexpected or orphan updater signature",
+  );
 
   const assetRecords = [];
   const stagedNames = new Set();
+  const normalizedSignatures = new Map();
   for (const source of [...distributables, ...signatures].sort((left, right) =>
     basename(left).localeCompare(basename(right), "en"),
   )) {
-    const sourceName = basename(source);
-    const kind = classify(source) ?? "linux-signature";
-    const isWindows = kind.startsWith("windows-");
-    let name = portableAssetName(sourceName);
+    const parent = signatureParents.get(source);
+    const parentKind = classify(parent?.installer ?? source);
+    const kind = parent
+      ? parent.suffix === ".sig"
+        ? `${parentKind}-signature`
+        : "linux-signature"
+      : parentKind;
+    const isWindows = parentKind.startsWith("windows-");
+    let name = portableAssetName(basename(parent?.installer ?? source));
     if (isWindows) {
       const extension = extname(name);
       const isPreviewName = name.endsWith(`.unsigned${extension}`);
@@ -205,6 +256,9 @@ export async function prepareReleaseAssets({
         name = `${name.slice(0, -extension.length)}.unsigned${extension}`;
       }
     }
+    if (parent) name += parent.suffix;
+    else if (updaterSignatures.has(source))
+      normalizedSignatures.set(name, updaterSignatures.get(source));
     assert(
       !stagedNames.has(name),
       `duplicate portable filename after normalization: ${name}`,
@@ -222,6 +276,32 @@ export async function prepareReleaseAssets({
       ...(isWindows ? { windowsSigning } : {}),
     });
   }
+
+  const updater = createUpdaterManifest(
+    metadata,
+    assetRecords,
+    normalizedSignatures,
+  );
+  const updaterContents = `${JSON.stringify(updater, null, 2)}\n`;
+  const previousUpdaters = files.filter(
+    (path) => basename(path) === "updater.json",
+  );
+  assert(previousUpdaters.length <= 1, "duplicate updater manifest");
+  if (previousUpdaters.length === 1) {
+    assert(
+      (await readFile(previousUpdaters[0], "utf8")) === updaterContents,
+      "recovered updater manifest differs from verified payloads",
+    );
+  }
+  const updaterPath = join(output, "updater.json");
+  await writeFile(updaterPath, updaterContents, "utf8");
+  assetRecords.push({
+    name: "updater.json",
+    platform: "desktop",
+    kind: "updater-manifest",
+    bytes: Buffer.byteLength(updaterContents),
+    sha256: await sha256(updaterPath),
+  });
 
   assetRecords.sort((left, right) => left.name.localeCompare(right.name, "en"));
   const manifest = {
