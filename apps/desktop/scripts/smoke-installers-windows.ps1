@@ -1,10 +1,25 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)][string]$BundleRoot
+    [Parameter(Mandatory = $true)][string]$BundleRoot,
+    [string]$ExpectedSignerSubject = ""
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+
+function Assert-InstalledUpdaterTrust {
+    param([Parameter(Mandatory = $true)][string]$Executable)
+    if ([string]::IsNullOrWhiteSpace($ExpectedSignerSubject)) { return }
+    # Tauri patches bundle-type markers in the packaged EXE. Verifying only the
+    # pre-bundle EXE and outer installers does not establish installed app trust.
+    $signature = Get-AuthenticodeSignature -LiteralPath $Executable
+    if ($signature.Status -ne "Valid" -or
+        $null -eq $signature.SignerCertificate -or
+        $signature.SignerCertificate.Subject -notlike "*$ExpectedSignerSubject*" -or
+        $null -eq $signature.TimeStamperCertificate) {
+        throw "Installed updater executable lacks a valid expected Authenticode signer and timestamp. Sign after Tauri bundle-type patching."
+    }
+}
 
 function Get-SingleBundle {
     param(
@@ -388,6 +403,7 @@ try {
     Invoke-CheckedProcess -FilePath $nsis -Arguments @("/S")
     $nsisEntry = Wait-ForStatuslineEntry -Present $true
     $nsisExecutable = Get-StatuslineExecutable -Entry $nsisEntry
+    Assert-InstalledUpdaterTrust -Executable $nsisExecutable
     Assert-CurrentUserInstall -Entry $nsisEntry -Executable $nsisExecutable
     Assert-CodexDetected `
         -StatuslineExecutable $nsisExecutable `
@@ -407,6 +423,7 @@ try {
     Write-MsiInstallContext -LogPath $msiInstallLog
     $msiEntry = Wait-ForStatuslineEntry -Present $true
     $msiExecutable = Get-StatuslineExecutable -Entry $msiEntry
+    Assert-InstalledUpdaterTrust -Executable $msiExecutable
     Assert-CodexDetected `
         -StatuslineExecutable $msiExecutable `
         -CodexExecutable $codexFixture `

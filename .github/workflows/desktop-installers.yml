@@ -24,6 +24,8 @@ on:
         required: true
         type: boolean
     secrets:
+      TAURI_SIGNING_PRIVATE_KEY:
+        required: false
       SIGNPATH_API_TOKEN:
         required: false
       LINUX_GPG_PRIVATE_KEY_BASE64:
@@ -124,6 +126,7 @@ jobs:
           bash -n apps/desktop/scripts/smoke-installer-macos.sh
           bash -n apps/desktop/scripts/prepare-macos-signing.sh
           bash -n apps/desktop/scripts/package-macos-pkg.sh
+          bash -n apps/desktop/scripts/package-macos-updater.sh
           bash -n apps/desktop/scripts/notarize-macos-artifact.sh
           bash -n apps/desktop/scripts/cleanup-macos-signing.sh
           bash -n apps/desktop/scripts/verify-detached-signature.sh
@@ -216,6 +219,10 @@ jobs:
             fi
           fi
           if [[ "$RELEASE_BUILD" == true ]]; then
+            if [[ "$GITHUB_REPOSITORY" != arvivares/statusline || "$GITHUB_EVENT_NAME" != push || "$GITHUB_REF_TYPE" != tag ]]; then
+              echo "Public updater artifacts require a canonical tag-triggered Release run." >&2
+              exit 1
+            fi
             windows_policy=$(node apps/desktop/scripts/windows-release-policy.mjs)
             expected_sign_windows=false
             [[ "$windows_policy" != signpath ]] || expected_sign_windows=true
@@ -265,6 +272,15 @@ jobs:
             echo "Set the STATUSLINE_RELAY_BASE_URL repository variable to the public HTTPS relay origin." >&2
             exit 1
           fi
+
+      - name: Require updater signing key for public releases
+        if: inputs.release == true && github.repository == 'arvivares/statusline' && github.event_name == 'push' && github.ref_type == 'tag'
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          [[ -n "$TAURI_SIGNING_PRIVATE_KEY" ]] || { echo "TAURI_SIGNING_PRIVATE_KEY is required for public releases." >&2; exit 1; }
 
       - name: Require SignPath configuration for signed Windows builds
         if: steps.metadata.outputs.signed_windows == 'true'
@@ -696,6 +712,14 @@ jobs:
         run: ./scripts/smoke-installers-windows.ps1 -BundleRoot ./src-tauri/target/release/bundle
         working-directory: apps/desktop
 
+      - name: Sign final Windows preview updater payloads
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD != 'true' && inputs.release == true && github.repository == 'arvivares/statusline' && github.event_name == 'push' && github.ref_type == 'tag'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        run: node scripts/sign-updater-artifacts.mjs windows src-tauri/target/release/bundle
+        working-directory: apps/desktop
+
       - name: Upload tested unsigned Windows preview installers
         if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -704,6 +728,8 @@ jobs:
           path: |
             apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
             apps/desktop/src-tauri/target/release/bundle/msi/*.msi
+            apps/desktop/src-tauri/target/release/bundle/nsis/*.exe.sig
+            apps/desktop/src-tauri/target/release/bundle/msi/*.msi.sig
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
@@ -714,6 +740,15 @@ jobs:
         run: >-
           ./scripts/smoke-installers-windows.ps1
           -BundleRoot '${{ runner.temp }}/statusline-windows-installers-signed'
+          -ExpectedSignerSubject '${{ vars.SIGNPATH_EXPECTED_SIGNER_SUBJECT }}'
+        working-directory: apps/desktop
+
+      - name: Sign final SignPath Windows updater payloads
+        if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true' && inputs.release == true && github.repository == 'arvivares/statusline' && github.event_name == 'push' && github.ref_type == 'tag'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        run: node scripts/sign-updater-artifacts.mjs windows '${{ runner.temp }}/statusline-windows-installers-signed'
         working-directory: apps/desktop
 
       - name: Upload signed Windows release installers
@@ -780,6 +815,14 @@ jobs:
           fi
         working-directory: apps/desktop
 
+      - name: Sign final prepared AppImage updater payload
+        if: runner.os == 'Linux' && inputs.release == true && github.repository == 'arvivares/statusline' && github.event_name == 'push' && github.ref_type == 'tag'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        run: node scripts/sign-updater-artifacts.mjs linux src-tauri/target/release/bundle/appimage
+        working-directory: apps/desktop
+
       - name: Upload validated Linux installers
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -789,6 +832,7 @@ jobs:
             apps/desktop/src-tauri/target/release/bundle/deb/*.deb
             apps/desktop/src-tauri/target/release/bundle/rpm/*.rpm
             apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+            apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage.sig
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
@@ -809,6 +853,33 @@ jobs:
           STATUSLINE_REQUIRE_MACOS_TRUST: ${{ env.MACOS_SIGNED_BUILD }}
         run: bash ./scripts/smoke-installer-macos.sh ./src-tauri/target/universal-apple-darwin/release/bundle
         working-directory: apps/desktop
+
+      - name: Package final stapled macOS updater app
+        if: runner.os == 'macOS' && inputs.release == true && github.repository == 'arvivares/statusline' && github.event_name == 'push' && github.ref_type == 'tag'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg_path=$(find ./src-tauri/target/universal-apple-darwin/release/bundle/dmg -type f -name '*.dmg' -print -quit)
+          bash scripts/package-macos-updater.sh "$dmg_path" src-tauri/target/macos-updater "$STATUSLINE_VERSION"
+        working-directory: apps/desktop
+
+      - name: Sign final macOS updater archive
+        if: runner.os == 'macOS' && inputs.release == true && github.repository == 'arvivares/statusline' && github.event_name == 'push' && github.ref_type == 'tag'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        run: node scripts/sign-updater-artifacts.mjs macos src-tauri/target/macos-updater
+        working-directory: apps/desktop
+
+      - name: Upload verified macOS updater archive and signature
+        if: runner.os == 'macOS' && inputs.release == true && github.repository == 'arvivares/statusline' && github.event_name == 'push' && github.ref_type == 'tag'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-updater-attempt-${{ github.run_attempt }}
+          path: apps/desktop/src-tauri/target/macos-updater/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
 
       - name: Upload macOS DMG artifact
         if: runner.os == 'macOS'

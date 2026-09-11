@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.16` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.16`;
-- Android candidate: `versionCode 12` (Google Play submission is separate);
+- prepared product tag: `v0.1.17` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.17`;
+- Android candidate: `versionCode 13` (Google Play submission is separate);
 - separately uploaded iOS candidate: `1.0.1 (6)`, acknowledged for TestFlight
   processing. A local development-signed USB upgrade confirmed an independent
   widget read with the existing pairing; TestFlight availability and the
@@ -50,7 +50,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.16`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.17`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -70,7 +70,17 @@ authenticate integrity, not Windows publisher trust. Never disable security prot
 When SignPath is approved, set `distribution.windowsSigning` to `signpath` in a reviewed
 commit and release a new version. Both executable and installer signing stages then become
 mandatory, with no fallback to preview mode on failure. Other platform signing gates are
-unchanged. The current full release has nine installers and 16 total downloadable assets.
+unchanged. In addition to the nine installers and existing verification assets,
+this release includes the universal macOS updater archive, final-payload updater
+signatures and `updater.json`. The updater manifest must not be published without
+the complete matching installer set.
+
+The dedicated `TAURI_SIGNING_PRIVATE_KEY` secret is mandatory for public releases.
+Keep an offline backup outside the repository. Only its public key is embedded
+in the companion. These signatures are generated after all preparation,
+notarization and repackaging; they are not Windows Authenticode certificates.
+See [companion updates](../architecture/companion-updates.md) for the platform
+matrix, private-key handling and required upgrade QA.
 
 It also creates `RELEASE-MANIFEST.json`, `SHA256SUMS.txt`,
 `SHA256SUMS.txt.asc` and includes the Linux public key. The generated manifest binds every
@@ -115,8 +125,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.16 -m "Statusline 0.1.16 beta"
-git push origin v0.1.16
+git tag -s v0.1.17 -m "Statusline 0.1.17 beta"
+git push origin v0.1.17
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -124,12 +134,15 @@ targets the exact workflow commit and matches `release.json`. The signed tag is 
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
 
-### 0.1.16 candidate gates
+### 0.1.17 candidate gates
 
-- Preserve the validated `0.1.15` synchronization and dependency fixes; this patch
-  adds focus-loss dismissal, Windows desktop discovery and iOS bundle guards.
+- Preserve the `0.1.16` window dismissal, Windows desktop discovery and iOS bundle
+  guards. This patch adds the companion updater and Vitest 5 from PR #20.
   Production Rust tests and the PowerShell fixture must pass on Windows, Linux
   and macOS as applicable before signing/tagging.
+- Validate update discovery, exact platform/format selection, duplicate operation
+  prevention and signed artifact publication. The first real upgrade from
+  `0.1.17` requires a later version and remains a physical-device QA gate.
 - Review and merge the preparation PR before creating the public tag. Do not
   retarget a published tag or publish branch-QA artifacts as a verified release.
 - Record the remaining physical-device checks explicitly in the beta notes:

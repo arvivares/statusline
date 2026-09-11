@@ -23,12 +23,14 @@ concurrency:
 
 env:
   NODE_VERSION: "24"
+  RUST_VERSION: "1.98.0"
   RELEASE_TAG: ${{ inputs.release_tag }}
   SOURCE_RUN_ID: ${{ inputs.source_run_id }}
 
 jobs:
   recover:
     name: Verify existing artifacts and publish prerelease
+    if: github.repository == 'arvivares/statusline'
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     permissions:
@@ -105,7 +107,7 @@ jobs:
           for platform in "${enabled_platforms[@]}"; do
             case "$platform" in
               windows) required_jobs+=('Desktop release artifacts / Windows x64') ;;
-              linux) required_jobs+=('Desktop release artifacts / Linux x64') ;;
+              linux) required_jobs+=('Desktop release artifacts / Linux x64' 'Desktop release artifacts / Linux compatibility (Ubuntu 24.04)') ;;
               macos) required_jobs+=('Desktop release artifacts / macOS universal') ;;
               android) required_jobs+=('Android release artifacts / Signed release APK and AAB') ;;
               *)
@@ -156,6 +158,17 @@ jobs:
           path: candidate-assets
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ env.SOURCE_RUN_ID }}
+
+      - name: Verify original candidate checksums before recovery
+        run: |
+          set -euo pipefail
+          bash apps/desktop/scripts/verify-detached-signature.sh candidate-assets/SHA256SUMS.txt candidate-assets/SHA256SUMS.txt.asc packaging/linux/statusline-release-signing-key.asc
+          (cd candidate-assets && sha256sum --check SHA256SUMS.txt)
+
+      - name: Build pinned standalone updater verifier
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal
+          node apps/desktop/scripts/build-updater-verifier.mjs
 
       - name: Normalize filenames and regenerate provenance manifest
         env:
@@ -257,6 +270,14 @@ jobs:
             echo "Release must remain a draft prerelease until verification completes." >&2
             exit 1
           fi
+
+      - name: Download and verify every recovered draft asset byte
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir remote-release
+          node apps/desktop/scripts/verify-release-download.mjs public-release remote-release
 
       - name: Publish recovered prerelease
         env:

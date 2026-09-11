@@ -27,6 +27,18 @@ Free code signing provided by [SignPath.io](https://signpath.io/), certificate b
 
 ## Signed artifact scope
 
+### Companion updater signatures
+
+Starting with `0.1.17`, final updater payloads also receive a dedicated Tauri
+signature. The companion verifies it against an embedded public key before
+installation. The private key is held in GitHub Secrets, excluded from pull
+requests and forks, and backed up outside the repository. It is separate from
+SignPath, Apple, Linux OpenPGP, Android signing and Git commit/tag signing.
+This does not remove Windows SmartScreen warnings or provide Authenticode trust.
+See [companion updates](../architecture/companion-updates.md).
+
+### SignPath scope
+
 The signing policy is limited to Windows binaries built from this repository:
 
 - `statusline-desktop.exe`, built from `apps/desktop`;

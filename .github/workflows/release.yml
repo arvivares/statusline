@@ -21,6 +21,7 @@ env:
 jobs:
   preflight:
     name: Release policy preflight
+    if: github.repository == 'arvivares/statusline'
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     permissions:
@@ -55,6 +56,11 @@ jobs:
         run: npm ci
         working-directory: services/relay
 
+      - name: Install pinned Rust formatter
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt
+          rustup default "$RUST_VERSION"
+
       - name: Validate release metadata, tests and documentation
         run: npm run release:check
         working-directory: apps/desktop
@@ -62,11 +68,6 @@ jobs:
       - name: Validate universal relay
         run: npm run db:migrate:local && npm test && npm run check
         working-directory: services/relay
-
-      - name: Install pinned Rust formatter
-        run: |
-          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt
-          rustup default "$RUST_VERSION"
 
       - name: Check Rust formatting
         run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
@@ -133,6 +134,7 @@ jobs:
       - name: Require enabled-platform signing configuration
         shell: bash
         env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
           SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
           SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
@@ -163,6 +165,7 @@ jobs:
           set -euo pipefail
           missing=()
           required_values=(
+            TAURI_SIGNING_PRIVATE_KEY
             STATUSLINE_RELAY_BASE_URL
             LINUX_GPG_PRIVATE_KEY_BASE64
             LINUX_GPG_PASSPHRASE
@@ -309,6 +312,11 @@ jobs:
           path: candidate-assets
           merge-multiple: true
 
+      - name: Build pinned standalone updater verifier
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal
+          node apps/desktop/scripts/build-updater-verifier.mjs
+
       - name: Enforce release inventory and write provenance manifest
         run: >-
           node apps/desktop/scripts/prepare-release-assets.mjs
@@ -402,6 +410,14 @@ jobs:
             echo "Release must remain a draft prerelease until verification completes." >&2
             exit 1
           fi
+
+      - name: Download and verify every draft asset byte
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --dir remote-release
+          node apps/desktop/scripts/verify-release-download.mjs public-release remote-release
 
       - name: Publish verified prerelease
         env:

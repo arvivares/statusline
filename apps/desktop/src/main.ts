@@ -18,6 +18,7 @@ import {
 } from "./codex";
 import { UsageController } from "./controller";
 import { copyForState, type UsageState } from "./usage";
+import { bindUpdater, refreshUpdaterCopy } from "./updates";
 
 const FOCUS_REFRESH_AGE_MS = 60 * 1_000;
 const SEGMENT_COUNT = 20;
@@ -126,10 +127,12 @@ if (previewState === null) {
   void startTauriRuntime();
 } else {
   startPreview(previewState);
+  void bindUpdater(true);
 }
 
 async function startTauriRuntime(): Promise<void> {
   await refreshLanguage();
+  await bindUpdater(false);
   window.addEventListener("languagechange", () => void refreshLanguage());
   window.addEventListener("focus", () => void refreshLanguage());
   let lastRefreshStartedAt = 0;
@@ -936,6 +939,7 @@ async function refreshLanguage(): Promise<void> {
   if (lastDiagnostic && !sourceActionPending)
     renderCodexDiagnostic(lastDiagnostic);
   if (lastRelayState && !relayActionPending) renderRelayStatus(lastRelayState);
+  refreshUpdaterCopy();
 }
 
 function errorMessage(_error: unknown): string {

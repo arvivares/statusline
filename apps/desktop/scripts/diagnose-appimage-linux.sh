@@ -212,6 +212,7 @@ for case_name in "${case_names[@]}"; do
     -u GST_REGISTRY -u GST_REGISTRY_1_0 -u APPDIR -u APPIMAGE
     -u APPIMAGE_EXTRACT_AND_RUN -u NO_CLEANUP
     "STATUSLINE_RELAY_BASE_URL="
+    "STATUSLINE_DISABLE_UPDATES=1"
     "XDG_CONFIG_HOME=$case_directory/config"
     "XDG_DATA_HOME=$case_directory/data"
     "XDG_CACHE_HOME=$case_directory/cache"

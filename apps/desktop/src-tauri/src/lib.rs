@@ -1,9 +1,16 @@
 pub mod app_server;
 pub mod codex_installation;
 pub mod localization;
+#[cfg(target_os = "macos")]
+mod macos_update;
 pub mod refresh;
 pub mod relay_protocol;
 pub mod universal_relay;
+pub mod update_policy;
+mod update_signature;
+#[cfg(target_os = "macos")]
+mod update_transaction;
+mod updates;
 pub mod usage;
 pub mod window_behavior;
 
@@ -44,13 +51,29 @@ struct LocalizedMenu {
     show: MenuItem<tauri::Wry>,
     refresh: MenuItem<tauri::Wry>,
     quit: MenuItem<tauri::Wry>,
+    updates: MenuItem<tauri::Wry>,
+}
+
+fn set_update_menu_label(app: &AppHandle, version: Option<&str>) {
+    let Some(menu) = app.try_state::<LocalizedMenu>() else {
+        return;
+    };
+    let label = match version {
+        Some(version) => format!("{} · {version}", localization::text("Update available")),
+        None => localization::text("Check for updates").to_owned(),
+    };
+    let _ = menu.updates.set_text(label);
 }
 
 #[tauri::command]
-fn system_language(menu: State<'_, LocalizedMenu>) -> &'static str {
+fn system_language(app: AppHandle, menu: State<'_, LocalizedMenu>) -> &'static str {
     let _ = menu.show.set_text(localization::text("Show"));
     let _ = menu.refresh.set_text(localization::text("Refresh"));
     let _ = menu.quit.set_text(localization::text("Quit"));
+    set_update_menu_label(
+        &app,
+        updates::updater_status(app.state()).version.as_deref(),
+    );
     localization::language()
 }
 
@@ -234,10 +257,19 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_positioner::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(RefreshState::default())
         .manage(WindowBehaviorState::default())
         .manage(UniversalRelayState::default())
         .setup(|app| {
+            // Diagnostic/smoke runs must never access the update feed.
+            let updates_disabled = cfg!(debug_assertions)
+                || WINDOW_READY_MARKER.get().is_some()
+                || std::env::var_os("STATUSLINE_DISABLE_UPDATES").is_some();
+            app.manage(updates::UpdateState::new(
+                app.path().app_config_dir().ok(),
+                updates_disabled,
+            ));
             #[cfg(target_os = "macos")]
             app.handle()
                 .set_activation_policy(tauri::ActivationPolicy::Accessory)?;
@@ -253,11 +285,20 @@ pub fn run() {
             )?;
             let quit_item =
                 MenuItem::with_id(app, "quit", localization::text("Quit"), true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show_item, &refresh_item, &quit_item])?;
+            let updates_item = MenuItem::with_id(
+                app,
+                "updates",
+                localization::text("Check for updates"),
+                true,
+                None::<&str>,
+            )?;
+            let menu =
+                Menu::with_items(app, &[&show_item, &refresh_item, &updates_item, &quit_item])?;
             app.manage(LocalizedMenu {
                 show: show_item,
                 refresh: refresh_item,
                 quit: quit_item,
+                updates: updates_item,
             });
             let mut tray_builder = TrayIconBuilder::with_id(TRAY_ID)
                 .menu(&menu)
@@ -272,6 +313,10 @@ pub fn run() {
                         });
                     }
                     "quit" => app.exit(0),
+                    "updates" => {
+                        show_main_window(app);
+                        let _ = app.emit("updater-open", ());
+                    }
                     _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {
@@ -328,6 +373,7 @@ pub fn run() {
                 tray_builder = tray_builder.icon(icon.clone());
             }
             tray_builder.build(app)?;
+            updates::start(app.handle());
             let refresh_app = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 let mut interval = refresh_interval();
@@ -367,7 +413,13 @@ pub fn run() {
             clear_codex_path,
             choose_codex_executable,
             system_language,
-            frontend_ready
+            frontend_ready,
+            updates::updater_status,
+            updates::check_for_updates,
+            updates::install_update,
+            updates::set_update_automatic,
+            updates::dismiss_update,
+            updates::open_update_release
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

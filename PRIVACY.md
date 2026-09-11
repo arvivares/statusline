@@ -1,6 +1,6 @@
 # Statusline — Privacy Policy
 
-Effective date: 9 September 2026
+Effective date: 11 September 2026
 
 Public policy: https://statusline.inmerzion.io/privacy
 
@@ -30,6 +30,18 @@ The relay receives:
 The relay does not receive the encryption key, Codex credentials, email address, prompts or source code, and therefore cannot decrypt the quota snapshot. The Cloudflare deployment applies abuse limits before credential parsing using a SHA-256 digest of the source IP address. Neither the source IP nor that digest is written to the Statusline D1 database.
 
 Persistent Cloudflare Worker invocation logs are disabled in the production project configuration. Cloudflare may still process IP addresses and request metadata at its edge for request delivery, security, abuse prevention, aggregate metrics and billing. The Statusline desktop and mobile applications do not integrate advertising SDKs or their own product analytics SDK. The ML Kit diagnostics described above are the only bundled third-party SDK telemetry currently identified in the mobile applications.
+
+## Desktop update checks
+
+Starting with companion version 0.1.17, the desktop checks the public GitHub
+releases of `arvivares/statusline` after startup and every six hours while running.
+Automatic checks can be disabled in Updates, and manual checks remain available.
+Downloads and installation require confirmation. GitHub and its delivery network
+receive normal HTTPS request metadata, such as the IP address and a user agent;
+Statusline sends no Codex credentials, quota snapshots, pairing keys, account email
+or persistent device identifier with these requests. Update preferences and the
+dismissed version are stored only in the local application configuration directory.
+These requests deliver software updates; they are not product analytics.
 
 ## Website analytics
 

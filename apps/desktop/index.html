@@ -158,13 +158,27 @@
           </svg>
           <span id="refresh-label" data-i18n="REFRESH NOW">REFRESH NOW</span>
         </button>
-        <p
-          class="updated"
-          id="updated-value"
-          data-i18n="WAITING FOR LOCAL SAMPLE"
-        >
-          WAITING FOR LOCAL SAMPLE
-        </p>
+        <div class="footer-meta">
+          <p
+            class="updated"
+            id="updated-value"
+            data-i18n="WAITING FOR LOCAL SAMPLE"
+          >
+            WAITING FOR LOCAL SAMPLE
+          </p>
+          <button
+            class="update-button"
+            id="update-button"
+            type="button"
+            aria-haspopup="dialog"
+            aria-controls="update-dialog"
+            aria-expanded="false"
+          >
+            <span id="update-footer-version">—</span>
+            <span class="update-footer-dot" aria-hidden="true">·</span>
+            <span id="update-footer-status" data-i18n="Updates">Updates</span>
+          </button>
+        </div>
       </footer>
 
       <section
@@ -411,5 +425,110 @@
         </div>
       </section>
     </main>
+
+    <dialog
+      class="update-dialog"
+      id="update-dialog"
+      aria-labelledby="update-title"
+      aria-describedby="update-detail"
+    >
+      <header class="source-heading update-heading">
+        <p data-i18n="SYSTEM / UPDATES">SYSTEM / UPDATES</p>
+        <button
+          class="source-close"
+          id="update-close"
+          type="button"
+          aria-label="Close updates"
+          data-i18n-aria-label="Close updates"
+          autofocus
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="m5 5 10 10M15 5 5 15" />
+          </svg>
+        </button>
+      </header>
+      <div class="update-content">
+        <div class="update-state" role="status" aria-atomic="true">
+          <h2 id="update-title" data-i18n="Companion updates">
+            Companion updates
+          </h2>
+          <p id="update-detail"></p>
+        </div>
+        <dl class="update-versions">
+          <div>
+            <dt data-i18n="Installed version">Installed version</dt>
+            <dd id="update-current-version">—</dd>
+          </div>
+          <div id="update-new-version-row" hidden>
+            <dt data-i18n="New version">New version</dt>
+            <dd id="update-new-version">—</dd>
+          </div>
+        </dl>
+        <div class="update-progress-group" id="update-progress-group" hidden>
+          <progress
+            id="update-progress"
+            max="100"
+            aria-label="Update progress"
+            data-i18n-aria-label="Update progress"
+          ></progress>
+          <span id="update-progress-label" aria-hidden="true"></span>
+        </div>
+        <p class="update-note" id="update-note" hidden></p>
+        <label class="update-preference">
+          <input
+            type="checkbox"
+            id="update-automatic"
+            aria-describedby="update-automatic-detail"
+          />
+          <span>
+            <strong data-i18n="Check automatically">Check automatically</strong>
+            <span
+              id="update-automatic-detail"
+              data-i18n="Notify me about new versions. Installation always needs my approval."
+              >Notify me about new versions. Installation always needs my
+              approval.</span
+            >
+          </span>
+        </label>
+        <p class="update-feedback" id="update-feedback" role="alert" hidden></p>
+        <div class="update-actions">
+          <button
+            class="source-secondary"
+            id="update-later"
+            type="button"
+            data-i18n="Close"
+          >
+            Close
+          </button>
+          <button
+            class="source-secondary"
+            id="update-downloads"
+            type="button"
+            aria-describedby="update-detail"
+            data-i18n="View downloads"
+            hidden
+          >
+            View downloads
+          </button>
+          <button
+            class="source-primary"
+            id="update-action"
+            type="button"
+            aria-describedby="update-note"
+            data-i18n="Check for updates"
+          >
+            Check for updates
+          </button>
+        </div>
+        <p
+          class="update-preview"
+          id="update-preview"
+          data-i18n="Local preview · no downloads or changes"
+          hidden
+        >
+          Local preview · no downloads or changes
+        </p>
+      </div>
+    </dialog>
   </body>
 </html>

@@ -1,0 +1,13 @@
+[package]
+name = "statusline-updater-verifier"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT"
+publish = false
+
+# Independent of Tauri/native UI dependencies: finalizer and recovery only need
+# the same audited verification implementation used by the native updater.
+[dependencies]
+base64 = "=0.23.1"
+minisign-verify = "=0.2.5"

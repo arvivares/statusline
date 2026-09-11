@@ -18,7 +18,7 @@ const installerExtensions = new Set([
   ".rpm",
 ]);
 
-const releaseMetadataFiles = new Set(["RELEASE-MANIFEST.json"]);
+const releaseMetadataFiles = new Set(["RELEASE-MANIFEST.json", "updater.json"]);
 
 export async function generateChecksums(inputDirectory) {
   const files = await collectInstallerFiles(resolve(inputDirectory));
@@ -49,6 +49,8 @@ async function collectInstallerFiles(directory) {
     } else if (
       entry.isFile() &&
       (installerExtensions.has(extension(entry.name).toLowerCase()) ||
+        /\.(?:AppImage|exe|msi|app\.tar\.gz)\.sig$/u.test(entry.name) ||
+        entry.name.endsWith(".app.tar.gz") ||
         releaseMetadataFiles.has(entry.name))
     ) {
       files.push(path);
