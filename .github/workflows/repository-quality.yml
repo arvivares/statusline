@@ -140,17 +140,18 @@ jobs:
         run: node scripts/generate-download-qr.mjs --check
 
       - name: Validate documentation and desktop release policy
+        # Release signature fixtures use the same pinned Rust verifier as CI.
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt
+          rustup default "$RUST_VERSION"
+
+      - name: Check documentation and desktop release policy
         run: npm run release:check
         working-directory: apps/desktop
 
       - name: Validate relay
         run: npm run db:migrate:local && npm test && npm run check
         working-directory: services/relay
-
-      - name: Install pinned Rust formatter
-        run: |
-          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt
-          rustup default "$RUST_VERSION"
 
       - name: Check Rust formatting
         run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check

@@ -269,7 +269,7 @@ async fn prepare_update(
     let manifest: serde_json::Value =
         serde_json::from_slice(&bounded_body(response, MAX_MANIFEST_BYTES as usize).await?)
             .map_err(|_| ())?;
-    let mut update = app
+    let mut builder = app
         .updater_builder()
         .target(target)
         .endpoints(vec![object_url])
@@ -278,7 +278,13 @@ async fn prepare_update(
         .configure_client(github_client)
         // On Windows, keep the tray/window alive if ShellExecute fails. The
         // plugin exits the process only after successfully launching the installer.
-        .on_before_exit(|| {})
+        .on_before_exit(|| {});
+    if target == "windows-x86_64-msi" {
+        // Ordinary MSI installs never auto-launch. Opt in only after explicit
+        // update consent, retaining the interactive user's per-user context.
+        builder = builder.installer_arg("STATUSLINE_UPDATER=1");
+    }
+    let mut update = builder
         .build()
         .map_err(|_| ())?
         .check()

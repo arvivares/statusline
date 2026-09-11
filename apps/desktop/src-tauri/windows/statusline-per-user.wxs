@@ -40,7 +40,12 @@
 
         <InstallExecuteSequence>
             <RemoveShortcuts>Installed AND NOT UPGRADINGPRODUCTCODE</RemoveShortcuts>
+            <!-- No launch on a normal installation. Only a confirmed updater
+                 transaction opts in, after the per-user install has committed. -->
+            <Custom Action="LaunchUpdatedApplication" After="InstallFinalize">STATUSLINE_UPDATER = "1" AND AUTOLAUNCHAPP = "True" AND NOT Installed AND NOT REMOVE</Custom>
         </InstallExecuteSequence>
+
+        <CustomAction Id="LaunchUpdatedApplication" Impersonate="yes" FileKey="Path" ExeCommand="[LAUNCHAPPARGS]" Return="asyncNoWait" />
 
         <Media Id="1" Cabinet="app.cab" EmbedCab="yes" />
 

@@ -419,9 +419,13 @@ assert(
     windowsMsiTemplate.includes('<Directory Id="LocalAppDataFolder">') &&
     windowsMsiTemplate.includes('Name="MainExecutable"') &&
     windowsMsiTemplate.includes('Root="HKCU"') &&
-    !windowsMsiTemplate.includes("LaunchApplication") &&
-    !windowsMsiTemplate.includes("AUTOLAUNCHAPP"),
-  "MSI must install in the current user's LocalAppData without launching from Windows Installer",
+    !windowsMsiTemplate.includes("WIXUI_EXITDIALOGOPTIONALCHECKBOX") &&
+    windowsMsiTemplate.includes('Impersonate="yes" FileKey="Path"') &&
+    windowsMsiTemplate.includes(
+      'After="InstallFinalize">STATUSLINE_UPDATER = "1" AND AUTOLAUNCHAPP = "True" AND NOT Installed AND NOT REMOVE',
+    ) &&
+    windowsSmokeScript.includes("Assert-MsiUpdaterReady"),
+  "MSI must install per-user; only a confirmed updater transaction may restart the app, with a Windows readiness smoke test",
 );
 assert(
   windowsConfig.bundle?.windows?.webviewInstallMode?.type ===
