@@ -471,6 +471,8 @@ for (const relativePath of [
   "scripts/updater-artifacts.test.mjs",
   "scripts/sign-updater-artifacts.mjs",
   "scripts/package-macos-updater.sh",
+  "scripts/verify-macos-architectures.sh",
+  "scripts/verify-macos-architectures.test.mjs",
   "scripts/verify-release-download.mjs",
   "scripts/smoke-installers-windows.ps1",
   "scripts/smoke-installers-linux.sh",
