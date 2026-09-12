@@ -27,6 +27,7 @@ export type UpdaterStatus = Readonly<{
   version: string | null;
   automatic: boolean;
   dismissedVersion: string | null;
+  presentationId: number;
   installable: boolean;
   downloaded: number;
   total: number | null;
@@ -100,6 +101,7 @@ const initialStatus: UpdaterStatus = {
   version: null,
   automatic: false,
   dismissedVersion: null,
+  presentationId: 0,
   installable: false,
   downloaded: 0,
   total: null,
@@ -123,6 +125,8 @@ export function parseUpdaterStatus(payload: unknown): UpdaterStatus {
     typeof status.currentVersion !== "string" ||
     !nullableString(status.version) ||
     !nullableString(status.dismissedVersion) ||
+    !Number.isSafeInteger(status.presentationId) ||
+    (status.presentationId as number) < 0 ||
     !nullableString(status.error) ||
     typeof status.automatic !== "boolean" ||
     typeof status.installable !== "boolean" ||
@@ -205,12 +209,22 @@ export function copyForUpdate(status: UpdaterStatus) {
 export class UpdateNotices {
   private shown = new Set<string>();
   private dismissed = new Set<string>();
+  private presentationId = -1;
 
-  dismiss(version: string): void {
+  private sync(presentationId: number): void {
+    if (presentationId === this.presentationId) return;
+    this.presentationId = presentationId;
+    this.shown.clear();
+    this.dismissed.clear();
+  }
+
+  dismiss(version: string, presentationId: number): void {
+    this.sync(presentationId);
     this.dismissed.add(version);
   }
 
   take(status: UpdaterStatus, focused: boolean): boolean {
+    this.sync(status.presentationId);
     const version = status.version;
     if (
       !focused ||
@@ -227,6 +241,7 @@ export class UpdateNotices {
   }
 
   markShown(status: UpdaterStatus): void {
+    this.sync(status.presentationId);
     if (status.phase === "available" && status.version)
       this.shown.add(status.version);
   }
@@ -252,7 +267,12 @@ export class UpdaterController {
     this.revision++;
     this.ready = true;
     try {
-      this.status = parseUpdaterStatus(payload);
+      const next = parseUpdaterStatus(payload);
+      if (next.presentationId !== this.status.presentationId) {
+        this.dismissals.clear();
+        this.feedback = null;
+      }
+      this.status = next;
     } catch {
       this.status = { ...this.status, phase: "error", error: null };
     }
@@ -361,23 +381,29 @@ export class UpdaterController {
 
   async dismiss(): Promise<void> {
     const version = this.status.version;
+    const presentationId = this.status.presentationId;
+    const key = `${presentationId}:${version}`;
     if (
       this.status.phase !== "available" ||
       !version ||
-      this.dismissals.has(version)
+      this.dismissals.has(key)
     )
       return;
-    // Suppress repeated events immediately, even while persistence is in flight.
-    this.notices.dismiss(version);
-    this.dismissals.add(version);
+    // Suppress repeated events immediately, even while the IPC is in flight.
+    this.notices.dismiss(version, presentationId);
+    this.dismissals.add(key);
     try {
-      await this.runtime("dismiss_update", { version });
-      if (this.status.version === version)
+      await this.runtime("dismiss_update", { version, presentationId });
+      if (
+        this.status.version === version &&
+        this.status.presentationId === presentationId
+      )
         this.status = { ...this.status, dismissedVersion: version };
     } catch {
-      this.dismissals.delete(version);
-      this.feedback =
-        "Could not save this dismissal. The update may appear again next time.";
+      this.dismissals.delete(key);
+      if (this.status.presentationId === presentationId)
+        this.feedback =
+          "Could not save this dismissal. The update may appear again next time.";
     }
     this.changed();
   }

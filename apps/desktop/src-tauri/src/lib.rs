@@ -232,6 +232,12 @@ async fn clear_codex_path(app: AppHandle) -> Result<CodexDiagnostic, String> {
 
 #[tauri::command]
 fn frontend_ready(app: AppHandle) {
+    if app
+        .get_webview_window("main")
+        .is_some_and(|window| window.is_visible().unwrap_or(false))
+    {
+        updates::window_opened(&app);
+    }
     #[cfg(target_os = "windows")]
     schedule_initial_window_activation(app);
 
@@ -457,13 +463,17 @@ fn show_main_window(app: &AppHandle) {
     let Some(window) = app.get_webview_window("main") else {
         return;
     };
+    let was_visible = window.is_visible().unwrap_or(true);
     let native_window = window.as_ref().window();
     if native_window.move_window(Position::TrayCenter).is_err() {
         let _ = native_window.move_window(Position::BottomRight);
     }
     let _ = window.unminimize();
-    let _ = window.show();
+    let shown = window.show().is_ok();
     let _ = window.set_focus();
+    if shown && !was_visible {
+        updates::window_opened(app);
+    }
 }
 
 fn hide_main_window(app: &AppHandle) {

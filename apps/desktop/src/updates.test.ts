@@ -113,6 +113,8 @@ describe("updater presentation", () => {
       { ...state("idle"), phase: "unknown" },
       { ...state("idle"), automatic: "true" },
       { ...state("idle"), downloaded: NaN },
+      { ...state("idle"), presentationId: -1 },
+      { ...state("idle"), presentationId: 1.5 },
       { ...state("idle"), version: { html: "<img>" } },
     ]) {
       expect(() => parseUpdaterStatus(invalid)).toThrow(
@@ -193,7 +195,7 @@ describe("automatic updater notices", () => {
     );
   });
 
-  it("honors persisted dismissal and automatic preference without suppressing future versions", () => {
+  it("honors this opening's dismissal and automatic preference without suppressing future versions", () => {
     const notices = new UpdateNotices();
     expect(
       notices.take(state("available", { dismissedVersion: "0.1.18" }), true),
@@ -201,11 +203,37 @@ describe("automatic updater notices", () => {
     expect(notices.take(state("available", { automatic: false }), true)).toBe(
       false,
     );
-    notices.dismiss("0.1.18");
+    notices.dismiss("0.1.18", 0);
     expect(notices.take(state("available"), true)).toBe(false);
     expect(notices.take(state("available", { version: "0.1.19" }), true)).toBe(
       true,
     );
+  });
+
+  it("offers the same update on reopening but not on repeated focus or status events", () => {
+    const notices = new UpdateNotices();
+    expect(notices.take(state("available", { presentationId: 1 }), true)).toBe(
+      true,
+    );
+    notices.dismiss("0.1.18", 1);
+    expect(notices.take(state("available", { presentationId: 1 }), true)).toBe(
+      false,
+    );
+    expect(notices.take(state("available", { presentationId: 2 }), false)).toBe(
+      false,
+    );
+    expect(notices.take(state("available", { presentationId: 2 }), true)).toBe(
+      true,
+    );
+    expect(notices.take(state("available", { presentationId: 2 }), true)).toBe(
+      false,
+    );
+    expect(
+      notices.take(
+        state("available", { presentationId: 3, automatic: false }),
+        true,
+      ),
+    ).toBe(false);
   });
 
   it("never opens for progress/error events or an obsolete deferred release", () => {
@@ -355,7 +383,7 @@ describe("updater native actions", () => {
     expect(runtime).toHaveBeenCalledTimes(2);
   });
 
-  it("persists Later exactly once and suppresses an event while the write is pending", async () => {
+  it("snoozes Later exactly once for this opening while IPC is pending", async () => {
     const dismissal = deferred<unknown>();
     const runtime = vi.fn(() => dismissal.promise);
     const controller = new UpdaterController(runtime, vi.fn());
@@ -366,10 +394,26 @@ describe("updater native actions", () => {
     expect(controller.notices.take(controller.status, true)).toBe(false);
     expect(runtime).toHaveBeenCalledExactlyOnceWith("dismiss_update", {
       version: "0.1.18",
+      presentationId: 0,
     });
     dismissal.resolve(undefined);
     await first;
     expect(controller.status.dismissedVersion).toBe("0.1.18");
+  });
+
+  it("does not let a late Later response dismiss a newly opened presentation", async () => {
+    const pending = deferred<unknown>();
+    const runtime = vi.fn(() => pending.promise);
+    const controller = new UpdaterController(runtime, vi.fn());
+    controller.accept(state("available", { presentationId: 1 }));
+    const dismissing = controller.dismiss();
+    controller.accept(state("available", { presentationId: 2 }));
+    pending.resolve(
+      state("available", { presentationId: 1, dismissedVersion: "0.1.18" }),
+    );
+    await dismissing;
+    expect(controller.status.dismissedVersion).toBeNull();
+    expect(controller.notices.take(controller.status, true)).toBe(true);
   });
 
   it("reports a failed dismissal safely and permits a later retry", async () => {

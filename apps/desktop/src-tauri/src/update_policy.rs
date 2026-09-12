@@ -4,6 +4,26 @@ use serde::Deserialize;
 use std::time::Duration;
 
 pub const CHECK_INTERVAL: Duration = Duration::from_secs(6 * 60 * 60);
+pub const FOREGROUND_CHECK_INTERVAL: Duration = Duration::from_secs(15 * 60);
+
+#[derive(Clone, Copy)]
+pub enum CheckReason {
+    Background,
+    Foreground,
+    Manual,
+}
+
+pub fn should_check(automatic: bool, elapsed: Option<Duration>, reason: CheckReason) -> bool {
+    if !automatic && !matches!(reason, CheckReason::Manual) {
+        return false;
+    }
+    let interval = match reason {
+        CheckReason::Background => CHECK_INTERVAL,
+        CheckReason::Foreground => FOREGROUND_CHECK_INTERVAL,
+        CheckReason::Manual => Duration::from_secs(60),
+    };
+    elapsed.is_none_or(|elapsed| elapsed >= interval)
+}
 
 pub fn next_check_delay(automatic: bool, elapsed: Option<Duration>) -> Option<Duration> {
     automatic.then(|| {
@@ -152,6 +172,46 @@ pub fn valid_download(candidate: &Candidate, url: &str, target: &str) -> bool {
 mod tests {
     use super::*;
     use serde_json::{Value, json};
+
+    #[test]
+    fn opening_checks_immediately_then_reuses_recent_results_without_polling_on_every_focus() {
+        assert!(should_check(true, None, CheckReason::Foreground));
+        assert!(!should_check(
+            true,
+            Some(Duration::from_secs(60)),
+            CheckReason::Foreground
+        ));
+        assert!(should_check(
+            true,
+            Some(FOREGROUND_CHECK_INTERVAL),
+            CheckReason::Foreground
+        ));
+        assert!(!should_check(
+            true,
+            Some(FOREGROUND_CHECK_INTERVAL),
+            CheckReason::Background
+        ));
+        assert!(should_check(
+            true,
+            Some(CHECK_INTERVAL),
+            CheckReason::Background
+        ));
+        for reason in [CheckReason::Foreground, CheckReason::Background] {
+            assert!(!should_check(false, None, reason));
+            assert!(!should_check(false, Some(CHECK_INTERVAL), reason));
+        }
+        assert!(should_check(false, None, CheckReason::Manual));
+        assert!(!should_check(
+            true,
+            Some(Duration::from_secs(59)),
+            CheckReason::Manual
+        ));
+        assert!(should_check(
+            true,
+            Some(Duration::from_secs(60)),
+            CheckReason::Manual
+        ));
+    }
 
     #[test]
     fn manual_check_reschedules_without_skipping_an_extra_six_hours() {

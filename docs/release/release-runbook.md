@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.18` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.18`;
-- Android candidate: `versionCode 14` (Google Play submission is separate);
+- prepared product tag: `v0.1.19` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.19`;
+- Android candidate: `versionCode 15` (Google Play submission is separate);
 - separately uploaded iOS candidate: `1.0.1 (6)`, acknowledged for TestFlight
   processing. A local development-signed USB upgrade confirmed an independent
   widget read with the existing pairing; TestFlight availability and the
@@ -50,7 +50,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.18`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.19`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -125,8 +125,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.18 -m "Statusline 0.1.18 beta"
-git push origin v0.1.18
+git tag -s v0.1.19 -m "Statusline 0.1.19 beta"
+git push origin v0.1.19
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -134,17 +134,26 @@ targets the exact workflow commit and matches `release.json`. The signed tag is 
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
 
-### 0.1.18 candidate gates
+### 0.1.19 candidate gates
 
 - Preserve the `0.1.16` window dismissal, Windows desktop discovery and iOS bundle
-  guards, plus the `0.1.17` updater. This patch ships the Still Signature design
-  from PR #32 in the companion and Android app/widgets.
+  guards, plus the `0.1.18` Still Signature design. This patch compacts the
+  companion, fixes macOS signature-requirement parsing and announces available
+  updates when opening the companion. Native mobile layouts are not shrunk.
   Production Rust tests and the PowerShell fixture must pass on Windows, Linux
   and macOS as applicable before signing/tagging.
 - Validate update discovery, exact platform/format selection, duplicate operation
-  prevention and signed artifact publication. Validate a real `0.1.17 → 0.1.18`
-  upgrade, including restart and pairing preservation, on each supported updater
-  installation type; this remains a physical-device QA gate.
+  prevention and signed artifact publication. The maintainer reports a successful
+  Windows update to `0.1.18`; separate MSI/NSIS coverage is not yet confirmed.
+  Affected macOS `0.1.17`/`0.1.18` users need one manual DMG/PKG installation of
+  the fixed updater. Validate a real `0.1.19 → later version` macOS upgrade,
+  including restart and pairing preservation, before claiming end-to-end success.
+  Real `codesign` tests and a signed-payload replacement rehearsal on temporary
+  copies passed locally; they do not prove a live restart or preserved pairing.
+- Verify foreground automatic notices on Windows and macOS without clicking
+  Updates: Later snoozes one opening, reopen reminds again, repeated focus does
+  not spam dialogs, and background checks never steal focus. Reopening reuses
+  checks younger than 15 minutes; the six-hour background schedule remains.
 - Review and merge the preparation PR before creating the public tag. Do not
   retarget a published tag or publish branch-QA artifacts as a verified release.
 - Record the remaining physical-device checks explicitly in the beta notes:
