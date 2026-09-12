@@ -14,6 +14,8 @@ requests are welcome.
   architecture, delivery sequence and feature backlog.
 - [Official brand kit](../branding/README.md): shared logo geometry, platform icons
   and reproducible asset generation.
+- [Still Signature](architecture/still-signature.md): approved app/widget visual
+  language, segmented-meter behavior and native verification requirements.
 
 ## Architecture and protocol
 

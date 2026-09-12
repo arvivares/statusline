@@ -88,7 +88,7 @@ private struct EmptyDataPlaneWidget: View {
 
             Spacer(minLength: 0)
 
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text("--")
                     .font(.largeTitle.bold())
                     .foregroundStyle(DataPlaneTheme.ink)
@@ -112,55 +112,30 @@ private struct SmallDataPlaneWidget: View {
     let date: Date
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                DataPlaneLabel(text: L10n.text("WEEKLY LIMIT"), tint: DataPlaneTheme.signal)
-                Spacer()
-                WidgetSampleAge(status: status, date: date)
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(L10n.text("Codex")).font(.subheadline.weight(.medium)).foregroundStyle(DataPlaneTheme.ink)
+                Text(L10n.text("Weekly")).font(.system(size: 10)).foregroundStyle(DataPlaneTheme.muted)
             }
-
             Spacer(minLength: 0)
-
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(status.remainingPercentage, format: .number)
-                    .font(.system(.largeTitle, design: .rounded).bold())
-                    .tracking(-2)
-                    .foregroundStyle(DataPlaneTheme.ink)
-                    .contentTransition(.numericText())
-
-                Text("%")
-                    .font(.headline.bold())
-                    .foregroundStyle(DataPlaneTheme.emphasis(for: status.remainingPercentage))
-            }
-
-            DataPlaneMeter(
-                remainingPercentage: status.remainingPercentage,
-                height: 6,
-                showsScale: false
-            )
-            .accessibilityHidden(true)
-
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 2) {
-                    DataPlaneLabel(text: L10n.text("RESETS"))
-                    Text(status.resetDate, format: .dateTime.hour().minute())
-                        .font(.caption.monospaced().weight(.bold))
-                        .foregroundStyle(DataPlaneTheme.signal)
-                }
-
-                Spacer()
-
-                Text(status.resetDate, format: .dateTime.day().month(.abbreviated))
-                    .font(.caption2.monospaced())
-                    .foregroundStyle(DataPlaneTheme.muted)
-                    .textCase(.uppercase)
-            }
+            WidgetQuotaNumber(status: status, size: 46)
+            DataPlaneMeter(remainingPercentage: status.remainingPercentage, height: 5, stripeWidth: 2)
+                .accessibilityHidden(true)
+            Text(L10n.text("Resets") + " " + status.resetDate.formatted(
+                .dateTime.day().month(.abbreviated).hour().minute().locale(L10n.locale)
+            ))
+            .font(.system(size: 10))
+            .foregroundStyle(DataPlaneTheme.muted)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            WidgetSampleAge(status: status, date: date)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.text("Codex weekly limit"))
         .accessibilityValue(
             L10n.text("{0} percent remaining. Resets {1}", status.remainingPercentage,
                       status.resetDate.formatted(.dateTime.locale(L10n.locale)))
+            + ". " + L10n.text("Last sample: {0}", L10n.relative(status.updatedAt))
         )
     }
 }
@@ -170,71 +145,56 @@ private struct MediumDataPlaneWidget: View {
     let date: Date
 
     var body: some View {
-        HStack(spacing: 14) {
-            VStack(alignment: .leading, spacing: 6) {
-                DataPlaneLabel(text: L10n.text("REMAINING"), tint: DataPlaneTheme.signal)
-
-                HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(status.remainingPercentage, format: .number)
-                        .font(.system(.largeTitle, design: .rounded).bold())
-                        .tracking(-2)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(L10n.text("Codex")).font(.subheadline.weight(.medium)).foregroundStyle(DataPlaneTheme.ink)
+                DataPlaneLabel(text: L10n.text("Weekly"))
+                Spacer()
+                WidgetSampleAge(status: status, date: date)
+            }
+            HStack(alignment: .center) {
+                WidgetQuotaNumber(status: status, size: 58)
+                Spacer(minLength: 16)
+                VStack(alignment: .trailing, spacing: 4) {
+                    DataPlaneLabel(text: L10n.text("Resets"))
+                    Text(status.resetDate, format: .dateTime.hour().minute())
+                        .font(.title3.weight(.medium))
                         .foregroundStyle(DataPlaneTheme.ink)
-                        .contentTransition(.numericText())
-
-                    Text("%")
-                        .font(.headline.bold())
-                        .foregroundStyle(DataPlaneTheme.emphasis(for: status.remainingPercentage))
+                    Text(status.resetDate, format: .dateTime.day().month(.abbreviated))
+                        .font(.caption)
+                        .foregroundStyle(DataPlaneTheme.muted)
                 }
             }
-            .frame(minWidth: 72, alignment: .leading)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    DataPlaneLabel(text: L10n.text("WEEKLY LIMIT"))
-                    Spacer()
-                    WidgetSampleAge(status: status, date: date)
-                }
-
-                DataPlaneMeter(
-                    remainingPercentage: status.remainingPercentage,
-                    height: 7,
-                    showsScale: false
-                )
-
-                HStack {
-                    Text("0")
-                    Spacer()
-                    Text(L10n.text("{0} LEFT", status.remainingPercentage))
-                    Spacer()
-                    Text("100")
-                }
-                .font(.caption2.monospaced())
-                .foregroundStyle(DataPlaneTheme.muted)
-            }
-
-            Rectangle()
-                .fill(DataPlaneTheme.line)
-                .frame(width: 1)
+            DataPlaneMeter(remainingPercentage: status.remainingPercentage, height: 6)
                 .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 5) {
-                DataPlaneLabel(text: L10n.text("RESETS"))
-                Text(status.resetDate, format: .dateTime.hour().minute())
-                    .font(.headline.monospaced().weight(.bold))
-                    .foregroundStyle(DataPlaneTheme.signal)
-                Text(status.resetDate, format: .dateTime.day().month(.abbreviated))
-                    .font(.caption2.monospaced())
-                    .foregroundStyle(DataPlaneTheme.muted)
-                    .textCase(.uppercase)
-            }
-            .frame(minWidth: 62, alignment: .leading)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.text("Codex weekly limit"))
         .accessibilityValue(
             L10n.text("{0} percent remaining. Resets {1}", status.remainingPercentage,
                       status.resetDate.formatted(.dateTime.locale(L10n.locale)))
+            + ". " + L10n.text("Last sample: {0}", L10n.relative(status.updatedAt))
         )
+    }
+}
+
+private struct WidgetQuotaNumber: View {
+    let status: CodexUsageStatus
+    let size: CGFloat
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(status.remainingPercentage, format: .number)
+                .font(.system(size: size, weight: .medium))
+                .monospacedDigit()
+                .tracking(-2)
+                .foregroundStyle(DataPlaneTheme.ink)
+            Text("%")
+                .font(.system(size: size * 0.38))
+                .foregroundStyle(DataPlaneTheme.muted)
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.65)
     }
 }
 
@@ -247,7 +207,7 @@ private struct WidgetSampleAge: View {
             Image(systemName: CodexSyncPolicy.isStale(status, at: date) ? "clock.badge.exclamationmark" : "clock")
             Text(status.updatedAt, style: .relative)
         }
-        .font(.system(size: 9, weight: .medium, design: .monospaced))
+        .font(.system(size: 9, weight: .medium))
         .foregroundStyle(CodexSyncPolicy.isStale(status, at: date) ? DataPlaneTheme.muted : DataPlaneTheme.signal)
         .lineLimit(1)
         .minimumScaleFactor(0.75)

@@ -19,9 +19,9 @@ import {
 import { UsageController } from "./controller";
 import { copyForState, type UsageState } from "./usage";
 import { bindUpdater, refreshUpdaterCopy } from "./updates";
+import { signatureMeter } from "./signature-meter";
 
 const FOCUS_REFRESH_AGE_MS = 60 * 1_000;
-const SEGMENT_COUNT = 20;
 
 const shell = requireElement("meter-shell", HTMLElement);
 const liveLabel = requireElement("live-label", HTMLElement);
@@ -106,13 +106,21 @@ let lastUsageState: UsageState | null = null;
 let lastDiagnostic: CodexDiagnostic | null = null;
 let lastRelayState: RelayStatus | null = null;
 
-const meterSegments = Array.from({ length: SEGMENT_COUNT }, () => {
-  const segment = document.createElement("span");
-  segment.className = "meter-segment";
-  segment.setAttribute("aria-hidden", "true");
-  return segment;
-});
-meterTrack.replaceChildren(...meterSegments);
+let displayedPercentage: number | null = null;
+const meterFill = document.createElement("span");
+meterFill.className = "signature-fill";
+const meterTip = document.createElement("span");
+meterTip.className = "signature-tip";
+meterFill.setAttribute("aria-hidden", "true");
+meterTip.setAttribute("aria-hidden", "true");
+meterTrack.replaceChildren(meterFill, meterTip);
+function paintMeter(): void {
+  const geometry = signatureMeter(displayedPercentage, meterTrack.clientWidth);
+  meterTrack.style.setProperty("--fill", geometry.value + "%");
+  meterTrack.style.setProperty("--tip-left", geometry.tipLeft + "px");
+  meterTrack.style.setProperty("--tip-width", geometry.tipWidth + "px");
+}
+new ResizeObserver(paintMeter).observe(meterTrack);
 
 const previewState = readPreviewState();
 // Local, account-free visual QA only. Packaged apps always use the OS language.
@@ -236,6 +244,9 @@ function renderUsage(state: UsageState): void {
   const liveState = labelForState(state);
 
   document.body.dataset.state = state.status;
+  document.body.dataset.multipleLimits = String(
+    state.status === "ready" && state.limitCount > 1,
+  );
   document.body.dataset.level =
     state.status === "ready" && state.weekly.remainingPercent <= 20
       ? "critical"
@@ -246,7 +257,7 @@ function renderUsage(state: UsageState): void {
   );
   refreshButton.disabled = state.status === "loading";
   refreshLabel.textContent =
-    state.status === "loading" ? t("READING CODEX") : t("REFRESH NOW");
+    state.status === "loading" ? t("Reading Codex") : t("Refresh");
   liveLabel.textContent = liveState;
   statusValue.textContent = liveState;
   eyebrow.textContent = copy.eyebrow;
@@ -261,8 +272,10 @@ function renderUsage(state: UsageState): void {
 
     if (state.shortWindow === null) {
       shortValue.textContent = t("NOT PUBLISHED");
+      shortValue.closest(".metric-cell")?.setAttribute("hidden", "");
       shortDetail.textContent = t("NO SHORT WINDOW");
     } else {
+      shortValue.closest(".metric-cell")?.removeAttribute("hidden");
       shortValue.textContent = t(
         "{0}% LEFT",
         Math.round(state.shortWindow.remainingPercent),
@@ -280,7 +293,7 @@ function renderUsage(state: UsageState): void {
         ? t("AVAILABLE · STRICTEST OF {0} LIMITS", state.limitCount)
         : t("AVAILABLE · QUOTA METADATA ONLY");
     updatedValue.textContent = t(
-      "SAMPLED {0} · CODEX LOCAL",
+      "Last sample: {0}",
       formatTime(state.checkedAt),
     );
 
@@ -950,9 +963,8 @@ function errorMessage(_error: unknown): string {
 function setMeter(percentage: number | null, loading: boolean): void {
   meterTrack.classList.toggle("is-loading", loading);
 
-  for (const segment of meterSegments) {
-    segment.classList.remove("is-full", "is-partial");
-  }
+  displayedPercentage = percentage;
+  paintMeter();
 
   if (percentage === null) {
     meterValue.textContent = loading ? "···" : "—";
@@ -966,16 +978,6 @@ function setMeter(percentage: number | null, loading: boolean): void {
 
   const normalized = Math.min(Math.max(percentage, 0), 100);
   const rounded = Math.round(normalized);
-  const fullSegments = Math.floor(normalized / 5);
-  const hasPartialSegment = normalized < 100 && normalized % 5 !== 0;
-
-  meterSegments.forEach((segment, index) => {
-    if (index < fullSegments) {
-      segment.classList.add("is-full");
-    } else if (index === fullSegments && hasPartialSegment) {
-      segment.classList.add("is-partial");
-    }
-  });
 
   meterValue.textContent = rounded.toString();
   meterSuffix.hidden = false;
@@ -993,7 +995,7 @@ function labelForState(state: UsageState): string {
     case "loading":
       return t("READING");
     case "ready":
-      return t("LIVE");
+      return t("AVAILABLE");
     case "unavailable":
       return t("OFFLINE");
     case "error":

@@ -1,18 +1,52 @@
-<?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="200dp"
-    android:height="7dp"
-    android:viewportWidth="200"
-    android:viewportHeight="7">
-    <path
-        android:fillColor="@color/data_plane_signal"
-        android:pathData="M0,0 L8,0 L8,7 L0,7 Z M10,0 L18,0 L18,7 L10,7 Z M20,0 L28,0 L28,7 L20,7 Z M30,0 L38,0 L38,7 L30,7 Z M40,0 L48,0 L48,7 L40,7 Z M50,0 L58,0 L58,7 L50,7 Z M60,0 L68,0 L68,7 L60,7 Z M70,0 L78,0 L78,7 L70,7 Z M80,0 L88,0 L88,7 L80,7 Z M90,0 L98,0 L98,7 L90,7 Z" />
-    <path
-        android:fillColor="@color/data_plane_ink"
-        android:pathData="M100,0 L108,0 L108,7 L100,7 Z" />
-    <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M0.5,0.5 L7.5,0.5 L7.5,6.5 L0.5,6.5 Z M10.5,0.5 L17.5,0.5 L17.5,6.5 L10.5,6.5 Z M20.5,0.5 L27.5,0.5 L27.5,6.5 L20.5,6.5 Z M30.5,0.5 L37.5,0.5 L37.5,6.5 L30.5,6.5 Z M40.5,0.5 L47.5,0.5 L47.5,6.5 L40.5,6.5 Z M50.5,0.5 L57.5,0.5 L57.5,6.5 L50.5,6.5 Z M60.5,0.5 L67.5,0.5 L67.5,6.5 L60.5,6.5 Z M70.5,0.5 L77.5,0.5 L77.5,6.5 L70.5,6.5 Z M80.5,0.5 L87.5,0.5 L87.5,6.5 L80.5,6.5 Z M90.5,0.5 L97.5,0.5 L97.5,6.5 L90.5,6.5 Z M100.5,0.5 L107.5,0.5 L107.5,6.5 L100.5,6.5 Z M110.5,0.5 L117.5,0.5 L117.5,6.5 L110.5,6.5 Z M120.5,0.5 L127.5,0.5 L127.5,6.5 L120.5,6.5 Z M130.5,0.5 L137.5,0.5 L137.5,6.5 L130.5,6.5 Z M140.5,0.5 L147.5,0.5 L147.5,6.5 L140.5,6.5 Z M150.5,0.5 L157.5,0.5 L157.5,6.5 L150.5,6.5 Z M160.5,0.5 L167.5,0.5 L167.5,6.5 L160.5,6.5 Z M170.5,0.5 L177.5,0.5 L177.5,6.5 L170.5,6.5 Z M180.5,0.5 L187.5,0.5 L187.5,6.5 L180.5,6.5 Z M190.5,0.5 L197.5,0.5 L197.5,6.5 L190.5,6.5 Z"
-        android:strokeColor="@color/data_plane_line"
-        android:strokeWidth="1" />
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="300dp" android:height="8dp" android:viewportWidth="300" android:viewportHeight="8">
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M0,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M6,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M12,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M18,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M24,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M30,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M36,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M42,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M48,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M54,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M60,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M66,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M72,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M78,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M84,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M90,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M96,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M102,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M108,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M114,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M120,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M126,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M132,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M138,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M144,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_signal" android:pathData="M150,0h4v8h-4z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M156,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M162,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M168,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M174,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M180,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M186,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M192,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M198,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M204,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M210,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M216,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M222,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M228,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M234,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M240,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M246,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M252,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M258,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M264,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M270,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M276,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M282,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M288,0h4v8h-4z" />
+    <path android:fillColor="@color/data_plane_track" android:pathData="M294,0h4v8h-4z" />
 </vector>

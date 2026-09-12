@@ -455,5 +455,16 @@
   "Could not save the update preference. Please try again.": "No se pudo guardar la preferencia de actualización. Inténtalo de nuevo.",
   "Could not save this dismissal. The update may appear again next time.": "No se pudo guardar el aviso descartado. La actualización podría volver a aparecer la próxima vez.",
   "Could not open downloads. Please try again.": "No se pudieron abrir las descargas. Inténtalo de nuevo.",
-  "Local preview · no downloads or changes": "Vista previa local · sin descargas ni cambios"
+  "Local preview · no downloads or changes": "Vista previa local · sin descargas ni cambios",
+  "Weekly": "Semanal",
+  "remaining": "restante",
+  "Resets": "Se reinicia",
+  "Short window": "Ventana corta",
+  "Account": "Cuenta",
+  "Private sync": "Sincronización privada",
+  "Reading from {0}": "Lectura de {0}",
+  "Details": "Detalles",
+  "Codex": "Codex",
+  "Statusline": "Statusline",
+  "OpenAI · Codex": "OpenAI · Codex"
 }

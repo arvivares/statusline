@@ -10,12 +10,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.RectF
 import android.os.Build
 import android.os.Bundle
 import android.util.SizeF
+import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
@@ -26,12 +25,7 @@ import inmerzion.statusline.protocol.UsageStatus
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
-
-internal enum class WidgetSegmentFill {
-    FULL,
-    PARTIAL,
-    EMPTY,
-}
+import kotlin.math.ceil
 
 internal enum class WidgetLayoutSize {
     COMPACT,
@@ -51,15 +45,9 @@ internal object WidgetLayoutPolicy {
         else -> WidgetLayoutSize.SMALL
     }
 
-    fun segmentFill(index: Int, remainingPercentage: Int): WidgetSegmentFill {
-        val normalized = remainingPercentage.coerceIn(0, 100)
-        val fullSegments = normalized / 5
-        val hasPartialSegment = normalized < 100 && normalized % 5 != 0
-        return when {
-            index < fullSegments -> WidgetSegmentFill.FULL
-            index == fullSegments && hasPartialSegment -> WidgetSegmentFill.PARTIAL
-            else -> WidgetSegmentFill.EMPTY
-        }
+    fun terminalStripe(remainingPercentage: Int, widthDp: Float, stepDp: Float = 6f): Int {
+        val edge = widthDp * remainingPercentage.coerceIn(0, 100) / 100f
+        return if (edge > 0 && stepDp > 0) (ceil(edge / stepDp).toInt() - 1).coerceAtLeast(0) else -1
     }
 }
 
@@ -97,12 +85,6 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
-        private const val SEGMENT_COUNT = 20
-        private const val METER_BITMAP_WIDTH = 600
-        private const val METER_BITMAP_HEIGHT = 21
-        private const val METER_SEGMENT_GAP = 3f
-        private const val METER_STROKE_WIDTH = 1.5f
-
         fun updateAll(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
             val component = ComponentName(context, StatuslineWidgetProvider::class.java)
@@ -180,7 +162,12 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
             }
             return RemoteViews(context.packageName, layout).also { views ->
                 bindLaunchAction(context, views)
-                bindStatus(context, views, status)
+                bindStatus(context, views, status, (widthDp - 24f).coerceAtLeast(1f),
+                    WidgetLayoutPolicy.layoutSize(widthDp, heightDp) == WidgetLayoutSize.SMALL)
+                if (WidgetLayoutPolicy.layoutSize(widthDp, heightDp) == WidgetLayoutSize.SMALL) {
+                    val numberSize = minOf(46f, heightDp - 86f, (widthDp - 50f) / 1.8f).coerceAtLeast(18f)
+                    views.setTextViewTextSize(R.id.widgetQuotaNumber, TypedValue.COMPLEX_UNIT_SP, numberSize)
+                }
             }
         }
 
@@ -199,18 +186,20 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
             context: Context,
             views: RemoteViews,
             status: UsageStatus?,
+            meterWidthDp: Float,
+            small: Boolean,
         ) {
             val populated = status != null
             // Set even the XML labels explicitly: an unsupported primary language
             // must not select secondary Spanish from Android's resource fallback.
             mapOf(
-                R.id.widget_weekly_limit_label to "WEEKLY LIMIT",
-                R.id.widget_weekly_limit_label_empty to "WEEKLY LIMIT",
-                R.id.widget_remaining_label to "REMAINING",
+                R.id.widget_weekly_limit_label to "Weekly",
+                R.id.widget_weekly_limit_label_empty to "Weekly",
                 R.id.widget_no_data_label to "NO DATA",
-                R.id.widget_resets_label to "RESETS",
+                R.id.widget_resets_label to "Resets",
                 R.id.widget_connect_companion to "CONNECT COMPANION",
             ).forEach { (id, key) -> views.setTextViewText(id, L10n.text(key)) }
+            views.setTextViewText(R.id.widget_weekly_limit_label, "Codex · " + L10n.text("Weekly"))
             views.setInt(R.id.widgetRoot, "setLayoutDirection", View.LAYOUT_DIRECTION_LTR)
             views.setViewVisibility(
                 R.id.widgetPopulated,
@@ -222,7 +211,7 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
             )
 
             if (status == null) {
-                views.setImageViewBitmap(R.id.widgetEmptyMeter, meterBitmap(context, 0))
+                views.setImageViewBitmap(R.id.widgetEmptyMeter, meterBitmap(context, 0, meterWidthDp, small))
                 views.setContentDescription(
                     R.id.widgetRoot,
                     L10n.text("No Statusline data. Tap to open the app and connect a companion."),
@@ -231,18 +220,17 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
             }
 
             val normalized = status.remainingPercentage.coerceIn(0, 100)
-            val emphasisColor = context.getColor(
-                if (normalized <= 20) {
-                    R.color.data_plane_critical
-                } else {
-                    R.color.data_plane_signal
-                },
-            )
             views.setTextViewText(R.id.widgetQuotaNumber, normalized.toString())
-            views.setTextViewText(R.id.widgetState, if (status.isDemo) L10n.text("DEMO") else L10n.text("LIVE"))
-            views.setTextColor(R.id.widgetQuotaPercent, emphasisColor)
-            views.setImageViewBitmap(R.id.widgetMeter, meterBitmap(context, normalized))
-            views.setTextViewText(R.id.widgetMeterScaleValue, L10n.text("{0} LEFT", normalized))
+            val elapsed = (System.currentTimeMillis() / 1_000 - status.updatedAtEpochSeconds).coerceAtLeast(0)
+            val age = when {
+                elapsed < 60 -> L10n.text("NOW")
+                elapsed < 3_600 -> L10n.text("{0} MIN AGO", elapsed / 60)
+                elapsed < 86_400 -> L10n.text("{0} H AGO", elapsed / 3_600)
+                else -> L10n.text("{0} D AGO", elapsed / 86_400)
+            }
+            views.setTextViewText(R.id.widgetState, if (status.isDemo) L10n.text("DEMO") else age)
+            views.setTextColor(R.id.widgetQuotaPercent, context.getColor(R.color.data_plane_muted))
+            views.setImageViewBitmap(R.id.widgetMeter, meterBitmap(context, normalized, meterWidthDp, small))
             views.setTextViewText(
                 R.id.widgetResetTime,
                 formatReset(status.resetAtEpochSeconds, "HH:mm"),
@@ -252,60 +240,36 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
                 formatReset(status.resetAtEpochSeconds, "dd MMM"),
             )
             val description = L10n.text("{0} percent remaining. Resets {1}", normalized,
-                formatAccessibleReset(status.resetAtEpochSeconds))
+                formatAccessibleReset(status.resetAtEpochSeconds)) + ". " + L10n.text("Last sample: {0}", age)
             views.setContentDescription(R.id.widgetRoot,
                 if (status.isDemo) L10n.text("Demo sample. {0}", description) else description)
         }
 
-        private fun meterBitmap(context: Context, remainingPercentage: Int): Bitmap {
-            val normalized = remainingPercentage.coerceIn(0, 100)
-            val signalColor = context.getColor(
-                if (normalized <= 20 && normalized > 0) {
-                    R.color.data_plane_critical
-                } else {
-                    R.color.data_plane_signal
-                },
-            )
-            val partialColor = context.getColor(R.color.data_plane_ink)
-            val lineColor = context.getColor(R.color.data_plane_line)
+        private fun meterBitmap(context: Context, remainingPercentage: Int, widthDp: Float, small: Boolean): Bitmap {
+            val density = context.resources.displayMetrics.density
+            val heightDp = if (small) 5f else 6f
             val bitmap = Bitmap.createBitmap(
-                METER_BITMAP_WIDTH,
-                METER_BITMAP_HEIGHT,
+                (widthDp * density).toInt().coerceAtLeast(1),
+                (heightDp * density).toInt().coerceAtLeast(1),
                 Bitmap.Config.ARGB_8888,
             )
             val canvas = Canvas(bitmap)
-            val fillPaint = Paint().apply {
-                isAntiAlias = false
-                style = Paint.Style.FILL
-            }
-            val strokePaint = Paint().apply {
-                isAntiAlias = false
-                color = lineColor
-                style = Paint.Style.STROKE
-                strokeWidth = METER_STROKE_WIDTH
-            }
-            val totalGap = METER_SEGMENT_GAP * (SEGMENT_COUNT - 1)
-            val segmentWidth = (METER_BITMAP_WIDTH - totalGap) / SEGMENT_COUNT
-            val inset = METER_STROKE_WIDTH / 2f
-
-            repeat(SEGMENT_COUNT) { index ->
-                val left = index * (segmentWidth + METER_SEGMENT_GAP)
-                val bounds = RectF(
-                    left + inset,
-                    inset,
-                    left + segmentWidth - inset,
-                    METER_BITMAP_HEIGHT - inset,
-                )
-                val fillColor = when (WidgetLayoutPolicy.segmentFill(index, normalized)) {
-                    WidgetSegmentFill.FULL -> signalColor
-                    WidgetSegmentFill.PARTIAL -> partialColor
-                    WidgetSegmentFill.EMPTY -> Color.TRANSPARENT
+            canvas.scale(density, density)
+            val stripe = if (small) 2f else 4f
+            val step = stripe * 1.5f
+            val terminal = WidgetLayoutPolicy.terminalStripe(remainingPercentage, widthDp, step)
+            val paint = Paint().apply { isAntiAlias = false; style = Paint.Style.FILL }
+            var x = 0f
+            var index = 0
+            while (x < widthDp) {
+                paint.color = when {
+                    index == terminal -> android.graphics.Color.WHITE
+                    index < terminal -> context.getColor(R.color.data_plane_signal)
+                    else -> context.getColor(R.color.data_plane_track)
                 }
-                if (fillColor != Color.TRANSPARENT) {
-                    fillPaint.color = fillColor
-                    canvas.drawRect(bounds, fillPaint)
-                }
-                canvas.drawRect(bounds, strokePaint)
+                canvas.drawRect(x, 0f, (x + stripe).coerceAtMost(widthDp), heightDp, paint)
+                x += step
+                index += 1
             }
             return bitmap
         }

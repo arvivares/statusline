@@ -16,6 +16,7 @@
 "/ COMPANION / DATA PLANE" = "/ COMPANION / DATA PLANE";
 "% LEFT" = "% LEFT";
 "A new version of Statusline Companion is ready." = "A new version of Statusline Companion is ready.";
+"Account" = "Account";
 "ACCOUNT CHANNEL" = "ACCOUNT CHANNEL";
 "ACCOUNT.CHANNEL" = "ACCOUNT.CHANNEL";
 "ACCOUNT.CONTROL" = "ACCOUNT.CONTROL";
@@ -61,6 +62,7 @@
 "CLOSE" = "CLOSE";
 "Close settings" = "Close settings";
 "Close updates" = "Close updates";
+"Codex" = "Codex";
 "Codex · {0}% left" = "Codex · {0}% left";
 "Codex account disconnected. Your devices remain paired." = "Codex account disconnected. Your devices remain paired.";
 "Codex App Server closed unexpectedly." = "Codex App Server closed unexpectedly.";
@@ -151,6 +153,7 @@
 "Demo sample. {0}" = "Demo sample. {0}";
 "DESKTOP APP" = "DESKTOP APP";
 "Desktop companion" = "Desktop companion";
+"Details" = "Details";
 "Device connected with encryption." = "Device connected with encryption.";
 "Device connected. Waiting for the companion’s first sample." = "Device connected. Waiting for the companion’s first sample.";
 "Device connected. Waiting for the first publication." = "Device connected. Waiting for the first publication.";
@@ -237,6 +240,7 @@
 "Open Source Settings to detect or select a local Codex runtime." = "Open Source Settings to detect or select a local Codex runtime.";
 "Open Source Settings to detect or select the local CLI." = "Open Source Settings to detect or select the local CLI.";
 "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample." = "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample.";
+"OpenAI · Codex" = "OpenAI · Codex";
 "Opening secure OpenAI sign-in…" = "Opening secure OpenAI sign-in…";
 "Opens an external web page" = "Opens an external web page";
 "OR PASTE" = "OR PASTE";
@@ -264,6 +268,7 @@
 "Private pairing QR" = "Private pairing QR";
 "Private QR" = "Private QR";
 "Private QR to pair Statusline" = "Private QR to pair Statusline";
+"Private sync" = "Private sync";
 "PRIVATE.PAIRING.LINK" = "PRIVATE.PAIRING.LINK";
 "PRIVATE.RELAY" = "PRIVATE.RELAY";
 "Processing" = "Processing";
@@ -278,6 +283,7 @@
 "READING · LOCAL METADATA ONLY" = "READING · LOCAL METADATA ONLY";
 "Reading Codex" = "Reading Codex";
 "READING CODEX" = "READING CODEX";
+"Reading from {0}" = "Reading from {0}";
 "Reading local session" = "Reading local session";
 "Reading usage windows through Codex App Server." = "Reading usage windows through Codex App Server.";
 "Reading your Codex weekly limit…" = "Reading your Codex weekly limit…";
@@ -301,6 +307,7 @@
 "RELAY.CONTROL" = "RELAY.CONTROL";
 "RELAY.PAYLOAD" = "RELAY.PAYLOAD";
 "RELAY.STATE" = "RELAY.STATE";
+"remaining" = "remaining";
 "REMAINING" = "REMAINING";
 "Remove pairing" = "Remove pairing";
 "REMOVING LOCAL RELAY CREDENTIALS" = "REMOVING LOCAL RELAY CREDENTIALS";
@@ -309,6 +316,7 @@
 "RESET" = "RESET";
 "RESET.DATE" = "RESET.DATE";
 "RESET.TIME" = "RESET.TIME";
+"Resets" = "Resets";
 "RESETS" = "RESETS";
 "RESETTING SOURCE" = "RESETTING SOURCE";
 "Retry check" = "Retry check";
@@ -338,6 +346,7 @@
 "Select the Codex executable" = "Select the Codex executable";
 "SESSION STAYS ON MAC" = "SESSION STAYS ON MAC";
 "SESSION.STORAGE" = "SESSION.STORAGE";
+"Short window" = "Short window";
 "SHORT.WINDOW" = "SHORT.WINDOW";
 "Show" = "Show";
 "Sign in to Codex in your desktop app or CLI, then refresh." = "Sign in to Codex in your desktop app or CLI, then refresh.";
@@ -355,6 +364,7 @@
 "STATUS / UNSUPPORTED" = "STATUS / UNSUPPORTED";
 "STATUS UNAVAILABLE" = "STATUS UNAVAILABLE";
 "STATUS.RECORD" = "STATUS.RECORD";
+"Statusline" = "Statusline";
 "Statusline Companion · loading…" = "Statusline Companion · loading…";
 "Statusline Companion · no data" = "Statusline Companion · no data";
 "Statusline Companion will restart after installation. Windows may ask for permission to install the update." = "Statusline Companion will restart after installation. Windows may ask for permission to install the update.";
@@ -449,6 +459,7 @@
 "WAITING FOR LOCAL SAMPLE" = "WAITING FOR LOCAL SAMPLE";
 "WAITING FOR RELAY" = "WAITING FOR RELAY";
 "Waiting for the QR scan. Expires {0}." = "Waiting for the QR scan. Expires {0}.";
+"Weekly" = "Weekly";
 "WEEKLY LIMIT" = "WEEKLY LIMIT";
 "Weekly quota" = "Weekly quota";
 "WEEKLY QUOTA" = "WEEKLY QUOTA";

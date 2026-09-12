@@ -13,10 +13,7 @@
     <main class="plane-shell" id="meter-shell" aria-busy="true">
       <header class="topbar" data-tauri-drag-region>
         <p class="brand-route" data-tauri-drag-region>
-          <span class="brand-code" data-tauri-drag-region>STL</span>
-          <span data-tauri-drag-region data-i18n="/ COMPANION / DATA PLANE"
-            >/ COMPANION / DATA PLANE</span
-          >
+          <span data-tauri-drag-region>Statusline</span>
         </p>
 
         <div class="topbar-actions">
@@ -45,20 +42,20 @@
 
       <section class="quota-plane" aria-live="polite">
         <header class="panel-heading">
-          <span data-i18n="CDX.WEEKLY.QUOTA">CDX.WEEKLY.QUOTA</span>
-          <span class="panel-index" data-i18n="PLANE / 010">PLANE / 010</span>
+          <p class="identity">OpenAI · <strong>Codex</strong></p>
+          <h2 data-i18n="Weekly">Weekly</h2>
         </header>
 
         <div class="hero">
           <div class="quota-value" aria-hidden="true">
             <span id="meter-value">—</span>
             <span class="quota-suffix" id="meter-suffix">%</span>
-            <span class="quota-unit" id="meter-unit" data-i18n="LEFT"
-              >LEFT</span
+            <span class="quota-unit" id="meter-unit" data-i18n="remaining"
+              >remaining</span
             >
           </div>
 
-          <dl class="hero-context">
+          <dl class="hero-context" hidden>
             <div>
               <dt data-i18n="STATUS">STATUS</dt>
               <dd id="status-value" data-i18n="READING">READING</dd>
@@ -109,13 +106,13 @@
 
         <dl class="metric-grid">
           <div class="metric-cell metric-cell--accent">
-            <dt data-i18n="RESET.TIME">RESET.TIME</dt>
+            <dt data-i18n="Resets">Resets</dt>
             <dd id="reset-value">—</dd>
             <span id="reset-detail" data-i18n="LOCAL TIME">LOCAL TIME</span>
           </div>
 
           <div class="metric-cell">
-            <dt data-i18n="SHORT.WINDOW">SHORT.WINDOW</dt>
+            <dt data-i18n="Short window">Short window</dt>
             <dd id="short-value">—</dd>
             <span id="short-detail" data-i18n="NOT PUBLISHED"
               >NOT PUBLISHED</span
@@ -123,13 +120,13 @@
           </div>
 
           <div class="metric-cell">
-            <dt data-i18n="ACCOUNT.PLAN">ACCOUNT.PLAN</dt>
+            <dt data-i18n="Account">Account</dt>
             <dd id="plan-value">—</dd>
             <span id="plan-detail">CHATGPT</span>
           </div>
 
           <div class="metric-cell">
-            <dt data-i18n="RELAY.STATE">RELAY.STATE</dt>
+            <dt data-i18n="Private sync">Private sync</dt>
             <dd id="relay-value" data-i18n="READING">READING</dd>
             <span id="relay-detail" data-i18n="E2E ENCRYPTED"
               >E2E ENCRYPTED</span
@@ -137,7 +134,7 @@
           </div>
         </dl>
 
-        <div class="record-line">
+        <div class="record-line" hidden>
           <div>
             <span class="record-label" data-i18n="STATUS.RECORD"
               >STATUS.RECORD</span
@@ -192,9 +189,7 @@
         <header class="source-heading">
           <div>
             <p data-i18n="SYSTEM / CONNECTIONS">SYSTEM / CONNECTIONS</p>
-            <h2 id="source-panel-title" data-i18n="Data plane setup">
-              Data plane setup
-            </h2>
+            <h2 id="source-panel-title" data-i18n="Connections">Connections</h2>
           </div>
           <button
             class="source-close"
