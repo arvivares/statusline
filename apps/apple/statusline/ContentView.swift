@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var viewModel = CodexStatusViewModel()
     @State private var isManualUpdateExpanded = false
     @State private var isPairingPresented = false
+    @State private var isSyncExpanded = false
 
     var body: some View {
         NavigationStack {
@@ -24,13 +25,21 @@ struct ContentView: View {
                         )
                     }
 
-                    UniversalRelayPanel(
-                        state: viewModel.relaySyncState,
-                        endpoint: viewModel.relayEndpoint,
-                        onRefresh: refreshFromRelay,
-                        onPair: { isPairingPresented = true },
-                        onDisconnect: viewModel.disconnectRelay
-                    )
+                    if viewModel.status == nil {
+                        relayControls
+                    } else {
+                        Button(L10n.text("Refresh"), systemImage: "arrow.clockwise", action: refreshFromRelay)
+                            .buttonStyle(DataPlaneSecondaryButtonStyle())
+                            .disabled(viewModel.relaySyncState == .syncing)
+                        DataPlaneRule()
+                        DisclosureGroup(L10n.text("Private sync"), isExpanded: $isSyncExpanded) {
+                            relayControls.padding(.top, 12)
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(DataPlaneTheme.ink)
+                        .frame(minHeight: 44)
+                        .padding(.vertical, 8)
+                    }
 
                     ManualUpdatePanel(
                         isExpanded: $isManualUpdateExpanded,
@@ -49,7 +58,7 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: 720)
                 .frame(maxWidth: .infinity)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 28)
                 .padding(.vertical, 18)
             }
             .scrollIndicators(.hidden)
@@ -73,6 +82,16 @@ struct ContentView: View {
         }
         .tint(DataPlaneTheme.signal)
         .preferredColorScheme(.dark)
+    }
+
+    private var relayControls: some View {
+        UniversalRelayPanel(
+            state: viewModel.relaySyncState,
+            endpoint: viewModel.relayEndpoint,
+            onRefresh: refreshFromRelay,
+            onPair: { isPairingPresented = true },
+            onDisconnect: viewModel.disconnectRelay
+        )
     }
 
     private func refreshFromRelay() {
@@ -169,27 +188,14 @@ private struct DataPlaneAppHeader: View {
     let syncState: CodexRelaySyncState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                DataPlaneLabel(text: L10n.text("STL / DATA PLANE"), tint: DataPlaneTheme.ink)
-                Spacer()
-                DataPlaneStatusIndicator(
-                    label: syncState.dataPlaneLabel,
-                    tint: syncState.dataPlaneTint
-                )
-            }
-
-            Text(L10n.text("Codex Status"))
-                .font(.largeTitle.bold())
-                .tracking(-1.4)
+        HStack {
+            Text(L10n.text("Statusline"))
+                .font(.headline)
                 .foregroundStyle(DataPlaneTheme.ink)
-
-            Text(L10n.text("Weekly quota, reset and private sync in one view."))
-                .font(.subheadline)
-                .foregroundStyle(DataPlaneTheme.muted)
+            Spacer()
+            DataPlaneStatusIndicator(label: syncState.dataPlaneLabel, tint: syncState.dataPlaneTint)
         }
-        .padding(.horizontal, 2)
-        .accessibilityElement(children: .contain)
+        .frame(minHeight: 44)
     }
 }
 
@@ -197,142 +203,65 @@ private struct CodexDataPlanePanel: View {
     let status: CodexUsageStatus
     let syncState: CodexRelaySyncState
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 0),
-        GridItem(.flexible(), spacing: 0),
-    ]
-
     var body: some View {
-        DataPlaneSurface(cornerRadius: 20) {
-            VStack(spacing: 0) {
-                HStack {
-                    DataPlaneLabel(text: L10n.text("CDX.WEEKLY.QUOTA"))
-                    Spacer()
-                    DataPlaneLabel(text: L10n.text("PLANE / 010"), tint: DataPlaneTheme.signal)
-                }
-                .padding(18)
+        VStack(spacing: 0) {
+            Text(L10n.text("OpenAI · Codex"))
+                .font(.subheadline)
+                .foregroundStyle(DataPlaneTheme.muted)
+            Text(L10n.text("Weekly"))
+                .font(.title3.weight(.medium))
+                .foregroundStyle(DataPlaneTheme.ink)
+                .padding(.top, 8)
 
-                DataPlaneRule()
+            DataPlaneQuotaValue(status: status)
+                .padding(.top, 22)
+            Text(L10n.text("remaining"))
+                .font(.subheadline)
+                .foregroundStyle(DataPlaneTheme.muted)
 
-                VStack(alignment: .leading, spacing: 18) {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .bottom, spacing: 24) {
-                            DataPlaneQuotaValue(status: status)
-                            Spacer(minLength: 8)
-                            DataPlaneQuotaContext(status: status)
-                                .frame(maxWidth: 180, alignment: .leading)
-                        }
+            DataPlaneMeter(remainingPercentage: status.remainingPercentage)
+                .padding(.top, 28)
+                .padding(.bottom, 14)
 
-                        VStack(alignment: .leading, spacing: 18) {
-                            DataPlaneQuotaValue(status: status)
-                            DataPlaneQuotaContext(status: status)
-                        }
-                    }
+            Text(L10n.text("Resets") + " " + status.resetDate.formatted(
+                .dateTime.day().month(.abbreviated).hour().minute().locale(L10n.locale)
+            ))
+            .font(.footnote)
+            .foregroundStyle(DataPlaneTheme.muted)
+            .multilineTextAlignment(.center)
 
-                    DataPlaneMeter(remainingPercentage: status.remainingPercentage)
-                }
-                .padding(18)
-
-                LazyVGrid(columns: columns, spacing: 0) {
-                    DataPlaneMetricCell(
-                        label: L10n.text("RESET.TIME"),
-                        value: status.resetDate.formatted(.dateTime.hour().minute().locale(L10n.locale)),
-                        detail: L10n.text("LOCAL TIME"),
-                        isAccented: true
-                    )
-
-                    DataPlaneMetricCell(
-                        label: L10n.text("RESET.DATE"),
-                        value: status.resetDate.formatted(.dateTime.day().month(.abbreviated).locale(L10n.locale)).uppercased(),
-                        detail: status.resetDate.formatted(.dateTime.weekday(.wide).locale(L10n.locale)).uppercased(),
-                        isAccented: true
-                    )
-
-                    DataPlaneMetricCell(
-                        label: L10n.text("SOURCE.HOST"),
-                        value: L10n.text("Desktop companion"),
-                        detail: L10n.text("CODEX SESSION LOCAL")
-                    )
-
-                    DataPlaneMetricCell(
-                        label: L10n.text("RELAY.STATE"),
-                        value: syncState.relayValue,
-                        detail: L10n.text("E2E · UNIVERSAL")
-                    )
-                }
-
-                HStack(alignment: .center, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 7) {
-                        DataPlaneLabel(text: L10n.text("STATUS.RECORD"))
-                        Text(L10n.text("available · quota metadata only"))
-                            .font(.caption.monospaced())
-                            .foregroundStyle(DataPlaneTheme.ink)
-                    }
-
-                    Spacer()
-
-                    DataPlaneStatusIndicator(
-                        label: syncState.dataPlaneLabel,
-                        tint: syncState.dataPlaneTint
-                    )
-                }
-                .padding(16)
-            }
+            Text(L10n.text("Last sample: {0}", L10n.relative(status.updatedAt)))
+                .font(.caption)
+                .foregroundStyle(DataPlaneTheme.muted)
+                .padding(.top, 28)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
     }
 }
 
 private struct DataPlaneQuotaValue: View {
     let status: CodexUsageStatus
-
-    @ScaledMetric(relativeTo: .largeTitle) private var valueSize = 72.0
+    @ScaledMetric(relativeTo: .largeTitle) private var valueSize = 120.0
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 4) {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(status.remainingPercentage, format: .number)
-                .font(.system(size: valueSize, weight: .bold, design: .rounded))
-                .tracking(-4)
+                .font(.system(size: valueSize, weight: .medium))
+                .tracking(-5)
+                .monospacedDigit()
                 .foregroundStyle(DataPlaneTheme.ink)
                 .contentTransition(.numericText())
-
             Text("%")
-                .font(.title.bold())
-                .foregroundStyle(DataPlaneTheme.emphasis(for: status.remainingPercentage))
-
-            Text(L10n.text("LEFT"))
-                .font(.caption2.monospaced().weight(.bold))
-                .tracking(1)
-                .foregroundStyle(DataPlaneTheme.emphasis(for: status.remainingPercentage))
+                .font(.largeTitle)
+                .foregroundStyle(DataPlaneTheme.muted)
         }
         .lineLimit(1)
-        .minimumScaleFactor(0.7)
+        .minimumScaleFactor(0.45)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.text("Weekly quota"))
         .accessibilityValue(L10n.text("{0} percent remaining", status.remainingPercentage))
         .accessibilityIdentifier("weeklyQuotaValue")
-    }
-}
-
-private struct DataPlaneQuotaContext: View {
-    let status: CodexUsageStatus
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 13) {
-            VStack(alignment: .leading, spacing: 4) {
-                DataPlaneLabel(text: L10n.text("STATUS"))
-                Text(L10n.text("AVAILABLE"))
-                    .font(.caption.monospaced().weight(.semibold))
-                    .foregroundStyle(DataPlaneTheme.ink)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                DataPlaneLabel(text: L10n.text("SAMPLE"))
-                Text(status.updatedAt, style: .relative)
-                    .font(.caption.monospaced())
-                    .foregroundStyle(DataPlaneTheme.ink)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -415,7 +344,7 @@ private struct UniversalRelayPanel: View {
                 DataPlaneRule()
 
                 Text(state.message)
-                    .font(.subheadline.monospaced())
+                    .font(.subheadline)
                     .foregroundStyle(state.isError ? DataPlaneTheme.critical : DataPlaneTheme.ink)
 
                 Text(L10n.text("The relay stores only an AES-256-GCM encrypted snapshot. Codex credentials and the encryption key never leave your devices."))
@@ -502,9 +431,9 @@ private struct ManualUpdatePanel: View {
             } label: {
                 HStack {
                     VStack(alignment: .leading, spacing: 5) {
-                        DataPlaneLabel(text: L10n.text("FALLBACK.INPUT"), tint: DataPlaneTheme.ink)
+
                         Text(L10n.text("Manual update"))
-                            .font(.subheadline.monospaced().weight(.semibold))
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(DataPlaneTheme.ink)
                     }
                     Spacer()

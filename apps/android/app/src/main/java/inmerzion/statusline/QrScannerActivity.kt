@@ -54,7 +54,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import inmerzion.statusline.ui.DataPlaneColors
-import inmerzion.statusline.ui.DataPlaneGrid
 import inmerzion.statusline.ui.StatuslineTheme
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
@@ -277,7 +276,6 @@ private fun QrScannerScreen(
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.28f)),
         )
-        DataPlaneGrid()
 
         Column(
             modifier = Modifier
@@ -289,7 +287,7 @@ private fun QrScannerScreen(
             Surface(
                 color = DataPlaneColors.Surface.copy(alpha = 0.94f),
                 border = BorderStroke(1.dp, DataPlaneColors.Line),
-                shape = RoundedCornerShape(0.dp),
+                shape = RoundedCornerShape(24.dp),
             ) {
                 Row(
                     modifier = Modifier

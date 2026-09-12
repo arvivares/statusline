@@ -2,6 +2,12 @@ package inmerzion.statusline.ui
 
 import inmerzion.statusline.localization.L10n
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.platform.LocalDensity
+import kotlin.math.ceil
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -68,6 +74,7 @@ fun StatuslineApp(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var pairingPresented by remember { mutableStateOf(false) }
     var disconnectPresented by remember { mutableStateOf(false) }
+    var syncExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.phase) {
         if (state.phase == SyncPhase.SYNCED || state.phase == SyncPhase.WAITING_FOR_DESKTOP) {
@@ -81,20 +88,33 @@ fun StatuslineApp(
                 .fillMaxSize()
                 .background(DataPlaneColors.Canvas),
         ) {
-            DataPlaneGrid()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                    .padding(horizontal = 28.dp, vertical = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 DataPlaneHeader(state.phase)
                 state.status?.let { status ->
                     QuotaPanel(status, state.phase)
                 } ?: WaitingPanel(state.phase)
-                RelayPanel(
+                if (state.status != null) {
+                    SecondaryButton(
+                        label = L10n.text("Refresh"),
+                        enabled = !state.isBusy,
+                        onClick = { viewModel.refresh() },
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    )
+                    PlaneDivider()
+                    TextButton(onClick = { syncExpanded = !syncExpanded }) {
+                        Text(L10n.text("Private sync"))
+                        Spacer(Modifier.weight(1f))
+                        Text(if (syncExpanded) "−" else "+")
+                    }
+                }
+                if (state.status == null || syncExpanded) RelayPanel(
                     state = state,
                     onRefresh = { viewModel.refresh() },
                     onPair = { pairingPresented = true },
@@ -138,112 +158,61 @@ fun StatuslineApp(
 
 @Composable
 private fun DataPlaneHeader(phase: SyncPhase) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            PlaneLabel(L10n.text("STL / DATA PLANE"), tint = DataPlaneColors.Ink)
-            Spacer(Modifier.weight(1f))
-            StatusIndicator(phase.indicator, phase.tint)
-        }
-        Text(
-            text = L10n.text("Codex Status"),
-            style = MaterialTheme.typography.headlineLarge,
-            color = DataPlaneColors.Ink,
-        )
-        Text(
-            text = L10n.text("Weekly quota, reset and private sync in one view."),
-            style = MaterialTheme.typography.bodyMedium,
-            color = DataPlaneColors.Muted,
-        )
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(L10n.text("Statusline"), fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = DataPlaneColors.Ink)
+        Spacer(Modifier.weight(1f))
+        StatusIndicator(phase.indicator, phase.tint)
     }
 }
 
 @Composable
 private fun QuotaPanel(status: UsageStatus, phase: SyncPhase) {
-    DataPlaneSurface(cornerRadius = 20) {
-        Column {
-            PanelHeader(L10n.text("CDX.WEEKLY.QUOTA"), L10n.text("PLANE / 010"))
-            PlaneDivider()
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clearAndSetSemantics {
-                            contentDescription =
-                                L10n.text("{0} percent remaining", status.remainingPercentage)
-                        },
-                    verticalAlignment = Alignment.Bottom,
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.Bottom,
-                    ) {
-                        Text(
-                            text = status.remainingPercentage.toString(),
-                            style = MaterialTheme.typography.displayLarge,
-                            color = DataPlaneColors.Ink,
-                            maxLines = 1,
-                        )
-                        Text(
-                            text = "%",
-                            color = DataPlaneColors.emphasis(status.remainingPercentage),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 30.sp,
-                            modifier = Modifier.padding(bottom = 8.dp),
-                        )
-                        Text(
-                            text = " " + L10n.text("LEFT"),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = DataPlaneColors.emphasis(status.remainingPercentage),
-                            modifier = Modifier.padding(bottom = 13.dp),
-                            maxLines = 1,
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.padding(bottom = 9.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        ContextValue(L10n.text("STATUS"), if (status.isDemo) L10n.text("DEMO SAMPLE") else L10n.text("AVAILABLE"))
-                        ContextValue(L10n.text("SAMPLE"), relativeAge(status.updatedAtEpochSeconds))
-                    }
-                }
-                QuotaMeter(status.remainingPercentage)
-            }
-            MetricsGrid(status, phase)
-            PlaneDivider()
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(L10n.text("OpenAI · Codex"), style = MaterialTheme.typography.bodyMedium, color = DataPlaneColors.Muted)
+        Text(L10n.text("Weekly"), fontSize = 20.sp, fontWeight = FontWeight.Medium,
+            color = DataPlaneColors.Ink, modifier = Modifier.padding(top = 8.dp))
+        BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 22.dp)) {
+            val numeralSize = (maxWidth.value / 3.0f / LocalDensity.current.fontScale).coerceAtMost(120f).sp
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.align(Alignment.Center).clearAndSetSemantics {
+                    contentDescription = L10n.text("{0} percent remaining", status.remainingPercentage)
+                },
+                verticalAlignment = Alignment.Bottom,
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    PlaneLabel(L10n.text("STATUS.RECORD"))
-                    Text(
-                        text = if (status.isDemo) {
-                            L10n.text("demo · local sample only")
-                        } else {
-                            L10n.text("available · quota metadata only")
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = DataPlaneColors.Ink,
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                StatusIndicator(phase.indicator, phase.tint)
+                Text(status.remainingPercentage.toString(), fontSize = numeralSize,
+                    fontWeight = FontWeight.Medium, letterSpacing = (-4).sp,
+                    color = DataPlaneColors.Ink, maxLines = 1)
+                Text("%", fontSize = 32.sp, color = DataPlaneColors.Muted,
+                    modifier = Modifier.padding(start = 12.dp, bottom = 14.dp))
             }
         }
+        Text(L10n.text("remaining"), style = MaterialTheme.typography.bodyMedium, color = DataPlaneColors.Muted)
+        Spacer(Modifier.height(28.dp))
+        QuotaMeter(status.remainingPercentage)
+        Text(
+            L10n.text("Resets") + " " + formatDate(status.resetAtEpochSeconds, "dd MMM · HH:mm"),
+            style = MaterialTheme.typography.bodySmall, color = DataPlaneColors.Muted,
+            modifier = Modifier.padding(top = 14.dp),
+        )
+        Text(
+            if (status.isDemo) L10n.text("DEMO SAMPLE")
+            else L10n.text("Last sample: {0}", relativeAge(status.updatedAtEpochSeconds)),
+            style = MaterialTheme.typography.bodySmall,
+            color = if (phase == SyncPhase.ERROR) DataPlaneColors.Critical else DataPlaneColors.Muted,
+            modifier = Modifier.padding(top = 28.dp),
+        )
     }
 }
 
 @Composable
 private fun WaitingPanel(phase: SyncPhase) {
-    DataPlaneSurface(cornerRadius = 20) {
+    DataPlaneSurface() {
         Column {
             PanelHeader(L10n.text("CDX.WEEKLY.QUOTA"), L10n.text("NO SAMPLE"), accent = false)
             PlaneDivider()
@@ -283,77 +252,6 @@ private fun WaitingPanel(phase: SyncPhase) {
                 StatusIndicator(phase.indicator, phase.tint)
             }
         }
-    }
-}
-
-@Composable
-private fun MetricsGrid(status: UsageStatus, phase: SyncPhase) {
-    Column {
-        Row(Modifier.fillMaxWidth()) {
-            MetricCell(
-                label = L10n.text("RESET.TIME"),
-                value = formatDate(status.resetAtEpochSeconds, "HH:mm"),
-                detail = L10n.text("LOCAL TIME"),
-                accented = true,
-                modifier = Modifier.weight(1f),
-            )
-            MetricCell(
-                label = L10n.text("RESET.DATE"),
-                value = formatDate(status.resetAtEpochSeconds, "dd MMM").uppercase(),
-                detail = formatDate(status.resetAtEpochSeconds, "EEEE").uppercase(),
-                accented = true,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Row(Modifier.fillMaxWidth()) {
-            MetricCell(
-                label = L10n.text("SOURCE.HOST"),
-                value = if (status.isDemo) L10n.text("Review sample") else L10n.text("Desktop companion"),
-                detail = if (status.isDemo) L10n.text("LOCAL · NO ACCOUNT") else L10n.text("CODEX SESSION LOCAL"),
-                modifier = Modifier.weight(1f),
-            )
-            MetricCell(
-                label = L10n.text("RELAY.STATE"),
-                value = phase.relayValue,
-                detail = if (status.isDemo) L10n.text("NO NETWORK") else L10n.text("E2E · UNIVERSAL"),
-                modifier = Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-@Composable
-private fun MetricCell(
-    label: String,
-    value: String,
-    detail: String,
-    modifier: Modifier = Modifier,
-    accented: Boolean = false,
-) {
-    Column(
-        modifier = modifier
-            .heightIn(min = 94.dp)
-            .background(DataPlaneColors.Surface.copy(alpha = 0.72f))
-            .border(0.5.dp, DataPlaneColors.Line)
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(7.dp),
-    ) {
-        PlaneLabel(label)
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.SemiBold,
-            color = if (accented) DataPlaneColors.Signal else DataPlaneColors.Ink,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = detail,
-            style = MaterialTheme.typography.labelSmall,
-            color = DataPlaneColors.Muted,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
@@ -650,15 +548,10 @@ private fun ConfirmDisconnectDialog(
 
 @Composable
 private fun DataPlaneSurface(
-    cornerRadius: Int = 18,
     content: @Composable () -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(cornerRadius.dp))
-            .background(DataPlaneColors.Surface.copy(alpha = 0.96f))
-            .border(1.dp, DataPlaneColors.Line, RoundedCornerShape(cornerRadius.dp)),
+        modifier = Modifier.fillMaxWidth(),
     ) {
         content()
     }
@@ -688,7 +581,7 @@ private fun PlaneLabel(
     tint: Color = DataPlaneColors.Muted,
 ) {
     Text(
-        text = text.uppercase(),
+        text = text,
         style = MaterialTheme.typography.labelSmall,
         color = tint,
         modifier = modifier,
@@ -704,7 +597,8 @@ private fun StatusIndicator(label: String, tint: Color) {
     ) {
         Box(
             Modifier
-                .size(7.dp)
+                .size(5.dp)
+                .clip(RoundedCornerShape(50))
                 .background(tint),
         )
         PlaneLabel(label, tint = tint)
@@ -712,58 +606,32 @@ private fun StatusIndicator(label: String, tint: Color) {
 }
 
 @Composable
-private fun ContextValue(label: String, value: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        PlaneLabel(label)
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = DataPlaneColors.Ink,
-            maxLines = 1,
-        )
-    }
-}
-
-@Composable
 private fun QuotaMeter(remainingPercentage: Int, empty: Boolean = false) {
-    val normalized = remainingPercentage.coerceIn(0, 100)
-    val fullSegments = if (empty) 0 else normalized / 5
-    val partialSegment = !empty && normalized < 100 && normalized % 5 != 0
-    Column(
-        modifier = Modifier.clearAndSetSemantics {
-            contentDescription = if (empty) {
-                L10n.text("No quota sample")
-            } else {
-                L10n.text("{0} percent remaining", normalized)
-            }
+    val normalized = if (empty) 0 else remainingPercentage.coerceIn(0, 100)
+    Canvas(
+        Modifier.fillMaxWidth().height(8.dp).clearAndSetSemantics {
+            contentDescription = if (empty) L10n.text("No quota sample")
+                else L10n.text("{0} percent remaining", normalized)
         },
-        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            repeat(20) { index ->
-                val color = when {
-                    index < fullSegments -> DataPlaneColors.emphasis(normalized)
-                    index == fullSegments && partialSegment -> DataPlaneColors.Ink
-                    else -> Color.Transparent
-                }
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .height(11.dp)
-                        .background(color)
-                        .border(0.7.dp, DataPlaneColors.Line),
-                )
-            }
-        }
-        Row(Modifier.fillMaxWidth()) {
-            PlaneLabel("0")
-            Spacer(Modifier.weight(1f))
-            PlaneLabel(if (empty) L10n.text("NO SAMPLE") else L10n.text("{0} / LEFT", normalized))
-            Spacer(Modifier.weight(1f))
-            PlaneLabel("100")
+        val stripe = 4.dp.toPx()
+        val step = 6.dp.toPx()
+        val edge = size.width * normalized / 100f
+        val terminal = if (edge > 0) (ceil(edge / step).toInt() - 1).coerceAtLeast(0) else -1
+        var x = 0f
+        var index = 0
+        while (x < size.width) {
+            drawRect(
+                color = when {
+                    index == terminal -> Color.White
+                    x < edge -> DataPlaneColors.Signal
+                    else -> DataPlaneColors.Track
+                },
+                topLeft = Offset(x, 0f),
+                size = Size(stripe.coerceAtMost(size.width - x), size.height),
+            )
+            x += step
+            index += 1
         }
     }
 }
@@ -785,7 +653,7 @@ private fun PrimaryButton(
         onClick = onClick,
         modifier = modifier.heightIn(min = 48.dp),
         enabled = enabled,
-        shape = RoundedCornerShape(0.dp),
+        shape = RoundedCornerShape(50),
         colors = ButtonDefaults.buttonColors(
             containerColor = color,
             contentColor = DataPlaneColors.Canvas,
@@ -808,9 +676,9 @@ private fun SecondaryButton(
         onClick = onClick,
         modifier = modifier
             .heightIn(min = 48.dp)
-            .border(1.dp, DataPlaneColors.Line),
+            .background(DataPlaneColors.Track.copy(alpha = 0.45f), RoundedCornerShape(50)),
         enabled = enabled,
-        shape = RoundedCornerShape(0.dp),
+        shape = RoundedCornerShape(50),
         colors = ButtonDefaults.textButtonColors(
             contentColor = DataPlaneColors.Ink,
             disabledContentColor = DataPlaneColors.Muted.copy(alpha = 0.5f),

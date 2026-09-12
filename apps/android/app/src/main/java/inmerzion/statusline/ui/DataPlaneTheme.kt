@@ -1,27 +1,22 @@
 package inmerzion.statusline.ui
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object DataPlaneColors {
-    val Canvas = Color(0xFF0D0E0B)
-    val Surface = Color(0xFF14150F)
-    val Ink = Color(0xFFECE9DC)
-    val Muted = Color(0xFF9D9B89)
-    val Line = Color(0xFF3B3929)
-    val Grid = Color(0x0CEFC65A)
+    val Canvas = Color(0xFF181813)
+    val Surface = Color(0xFF181813)
+    val Ink = Color(0xFFF2F0EB)
+    val Muted = Color(0xFFA09E97)
+    val Line = Color(0xFF3E3E37)
+    val Track = Color(0xFF2F2F29)
     val Signal = Color(0xFFEFC65A)
     val Critical = Color(0xFFF26856)
 
@@ -69,21 +64,21 @@ private val dataPlaneTypography = Typography(
         lineHeight = 20.sp,
     ),
     bodySmall = TextStyle(
-        fontFamily = FontFamily.Monospace,
+        fontFamily = FontFamily.SansSerif,
         fontSize = 12.sp,
         lineHeight = 17.sp,
     ),
     labelLarge = TextStyle(
-        fontFamily = FontFamily.Monospace,
+        fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
         fontSize = 13.sp,
-        letterSpacing = 0.8.sp,
+        letterSpacing = 0.sp,
     ),
     labelSmall = TextStyle(
-        fontFamily = FontFamily.Monospace,
+        fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
         fontSize = 10.sp,
-        letterSpacing = 1.1.sp,
+        letterSpacing = 0.sp,
     ),
 )
 
@@ -94,32 +89,4 @@ fun StatuslineTheme(content: @Composable () -> Unit) {
         typography = dataPlaneTypography,
         content = content,
     )
-}
-
-@Composable
-fun DataPlaneGrid(modifier: Modifier = Modifier) {
-    val spacing = 24.dp
-    Canvas(modifier = modifier.fillMaxSize()) {
-        val step = spacing.toPx()
-        var x = 0f
-        while (x <= size.width) {
-            drawLine(
-                color = DataPlaneColors.Grid,
-                start = Offset(x, 0f),
-                end = Offset(x, size.height),
-                strokeWidth = 0.5.dp.toPx(),
-            )
-            x += step
-        }
-        var y = 0f
-        while (y <= size.height) {
-            drawLine(
-                color = DataPlaneColors.Grid,
-                start = Offset(0f, y),
-                end = Offset(size.width, y),
-                strokeWidth = 0.5.dp.toPx(),
-            )
-            y += step
-        }
-    }
 }

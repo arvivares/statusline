@@ -16,6 +16,7 @@
 "/ COMPANION / DATA PLANE" = "/ COMPANION / DATOS";
 "% LEFT" = "% LIBRE";
 "A new version of Statusline Companion is ready." = "Hay una nueva versión de Statusline Companion disponible.";
+"Account" = "Cuenta";
 "ACCOUNT CHANNEL" = "CANAL DE LA CUENTA";
 "ACCOUNT.CHANNEL" = "CANAL.CUENTA";
 "ACCOUNT.CONTROL" = "CONTROL.CUENTA";
@@ -61,6 +62,7 @@
 "CLOSE" = "CERRAR";
 "Close settings" = "Cerrar configuración";
 "Close updates" = "Cerrar actualizaciones";
+"Codex" = "Codex";
 "Codex · {0}% left" = "Codex · {0}% libre";
 "Codex account disconnected. Your devices remain paired." = "Cuenta de Codex desconectada. El vínculo con tus dispositivos se conserva.";
 "Codex App Server closed unexpectedly." = "Codex App Server se cerró inesperadamente.";
@@ -151,6 +153,7 @@
 "Demo sample. {0}" = "Muestra de demostración. {0}";
 "DESKTOP APP" = "APP DE ESCRITORIO";
 "Desktop companion" = "Companion de escritorio";
+"Details" = "Detalles";
 "Device connected with encryption." = "Dispositivo conectado de forma cifrada.";
 "Device connected. Waiting for the companion’s first sample." = "Dispositivo conectado. Esperando la primera muestra del companion.";
 "Device connected. Waiting for the first publication." = "Dispositivo conectado. Esperando la primera publicación.";
@@ -237,6 +240,7 @@
 "Open Source Settings to detect or select a local Codex runtime." = "Abre la configuración de origen para detectar o seleccionar un ejecutable local de Codex.";
 "Open Source Settings to detect or select the local CLI." = "Abre la configuración de origen para detectar o seleccionar la CLI local.";
 "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample." = "Abre Statusline Companion en Windows, Linux o macOS, crea un vínculo y escanea su QR para recibir la primera muestra cifrada.";
+"OpenAI · Codex" = "OpenAI · Codex";
 "Opening secure OpenAI sign-in…" = "Abriendo el inicio de sesión seguro de OpenAI…";
 "Opens an external web page" = "Abre una página web externa";
 "OR PASTE" = "O PEGA EL VÍNCULO";
@@ -264,6 +268,7 @@
 "Private pairing QR" = "QR privado de emparejamiento";
 "Private QR" = "QR privado";
 "Private QR to pair Statusline" = "QR privado para emparejar Statusline";
+"Private sync" = "Sincronización privada";
 "PRIVATE.PAIRING.LINK" = "VÍNCULO.PRIVADO";
 "PRIVATE.RELAY" = "RELAY.PRIVADO";
 "Processing" = "Procesando";
@@ -278,6 +283,7 @@
 "READING · LOCAL METADATA ONLY" = "LEYENDO · SOLO METADATOS LOCALES";
 "Reading Codex" = "Leyendo Codex";
 "READING CODEX" = "LEYENDO CODEX";
+"Reading from {0}" = "Lectura de {0}";
 "Reading local session" = "Leyendo sesión local";
 "Reading usage windows through Codex App Server." = "Consultando los periodos de uso mediante Codex App Server.";
 "Reading your Codex weekly limit…" = "Leyendo tu límite semanal de Codex…";
@@ -301,6 +307,7 @@
 "RELAY.CONTROL" = "CONTROL.RELAY";
 "RELAY.PAYLOAD" = "CONTENIDO.RELAY";
 "RELAY.STATE" = "ESTADO.RELAY";
+"remaining" = "restante";
 "REMAINING" = "RESTANTE";
 "Remove pairing" = "Eliminar vínculo";
 "REMOVING LOCAL RELAY CREDENTIALS" = "ELIMINANDO CREDENCIALES LOCALES DEL RELAY";
@@ -309,6 +316,7 @@
 "RESET" = "REINICIO";
 "RESET.DATE" = "FECHA.REINICIO";
 "RESET.TIME" = "HORA.REINICIO";
+"Resets" = "Se reinicia";
 "RESETS" = "REINICIA";
 "RESETTING SOURCE" = "RESTABLECIENDO ORIGEN";
 "Retry check" = "Volver a buscar";
@@ -338,6 +346,7 @@
 "Select the Codex executable" = "Selecciona el ejecutable de Codex";
 "SESSION STAYS ON MAC" = "SESIÓN SOLO EN EL MAC";
 "SESSION.STORAGE" = "ALMACÉN.SESIÓN";
+"Short window" = "Ventana corta";
 "SHORT.WINDOW" = "PERIODO.CORTO";
 "Show" = "Mostrar";
 "Sign in to Codex in your desktop app or CLI, then refresh." = "Inicia sesión en Codex desde la app de escritorio o la CLI y actualiza.";
@@ -355,6 +364,7 @@
 "STATUS / UNSUPPORTED" = "ESTADO / NO COMPATIBLE";
 "STATUS UNAVAILABLE" = "ESTADO NO DISPONIBLE";
 "STATUS.RECORD" = "REGISTRO.ESTADO";
+"Statusline" = "Statusline";
 "Statusline Companion · loading…" = "Statusline Companion · cargando…";
 "Statusline Companion · no data" = "Statusline Companion · sin datos";
 "Statusline Companion will restart after installation. Windows may ask for permission to install the update." = "Statusline Companion se reiniciará tras la instalación. Windows puede pedir permiso para instalar la actualización.";
@@ -449,6 +459,7 @@
 "WAITING FOR LOCAL SAMPLE" = "ESPERANDO MUESTRA LOCAL";
 "WAITING FOR RELAY" = "ESPERANDO AL RELAY";
 "Waiting for the QR scan. Expires {0}." = "Esperando el escaneo del QR. Caduca {0}.";
+"Weekly" = "Semanal";
 "WEEKLY LIMIT" = "LÍMITE SEMANAL";
 "Weekly quota" = "Cuota semanal";
 "WEEKLY QUOTA" = "CUOTA SEMANAL";

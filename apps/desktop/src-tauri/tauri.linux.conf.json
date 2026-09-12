@@ -16,6 +16,7 @@
         "maximizable": false,
         "minimizable": false,
         "decorations": false,
+        "transparent": true,
         "alwaysOnTop": true,
         "skipTaskbar": false,
         "shadow": true
