@@ -6,8 +6,11 @@ does not install Android or iOS packages.
 
 ## User flow
 
-The Rust runtime checks the public `arvivares/statusline` GitHub releases feed
-30 seconds after startup and every six hours. The beta channel includes published
+Starting with the `0.1.19` candidate, the Rust runtime checks the public
+`arvivares/statusline` GitHub releases feed when the native companion window opens.
+It reuses checks made within the last 15 minutes to avoid a request on every tray
+click. Hidden startup has a two-second fallback check; background checks continue
+every six hours. The beta channel includes published
 pre-releases; drafts, old versions and releases without `updater.json` are skipped.
 Discovery uses bounded pagination and strict numeric product versions. Incomplete,
 unreachable or invalid responses must not be reported as a successful current check.
@@ -15,7 +18,12 @@ Manual requests share the same operation lock and a one-minute request cooldown.
 
 The Updates button and tray menu open the update dialog. A newly available version
 is announced when the companion has focus; it never brings another application's
-window to the foreground. **Later** persists the dismissed version. Automatic
+window to the foreground. **Later**, Escape and Close snooze the notice for the
+current opening only; reopening offers the cached update again. Native presentation
+IDs prevent a late dismissal from suppressing a newer opening. Repeated focus
+events without a native show do not create another notice. Old persisted version
+dismissals are ignored when migrating; the automatic-check preference is retained.
+Automatic
 checks can be disabled without changing quota synchronization or manual checks.
 Preferences live in `updater-preferences.json` inside the app configuration directory.
 
@@ -46,6 +54,29 @@ backup until the new app has been verified; if replacement and rollback both
 fail, it is the manual recovery copy. The updater never runs an elevated deletion
 command or requests an administrator password. Read-only/system-managed locations
 use the official DMG/PKG download path instead.
+
+### macOS verification fix and bootstrap
+
+The `0.1.17`/`0.1.18` updater passed `anchor apple generic` to `codesign -R`
+without its inline-expression prefix. macOS interpreted it as a filename and
+rejected the verification before replacement. The `0.1.19` candidate uses
+`=anchor apple generic`; signature, bundle identity, version, signing-team,
+archive-safety and rollback checks remain mandatory.
+
+Existing affected macOS versions cannot fix their own running updater by
+downloading a newer payload: install the corrected DMG/PKG manually once after
+publication. Future upgrades use the fixed updater. Windows does not have this
+bootstrap limitation.
+
+The runtime tests now exercise the real `codesign` parser against an Apple-signed
+system binary and reject an ad hoc signature. An opt-in
+`signed_release_upgrade_rehearsal` test copies a signed app into a temporary
+directory, replaces only that copy and verifies the new app and preserved backup.
+Supply `STATUSLINE_TEST_MACOS_APP`, `STATUSLINE_TEST_MACOS_ARCHIVE` and
+`STATUSLINE_TEST_MACOS_VERSION` only after independently checking the archive's
+Minisign signature. Run on macOS with access to its trust services, not in a
+sandbox that prevents code-signature evaluation. The real app is never replaced
+or launched by this test. This is not a substitute for a native restart/upgrade QA.
 
 ## Trust and release gates
 
@@ -81,7 +112,9 @@ GitHub, pairing data or real installers.
 
 1. Install `0.1.17` manually and verify **up to date** against that same release.
 2. With a later reviewed release, confirm a hidden companion discovers it and
-   offers it after reopening; Later survives restart and a newer version reappears.
+   offers it after opening without clicking Updates. Later suppresses repeats
+   within that opening; reopening or restarting offers it again. Focus changes
+   alone must not repeatedly prompt. Disabled automatic checks remain respected.
 3. Test manual checks, disabled automatic checks, network errors and interrupted
    downloads; verify no unsigned/tampered payload is installed.
 4. Test each direct-upgrade format separately. Check version, restart, executable

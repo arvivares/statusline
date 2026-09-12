@@ -4,12 +4,12 @@
     "windows": [
       {
         "title": "Statusline Companion",
-        "width": 400,
-        "height": 600,
-        "minWidth": 400,
-        "minHeight": 600,
-        "maxWidth": 400,
-        "maxHeight": 600,
+        "width": 340,
+        "height": 500,
+        "minWidth": 340,
+        "minHeight": 500,
+        "maxWidth": 340,
+        "maxHeight": 500,
         "visible": false,
         "focus": false,
         "resizable": false,

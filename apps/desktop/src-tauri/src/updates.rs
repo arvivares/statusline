@@ -18,8 +18,7 @@ use tauri::{
 };
 use tauri_plugin_updater::{Update, UpdaterExt};
 
-use update_policy::CHECK_INTERVAL;
-const MANUAL_COOLDOWN: Duration = Duration::from_secs(60);
+use update_policy::CheckReason;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -29,6 +28,7 @@ pub struct UpdateStatus {
     pub(crate) version: Option<String>,
     automatic: bool,
     dismissed_version: Option<String>,
+    presentation_id: u32,
     installable: bool,
     downloaded: u64,
     total: Option<u64>,
@@ -39,14 +39,10 @@ pub struct UpdateStatus {
 #[serde(default, rename_all = "camelCase")]
 struct Preferences {
     automatic: bool,
-    dismissed_version: Option<String>,
 }
 impl Default for Preferences {
     fn default() -> Self {
-        Self {
-            automatic: true,
-            dismissed_version: None,
-        }
+        Self { automatic: true }
     }
 }
 
@@ -84,9 +80,10 @@ impl UpdateState {
                     current_version: env!("CARGO_PKG_VERSION"),
                     version: None,
                     automatic: prefs.automatic,
-                    dismissed_version: prefs
-                        .dismissed_version
-                        .filter(|value| update_policy::version_parts(value).is_some()),
+                    // Ignore legacy persisted Later: it now snoozes this opening
+                    // only. The user's automatic-check opt-out is still retained.
+                    dismissed_version: None,
+                    presentation_id: 0,
                     installable: installation_target().is_some(),
                     downloaded: 0,
                     total: None,
@@ -366,10 +363,25 @@ pub fn updater_status(state: State<'_, UpdateState>) -> UpdateStatus {
 
 #[tauri::command]
 pub async fn check_for_updates(app: AppHandle) -> UpdateStatus {
-    check_native(&app, true).await
+    check_native(&app, CheckReason::Manual).await
 }
 
-async fn check_native(app: &AppHandle, manual: bool) -> UpdateStatus {
+/// Called only on an actual native presentation, not every focus notification.
+/// Cached availability is immediately re-announced; discovery is rate limited.
+pub fn window_opened(app: &AppHandle) {
+    let state = app.state::<UpdateState>();
+    state.with(|inner| {
+        inner.status.presentation_id = inner.status.presentation_id.wrapping_add(1);
+        inner.status.dismissed_version = None;
+    });
+    state.emit(app);
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        check_native(&app, CheckReason::Foreground).await;
+    });
+}
+
+async fn check_native(app: &AppHandle, reason: CheckReason) -> UpdateStatus {
     let state = app.state::<UpdateState>();
     if state.disabled {
         return state.status();
@@ -378,16 +390,11 @@ async fn check_native(app: &AppHandle, manual: bool) -> UpdateStatus {
         return state.status();
     };
     let should_check = state.with(|inner| {
-        if (!manual && !inner.status.automatic)
-            || inner.last_check.is_some_and(|last| {
-                last.elapsed()
-                    < if manual {
-                        MANUAL_COOLDOWN
-                    } else {
-                        CHECK_INTERVAL
-                    }
-            })
-        {
+        if !update_policy::should_check(
+            inner.status.automatic,
+            inner.last_check.map(|last| last.elapsed()),
+            reason,
+        ) {
             return false;
         }
         inner.last_check = Some(Instant::now());
@@ -435,10 +442,7 @@ async fn check_native(app: &AppHandle, manual: bool) -> UpdateStatus {
 pub fn set_update_automatic(app: AppHandle, enabled: bool) -> Result<UpdateStatus, String> {
     let state = app.state::<UpdateState>();
     state.with(|inner| {
-        let prefs = Preferences {
-            automatic: enabled,
-            dismissed_version: inner.status.dismissed_version.clone(),
-        };
+        let prefs = Preferences { automatic: enabled };
         state.save_preferences(&prefs)?;
         inner.status.automatic = enabled;
         Ok::<_, String>(())
@@ -448,17 +452,18 @@ pub fn set_update_automatic(app: AppHandle, enabled: bool) -> Result<UpdateStatu
 }
 
 #[tauri::command]
-pub fn dismiss_update(app: AppHandle, version: String) -> Result<UpdateStatus, String> {
+pub fn dismiss_update(
+    app: AppHandle,
+    version: String,
+    presentation_id: u32,
+) -> Result<UpdateStatus, String> {
     let state = app.state::<UpdateState>();
     state.with(|inner| {
-        if inner.status.version.as_deref() != Some(&version) {
+        if inner.status.version.as_deref() != Some(&version)
+            || inner.status.presentation_id != presentation_id
+        {
             return Err("unavailable".to_owned());
         }
-        let prefs = Preferences {
-            automatic: inner.status.automatic,
-            dismissed_version: Some(version.clone()),
-        };
-        state.save_preferences(&prefs)?;
         inner.status.dismissed_version = Some(version);
         Ok(())
     })?;
@@ -563,14 +568,15 @@ pub async fn open_update_release(app: AppHandle) -> Result<(), String> {
 pub fn start(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
-        // Do not compete with initial Codex startup or installer activation.
-        tokio::time::sleep(Duration::from_secs(30)).await;
+        // Foreground opens check immediately. This fallback also covers startup
+        // hidden in the tray, without depending on a WebView timer.
+        tokio::time::sleep(Duration::from_secs(2)).await;
         let state = app.state::<UpdateState>();
         if state.disabled {
             return;
         }
         loop {
-            check_native(&app, false).await;
+            check_native(&app, CheckReason::Background).await;
             let delay = state.with(|inner| {
                 update_policy::next_check_delay(
                     inner.status.automatic,

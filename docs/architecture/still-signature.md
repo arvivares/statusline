@@ -13,7 +13,13 @@ Existing store screenshots are not evidence that the design has shipped there.
 - System sans-serif type, tabular quota digits, restrained supporting labels.
 - The remaining percentage is the primary reading. Leave 12 points/dp/CSS pixels
   between the number and its smaller percent symbol (6 in widgets).
-- Companion window radius: 36 CSS pixels. Widget containers use native clipping;
+- The `0.1.19` companion candidate is compact: 340 × 500 logical pixels (formerly
+  400 × 600), 88 px primary quota digits (formerly 120), 26 px percent symbol,
+  16 px heading, 15 px brand and 12 px secondary readings. Desktop controls keep
+  comfortable targets (36 px for primary dialog actions); existing small
+  supporting labels are not scaled down.
+  This compact pass does not shrink the native mobile apps or widgets.
+- Companion window radius: 28 CSS pixels. Widget containers use native clipping;
   Android's shared background uses a 28 dp radius. Mobile screens follow their
   safe areas rather than drawing another rounded panel inside the phone.
 - Remaining quota is gold. The **last active stripe is completely white**,

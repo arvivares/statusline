@@ -61,6 +61,8 @@ mod native {
     const MAX_ENTRIES: usize = 20_000;
     const MAX_METADATA_BYTES: u64 = 64 * 1024;
     const MAX_TAR_BYTES: u64 = MAX_EXPANDED_BYTES + MAX_ENTRIES as u64 * 1024;
+    // codesign treats -R as a filename unless the requirement starts with '='.
+    const APPLE_REQUIREMENT: &str = "=anchor apple generic";
 
     #[derive(Debug)]
     pub enum InstallError {
@@ -401,6 +403,11 @@ mod native {
             .stdin(Stdio::null())
             .output()?;
         if !output.status.success() {
+            #[cfg(test)]
+            eprintln!(
+                "Read-only verification command {program} {args:?} failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
             return Err(InstallError::VerificationFailed);
         }
         Ok(output)
@@ -446,6 +453,77 @@ mod native {
         const ROOT: &str = "状态 line.app";
         const PLIST: &[u8] = b"<?xml version=\"1.0\"?><plist version=\"1.0\"><dict><key>CFBundleIdentifier</key><string>inmerzion.statusline.desktop</string><key>CFBundleExecutable</key><string>statusline-desktop</string><key>CFBundleShortVersionString</key><string>0.1.18</string></dict></plist>";
         type Member<'a> = (&'a str, tar::EntryType, &'a [u8], Option<&'a str>);
+
+        #[test]
+        fn apple_requirement_is_evaluated_as_code_not_a_filename() {
+            // A real read-only Apple-signed executable catches argument parsing
+            // errors that mocked signature checks cannot detect.
+            command_output(
+                "/usr/bin/codesign",
+                &["--verify", "--strict", "-R", APPLE_REQUIREMENT],
+                Path::new("/usr/bin/true"),
+            )
+            .unwrap();
+        }
+
+        #[test]
+        fn apple_requirement_rejects_an_adhoc_signed_binary() {
+            let fixture = tempfile::tempdir().unwrap();
+            let binary = fixture.path().join("adhoc");
+            fs::copy("/usr/bin/true", &binary).unwrap();
+            command_output("/usr/bin/codesign", &["--force", "--sign", "-"], &binary).unwrap();
+            assert!(
+                command_output(
+                    "/usr/bin/codesign",
+                    &["--verify", "--strict", "-R", APPLE_REQUIREMENT],
+                    &binary,
+                )
+                .is_err()
+            );
+        }
+
+        #[test]
+        #[ignore = "Requires an independently signature-verified release archive and installed signed app; only temporary copies are replaced"]
+        fn signed_release_upgrade_rehearsal() {
+            let source = PathBuf::from(std::env::var_os("STATUSLINE_TEST_MACOS_APP").unwrap());
+            let archive = PathBuf::from(std::env::var_os("STATUSLINE_TEST_MACOS_ARCHIVE").unwrap());
+            let version = std::env::var("STATUSLINE_TEST_MACOS_VERSION").unwrap();
+            let fixture = tempfile::tempdir().unwrap();
+            let current = fixture.path().join("Statusline Test.app");
+            let result = Command::new("/usr/bin/ditto")
+                .arg(&source)
+                .arg(&current)
+                .status()
+                .unwrap();
+            assert!(result.success());
+            let current = current.canonicalize().unwrap();
+            let old_team = verify_bundle(&current).unwrap();
+            install(&fs::read(archive).unwrap(), &current, &version).unwrap();
+            assert_eq!(verify_bundle(&current).unwrap(), old_team);
+            assert_eq!(
+                plist_value(&current, "CFBundleShortVersionString").unwrap(),
+                version
+            );
+            let backup = fs::read_dir(fixture.path())
+                .unwrap()
+                .map(|entry| entry.unwrap().path())
+                .find(|path| {
+                    path.file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                        .starts_with(".statusline-backup-")
+                })
+                .unwrap()
+                .join("Statusline Test.app")
+                .canonicalize()
+                .unwrap();
+            assert_eq!(verify_bundle(&backup).unwrap(), old_team);
+            // The real app, its settings and the running process were never changed.
+            assert_eq!(
+                verify_bundle(&source.canonicalize().unwrap()).unwrap(),
+                old_team
+            );
+        }
 
         fn archive(extra: &[Member<'_>]) -> Vec<u8> {
             let mut builder = tar::Builder::new(GzEncoder::new(Vec::new(), Compression::fast()));
@@ -757,7 +835,7 @@ mod native {
                 "--strict",
                 "--all-architectures",
                 "-R",
-                "anchor apple generic",
+                APPLE_REQUIREMENT,
             ],
             bundle,
         )?;
