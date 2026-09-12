@@ -44,7 +44,7 @@ requests are welcome.
 
 - [Public release runbook](release/release-runbook.md): canonical version, unified tag,
   required assets, SignPath inputs, provenance and publication procedure.
-- [Current beta release notes](release/notes/v0.1.17.md): curated user-facing notes and
+- [Current beta release notes](release/notes/v0.1.18.md): curated user-facing notes and
   known limitations for the next candidate.
 - [Desktop installers](release/desktop-installers.md): build matrix, signing, checksums and
   smoke tests.

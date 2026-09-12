@@ -1,8 +1,11 @@
 # Still Signature
 
 Approved UI direction for the companion, iPhone app, Android app and home-screen
-widgets. This is an **unreleased implementation**, not a claim that the currently
-published binaries or store screenshots already contain the design.
+widgets. The companion and Android implementation is included in the
+[`0.1.18` beta candidate](../release/notes/v0.1.18.md). Preparing the candidate does
+not confirm publication; check its GitHub Release and successful release workflow.
+The iPhone app/widgets require a separate manual build and store submission.
+Existing store screenshots are not evidence that the design has shipped there.
 
 ## Visual contract
 
