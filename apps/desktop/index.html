@@ -187,10 +187,7 @@
         hidden
       >
         <header class="source-heading">
-          <div>
-            <p data-i18n="SYSTEM / CONNECTIONS">SYSTEM / CONNECTIONS</p>
-            <h2 id="source-panel-title" data-i18n="Connections">Connections</h2>
-          </div>
+          <h2 id="source-panel-title" data-i18n="Settings">Settings</h2>
           <button
             class="source-close"
             id="source-close"
@@ -217,9 +214,8 @@
             role="tab"
             aria-selected="true"
             aria-controls="source-settings-view"
-            data-i18n="CODEX SOURCE"
           >
-            CODEX SOURCE
+            Codex
           </button>
           <button
             class="settings-tab"
@@ -229,9 +225,9 @@
             aria-selected="false"
             aria-controls="relay-settings-view"
             tabindex="-1"
-            data-i18n="UNIVERSAL RELAY"
+            data-i18n="Mobile sync"
           >
-            UNIVERSAL RELAY
+            Mobile sync
           </button>
         </div>
 
@@ -244,32 +240,61 @@
           <div class="source-summary" id="source-summary" data-status="reading">
             <span class="source-beacon" aria-hidden="true"></span>
             <div>
-              <span data-i18n="CODEX.RUNTIME">CODEX.RUNTIME</span>
-              <strong id="source-status" data-i18n="READING">READING</strong>
+              <span data-i18n="Local source">Local source</span>
+              <strong id="source-status" data-i18n="Reading Codex"
+                >Reading Codex</strong
+              >
             </div>
           </div>
 
           <dl class="source-grid">
+            <div>
+              <dt data-i18n="Detected via">Detected via</dt>
+              <dd id="source-origin" data-i18n="Automatic detection">
+                Automatic detection
+              </dd>
+            </div>
+            <div>
+              <dt data-i18n="Version">Version</dt>
+              <dd id="source-version">—</dd>
+            </div>
             <div class="source-path-cell">
-              <dt data-i18n="EXECUTABLE.PATH">EXECUTABLE.PATH</dt>
+              <dt data-i18n="Executable path">Executable path</dt>
               <dd id="source-path" title="" data-i18n="Scanning local system…">
                 Scanning local system…
               </dd>
             </div>
-            <div>
-              <dt data-i18n="ORIGIN">ORIGIN</dt>
-              <dd id="source-origin" data-i18n="AUTO DETECT">AUTO DETECT</dd>
-            </div>
-            <div>
-              <dt data-i18n="VERSION">VERSION</dt>
-              <dd id="source-version">—</dd>
-            </div>
           </dl>
 
-          <div class="source-guidance">
-            <p class="source-guidance-label" data-i18n="OFFICIAL SETUP">
-              OFFICIAL SETUP
-            </p>
+          <div class="source-actions">
+            <button
+              class="source-primary"
+              id="source-choose"
+              type="button"
+              data-i18n="Choose executable"
+            >
+              Choose executable
+            </button>
+            <button
+              class="source-secondary"
+              id="source-scan"
+              type="button"
+              data-i18n="Scan again"
+            >
+              Scan again
+            </button>
+          </div>
+          <button
+            class="source-reset"
+            id="source-reset"
+            type="button"
+            hidden
+            data-i18n="Use automatic detection"
+          >
+            Use automatic detection
+          </button>
+          <details class="source-guidance" id="source-setup">
+            <summary data-i18n="Set up Codex">Set up Codex</summary>
             <p
               data-i18n="Use a compatible ChatGPT or Codex desktop app on Windows or macOS, or install the CLI below. Sign in with ChatGPT, then refresh."
             >
@@ -279,35 +304,7 @@
             <code class="install-command" id="install-command"
               >npm install -g @openai/codex</code
             >
-          </div>
-
-          <div class="source-actions">
-            <button
-              class="source-primary"
-              id="source-choose"
-              type="button"
-              data-i18n="SELECT EXECUTABLE"
-            >
-              SELECT EXECUTABLE
-            </button>
-            <button
-              class="source-secondary"
-              id="source-scan"
-              type="button"
-              data-i18n="SCAN AGAIN"
-            >
-              SCAN AGAIN
-            </button>
-          </div>
-          <button
-            class="source-reset"
-            id="source-reset"
-            type="button"
-            hidden
-            data-i18n="USE AUTOMATIC DETECTION"
-          >
-            USE AUTOMATIC DETECTION
-          </button>
+          </details>
           <p
             class="source-feedback"
             id="source-feedback"
@@ -328,41 +325,11 @@
           <div class="source-summary" id="relay-summary" data-status="reading">
             <span class="source-beacon" aria-hidden="true"></span>
             <div>
-              <span data-i18n="PRIVATE.RELAY">PRIVATE.RELAY</span>
-              <strong id="relay-status" data-i18n="READING">READING</strong>
+              <span data-i18n="Private sync">Private sync</span>
+              <strong id="relay-status" data-i18n="Checking sync"
+                >Checking sync</strong
+              >
             </div>
-          </div>
-
-          <dl class="source-grid relay-grid">
-            <div>
-              <dt data-i18n="ENDPOINT">ENDPOINT</dt>
-              <dd id="relay-endpoint">—</dd>
-            </div>
-            <div>
-              <dt data-i18n="SESSION.STORAGE">SESSION.STORAGE</dt>
-              <dd id="relay-storage" data-i18n="SYSTEM KEYCHAIN">
-                SYSTEM KEYCHAIN
-              </dd>
-            </div>
-            <div class="source-path-cell">
-              <dt data-i18n="LAST.PUBLISH">LAST.PUBLISH</dt>
-              <dd id="relay-published" data-i18n="NO SAMPLE PUBLISHED">
-                NO SAMPLE PUBLISHED
-              </dd>
-            </div>
-          </dl>
-
-          <div class="source-guidance relay-guidance">
-            <p class="source-guidance-label" data-i18n="UNIVERSAL / E2E">
-              UNIVERSAL / E2E
-            </p>
-            <p
-              data-i18n="Create a pairing and scan its QR in Statusline on iOS or Android. The relay stores only an encrypted snapshot; your Codex session stays local."
-            >
-              Create a pairing and scan its QR in Statusline on iOS or Android.
-              The relay stores only an encrypted snapshot; your Codex session
-              stays local.
-            </p>
           </div>
 
           <div class="relay-pairing" id="relay-pairing" hidden>
@@ -374,40 +341,73 @@
               />
             </div>
             <div class="relay-pairing-copy">
-              <p class="source-guidance-label" data-i18n="PAIRING.LINK">
-                PAIRING.LINK
-              </p>
-              <code id="relay-pairing-link">—</code>
+              <details class="pairing-link-details">
+                <summary data-i18n="Private pairing link">
+                  Private pairing link
+                </summary>
+                <code id="relay-pairing-link">—</code>
+              </details>
               <button
                 class="source-secondary"
                 id="relay-copy"
                 type="button"
-                data-i18n="COPY PRIVATE LINK"
+                data-i18n="Copy private link"
               >
-                COPY PRIVATE LINK
+                Copy private link
               </button>
             </div>
           </div>
+
+          <dl class="source-grid relay-grid">
+            <div>
+              <dt data-i18n="Relay server">Relay server</dt>
+              <dd id="relay-endpoint">—</dd>
+            </div>
+            <div>
+              <dt data-i18n="Credentials">Credentials</dt>
+              <dd id="relay-storage" data-i18n="System keychain">
+                System keychain
+              </dd>
+            </div>
+            <div>
+              <dt data-i18n="Last sync">Last sync</dt>
+              <dd id="relay-published" data-i18n="No sample published">
+                No sample published
+              </dd>
+            </div>
+          </dl>
 
           <div class="source-actions relay-actions">
             <button
               class="source-primary"
               id="relay-connect"
               type="button"
-              data-i18n="CREATE PAIRING"
+              data-i18n="Create pairing"
             >
-              CREATE PAIRING
+              Create pairing
             </button>
             <button
-              class="source-secondary"
+              class="source-secondary source-danger"
               id="relay-disconnect"
               type="button"
               hidden
-              data-i18n="DISCONNECT"
+              data-i18n="Disconnect"
             >
-              DISCONNECT
+              Disconnect
             </button>
           </div>
+          <details class="source-guidance relay-guidance">
+            <summary data-i18n="How private sync works">
+              How private sync works
+            </summary>
+            <p
+              data-i18n="Create a pairing and scan its QR in Statusline on iOS or Android. The relay stores only an encrypted snapshot; your Codex session stays local."
+            >
+              Create a pairing and scan its QR in Statusline on iOS or Android.
+              The relay stores only an encrypted snapshot; your Codex session
+              stays local.
+            </p>
+          </details>
           <p
             class="source-feedback"
             id="relay-feedback"
@@ -428,7 +428,6 @@
       aria-describedby="update-detail"
     >
       <header class="source-heading update-heading">
-        <p data-i18n="SYSTEM / UPDATES">SYSTEM / UPDATES</p>
         <button
           class="source-close"
           id="update-close"

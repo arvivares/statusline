@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setLanguage } from "./localization";
+import { version as companionVersion } from "../package.json";
 import {
   copyForUpdate,
   createPreviewUpdaterRuntime,
@@ -19,7 +20,14 @@ function state(
   phase: UpdatePhase,
   changes: Partial<UpdaterStatus> = {},
 ): UpdaterStatus {
-  return { ...previewUpdaterStatus(phase), ...changes };
+  const preview = previewUpdaterStatus(phase);
+  // Behavioral fixtures stay fixed as the product's screenshot version advances.
+  return {
+    ...preview,
+    currentVersion: "0.1.17",
+    version: preview.version === null ? null : "0.1.18",
+    ...changes,
+  };
 }
 
 function deferred<T>() {
@@ -546,9 +554,11 @@ describe("updater native actions", () => {
 describe("local updater preview", () => {
   it("uses current/future preview versions and only known failure codes", () => {
     expect(previewUpdaterStatus("available")).toMatchObject({
-      currentVersion: "0.1.17",
-      version: "0.1.18",
+      currentVersion: companionVersion,
     });
+    expect(previewUpdaterStatus("available").version).not.toBe(
+      companionVersion,
+    );
     expect(previewUpdaterStatus("error", "installFailed").error).toBe(
       "installFailed",
     );

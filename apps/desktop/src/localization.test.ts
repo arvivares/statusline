@@ -61,8 +61,8 @@ describe("messages", () => {
     expect(copy.detail).toBe(
       "Abre la configuración de origen para detectar o seleccionar un ejecutable local de Codex.",
     );
-    expect(labelForCodexSource("saved")).toBe("RUTA GUARDADA");
-    expect(labelForCodexSource("desktopApp")).toBe("APP DE ESCRITORIO");
+    expect(labelForCodexSource("saved")).toBe("Ruta guardada");
+    expect(labelForCodexSource("desktopApp")).toBe("App de escritorio");
     expect(relayErrorCopy("pairingExpired")).toContain("caducado");
     expect(relayErrorCopy("unknown_server_error")).toContain(
       "Comprueba la conexión",

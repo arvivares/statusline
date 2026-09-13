@@ -37,23 +37,23 @@ export function parseCodexDiagnostic(input: unknown): CodexDiagnostic {
 export function labelForCodexSource(source: CodexSource | null): string {
   switch (source) {
     case "environment":
-      return t("ENV OVERRIDE");
+      return t("Environment override");
     case "saved":
-      return t("SAVED PATH");
+      return t("Saved path");
     case "desktopApp":
-      return t("DESKTOP APP");
+      return t("Desktop app");
     case "standalone":
-      return t("STANDALONE");
+      return t("Standalone install");
     case "npm":
-      return t("NPM GLOBAL");
+      return t("Global npm");
     case "volta":
-      return t("VOLTA");
+      return t("Volta");
     case "versionManager":
-      return t("VERSION MANAGER");
+      return t("Version manager");
     case "path":
-      return t("SYSTEM PATH");
+      return t("System PATH");
     case null:
-      return t("NOT DETECTED");
+      return t("Not detected");
   }
 }
 

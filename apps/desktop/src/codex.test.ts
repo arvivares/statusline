@@ -13,7 +13,7 @@ describe("parseCodexDiagnostic", () => {
       message: null,
     });
     expect(result.source).toBe("desktopApp");
-    expect(labelForCodexSource(result.source)).toBe("DESKTOP APP");
+    expect(labelForCodexSource(result.source)).toBe("Desktop app");
   });
   it("preserves a verified npm launcher", () => {
     expect(
@@ -50,8 +50,8 @@ describe("parseCodexDiagnostic", () => {
 });
 
 describe("labelForCodexSource", () => {
-  it("uses concise Data Plane labels", () => {
-    expect(labelForCodexSource("versionManager")).toBe("VERSION MANAGER");
-    expect(labelForCodexSource(null)).toBe("NOT DETECTED");
+  it("uses concise Still Signature labels", () => {
+    expect(labelForCodexSource("versionManager")).toBe("Version manager");
+    expect(labelForCodexSource(null)).toBe("Not detected");
   });
 });

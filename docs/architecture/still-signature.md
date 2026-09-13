@@ -42,6 +42,27 @@ Existing store screenshots are not evidence that the design has shipped there.
 
 ## Behavior and scope
 
+### Companion settings
+
+Settings extends the same 340 × 500 surface as the quota view. It uses a simple
+header, unboxed **Codex / Mobile sync** tabs, sentence-case labels, aligned rows
+and 36 px rounded actions. The active tab has a restrained gold underline.
+No legacy telemetry labels or nested grid panels are shown.
+
+Executable paths wrap in a small monospace face. Setup guidance is a native
+disclosure, collapsed for a verified runtime and opened when the source is
+missing or invalid. Its contents, errors and long paths scroll inside the panel.
+The pairing QR is shown before the server metadata and uses the panel's width
+(up to 220 px), with its private link in a separate keyboard-operable disclosure.
+QR credentials, expiry and polling
+behavior are unchanged.
+
+Tab/Shift-Tab stays within the visible controls, including disclosures; arrow
+keys switch tabs and Escape restores the previous focus. The underlying quota
+view is inert while Settings is open. EN/ES labels use the shared catalog.
+
+### Shared quota behavior
+
 The desktop continues to show real Codex weekly and optional short-window data,
 account information and relay state. Mobile retains the weekly snapshot supported
 by protocol v1; it does not invent a short-window value or Antigravity quotas.
