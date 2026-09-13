@@ -32,20 +32,41 @@ credentials, prompts, conversations or source code.
 <table>
   <tr>
     <td align="center" width="64%">
-      <img src="docs/assets/readme/companion-data-plane.png" alt="Statusline Companion displaying weekly quota, reset time and relay status" width="420">
+      <img src="docs/assets/readme/still-signature/companion-en.png" alt="Still Signature companion: weekly quota, segmented meter with a white terminal stripe, reset time and private sync" width="340">
     </td>
     <td align="center" width="36%">
-      <img src="apps/apple/store/assets/phone/01-weekly-quota.png" alt="Statusline for iPhone displaying weekly quota in the Data Plane interface" width="233">
+      <img src="docs/assets/readme/still-signature/iphone-en.png" alt="Statusline for iPhone showing the Still Signature interface with a local demo quota" width="230">
     </td>
   </tr>
   <tr>
     <td align="center"><strong>Companion</strong><br><sub>Windows · Linux · macOS</sub></td>
-    <td align="center"><strong>Mobile</strong><br><sub>iPhone · Android</sub></td>
+    <td align="center"><strong>iPhone</strong><br><sub>Native app · local demo</sub></td>
   </tr>
 </table>
 
-The Data Plane interface keeps quota, reset and sync state consistent across desktop,
-mobile and native widgets.
+**Still Signature** puts the remaining quota first: one warm dark surface,
+restrained typography and a gold segmented meter with a white terminal stripe.
+The companion is compact at 340 × 500 logical pixels. iPhone, Android and native
+widgets share the same visual language.
+
+These captures use demo data, not a personal account. The iPhone image is from
+the current source running in an iOS simulator; App Store rollout is separate.
+See [capture provenance and reproduction](docs/assets/readme/README.md#still-signature-product-captures).
+
+<details>
+  <summary>Companion settings · Codex and mobile sync</summary>
+  <br>
+  <table>
+    <tr>
+      <td align="center"><img src="docs/assets/readme/still-signature/settings-codex-en.png" alt="Codex settings: verified runtime, executable path and expandable setup help" width="340"></td>
+      <td align="center"><img src="docs/assets/readme/still-signature/settings-mobile-en.png" alt="Mobile sync settings: relay server, secure credential storage and last encrypted snapshot" width="340"></td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Codex</strong></td>
+      <td align="center"><strong>Mobile sync</strong></td>
+    </tr>
+  </table>
+</details>
 
 The segmented gold **S** is Statusline's official logo. Its shared source and
 platform exports are maintained in the [brand kit](branding/README.md).

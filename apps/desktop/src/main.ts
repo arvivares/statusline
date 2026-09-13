@@ -58,6 +58,7 @@ const sourceScan = requireElement("source-scan", HTMLButtonElement);
 const sourceReset = requireElement("source-reset", HTMLButtonElement);
 const sourceFeedback = requireElement("source-feedback", HTMLElement);
 const installCommand = requireElement("install-command", HTMLElement);
+const sourceSetup = requireElement("source-setup", HTMLDetailsElement);
 const sourceTab = requireElement("source-tab", HTMLButtonElement);
 const relayTab = requireElement("relay-tab", HTMLButtonElement);
 const sourceSettingsView = requireElement("source-settings-view", HTMLElement);
@@ -396,6 +397,10 @@ function openSourcePanel(): void {
       ? document.activeElement
       : null;
   sourcePanel.hidden = false;
+  for (const surface of shell.querySelectorAll<HTMLElement>(
+    ".topbar, .quota-plane, .footer",
+  ))
+    surface.inert = true;
   settingsButton.setAttribute("aria-expanded", "true");
   sourceClose.focus();
   if (!sourceSettingsView.hidden && sourceRuntime !== null) {
@@ -412,6 +417,10 @@ function closeSourcePanel(): void {
   }
   pausePairingPoll();
   sourcePanel.hidden = true;
+  for (const surface of shell.querySelectorAll<HTMLElement>(
+    ".topbar, .quota-plane, .footer",
+  ))
+    surface.inert = false;
   settingsButton.setAttribute("aria-expanded", "false");
   focusBeforeSourcePanel?.focus();
   focusBeforeSourcePanel = null;
@@ -461,7 +470,7 @@ async function refreshSourceDiagnostic(): Promise<void> {
   if (sourceRuntime === null || sourceActionPending) {
     return;
   }
-  setSourceBusy(t("SCANNING LOCAL INSTALLS"));
+  setSourceBusy(t("Scanning local installs"));
   try {
     const diagnostic = parseCodexDiagnostic(await sourceRuntime.inspect());
     renderCodexDiagnostic(diagnostic);
@@ -482,7 +491,7 @@ async function chooseCodexExecutable(): Promise<void> {
     // Native code protects the parent against blur while the OS picker is open.
     const selected = await invoke<string | null>("choose_codex_executable");
     if (selected === null) return;
-    setSourceBusy(t("VERIFYING CODEX --VERSION"));
+    setSourceBusy(t("Verifying Codex --version"));
     const diagnostic = parseCodexDiagnostic(await sourceRuntime.save(selected));
     renderCodexDiagnostic(diagnostic);
     sourceFeedback.textContent = t(
@@ -500,7 +509,7 @@ async function useAutomaticDetection(): Promise<void> {
   if (sourceRuntime === null || sourceActionPending) {
     return;
   }
-  setSourceBusy(t("RESETTING SOURCE"));
+  setSourceBusy(t("Resetting source"));
   try {
     const diagnostic = parseCodexDiagnostic(await sourceRuntime.clear());
     renderCodexDiagnostic(diagnostic);
@@ -513,14 +522,18 @@ async function useAutomaticDetection(): Promise<void> {
 }
 
 function renderCodexDiagnostic(diagnostic: CodexDiagnostic): void {
+  const previousStatus = lastDiagnostic?.status;
   lastDiagnostic = diagnostic;
+  if (previousStatus !== diagnostic.status) {
+    sourceSetup.open = diagnostic.status !== "ready";
+  }
   sourceSummary.dataset.status = diagnostic.status;
   sourceStatus.textContent =
     diagnostic.status === "ready"
-      ? t("VERIFIED")
+      ? t("Verified")
       : diagnostic.status === "missing"
-        ? t("NOT FOUND")
-        : t("INVALID SOURCE");
+        ? t("Not found")
+        : t("Invalid source");
   sourcePath.textContent = diagnostic.path ?? t("No Codex executable detected");
   sourcePath.title = diagnostic.path ?? "";
   sourceOrigin.textContent = labelForCodexSource(diagnostic.source);
@@ -542,7 +555,7 @@ function renderCodexDiagnostic(diagnostic: CodexDiagnostic): void {
 
 function renderSourceFailure(error: unknown): void {
   sourceSummary.dataset.status = "invalid";
-  sourceStatus.textContent = t("CHECK FAILED");
+  sourceStatus.textContent = t("Check failed");
   sourceFeedback.textContent = errorMessage(error);
 }
 
@@ -550,7 +563,7 @@ function setSourceBusy(message: string): void {
   sourceActionPending = true;
   setSourceControlsDisabled(true);
   sourceSummary.dataset.status = "reading";
-  sourceStatus.textContent = t("READING");
+  sourceStatus.textContent = t("Reading Codex");
   sourceFeedback.textContent = message;
 }
 
@@ -573,7 +586,7 @@ async function createRelayPairing(): Promise<void> {
     return;
   }
   relayActionPending = true;
-  setRelayBusy(t("CREATING ENCRYPTED CHANNEL"));
+  setRelayBusy(t("Creating encrypted channel"));
   try {
     const status = parseRelayStatus(await relayRuntime.create());
     relayActionPending = false;
@@ -592,7 +605,7 @@ async function disconnectRelay(): Promise<void> {
     return;
   }
   relayActionPending = true;
-  setRelayBusy(t("REMOVING LOCAL RELAY CREDENTIALS"));
+  setRelayBusy(t("Removing local relay credentials"));
   try {
     const status = parseRelayStatus(await relayRuntime.disconnect());
     relayActionPending = false;
@@ -616,16 +629,16 @@ function renderRelayStatus(state: RelayStatus): void {
   relayDisconnect.hidden = true;
   relayPairing.hidden = true;
   currentPairingURI = null;
-  relayPublished.textContent = t("NO SAMPLE PUBLISHED");
+  relayPublished.textContent = t("No sample published");
   relayDetail.textContent = t("E2E / AES-256-GCM");
 
   switch (state.status) {
     case "notConfigured":
       relaySummary.dataset.status = "invalid";
-      relayStatus.textContent = t("BUILD NOT CONFIGURED");
+      relayStatus.textContent = t("Not configured");
       relayValue.textContent = t("UNAVAILABLE");
       relayDetail.textContent = t("INSTALLER CONFIG");
-      relayPublished.textContent = t("RELAY URL NOT CONFIGURED");
+      relayPublished.textContent = t("Relay URL not configured");
       relayConnect.disabled = true;
       relayFeedback.textContent = t(
         "This build needs STATUSLINE_RELAY_BASE_URL pointing to the public HTTPS relay.",
@@ -633,18 +646,18 @@ function renderRelayStatus(state: RelayStatus): void {
       break;
     case "unpaired":
       relaySummary.dataset.status = "offline";
-      relayStatus.textContent = t("READY TO PAIR");
+      relayStatus.textContent = t("Ready to pair");
       relayValue.textContent = t("OFFLINE");
-      relayConnect.textContent = t("CREATE PAIRING");
+      relayConnect.textContent = t("Create pairing");
       relayFeedback.textContent = t(
         "Create a private QR for Statusline on iOS or Android. No platform account is required.",
       );
       break;
     case "creating":
       relaySummary.dataset.status = "reading";
-      relayStatus.textContent = t("CREATING CHANNEL");
+      relayStatus.textContent = t("Creating channel");
       relayValue.textContent = t("PAIRING");
-      relayConnect.textContent = t("CREATING…");
+      relayConnect.textContent = t("Creating…");
       relayConnect.disabled = true;
       relayFeedback.textContent = t(
         "Generating independent read/write credentials.",
@@ -652,15 +665,15 @@ function renderRelayStatus(state: RelayStatus): void {
       break;
     case "pairing":
       relaySummary.dataset.status = "reading";
-      relayStatus.textContent = t("SCAN ON MOBILE");
+      relayStatus.textContent = t("Scan on mobile");
       relayValue.textContent = t("PAIRING");
-      relayConnect.textContent = t("REPLACE PAIRING");
+      relayConnect.textContent = t("Replace pairing");
       relayDisconnect.hidden = false;
       relayPairing.hidden = false;
       currentPairingURI = state.pairingUri;
       relayPairingLink.textContent = state.pairingUri;
       relayPublished.textContent = t(
-        "QR EXPIRES {0}",
+        "QR expires {0}",
         formatTime(state.pairingExpiresAt),
       );
       relayFeedback.textContent = t(
@@ -672,15 +685,15 @@ function renderRelayStatus(state: RelayStatus): void {
     case "connected":
       relaySummary.dataset.status = "ready";
       relayStatus.textContent =
-        state.lastPublishedAt === null ? t("CONNECTED") : t("SYNCED");
+        state.lastPublishedAt === null ? t("Connected") : t("Synced");
       relayValue.textContent =
         state.lastPublishedAt === null ? t("CONNECTED") : t("SYNCED");
-      relayConnect.textContent = t("REPLACE PAIRING");
+      relayConnect.textContent = t("Replace pairing");
       relayDisconnect.hidden = false;
       relayPublished.textContent =
         state.lastPublishedAt === null
-          ? t("WAITING FOR LOCAL SAMPLE")
-          : t("{0} · ENCRYPTED SNAPSHOT", formatTime(state.lastPublishedAt));
+          ? t("Waiting for local sample")
+          : t("{0} · Encrypted snapshot", formatTime(state.lastPublishedAt));
       relayFeedback.textContent =
         state.lastPublishedAt === null
           ? t("Paired. Refresh Codex to publish the first encrypted snapshot.")
@@ -690,11 +703,11 @@ function renderRelayStatus(state: RelayStatus): void {
       break;
     case "error":
       relaySummary.dataset.status = "invalid";
-      relayStatus.textContent = t("RELAY NEEDS ATTENTION");
+      relayStatus.textContent = t("Sync needs attention");
       relayValue.textContent = t("SYNC ERROR");
-      relayConnect.textContent = t("CREATE NEW PAIRING");
+      relayConnect.textContent = t("Create new pairing");
       relayDisconnect.hidden = !state.hasPairing;
-      relayPublished.textContent = t("STATUS UNAVAILABLE");
+      relayPublished.textContent = t("Status unavailable");
       relayFeedback.textContent = relayErrorCopy(state.code);
       break;
   }
@@ -717,10 +730,10 @@ function setRelayBusy(message: string): void {
   relayPairingLink.textContent = "";
   relayQRCode.removeAttribute("src");
   relaySummary.dataset.status = "reading";
-  relayStatus.textContent = t("WORKING");
+  relayStatus.textContent = t("Working");
   relayValue.textContent = t("PAIRING");
   relayDetail.textContent = t("E2E / AES-256-GCM");
-  relayPublished.textContent = t("WAITING FOR RELAY");
+  relayPublished.textContent = t("Waiting for relay");
   relayFeedback.textContent = message;
   relayConnect.disabled = true;
   relayDisconnect.disabled = true;
@@ -728,12 +741,12 @@ function setRelayBusy(message: string): void {
 
 function renderRelayFailure(message: string): void {
   relaySummary.dataset.status = "invalid";
-  relayStatus.textContent = t("CHECK FAILED");
+  relayStatus.textContent = t("Check failed");
   relayValue.textContent = t("SYNC ERROR");
   relayDetail.textContent = t("E2E / AES-256-GCM");
-  relayPublished.textContent = t("STATUS UNAVAILABLE");
+  relayPublished.textContent = t("Status unavailable");
   relayFeedback.textContent = message;
-  relayConnect.textContent = t("RETRY PAIRING");
+  relayConnect.textContent = t("Retry pairing");
   relayDisconnect.hidden = true;
   relayConnect.disabled = relayRuntime === null;
   relayDisconnect.disabled = relayRuntime === null;
@@ -827,11 +840,11 @@ function renderExpiredPairing(pairingURI: string, expiresAt: number): void {
   relayPairingLink.textContent = "";
   relayQRCode.removeAttribute("src");
   relaySummary.dataset.status = "offline";
-  relayStatus.textContent = t("QR EXPIRED");
+  relayStatus.textContent = t("QR expired");
   relayValue.textContent = t("OFFLINE");
   relayDetail.textContent = t("PAIRING WINDOW CLOSED");
-  relayPublished.textContent = t("NO ACTIVE QR");
-  relayConnect.textContent = t("CREATE NEW PAIRING");
+  relayPublished.textContent = t("No active QR");
+  relayConnect.textContent = t("Create new pairing");
   relayConnect.hidden = false;
   relayConnect.disabled = relayRuntime === null || relayActionPending;
   relayDisconnect.hidden = false;
@@ -868,9 +881,9 @@ async function copyPairingLink(): Promise<void> {
   }
   try {
     await navigator.clipboard.writeText(currentPairingURI);
-    relayCopy.textContent = t("COPIED");
+    relayCopy.textContent = t("Copied");
     window.setTimeout(() => {
-      relayCopy.textContent = t("COPY PRIVATE LINK");
+      relayCopy.textContent = t("Copy private link");
     }, 1_500);
   } catch {
     relayFeedback.textContent = t(
@@ -881,19 +894,19 @@ async function copyPairingLink(): Promise<void> {
 
 function compactEndpoint(endpoint: string): string {
   try {
-    return new URL(endpoint).host.toUpperCase();
+    return new URL(endpoint).host;
   } catch {
-    return t("INVALID ENDPOINT");
+    return t("Invalid endpoint");
   }
 }
 
 function relayStorageLabel(): void {
   const platform = navigator.userAgent;
   const label = platform.includes("Windows")
-    ? t("CREDENTIAL MANAGER")
+    ? t("Credential Manager")
     : platform.includes("Linux")
-      ? t("SECRET SERVICE")
-      : t("SYSTEM KEYCHAIN");
+      ? t("Secret Service")
+      : t("System keychain");
   relayStorage.textContent = label;
 }
 
@@ -902,21 +915,11 @@ function trapSourcePanelFocus(event: KeyboardEvent): void {
     return;
   }
   const focusable = [
-    sourceClose,
-    sourceTab,
-    relayTab,
-    sourceChoose,
-    sourceScan,
-    sourceReset,
-    relayConnect,
-    relayDisconnect,
-    relayCopy,
+    ...sourcePanel.querySelectorAll<HTMLElement>(
+      "button:not(:disabled), summary, [tabindex]",
+    ),
   ].filter(
-    (element) =>
-      !element.hidden &&
-      !element.disabled &&
-      element.tabIndex >= 0 &&
-      element.closest("[hidden]") === null,
+    (element) => element.tabIndex >= 0 && element.getClientRects().length > 0,
   );
   const first = focusable[0];
   const last = focusable.at(-1);

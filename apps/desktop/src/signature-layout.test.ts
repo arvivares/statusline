@@ -54,4 +54,30 @@ describe("Still Signature layout contracts", () => {
     expect(css).toMatch(/\.signature-tip\s*\{[^}]*background:\s*#fff/);
     expect(css).toMatch(/\.quota-suffix\s*\{[^}]*margin-left:\s*12px/);
   });
+
+  it("keeps settings on the same surface with unboxed tabs and readable actions", () => {
+    const css = source("./styles.css");
+    expect(css).toMatch(
+      /\.source-panel\s*\{[^}]*background:\s*var\(--surface\)/,
+    );
+    expect(css).toMatch(/\.settings-tab\s*\{[^}]*background:\s*transparent/);
+    expect(css).toMatch(/\.settings-tab\s*\{[^}]*min-height:\s*44px/);
+    expect(css).toMatch(/\.source-grid\s*\{[^}]*flex-direction:\s*column/);
+    expect(css).not.toContain(".settings-tab:last-child");
+  });
+
+  it("keeps setup and private links in native keyboard-operable disclosures", () => {
+    const html = source("../index.html");
+    expect(html).toContain(
+      '<details class="source-guidance" id="source-setup">',
+    );
+    expect(html).toContain('<summary data-i18n="Set up Codex">');
+    expect(html).toContain('<details class="pairing-link-details">');
+    expect(html).not.toContain('data-i18n="CODEX.RUNTIME"');
+    expect(html).not.toContain('data-i18n="EXECUTABLE.PATH"');
+    const main = source("./main.ts");
+    expect(main).toContain('"button:not(:disabled), summary, [tabindex]"');
+    expect(main).toContain("surface.inert = true");
+    expect(main).toContain("surface.inert = false");
+  });
 });

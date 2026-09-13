@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { localizeDocument, t, type MessageKey } from "./localization";
+import { version as companionVersion } from "../package.json";
 
 export type UpdatePhase =
   | "idle"
@@ -415,10 +416,11 @@ export function previewUpdaterStatus(
 ): UpdaterStatus {
   const selected =
     phase && Object.hasOwn(phaseCopy, phase) ? (phase as UpdatePhase) : "idle";
+  const [major, minor, patch] = companionVersion.split(".");
   return {
     ...initialStatus,
     phase: selected,
-    currentVersion: "0.1.17",
+    currentVersion: companionVersion,
     version: [
       "available",
       "downloading",
@@ -426,7 +428,7 @@ export function previewUpdaterStatus(
       "installed",
       "error",
     ].includes(selected)
-      ? "0.1.18"
+      ? `${major}.${minor}.${Number(patch) + 1}`
       : null,
     automatic: true,
     installable: true,

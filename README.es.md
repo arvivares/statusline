@@ -25,19 +25,41 @@ Statusline muestra el estado de la cuota de Codex en Windows, Linux, macOS, iPho
 <table>
   <tr>
     <td align="center" width="64%">
-      <img src="docs/assets/readme/companion-data-plane.png" alt="Statusline Companion mostrando la cuota semanal, el reinicio y el estado del relay" width="420">
+      <img src="docs/assets/readme/still-signature/companion-es.png" alt="Companion Still Signature: cuota semanal, barra segmentada con cursor blanco, reinicio y sincronización privada" width="340">
     </td>
     <td align="center" width="36%">
-      <img src="apps/apple/store/assets/phone/01-weekly-quota.png" alt="Statusline para iPhone mostrando la cuota semanal con la interfaz Data Plane" width="233">
+      <img src="docs/assets/readme/still-signature/iphone-es.png" alt="Statusline para iPhone con la interfaz Still Signature y una cuota de demostración local" width="230">
     </td>
   </tr>
   <tr>
     <td align="center"><strong>Companion</strong><br><sub>Windows · Linux · macOS</sub></td>
-    <td align="center"><strong>Mobile</strong><br><sub>iPhone · Android</sub></td>
+    <td align="center"><strong>iPhone</strong><br><sub>App nativa · demo local</sub></td>
   </tr>
 </table>
 
-La misma interfaz Data Plane mantiene cuota, reinicio y estado de sincronización consistentes entre escritorio, móvil y widgets nativos.
+**Still Signature** da protagonismo a la cuota restante: una única superficie
+oscura cálida, tipografía discreta y una barra dorada segmentada con un cursor
+blanco al final. El companion ocupa 340 × 500 píxeles lógicos. iPhone, Android
+y los widgets nativos comparten el mismo estilo.
+
+Las capturas usan datos de demostración, no una cuenta personal. La imagen del
+iPhone procede del código actual ejecutado en el simulador de iOS; su publicación
+en la App Store es independiente. Consulta la [procedencia y reproducción de las capturas](docs/assets/readme/README.md#still-signature-product-captures).
+
+<details>
+  <summary>Configuración del companion · Codex y sincronización móvil</summary>
+  <br>
+  <table>
+    <tr>
+      <td align="center"><img src="docs/assets/readme/still-signature/settings-codex-es.png" alt="Configuración de Codex: ejecutable verificado, ruta y ayuda de instalación desplegable" width="340"></td>
+      <td align="center"><img src="docs/assets/readme/still-signature/settings-mobile-es.png" alt="Sincronización móvil: servidor relay, almacenamiento seguro y última muestra cifrada" width="340"></td>
+    </tr>
+    <tr>
+      <td align="center"><strong>Codex</strong></td>
+      <td align="center"><strong>Sincronización móvil</strong></td>
+    </tr>
+  </table>
+</details>
 
 La **S** dorada segmentada es el logo oficial de Statusline. Su fuente común y las
 variantes para cada plataforma se mantienen en el [kit de marca](branding/README.md).

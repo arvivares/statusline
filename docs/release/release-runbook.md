@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.19` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.19`;
-- Android candidate: `versionCode 15` (Google Play submission is separate);
+- prepared product tag: `v0.1.20` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.20`;
+- Android candidate: `versionCode 16` (Google Play submission is separate);
 - separately uploaded iOS candidate: `1.0.1 (6)`, acknowledged for TestFlight
   processing. A local development-signed USB upgrade confirmed an independent
   widget read with the existing pairing; TestFlight availability and the
@@ -50,7 +50,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.19`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.20`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -125,8 +125,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.19 -m "Statusline 0.1.19 beta"
-git push origin v0.1.19
+git tag -s v0.1.20 -m "Statusline 0.1.20 beta"
+git push origin v0.1.20
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -134,12 +134,18 @@ targets the exact workflow commit and matches `release.json`. The signed tag is 
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
 
-### 0.1.19 candidate gates
+### 0.1.20 candidate gates
+
+- Verify the Still Signature settings in EN/ES: Codex and mobile-sync tabs,
+  setup disclosures, long paths, QR visibility, keyboard focus and Escape.
+  The README uses fresh, language-matched source captures; iPhone images are
+  isolated simulator demos, not evidence of a store rollout. This release does
+  not change the native mobile layout or core sync/updater protocols.
 
 - Preserve the `0.1.16` window dismissal, Windows desktop discovery and iOS bundle
-  guards, plus the `0.1.18` Still Signature design. This patch compacts the
-  companion, fixes macOS signature-requirement parsing and announces available
-  updates when opening the companion. Native mobile layouts are not shrunk.
+  guards, plus the `0.1.18` Still Signature design and `0.1.19` compact window,
+  macOS signature-requirement fix and automatic update notices on opening.
+  Native mobile layouts are not shrunk.
   Production Rust tests and the PowerShell fixture must pass on Windows, Linux
   and macOS as applicable before signing/tagging.
 - Validate update discovery, exact platform/format selection, duplicate operation

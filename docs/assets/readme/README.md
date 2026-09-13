@@ -1,5 +1,78 @@
 # README assets
 
+## Still Signature product captures
+
+The English and Spanish READMEs use separate, language-matched PNGs in
+[`still-signature/`](still-signature/):
+
+| Files                         | Source                                                  | Size                                      |
+| ----------------------------- | ------------------------------------------------------- | ----------------------------------------- |
+| `companion-{en,es}.png`       | Real desktop frontend, isolated preview                 | 680 × 1000 px; 340 × 500 logical viewport |
+| `settings-codex-{en,es}.png`  | Same frontend, Codex settings tab                       | 680 × 1000 px                             |
+| `settings-mobile-{en,es}.png` | Same frontend, mobile sync settings tab                 | 680 × 1000 px                             |
+| `iphone-{en,es}.png`          | Real SwiftUI app in an isolated iPhone 17 Pro simulator | 1206 × 2622 px                            |
+
+Captured on 13 September 2026 for the `v0.1.20` candidate. The desktop images
+show version 0.1.20 and the Still Signature settings revision. The iPhone captures
+use the same native layout as the 0.1.19 source, unchanged in this release.
+The desktop preview has a synthetic 53% quota,
+sample runtime path and `.example` relay host. Pairing actions are intentionally
+disabled in that preview. The iPhone uses the app's public local demo (70%) and
+remains unpaired. No image contains real account details, live pairing links,
+QR credentials or filesystem paths identifying a user.
+
+These are source screenshots, **not evidence of App Store approval or native
+desktop compositor behavior**. They replace the Data Plane images in the README;
+store listing assets and the old `companion-data-plane.png` are not overwritten.
+
+### Desktop reproduction
+
+Run `npm ci` and `npm run dev` in `apps/desktop`. Open each route in a clean browser
+at **340 × 500 CSS pixels**, with device scale factor **2**, and capture the viewport
+after fonts and layout have settled:
+
+```text
+http://localhost:1420/?preview=ready&lang=en
+http://localhost:1420/?preview=ready&lang=en&panel=source
+http://localhost:1420/?preview=ready&lang=en&panel=relay
+```
+
+Repeat with `lang=es`. Use the actual frontend, not an illustrated mockup. Keep
+the white terminal stripe and the 12 px number/percent gap visible. The preview's
+version comes from `apps/desktop/package.json`, not a hard-coded screenshot label.
+Native builds, accounts and relay access are not needed for these captures.
+
+### iPhone reproduction
+
+Use a **new, unpaired simulator**, never a personal phone or a simulator with
+real account data. In Xcode run only
+[`ReadmeScreenshotTests`](../../../apps/apple/statuslineUITests/ReadmeScreenshotTests.swift),
+or run this from the repository root with your simulator's UDID:
+
+```sh
+xcodebuild test \
+  -project apps/apple/statusline.xcodeproj -scheme statusline \
+  -configuration Debug \
+  -destination 'platform=iOS Simulator,id=YOUR_ISOLATED_SIMULATOR_UDID' \
+  -derivedDataPath /tmp/statusline-readme-derived \
+  -resultBundlePath /tmp/statusline-readme.xcresult \
+  -only-testing:statuslineUITests/ReadmeScreenshotTests \
+  -parallel-testing-enabled NO CODE_SIGN_IDENTITY=-
+xcrun xcresulttool export attachments \
+  --path /tmp/statusline-readme.xcresult \
+  --output-path /tmp/statusline-readme-attachments
+```
+
+Choose unused output paths. Keep simulator signing enabled: disabling it can
+remove the app-group/keychain entitlements and produce a misleading error state.
+Local ad-hoc simulator signing does not use distribution certificates. The tests
+skip physical devices or an app that is not visibly unpaired, use only public
+demo controls, verify the quota, and retain both language captures.
+
+Inspect the attachments before copying their original bytes to `iphone-en.png`
+and `iphone-es.png`. Do not retouch away errors or label an unpaired demo as live
+sync. A passing test alone does not replace visual inspection.
+
 ## App Store download QR
 
 [`app-store-qr.svg`](app-store-qr.svg) links directly to the public
