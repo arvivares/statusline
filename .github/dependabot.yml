@@ -43,7 +43,9 @@ updates:
           - patch
 
   - package-ecosystem: cargo
-    directory: /apps/desktop/src-tauri
+    directories:
+      - /apps/desktop/src-tauri
+      - /apps/desktop/runtime-tests
     schedule:
       interval: weekly
       day: monday
@@ -55,6 +57,10 @@ updates:
         update-types:
           - minor
           - patch
+      runtime-major-updates:
+        group-by: dependency-name
+        update-types:
+          - major
 
   - package-ecosystem: npm
     directory: /branding
@@ -96,3 +102,6 @@ updates:
       actions:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch

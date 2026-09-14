@@ -158,6 +158,13 @@ jobs:
         run: npm run release:check
         working-directory: apps/desktop
 
+      - name: Build companion frontend without native installers
+        run: npm run build
+        working-directory: apps/desktop
+
+      - name: Validate dependency update policy
+        run: node --test scripts/dependabot-policy.test.mjs
+
       - name: Validate relay
         run: npm run db:migrate:local && npm test && npm run check
         working-directory: services/relay
