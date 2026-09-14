@@ -43,7 +43,9 @@ updates:
           - patch
 
   - package-ecosystem: cargo
-    directory: /apps/desktop/src-tauri
+    directories:
+      - /apps/desktop/src-tauri
+      - /apps/desktop/runtime-tests
     schedule:
       interval: weekly
       day: monday
@@ -96,3 +98,6 @@ updates:
       actions:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
