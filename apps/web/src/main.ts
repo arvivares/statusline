@@ -284,20 +284,3 @@ onLanguageChange(() => {
   updateMotion(root.classList.contains("motion-paused"));
 });
 setMenu(false);
-
-const heroScene = document.querySelector<HTMLElement>(".hero-scene")!;
-if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-  heroScene.addEventListener("pointermove", (event) => {
-    if (reducedMotion.matches || root.classList.contains("motion-paused"))
-      return;
-    const bounds = heroScene.getBoundingClientRect();
-    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-    heroScene.style.setProperty("--scene-rx", `${-y * 4}deg`);
-    heroScene.style.setProperty("--scene-ry", `${x * 6}deg`);
-  });
-  heroScene.addEventListener("pointerleave", () => {
-    heroScene.style.setProperty("--scene-rx", "0deg");
-    heroScene.style.setProperty("--scene-ry", "0deg");
-  });
-}

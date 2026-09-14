@@ -60,7 +60,7 @@ export const platformMessages: Record<
       badge: "BETA",
       description:
         "A universal companion for Apple Silicon and Intel Macs. Explore the project's releases for DMG and PKG installers.",
-      requirement: "REQUIRES CODEX CLI, INSTALLED AND SIGNED IN",
+      requirement: "REQUIRES CODEX CLI OR COMPATIBLE DESKTOP APP, SIGNED IN",
       cta: "Explore releases",
     },
     linux: {
@@ -75,9 +75,9 @@ export const platformMessages: Record<
       title: "The next step for your desktop.",
       badge: "PREVIEW",
       description:
-        "Public NSIS and MSI beta previews are available without Authenticode signing while SignPath onboarding is pending. SmartScreen may warn or block installation; verify the signed checksums and provenance.",
+        "Public NSIS and MSI installers are available without Authenticode signing. SmartScreen may warn or block installation; verify the signed checksums and provenance.",
       requirement:
-        "UNSIGNED PREVIEW · REQUIRES CODEX CLI, INSTALLED AND SIGNED IN",
+        "UNSIGNED · REQUIRES CODEX CLI OR COMPATIBLE DESKTOP APP, SIGNED IN",
       cta: "Explore preview releases",
     },
     android: {
@@ -103,7 +103,8 @@ export const platformMessages: Record<
       badge: "BETA",
       description:
         "Companion universal para Mac con Apple Silicon e Intel. Consulta los instaladores DMG y PKG en las versiones del proyecto.",
-      requirement: "REQUIERE CODEX CLI INSTALADO Y AUTENTICADO",
+      requirement:
+        "REQUIERE SESIÓN EN CODEX CLI O APP DE ESCRITORIO COMPATIBLE",
       cta: "Explorar versiones",
     },
     linux: {
@@ -118,9 +119,9 @@ export const platformMessages: Record<
       title: "El próximo paso para tu escritorio.",
       badge: "PREVIEW",
       description:
-        "Hay previews beta públicas NSIS y MSI sin Authenticode mientras se completa SignPath. SmartScreen puede advertir o bloquear la instalación; verifica los checksums firmados y la procedencia.",
+        "Los instaladores públicos NSIS y MSI no tienen firma Authenticode. SmartScreen puede advertir o bloquear la instalación; verifica los checksums firmados y la procedencia.",
       requirement:
-        "PREVIEW SIN FIRMA · REQUIERE CODEX CLI INSTALADO Y AUTENTICADO",
+        "SIN FIRMA · REQUIERE SESIÓN EN CODEX CLI O APP DE ESCRITORIO COMPATIBLE",
       cta: "Explorar previews",
     },
     android: {

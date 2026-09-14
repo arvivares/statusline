@@ -14,6 +14,7 @@
     "test:dev": "node --experimental-strip-types scripts/check-dev.mjs",
     "test:analytics": "node --experimental-strip-types --test scripts/analytics.test.mjs",
     "test:public": "node --experimental-strip-types --test scripts/public-pages.test.mjs",
+    "test:media": "node --experimental-strip-types --test scripts/product-media.test.mjs",
     "test:seo": "node --experimental-strip-types scripts/check-seo.mjs",
     "preview": "vite preview --host 0.0.0.0"
   },

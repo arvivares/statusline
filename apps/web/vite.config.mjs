@@ -2,9 +2,11 @@ import { readFile } from "node:fs/promises";
 import { defineConfig } from "vite";
 import { renderPublicPage } from "./scripts/render-public-pages.mjs";
 import { publicPageMatch } from "../../content/public-pages.ts";
+import { productMediaPlugin } from "./scripts/product-media.mjs";
 
 export default defineConfig({
   plugins: [
+    productMediaPlugin(),
     {
       name: "public-information-pages",
       configureServer(server) {
