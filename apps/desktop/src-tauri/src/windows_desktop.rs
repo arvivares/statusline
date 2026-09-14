@@ -319,8 +319,10 @@ mod tests {
             .enable_all()
             .build()
             .unwrap();
-        let (selected, _) = runtime.block_on(select_verified_candidate(&candidates));
-        let selected = selected.unwrap();
+        let (selected, failure) = runtime.block_on(select_verified_candidate(&candidates));
+        let selected = selected.unwrap_or_else(|| {
+            panic!("Desktop fixture was not selected; verification failure: {failure:?}")
+        });
         assert_eq!(selected.launch.program, executable);
         assert!(selected.launch.prefix_args.is_empty());
         assert_eq!(selected.candidate.source, CodexSource::DesktopApp);
@@ -337,8 +339,11 @@ mod tests {
             path: fallback.clone(),
             source: CodexSource::Path,
         });
-        let (selected, _) = runtime.block_on(select_verified_candidate(&candidates));
-        assert_eq!(selected.unwrap().launch.program, fallback);
+        let (selected, failure) = runtime.block_on(select_verified_candidate(&candidates));
+        let selected = selected.unwrap_or_else(|| {
+            panic!("Fallback fixture was not selected; verification failure: {failure:?}")
+        });
+        assert_eq!(selected.launch.program, fallback);
         fs::remove_dir_all(directory).unwrap();
     }
 }

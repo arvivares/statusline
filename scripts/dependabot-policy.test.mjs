@@ -16,6 +16,10 @@ test("Cargo monitors production and the lightweight runtime harness together", (
   const cargo = block("cargo");
   assert.match(
     cargo,
+    /runtime-major-updates:\n        group-by: dependency-name\n        update-types:\n          - major/,
+  );
+  assert.match(
+    cargo,
     /directories:\n      - \/apps\/desktop\/src-tauri\n      - \/apps\/desktop\/runtime-tests/,
   );
   assert.equal(

@@ -57,6 +57,10 @@ updates:
         update-types:
           - minor
           - patch
+      runtime-major-updates:
+        group-by: dependency-name
+        update-types:
+          - major
 
   - package-ecosystem: npm
     directory: /branding
