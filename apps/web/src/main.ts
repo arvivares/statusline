@@ -160,12 +160,11 @@ function updateQuota(value: number, announce = false) {
     selectedWindow === "weekly" ? "weeklyLabel" : "shortLabel",
   );
   demo.style.setProperty("--demo-color", bounded <= 15 ? "#f26856" : "#efc65a");
-  segments.forEach((segment, index) =>
-    segment.classList.toggle(
-      "is-filled",
-      index < Math.ceil((bounded / 100) * segments.length),
-    ),
-  );
+  const filledSegments = Math.ceil((bounded / 100) * segments.length);
+  segments.forEach((segment, index) => {
+    segment.classList.toggle("is-filled", index < filledSegments);
+    segment.classList.toggle("is-terminal", index === filledSegments - 1);
+  });
   if (announce)
     demoAnnouncement.textContent = uiText("quotaAnnouncement", {
       value: bounded,

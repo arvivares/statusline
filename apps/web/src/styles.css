@@ -1353,6 +1353,10 @@ svg.icon,
   background: var(--demo-color, var(--gold));
   border-color: var(--demo-color, var(--gold));
 }
+.demo-segments > span.is-terminal {
+  background: var(--text);
+  border-color: var(--text);
+}
 .demo-scale {
   display: flex;
   justify-content: space-between;
@@ -3811,7 +3815,12 @@ html:not(.js) .menu-toggle {
   display: none;
 }
 html:not(.js) .demo-segments {
-  background: linear-gradient(90deg, var(--gold) 73%, transparent 73%);
+  background: linear-gradient(
+    90deg,
+    var(--gold) 70%,
+    var(--text) 70% 73.333%,
+    transparent 73.333%
+  );
   mask-image: repeating-linear-gradient(
     90deg,
     #000 0 calc(3.333% - 3px),
