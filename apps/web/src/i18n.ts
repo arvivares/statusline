@@ -1,4 +1,5 @@
 import { staticMessages } from "./static-messages";
+import { productImage } from "./product-media";
 import {
   publicPagePath,
   type PublicPageID,
@@ -78,6 +79,11 @@ function applyLanguage(next: Language, persist: boolean) {
   }
 
   const metadata = pageMetadata(next);
+  document
+    .querySelectorAll<HTMLImageElement>("img[data-product-image]")
+    .forEach((image) => {
+      image.src = productImage(image.dataset.productImage!, next);
+    });
   document
     .querySelectorAll<HTMLAnchorElement>("[data-public-page]")
     .forEach((link) => {

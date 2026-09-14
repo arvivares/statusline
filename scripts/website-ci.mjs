@@ -20,6 +20,7 @@ export function isWebsitePath(path) {
     path.startsWith("apps/web/") ||
     path.startsWith("content/") ||
     path.startsWith("branding/") ||
+    path.startsWith("docs/assets/readme/still-signature/") ||
     relevantFiles.has(path)
   );
 }

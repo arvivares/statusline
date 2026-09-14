@@ -1353,6 +1353,10 @@ svg.icon,
   background: var(--demo-color, var(--gold));
   border-color: var(--demo-color, var(--gold));
 }
+.demo-segments > span.is-terminal {
+  background: var(--ink);
+  border-color: var(--ink);
+}
 .demo-scale {
   display: flex;
   justify-content: space-between;
@@ -3811,7 +3815,12 @@ html:not(.js) .menu-toggle {
   display: none;
 }
 html:not(.js) .demo-segments {
-  background: linear-gradient(90deg, var(--gold) 73%, transparent 73%);
+  background: linear-gradient(
+    90deg,
+    var(--gold) 70%,
+    var(--ink) 70% 73.333%,
+    transparent 73.333%
+  );
   mask-image: repeating-linear-gradient(
     90deg,
     #000 0 calc(3.333% - 3px),
@@ -3856,5 +3865,125 @@ html:not(.js) .demo-segments {
   }
   .desktop-device {
     transform: perspective(1100px) rotateY(-9deg) rotateX(6deg) rotate(-4deg);
+  }
+}
+
+/* Still Signature: real product captures, shared with the README. */
+.hero-scene.still-scene {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 32px 0;
+  transform: none;
+  align-self: center;
+}
+.still-scene-label {
+  margin: 0 0 24px;
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.still-devices {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  align-items: center;
+  gap: 20px;
+}
+.still-capture {
+  margin: 0;
+  min-width: 0;
+}
+.still-capture img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 26px;
+  box-shadow: 0 24px 64px #0005;
+}
+.still-iphone img {
+  border-radius: 24px;
+}
+.still-capture figcaption {
+  margin-top: 18px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.still-scene-note {
+  max-width: 560px;
+  margin: 24px auto 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+.settings-showcase {
+  padding-top: 0;
+}
+.settings-showcase .section-heading h2 {
+  max-width: 700px;
+  font-size: clamp(30px, 4vw, 54px);
+}
+.settings-captures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 340px));
+  justify-content: center;
+  gap: clamp(20px, 5vw, 72px);
+}
+.settings-showcase .still-scene-note {
+  text-align: center;
+}
+/* Retain an explicitly labelled interactive illustration, in the new style. */
+.interactive-demo {
+  border-radius: 24px;
+  background: #181912;
+}
+.small-widget {
+  border-radius: 24px;
+  transform: none;
+  background: #181912;
+}
+.small-widget .segment-meter {
+  position: relative;
+}
+.small-widget .segment-meter::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 calc(73% - 5px);
+  width: 5px;
+  background: #f2f1ec;
+}
+.widget-value > span {
+  margin-left: 8px;
+}
+@media (max-width: 1000px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
+  .hero-scene.still-scene {
+    max-width: 600px;
+    justify-self: center;
+    padding: 0 0 40px;
+  }
+}
+@media (max-width: 580px) {
+  .still-devices {
+    gap: 12px;
+  }
+  .still-capture img {
+    border-radius: 18px;
+  }
+  .still-scene-label {
+    font-size: 9px;
+  }
+  .still-capture figcaption {
+    font-size: 11px;
+    margin-top: 12px;
+  }
+  .settings-captures {
+    grid-template-columns: minmax(0, 320px);
+    gap: 36px;
   }
 }

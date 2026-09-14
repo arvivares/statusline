@@ -9,6 +9,7 @@ import {
   publicPagePath,
 } from "../../../content/public-pages.ts";
 import { validatePublicDocument } from "./check-public-pages.mjs";
+import { productAssets } from "./product-media.mjs";
 
 const server = await createServer({
   root: fileURLToPath(new URL("../", import.meta.url)),
@@ -51,6 +52,22 @@ try {
   console.log(
     "Dev checks passed: shared QR and six static information pages (GET/HEAD/POST).",
   );
+  for (const [path, source] of productAssets) {
+    const response = await fetch(new URL(path, origin));
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /^image\/png/);
+    assert.deepEqual(
+      Buffer.from(await response.arrayBuffer()),
+      await readFile(source),
+    );
+    const head = await fetch(new URL(path, origin), { method: "HEAD" });
+    assert.equal(head.status, 200);
+    assert.equal(await head.text(), "");
+    const post = await fetch(new URL(path, origin), { method: "POST" });
+    assert.equal(post.status, 405);
+    assert.equal(post.headers.get("allow"), "GET, HEAD");
+  }
+  console.log("Dev checks passed: eight original captures (GET/HEAD/POST).");
 } finally {
   await server.close();
 }

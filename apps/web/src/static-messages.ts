@@ -2,6 +2,26 @@
 // HTML messages contain only authored markup; both locales must retain the same keys.
 export const staticMessages = {
   en: {
+    "screens.design": "STILL SIGNATURE / LESS, BUT CLEARER",
+    "screens.companion": "Companion · 0.1.20",
+    "screens.iphone": "iPhone · Native app",
+    "screens.companionAlt":
+      "Statusline Companion showing a 53 percent sample quota",
+    "screens.iphoneAlt":
+      "The native iPhone app with its unpaired 70 percent local example",
+    "screens.note":
+      "Real interfaces. Separate demo samples, not a live connection. Captured from the latest source; store versions may differ.",
+    "screens.settingsTitle": "Only what you need. When you need it.",
+    "screens.settingsDescription":
+      "Find your local Codex installation and manage private sync in one quiet settings panel.",
+    "screens.sourceAlt":
+      "Still Signature Codex settings with a synthetic installation path",
+    "screens.syncAlt":
+      "Still Signature mobile sync settings with a sample relay and system keychain credentials",
+    "screens.sourceCaption": "Your local Codex. Your own session.",
+    "screens.syncCaption": "Your devices. Your encryption key.",
+    "screens.settingsNote":
+      "Isolated desktop previews with sample data. No account details or pairing codes are shown.",
     "meta.description":
       "Your Codex quota, at a glance. Statusline connects desktop, mobile and widgets with end-to-end encrypted sync. Open source and independent.",
     "meta.title": "Statusline — Codex quota monitor for desktop & mobile",
@@ -95,7 +115,7 @@ export const staticMessages = {
     "connect.caption": "OPTIONAL SYNC · LOCAL ENCRYPTION",
     "connect.step1Title": "Install the companion",
     "connect.step1Description":
-      "With Codex CLI already signed in, Statusline detects your local session and shows your quota.",
+      "With Codex already signed in, Statusline detects your local session and shows your quota. On Mac and Windows, a compatible Codex desktop installation works too; Linux uses the CLI.",
     "connect.step2Title": "Scan. Connect.",
     "connect.step2Description":
       "Create a pairing and scan the QR code with your phone. No extra account.",
@@ -141,7 +161,7 @@ export const staticMessages = {
     "availability.beta": "TESTER BETA",
     "availability.macosFormats": "Universal DMG and PKG installers.",
     "availability.macosRequirements":
-      "Apple Silicon or Intel Mac. Codex CLI installed and signed in.",
+      "Apple Silicon or Intel Mac. Sign in through Codex CLI or a compatible Codex desktop installation.",
     "availability.macosLink": "macOS releases",
     "availability.linuxFormats": "DEB, RPM and AppImage packages.",
     "availability.linuxRequirements":
@@ -151,7 +171,7 @@ export const staticMessages = {
     "availability.windowsFormats":
       "Public NSIS and MSI previews without Authenticode; verify signed checksums.",
     "availability.windowsRequirements":
-      "Windows x64 and authenticated Codex CLI. SmartScreen may warn or block installation.",
+      "Windows x64. Sign in through Codex CLI or a compatible Codex desktop installation. SmartScreen may warn or block installation.",
     "availability.windowsLink": "Windows preview releases",
     "availability.androidStatus": "IN TESTING",
     "availability.androidFormats":
@@ -182,7 +202,7 @@ export const staticMessages = {
     "faq.accountQuestion":
       'Do I need an API key or a new account?<span aria-hidden="true">+</span>',
     "faq.accountAnswer":
-      "You don't need an API key or a Statusline account. For automatic sync, install Codex CLI on your computer, sign in with ChatGPT and pair the companion with your phone. On iPhone, you can also paste a /status quota line manually. The local demo works without a companion or an account.",
+      "You don't need an API key or a Statusline account. For automatic sync, sign in to Codex on your computer and pair the companion with your phone. Mac and Windows support the CLI or a compatible Codex desktop installation; Linux requires the CLI. On iPhone, you can also paste a /status quota line manually. The local demo works without a companion or an account.",
     "faq.widgetQuestion":
       'Does the widget update in real time?<span aria-hidden="true">+</span>',
     "faq.widgetAnswer":
@@ -204,6 +224,26 @@ export const staticMessages = {
     "footer.independent": "Independent. Not affiliated with OpenAI.",
   },
   es: {
+    "screens.design": "STILL SIGNATURE / MENOS, PERO MÁS CLARO",
+    "screens.companion": "Companion · 0.1.20",
+    "screens.iphone": "iPhone · App nativa",
+    "screens.companionAlt":
+      "Statusline Companion con una cuota de ejemplo del 53 por ciento",
+    "screens.iphoneAlt":
+      "La app nativa de iPhone con su ejemplo local del 70 por ciento, sin emparejar",
+    "screens.note":
+      "Interfaces reales. Ejemplos independientes, no una conexión activa. Capturas del código más reciente; las versiones de las tiendas pueden variar.",
+    "screens.settingsTitle": "Solo lo necesario. Cuando lo necesitas.",
+    "screens.settingsDescription":
+      "Encuentra tu instalación local de Codex y gestiona la sincronización privada desde un panel de ajustes sencillo.",
+    "screens.sourceAlt":
+      "Ajustes de Codex con Still Signature y una ruta de instalación de ejemplo",
+    "screens.syncAlt":
+      "Ajustes de sincronización móvil con Still Signature, un relay de ejemplo y credenciales en el llavero del sistema",
+    "screens.sourceCaption": "Tu Codex local. Tu propia sesión.",
+    "screens.syncCaption": "Tus dispositivos. Tu clave de cifrado.",
+    "screens.settingsNote":
+      "Vistas aisladas del escritorio con datos de ejemplo. No se muestran cuentas ni códigos de emparejamiento.",
     "meta.description":
       "Tu cuota de Codex, a la vista. Statusline conecta escritorio, móvil y widgets con sincronización cifrada de extremo a extremo. Open source e independiente.",
     "meta.title": "Statusline — Monitor de cuota de Codex y widgets",
@@ -296,7 +336,7 @@ export const staticMessages = {
     "connect.caption": "SINCRONIZACIÓN OPCIONAL · CIFRADO LOCAL",
     "connect.step1Title": "Instala el companion",
     "connect.step1Description":
-      "Con Codex CLI ya autenticado, Statusline detecta tu sesión local y muestra tu cuota.",
+      "Con la sesión de Codex iniciada, Statusline detecta tu sesión local y muestra tu cuota. En Mac y Windows también sirve una instalación compatible de Codex de escritorio; Linux usa la CLI.",
     "connect.step2Title": "Escanea. Conecta.",
     "connect.step2Description":
       "Crea un emparejamiento y escanea el QR desde tu móvil. Sin una cuenta adicional.",
@@ -342,7 +382,7 @@ export const staticMessages = {
     "availability.beta": "BETA PARA TESTERS",
     "availability.macosFormats": "Instaladores DMG y PKG universales.",
     "availability.macosRequirements":
-      "Mac con Apple Silicon o Intel. Codex CLI instalado y autenticado.",
+      "Mac con Apple Silicon o Intel. Inicia sesión en Codex CLI o en una instalación compatible de Codex de escritorio.",
     "availability.macosLink": "Versiones para macOS",
     "availability.linuxFormats": "Paquetes DEB, RPM y AppImage.",
     "availability.linuxRequirements":
@@ -352,7 +392,7 @@ export const staticMessages = {
     "availability.windowsFormats":
       "Previews públicas NSIS y MSI sin Authenticode; verifica los checksums firmados.",
     "availability.windowsRequirements":
-      "Windows x64 y Codex CLI autenticado. SmartScreen puede advertir o bloquear la instalación.",
+      "Windows x64. Inicia sesión en Codex CLI o en una instalación compatible de Codex de escritorio. SmartScreen puede advertir o bloquear la instalación.",
     "availability.windowsLink": "Previews para Windows",
     "availability.androidStatus": "EN PRUEBAS",
     "availability.androidFormats":
@@ -384,7 +424,7 @@ export const staticMessages = {
     "faq.accountQuestion":
       '¿Necesito una API key o una cuenta nueva?<span aria-hidden="true">+</span>',
     "faq.accountAnswer":
-      "No necesitas una API key ni una cuenta de Statusline. Para sincronizar automáticamente, instala Codex CLI en tu ordenador, inicia sesión con ChatGPT y empareja el companion con tu móvil. En iPhone también puedes pegar manualmente una línea de cuota de /status. La demo local funciona sin companion ni cuenta.",
+      "No necesitas una API key ni una cuenta de Statusline. Para sincronizar automáticamente, inicia sesión en Codex en tu ordenador y empareja el companion con tu móvil. Mac y Windows admiten la CLI o una instalación compatible de Codex de escritorio; Linux requiere la CLI. En iPhone también puedes pegar manualmente una línea de cuota de /status. La demo local funciona sin companion ni cuenta.",
     "faq.widgetQuestion":
       '¿El widget se actualiza en tiempo real?<span aria-hidden="true">+</span>',
     "faq.widgetAnswer":

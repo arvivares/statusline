@@ -160,12 +160,11 @@ function updateQuota(value: number, announce = false) {
     selectedWindow === "weekly" ? "weeklyLabel" : "shortLabel",
   );
   demo.style.setProperty("--demo-color", bounded <= 15 ? "#f26856" : "#efc65a");
-  segments.forEach((segment, index) =>
-    segment.classList.toggle(
-      "is-filled",
-      index < Math.ceil((bounded / 100) * segments.length),
-    ),
-  );
+  const filledSegments = Math.ceil((bounded / 100) * segments.length);
+  segments.forEach((segment, index) => {
+    segment.classList.toggle("is-filled", index < filledSegments);
+    segment.classList.toggle("is-terminal", index === filledSegments - 1);
+  });
   if (announce)
     demoAnnouncement.textContent = uiText("quotaAnnouncement", {
       value: bounded,
@@ -284,20 +283,3 @@ onLanguageChange(() => {
   updateMotion(root.classList.contains("motion-paused"));
 });
 setMenu(false);
-
-const heroScene = document.querySelector<HTMLElement>(".hero-scene")!;
-if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-  heroScene.addEventListener("pointermove", (event) => {
-    if (reducedMotion.matches || root.classList.contains("motion-paused"))
-      return;
-    const bounds = heroScene.getBoundingClientRect();
-    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
-    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-    heroScene.style.setProperty("--scene-rx", `${-y * 4}deg`);
-    heroScene.style.setProperty("--scene-ry", `${x * 6}deg`);
-  });
-  heroScene.addEventListener("pointerleave", () => {
-    heroScene.style.setProperty("--scene-rx", "0deg");
-    heroScene.style.setProperty("--scene-ry", "0deg");
-  });
-}

@@ -1,10 +1,10 @@
 # Statusline website
 
 Sitio de presentación en inglés y español para [Statusline](https://statusline.inmerzion.io).
-Conserva la identidad Data Plane del producto: superficies oscuras, señal ámbar,
-medidores segmentados y tipografía técnica.
+Conserva la identidad oscura y ámbar de Statusline y presenta capturas reales de
+Still Signature: superficies redondeadas, medidores segmentados y tipografía técnica.
 
-La web es una aplicación estática independiente construida con Vite 8.2.2,
+La web es una aplicación estática independiente construida con Vite 8.3.0,
 TypeScript 7.0.2, HTML y CSS. No necesita Codex, credenciales ni un backend de relay.
 Las demostraciones interactivas usan datos de ejemplo identificados como tales;
 no representan la cuota de quien visita la página.
@@ -57,6 +57,7 @@ npm run format:check
 npm run test:dev
 npm run test:analytics
 npm run test:public
+npm run test:media
 npm run build
 npm run test:seo
 ```
@@ -224,6 +225,26 @@ La validación del build comprueba los enlaces, la presencia del QR en el HTML
 estático EN/ES y que el SVG publicado sea idéntico al original compartido. Para
 regenerar o validar el QR, consulta su
 [documentación](../../docs/assets/readme/README.md#app-store-download-qr).
+
+### Capturas reales de Still Signature
+
+El hero muestra el companion y el iPhone; una galería adicional muestra los
+ajustes de origen y sincronización. Las ocho capturas EN/ES proceden directamente
+de `docs/assets/readme/still-signature/`, compartidas con el README. No se retocan,
+recrean ni duplican en Git: `scripts/product-media.mjs` incorpora los PNG originales
+al build y sirve una lista cerrada de ocho rutas durante el desarrollo.
+
+Son ejemplos independientes, no dispositivos emparejados entre sí. Los pies lo
+indican y advierten que las versiones disponibles en las tiendas pueden variar.
+La procedencia y las versiones de cada captura están documentadas junto a los
+originales. No contienen credenciales ni datos de cuentas reales.
+
+El HTML estático y el selector de idioma utilizan `src/product-media.ts`, de modo
+que `/es/` muestra interfaces en español incluso sin JavaScript. Las dimensiones
+explícitas evitan saltos de diseño; las capturas de ajustes se cargan bajo demanda.
+`test:media` valida ambos idiomas y la igualdad byte a byte con los originales;
+`test:dev` comprueba GET, HEAD y el rechazo de POST. Modificar las capturas
+compartidas también activa la validación de la web en CI.
 
 ### Identidad oficial
 

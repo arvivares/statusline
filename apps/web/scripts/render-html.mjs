@@ -1,5 +1,6 @@
 import { parse, parseFragment, serialize } from "parse5";
 import { staticMessages } from "../src/static-messages.ts";
+import { productImage } from "../src/product-media.ts";
 import { publicPagePath } from "../../../content/public-pages.ts";
 import { interfaceMessages, platformMessages } from "../src/messages.ts";
 import {
@@ -57,6 +58,10 @@ export function renderPage(html, language) {
     ["data-i18n-alt", "alt"],
   ];
   for (const element of elements) {
+    const view = attribute(element, "data-product-image");
+    if (element.tagName === "img" && view) {
+      setAttribute(element, "src", productImage(view, language));
+    }
     for (const [binding, target] of bindings) {
       const key = attribute(element, binding);
       if (!key) continue;
