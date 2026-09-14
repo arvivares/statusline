@@ -126,7 +126,7 @@ android {
 
 dependencies {
     // Compose 1.12 requires compileSdk 37; targetSdk remains independently pinned to 36.
-    val composeBOM = platform("androidx.compose:compose-bom:2026.08.00")
+    val composeBOM = platform("androidx.compose:compose-bom:2026.09.00")
 
     implementation(composeBOM)
     androidTestImplementation(composeBOM)
