@@ -105,6 +105,8 @@ const cargoToml = readText("src-tauri/Cargo.toml");
 const cargoLock = readText("src-tauri/Cargo.lock");
 const runtimeTestCargo = readText("runtime-tests/Cargo.toml");
 for (const dependency of [
+  "base64",
+  "minisign-verify",
   "serde",
   "serde_json",
   "sys-locale",
@@ -112,6 +114,10 @@ for (const dependency of [
   "tokio",
   "dirs",
   "winreg",
+  "flate2",
+  "libc",
+  "tar",
+  "tempfile",
 ]) {
   assert(
     exactCargoDependencyVersion(runtimeTestCargo, dependency) ===
