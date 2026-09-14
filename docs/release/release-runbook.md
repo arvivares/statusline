@@ -10,21 +10,15 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.20` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.20`;
-- Android candidate: `versionCode 16` (Google Play submission is separate);
-- separately uploaded iOS candidate: `1.0.1 (6)`, acknowledged for TestFlight
-  processing. A local development-signed USB upgrade confirmed an independent
-  widget read with the existing pairing; TestFlight availability and the
-  distribution-signed upgrade remain unverified. Build 5 has an empty widget
-  endpoint and must not be publicly released.
-- currently published iOS App Store release: `1.0 (4)`, distributed manually through App Store Connect.
-  Apple approved submission `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`; the account
-  holder authorized public release on 9 September 2026 (Europe/Madrid).
-  The delivered version reports **Ready for Distribution**; the account holder
-  subsequently confirmed the public listing is visible. An on-device App Store
-  download remains to be verified.
-  See the current status in [iOS validation](../../apps/apple/store/validation.md).
+- prepared product tag: `v0.1.21` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.21`;
+- Android candidate: `versionCode 17` (Google Play submission is separate);
+- recorded iOS source version: `1.0.1 (6)`, unchanged by this maintenance
+  release. This metadata is not a live App Store/TestFlight status report.
+  iOS delivery is manual; verify the actual candidate in App Store Connect
+  before taking any store action. Build 5 has an empty widget endpoint and
+  must not be publicly released. Historical device and submission evidence is
+  in [iOS validation](../../apps/apple/store/validation.md).
 - GitHub prerelease platforms: Windows, Linux, macOS and Android. Windows explicitly
   uses `windowsSigning: unsigned-preview`; no SignPath certificate has been approved.
 
@@ -50,7 +44,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.20`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.21`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -125,8 +119,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.20 -m "Statusline 0.1.20 beta"
-git push origin v0.1.20
+git tag -s v0.1.21 -m "Statusline 0.1.21 beta"
+git push origin v0.1.21
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -134,7 +128,18 @@ targets the exact workflow commit and matches `release.json`. The signed tag is 
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
 
-### 0.1.20 candidate gates
+### 0.1.21 candidate gates
+
+- Validate the merged dependency updates together: production frontend build,
+  Rust runtime/type checks on each desktop OS, Android tests/lint and signed
+  packaging, relay migrations/tests/type checks, and release-policy checks.
+  The website changes are source-only here; do not deploy the website or relay
+  as a side effect of publishing installers.
+- Physical Android dependency-candidate QA covered EN/ES/fallback, launch,
+  camera permission/cancellation and a 4 × 1 demo widget, with the production
+  pairing untouched. It did not validate optical QR decoding, a fresh live
+  pairing or the final signed 0.1.21 package. Keep these limits explicit in the
+  [release notes](notes/v0.1.21.md).
 
 - Verify the Still Signature settings in EN/ES: Codex and mobile-sync tabs,
   setup disclosures, long paths, QR visibility, keyboard focus and Escape.
@@ -169,8 +174,8 @@ draft is published automatically with GitHub's **Pre-release** flag.
   record the [Still Signature checks](../architecture/still-signature.md): native
   corner clipping, Linux/XWayland rendering, Windows first launch and Android
   widgets at minimum size, larger text, empty data and 100% quota in EN/ES.
-- Reuse the already-uploaded iOS build 6 for its separate TestFlight validation;
-  do not rebuild or replace App Review as part of this desktop/Android release.
+- There are no iOS source changes since 0.1.20. Do not rebuild or replace its
+  separate TestFlight/App Review submission as part of this maintenance release.
   GitHub Actions never builds iOS; App Store and Google Play actions are separate.
 
 Release assets use portable ASCII filenames. Whitespace emitted by native packagers is
