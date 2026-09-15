@@ -1,5 +1,22 @@
 # Apple App Store release kit
 
+## Current candidate — 15 September 2026
+
+The Antigravity integration prepares **iOS 1.1.0 (9)** for manual TestFlight
+delivery with Companion 0.1.24 and the compatible services-v1 relay extension.
+App Store Connect was checked on 15 September: the latest processed upload before
+this candidate was **1.0.3 (8)**, assigned to Internal QA. Source preparation and
+passing simulator tests do not establish upload, processing or physical-device QA.
+Build-specific instructions are in [English](testflight/1.1.0-9-en-US.txt) and
+[Spanish](testflight/1.1.0-9-es-ES.txt). No App Store production submission or public
+release is authorized by this TestFlight delivery. Existing pairings must survive.
+
+The dated records below are historical; their older "latest upload" and review
+statuses are not a live status report. PR #47 separately consolidates those records
+and must not replace this candidate's version/build with 1.0.3 (8).
+
+## Historical release records
+
 This directory is the versioned source of truth for Statusline iPhone releases. The latest upload is `inmerzion.statusline` version `1.0.1`, build `6`, accepted for processing on 10 September 2026 at 17:08 Europe/Madrid. TestFlight availability is not yet verified. The separate App Review submission still uses build `5`, last verified as **Waiting for Review**, and was not replaced by this upload. The published release remains `1.0 (4)`, manually released on 9 September 2026. See `validation.md` for dated evidence.
 
 **Do not publicly release build 5:** subsequent physical-device diagnosis and

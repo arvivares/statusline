@@ -10,11 +10,11 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.23` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.23`;
-- Android candidate: `versionCode 19` (Google Play submission is separate);
-- recorded iOS source version: `1.0.1 (6)`, unchanged by this Companion
-  release. This metadata is not a live App Store/TestFlight status report.
+- prepared product tag: `v0.1.24` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.24`;
+- Android candidate: `versionCode 20` (Google Play submission is separate);
+- recorded iOS source version: `1.1.0 (9)`, adding Antigravity to the app and
+  widgets. This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
   before taking any store action. Build 5 has an empty widget endpoint and
   must not be publicly released. Historical device and submission evidence is
@@ -44,7 +44,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.23`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.24`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -119,8 +119,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.23 -m "Statusline 0.1.23 beta"
-git push origin v0.1.23
+git tag -s v0.1.24 -m "Statusline 0.1.24 beta"
+git push origin v0.1.24
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -128,7 +128,38 @@ targets the exact workflow commit and matches `release.json`. The signed tag is 
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
 
-### 0.1.23 candidate gates
+### 0.1.24 candidate gates
+
+- Validate the [optional services extension](../../protocol/statusline-services-v1.md)
+  with real SQLite migrations, old/new readers and publishers, atomic sequences,
+  authenticated crypto fixtures and bounded request bodies. Preserve all existing
+  channel IDs, tokens, Codex snapshots and pairings.
+- After CI passes, record the current production Worker version and D1 recovery
+  bookmark, then apply migration 0003 before deploying the Worker. Verify the
+  advertised capability and old/new read paths with a private disposable channel;
+  delete only that test channel. This release's relay deployment is explicitly
+  authorized; website and store-production deployments remain separate.
+- Run native runtime/type checks on all three desktop operating systems. Verify
+  that absent, disabled, unavailable and ready services match Companion discovery,
+  and that Google-only Antigravity readings do not change Codex collection.
+- Run iOS app/widget tests and EN/ES layout checks. Validate the processed archive
+  and exported app/widget endpoints, versions, entitlements and signatures before
+  uploading the same archive as `1.1.0 (9)` to TestFlight. Confirm processing and
+  the existing Internal QA group in App Store Connect, not just upload success.
+- Complete a physical TestFlight upgrade without re-pairing: both services when
+  present in Companion, no absent-service placeholders, focus/watchlist behavior,
+  small/medium widgets, unavailable/offline state and independent widget refresh.
+  Simulator tests do not prove device background scheduling or vendor collection.
+- Publish the complete signed-tag installer set only after all release gates pass.
+  Android `0.1.24 (20)` and older iOS clients retain the Codex v1 projection; this
+  release does not add Antigravity to Android or roll out Google Play/App Store
+  production. Keep remaining device checks explicit in the
+  [beta notes](notes/v0.1.24.md).
+
+### Historical 0.1.23 candidate gates
+
+The following records the previous Companion-only release. Its no-relay-change
+and no-iOS-rebuild instructions do not apply to the authorized 0.1.24 rollout.
 
 - Run the Antigravity runtime tests and full Companion typecheck on Windows,
   Linux and macOS. Verify Google-only filtering, automatic discovery only without

@@ -546,15 +546,23 @@ impl State {
                 usage: collect(&settings).await,
                 settings,
             },
-            Err(reason) => View {
-                revision,
-                settings: Settings::default(),
-                usage: Usage::Unavailable {
-                    source: None,
-                    checked_at: timestamp(),
-                    reason,
-                },
-            },
+            Err(reason) => {
+                // An unreadable preference file is not an explicit removal.
+                // Retain the known source without running it or changing accounts.
+                let settings = cache
+                    .as_ref()
+                    .map(|(_, view)| view.settings.clone())
+                    .unwrap_or_default();
+                View {
+                    revision,
+                    usage: Usage::Unavailable {
+                        source: settings.source,
+                        checked_at: timestamp(),
+                        reason,
+                    },
+                    settings,
+                }
+            }
         };
         *cache = Some((std::time::Instant::now(), view.clone()));
         view
@@ -675,6 +683,36 @@ mod tests {
             ]
         );
         assert!(automatic_path_dirs("windows").is_empty());
+    }
+
+    #[tokio::test]
+    async fn unreadable_preferences_keep_the_known_service_without_executing_it() {
+        let state = State::default();
+        *state.0.lock().await = Some((
+            std::time::Instant::now(),
+            View {
+                revision: 1,
+                settings: Settings {
+                    source: Some(Source::Desktop),
+                    ..Settings::default()
+                },
+                usage: Usage::Unavailable {
+                    source: Some(Source::Desktop),
+                    checked_at: 1,
+                    reason: Failure::Timeout,
+                },
+            },
+        ));
+        let result = state.refresh(None, std::time::Duration::ZERO).await;
+        assert_eq!(result.settings.source, Some(Source::Desktop));
+        assert!(matches!(
+            result.usage,
+            Usage::Unavailable {
+                source: Some(Source::Desktop),
+                reason: Failure::SettingsUnavailable,
+                ..
+            }
+        ));
     }
 
     #[tokio::test]

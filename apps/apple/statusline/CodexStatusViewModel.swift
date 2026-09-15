@@ -93,6 +93,8 @@ enum CodexRelaySyncState: Equatable {
 final class CodexStatusViewModel {
     var sourceText: String
     private(set) var status: CodexUsageStatus?
+    private(set) var services: AgentServicesSnapshot?
+    private(set) var preferredProvider: AgentProviderID?
     private(set) var feedback: CodexStatusFeedback?
     private(set) var relaySyncState: CodexRelaySyncState = .unpaired
     private(set) var isManualUpdateInProgress = false
@@ -119,12 +121,24 @@ final class CodexStatusViewModel {
         self.parser = parser
         self.store = store
         self.relayRepository = relayRepository
+        preferredProvider = store.servicesStore.focusedProvider
 
         let savedStatus = store.loadSaved()
         status = savedStatus
         sourceText = savedStatus?.sourceText.contains("% left") == true
             ? savedStatus?.sourceText ?? CodexStatusConstants.exampleLine
             : CodexStatusConstants.exampleLine
+        reloadLocalStatus()
+    }
+
+    var focusedProvider: AgentProviderReading? { services?.focusedProvider(preferred: preferredProvider) }
+    var watchlist: [AgentProviderReading] { services?.providers.filter { $0.id != focusedProvider?.id } ?? [] }
+
+    func focus(_ provider: AgentProviderID) {
+        guard services?.providers.contains(where: { $0.id == provider }) == true else { return }
+        preferredProvider = provider
+        store.servicesStore.focus(provider)
+        WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
     }
 
     var relayEndpoint: String? { relayRepository.endpoint }
@@ -168,6 +182,9 @@ final class CodexStatusViewModel {
         do {
             try await relayRepository.pair(using: uri)
             store.clear()
+            store.servicesStore.clear()
+            services = nil
+            preferredProvider = nil
             status = nil
             WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
             feedback = .success(L10n.text("Device connected with encryption."))
@@ -194,7 +211,7 @@ final class CodexStatusViewModel {
         defer { isRefreshing = false }
         relaySyncState = .syncing
         do {
-            let fetched = try await relayRepository.fetchStatus()
+            let fetched = try await relayRepository.fetchServices()
             try Task.checkCancellation()
             guard generation == pairingGeneration else { return }
             guard let relayStatus = fetched else {
@@ -202,10 +219,17 @@ final class CodexStatusViewModel {
                 relaySyncState = .waitingForDesktop
                 return
             }
-            let changed = status != relayStatus
-            try store.save(relayStatus)
-            status = relayStatus
-            relaySyncState = .synced(relayStatus.updatedAt)
+            guard relayStatus.channelID == (try relayRepository.pairedChannelID()) else { return }
+            let selected: AgentServicesSnapshot
+            if let previous = services, previous.channelID == relayStatus.channelID,
+               !relayStatus.supersedes(previous) { selected = previous }
+            else { selected = relayStatus }
+            let changed = services != selected
+            try store.servicesStore.save(selected)
+            services = selected
+            status = selected.codexStatus
+            if let status { try store.save(status) } else { store.clear() }
+            relaySyncState = .synced(selected.updatedAt)
             if changed { WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind) }
             if userInitiated {
                 feedback = .success(L10n.text("Encrypted snapshot updated."))
@@ -224,6 +248,9 @@ final class CodexStatusViewModel {
             try relayRepository.disconnect()
             pairingGeneration += 1
             store.clear()
+            store.servicesStore.clear()
+            services = nil
+            preferredProvider = nil
             status = nil
             relaySyncState = .unpaired
             feedback = .success(L10n.text("This device was disconnected from the relay."))
@@ -235,9 +262,18 @@ final class CodexStatusViewModel {
     }
 
     func reloadLocalStatus() {
-        status = store.loadSaved()
-        if let status {
-            relaySyncState = .synced(status.updatedAt)
+        do {
+            let channel = try relayRepository.pairedChannelID()
+            if let saved = store.servicesStore.load(), saved.channelID == channel {
+                services = saved
+            } else if let legacy = store.loadSaved(), legacy.relayChannelID == channel {
+                services = .legacy(legacy)
+            } else { services = nil }
+            status = services?.codexStatus
+            if let services { relaySyncState = .synced(services.updatedAt) }
+        } catch {
+            status = nil
+            services = nil
         }
     }
 
@@ -254,6 +290,8 @@ final class CodexStatusViewModel {
             let parsedStatus = try parser.parse(sourceText)
             try store.save(parsedStatus)
             status = parsedStatus
+            services = .legacy(parsedStatus)
+            if let services { try store.servicesStore.save(services) }
             WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
             feedback = .success(L10n.text("Local widget updated. The relay was not changed."))
         } catch {

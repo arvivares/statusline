@@ -24,6 +24,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply statusline-relay --remote"
   },
   "devDependencies": {
+    "@types/node": "24.13.4",
     "typescript": "7.0.2",
     "vitest": "5.0.0",
     "wrangler": "4.131.0"

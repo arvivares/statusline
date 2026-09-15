@@ -7,13 +7,17 @@
 "{0} D AGO" = "{0} D AGO";
 "{0} H AGO" = "{0} H AGO";
 "{0} LEFT" = "{0} LEFT";
+"{0} min" = "{0} min";
 "{0} MIN AGO" = "{0} MIN AGO";
 "{0} percent remaining" = "{0} percent remaining";
 "{0} percent remaining. Resets {1}" = "{0} percent remaining. Resets {1}";
+"{0} quota" = "{0} quota";
 "{0} WINDOW" = "{0} WINDOW";
 "{0}% downloaded" = "{0}% downloaded";
+"{0}% left" = "{0}% left";
 "{0}% LEFT" = "{0}% LEFT";
 "{0}% of the weekly quota used." = "{0}% of the weekly quota used.";
+"{0}h" = "{0}h";
 "/ COMPANION / DATA PLANE" = "/ COMPANION / DATA PLANE";
 "% LEFT" = "% LEFT";
 "A new version of Statusline Companion is ready." = "A new version of Statusline Companion is ready.";
@@ -25,6 +29,7 @@
 "Add service" = "Add service";
 "AES-256-GCM · 30 DAY TTL" = "AES-256-GCM · 30 DAY TTL";
 "AES-256-GCM · UNIVERSAL" = "AES-256-GCM · UNIVERSAL";
+"Agent usage" = "Agent usage";
 "An encrypted snapshot is available on this device." = "An encrypted snapshot is available on this device.";
 "Antigravity · {0}% left" = "Antigravity · {0}% left";
 "Antigravity · no weekly data" = "Antigravity · no weekly data";
@@ -57,6 +62,7 @@
 "Check relay" = "Check relay";
 "Check scan" = "Check scan";
 "Check that you are signed in to the CLI, then refresh." = "Check that you are signed in to the CLI, then refresh.";
+"Check this service in Companion." = "Check this service in Companion.";
 "Check your Codex session in the desktop app or CLI, then refresh." = "Check your Codex session in the desktop app or CLI, then refresh.";
 "Check your connection and try again in a few seconds." = "Check your connection and try again in a few seconds.";
 "CHECKING" = "CHECKING";
@@ -194,6 +200,7 @@
 "E2E · UNIVERSAL" = "E2E · UNIVERSAL";
 "E2E / AES-256-GCM" = "E2E / AES-256-GCM";
 "E2E ENCRYPTED" = "E2E ENCRYPTED";
+"Enable a supported service in your Companion to see its quota here." = "Enable a supported service in your Companion to see its quota here.";
 "Encrypted relay active" = "Encrypted relay active";
 "Encrypted snapshot" = "Encrypted snapshot";
 "Encrypted snapshot published {0}." = "Encrypted snapshot published {0}.";
@@ -210,6 +217,7 @@
 "EXECUTABLE.PATH" = "EXECUTABLE.PATH";
 "FALLBACK.INPUT" = "FALLBACK.INPUT";
 "FAULT" = "FAULT";
+"Gemini sync requires an updated relay and iOS app. Android continues showing Codex." = "Gemini sync requires an updated relay and iOS app. Android continues showing Codex.";
 "Gemini weekly limit" = "Gemini weekly limit";
 "Generating independent read/write credentials." = "Generating independent read/write credentials.";
 "Global npm" = "Global npm";
@@ -272,6 +280,7 @@
 "NO SAMPLE" = "NO SAMPLE";
 "No sample published" = "No sample published";
 "NO SAMPLE PUBLISHED" = "NO SAMPLE PUBLISHED";
+"No services to show. Open Statusline Companion on your computer." = "No services to show. Open Statusline Companion on your computer.";
 "NO SHORT WINDOW" = "NO SHORT WINDOW";
 "No Statusline data. Tap to open the app and connect a companion." = "No Statusline data. Tap to open the app and connect a companion.";
 "Not configured" = "Not configured";
@@ -337,6 +346,8 @@
 "QR expires {0}" = "QR expires {0}";
 "QR EXPIRES {0}" = "QR EXPIRES {0}";
 "Quit" = "Quit";
+"Quota period" = "Quota period";
+"Quotas from your Companion. The small widget follows the service selected in Statusline." = "Quotas from your Companion. The small widget follows the service selected in Statusline.";
 "READER.STATE / LIVE" = "READER.STATE / LIVE";
 "READING" = "READING";
 "READING · LOCAL METADATA ONLY" = "READING · LOCAL METADATA ONLY";
@@ -427,6 +438,7 @@
 "Short window" = "Short window";
 "SHORT.WINDOW" = "SHORT.WINDOW";
 "Show" = "Show";
+"Show this service in the main view and small widget" = "Show this service in the main view and small widget";
 "Sign in to Codex in your desktop app or CLI, then refresh." = "Sign in to Codex in your desktop app or CLI, then refresh.";
 "Sign in to the selected Antigravity source, then refresh." = "Sign in to the selected Antigravity source, then refresh.";
 "SOURCE" = "SOURCE";
@@ -455,6 +467,7 @@
 "Statusline could not complete the update. Please try again." = "Statusline could not complete the update. Please try again.";
 "Statusline could not verify the selected Codex executable." = "Statusline could not verify the selected Codex executable.";
 "Statusline is an independent app and is not affiliated with or endorsed by OpenAI." = "Statusline is an independent app and is not affiliated with or endorsed by OpenAI.";
+"Statusline is independent and is not affiliated with or endorsed by OpenAI or Google." = "Statusline is independent and is not affiliated with or endorsed by OpenAI or Google.";
 "Statusline needs a ChatGPT session, not an API key." = "Statusline needs a ChatGPT session, not an API key.";
 "Statusline needs camera permission to scan the QR. You can also paste the link manually." = "Statusline needs camera permission to scan the QR. You can also paste the link manually.";
 "Statusline stores only the selected local path." = "Statusline stores only the selected local path.";
@@ -496,6 +509,7 @@
 "The read token, encryption key and latest sample will be removed from this device. The companion will keep its channel." = "The read token, encryption key and latest sample will be removed from this device. The companion will keep its channel.";
 "The received snapshot has an invalid format." = "The received snapshot has an invalid format.";
 "The relay returned an unexpected response." = "The relay returned an unexpected response.";
+"The relay stores only AES-256-GCM encrypted quota snapshots. Your agents’ credentials and the encryption key never reach the relay." = "The relay stores only AES-256-GCM encrypted quota snapshots. Your agents’ credentials and the encryption key never reach the relay.";
 "The relay stores only an AES-256-GCM encrypted snapshot. Codex credentials and the encryption key never leave your devices." = "The relay stores only an AES-256-GCM encrypted snapshot. Codex credentials and the encryption key never leave your devices.";
 "The relay took too long to respond." = "The relay took too long to respond.";
 "The relay URL is invalid." = "The relay URL is invalid.";
@@ -552,6 +566,7 @@
 "Volta" = "Volta";
 "VOLTA" = "VOLTA";
 "WAITING" = "WAITING";
+"Waiting for a fresh sample" = "Waiting for a fresh sample";
 "Waiting for authorization" = "Waiting for authorization";
 "Waiting for local sample" = "Waiting for local sample";
 "WAITING FOR LOCAL SAMPLE" = "WAITING FOR LOCAL SAMPLE";

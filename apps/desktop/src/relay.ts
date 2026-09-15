@@ -8,11 +8,13 @@ export type RelayStatus =
       pairingUri: string;
       pairingExpiresAt: number;
       lastPublishedAt: number | null;
+      servicesPublishedAt?: number | null;
     }>
   | Readonly<{
       status: "connected";
       endpoint: string;
       lastPublishedAt: number | null;
+      servicesPublishedAt?: number | null;
     }>
   | Readonly<{
       status: "error";
@@ -41,6 +43,7 @@ export function parseRelayStatus(input: unknown): RelayStatus {
     case "pairing":
       return {
         status,
+        ...readServicesPublication(envelope),
         endpoint: readEndpoint(envelope.endpoint),
         pairingUri: readPairingURI(envelope.pairingUri),
         pairingExpiresAt: readTimestamp(
@@ -55,6 +58,7 @@ export function parseRelayStatus(input: unknown): RelayStatus {
     case "connected":
       return {
         status,
+        ...readServicesPublication(envelope),
         endpoint: readEndpoint(envelope.endpoint),
         lastPublishedAt: readNullableTimestamp(
           envelope.lastPublishedAt,
@@ -73,6 +77,19 @@ export function parseRelayStatus(input: unknown): RelayStatus {
     default:
       throw new RelayPayloadError(`Unknown relay status: ${status}`);
   }
+}
+
+function readServicesPublication(envelope: Record<string, unknown>): {
+  servicesPublishedAt?: number | null;
+} {
+  return envelope.servicesPublishedAt === undefined
+    ? {}
+    : {
+        servicesPublishedAt: readNullableTimestamp(
+          envelope.servicesPublishedAt,
+          "servicesPublishedAt",
+        ),
+      };
 }
 
 function readPairingURI(value: unknown): string {

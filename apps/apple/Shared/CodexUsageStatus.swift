@@ -196,6 +196,8 @@ struct CodexStatusParser: Sendable {
 struct CodexStatusStore {
     private let defaults: UserDefaults
 
+    @MainActor var servicesStore: AgentServicesStore { AgentServicesStore(defaults: defaults) }
+
     init(defaults: UserDefaults? = UserDefaults(suiteName: CodexStatusConstants.appGroupIdentifier)) {
         self.defaults = defaults ?? .standard
     }

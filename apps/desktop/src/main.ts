@@ -680,8 +680,21 @@ function renderGoogleUsage(): void {
   planValue.textContent =
     googleView.settings.source === "cli" ? "AGY CLI" : t("Desktop app");
   planDetail.textContent = "Google · Gemini";
-  // The relay's state is specifically Codex. Never label AGY as mobile-synced.
-  relayValue.closest(".metric-cell")?.setAttribute("hidden", "");
+  // Only an acknowledged services publication can label Gemini as synced.
+  const googlePublished =
+    lastRelayState?.status === "connected"
+      ? lastRelayState.servicesPublishedAt
+      : null;
+  relayValue
+    .closest(".metric-cell")
+    ?.toggleAttribute("hidden", !googlePublished);
+  if (googlePublished) {
+    relayValue.textContent = t("Synced");
+    relayDetail.textContent = t(
+      "Last sample: {0}",
+      formatTime(googlePublished),
+    );
+  }
   title.textContent = t("Google quota unavailable");
   detail.textContent =
     usage.status === "unavailable"

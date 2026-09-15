@@ -6,6 +6,7 @@ pub mod localization;
 mod macos_update;
 pub mod refresh;
 pub mod relay_protocol;
+pub mod services_snapshot;
 pub mod universal_relay;
 pub mod update_policy;
 mod update_signature;
@@ -233,6 +234,9 @@ async fn refresh_antigravity_with_age(app: &AppHandle, age: Duration) -> antigra
         .await;
     let _ = app.emit("antigravity-updated", &view);
     update_provider_tooltip(app, None, Some(&view));
+    app.state::<UniversalRelayState>()
+        .record_google(&view)
+        .await;
     view
 }
 
@@ -264,6 +268,9 @@ async fn configure_antigravity(
         .await?;
     let _ = app.emit("antigravity-updated", &view);
     update_provider_tooltip(&app, None, Some(&view));
+    app.state::<UniversalRelayState>()
+        .record_google(&view)
+        .await;
     Ok(view)
 }
 
@@ -275,11 +282,9 @@ async fn refresh_native(app: &AppHandle, minimum_age: Duration) -> UsageResponse
                 app_server::fetch_usage(env!("CARGO_PKG_VERSION"), settings_directory.as_deref())
                     .await;
             update_provider_tooltip(app, Some(&response), None);
-            let relay_status = app
-                .state::<UniversalRelayState>()
-                .publish_usage(&response)
+            app.state::<UniversalRelayState>()
+                .record_codex(&response)
                 .await;
-            let _ = app.emit("relay-status-changed", relay_status);
             let _ = app.emit("usage-updated", &response);
             response
         })
@@ -497,6 +502,16 @@ pub fn run() {
             tray_builder.build(app)?;
             updates::start(app.handle());
             let refresh_app = app.handle().clone();
+            let publisher_app = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let relay = publisher_app.state::<UniversalRelayState>();
+                loop {
+                    relay.wait_for_publication().await;
+                    tokio::time::sleep(Duration::from_millis(400)).await;
+                    let status = relay.publish_inventory().await;
+                    let _ = publisher_app.emit("relay-status-changed", status);
+                }
+            });
             tauri::async_runtime::spawn(async move {
                 let mut interval = refresh_interval();
                 loop {
