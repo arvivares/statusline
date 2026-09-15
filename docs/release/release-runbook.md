@@ -10,10 +10,10 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.21` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.21`;
-- Android candidate: `versionCode 17` (Google Play submission is separate);
-- recorded iOS source version: `1.0.1 (6)`, unchanged by this maintenance
+- prepared product tag: `v0.1.22` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.22`;
+- Android candidate: `versionCode 18` (Google Play submission is separate);
+- recorded iOS source version: `1.0.1 (6)`, unchanged by this Companion
   release. This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
   before taking any store action. Build 5 has an empty widget endpoint and
@@ -44,7 +44,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.21`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.22`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -119,8 +119,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.21 -m "Statusline 0.1.21 beta"
-git push origin v0.1.21
+git tag -s v0.1.22 -m "Statusline 0.1.22 beta"
+git push origin v0.1.22
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -128,7 +128,20 @@ targets the exact workflow commit and matches `release.json`. The signed tag is 
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
 
-### 0.1.21 candidate gates
+### 0.1.22 candidate gates
+
+- Run the Antigravity runtime tests and full Companion typecheck on Windows,
+  Linux and macOS. Verify Google-only filtering, default-disabled behavior,
+  revision guards, removal/settings preservation and unchanged relay encryption
+  fixtures. Record actual signed-in Windows/Linux sessions separately from CI:
+  macOS collector checks do not establish live cross-platform vendor compatibility.
+- Preserve existing pairing keys, v1 snapshots, endpoint and mobile behavior.
+  Antigravity is local to Companion; adding/removing it must not reset Codex or
+  mobile sync. The mobile generated catalogs gain unused shared strings, but
+  there is no Antigravity mobile screen, widget or relay payload in this release.
+- Verify configured-only visibility in EN/ES, including Codex-only, AGY-only,
+  two-service and unavailable states. Keep unresolved physical-device and
+  installer/update checks explicit in the [beta notes](notes/v0.1.22.md).
 
 - Validate the merged dependency updates together: production frontend build,
   Rust runtime/type checks on each desktop OS, Android tests/lint and signed
@@ -139,7 +152,8 @@ draft is published automatically with GitHub's **Pre-release** flag.
   camera permission/cancellation and a 4 × 1 demo widget, with the production
   pairing untouched. It did not validate optical QR decoding, a fresh live
   pairing or the final signed 0.1.21 package. Keep these limits explicit in the
-  [release notes](notes/v0.1.21.md).
+  [previous release notes](notes/v0.1.21.md). This is historical QA evidence, not
+  validation of the final 0.1.22 installers.
 
 - Verify the Still Signature settings in EN/ES: Codex and mobile-sync tabs,
   setup disclosures, long paths, QR visibility, keyboard focus and Escape.
@@ -174,8 +188,8 @@ draft is published automatically with GitHub's **Pre-release** flag.
   record the [Still Signature checks](../architecture/still-signature.md): native
   corner clipping, Linux/XWayland rendering, Windows first launch and Android
   widgets at minimum size, larger text, empty data and 100% quota in EN/ES.
-- There are no iOS source changes since 0.1.20. Do not rebuild or replace its
-  separate TestFlight/App Review submission as part of this maintenance release.
+- iOS changes here are generated, unused localization entries only. Do not
+  rebuild or replace its separate TestFlight/App Review submission for this release.
   GitHub Actions never builds iOS; App Store and Google Play actions are separate.
 
 Release assets use portable ASCII filenames. Whitespace emitted by native packagers is

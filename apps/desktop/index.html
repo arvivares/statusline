@@ -42,7 +42,29 @@
 
       <section class="quota-plane" aria-live="polite">
         <header class="panel-heading">
-          <p class="identity">OpenAI · <strong>Codex</strong></p>
+          <div
+            class="provider-switch"
+            id="provider-switch"
+            role="group"
+            aria-label="Your services"
+            data-i18n-aria-label="Your services"
+            hidden
+          >
+            <button type="button" id="provider-codex" aria-pressed="true">
+              Codex <span id="watch-codex"></span>
+            </button>
+            <button
+              type="button"
+              id="provider-google"
+              aria-pressed="false"
+              hidden
+            >
+              Antigravity <span id="watch-google"></span>
+            </button>
+          </div>
+          <p class="identity" id="provider-identity">
+            OpenAI · <strong>Codex</strong>
+          </p>
           <h2 data-i18n="Weekly">Weekly</h2>
         </header>
 
@@ -219,6 +241,18 @@
           </button>
           <button
             class="settings-tab"
+            id="google-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="google-settings-view"
+            tabindex="-1"
+            data-i18n="Add service"
+          >
+            Add service
+          </button>
+          <button
+            class="settings-tab"
             id="relay-tab"
             type="button"
             role="tab"
@@ -313,6 +347,95 @@
           >
             Statusline stores only the selected local path.
           </p>
+        </div>
+
+        <div
+          class="settings-view"
+          id="google-settings-view"
+          role="tabpanel"
+          aria-labelledby="google-tab"
+          hidden
+        >
+          <div class="source-summary">
+            <div><span>Google · Gemini</span><strong>Antigravity</strong></div>
+          </div>
+          <p
+            class="google-note"
+            data-i18n="Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits."
+          >
+            Only enable a trusted Antigravity installation that you use.
+            Statusline reads Google quota, not Claude or GPT limits.
+          </p>
+          <label class="google-field" for="google-source"
+            ><span data-i18n="Local source">Local source</span>
+            <select id="google-source">
+              <option value="" data-i18n="Not connected">Not connected</option>
+              <option value="desktop" data-i18n="Desktop app">
+                Desktop app
+              </option>
+              <option value="cli">AGY CLI</option>
+            </select>
+          </label>
+          <details class="source-guidance">
+            <summary data-i18n="Custom installation">
+              Custom installation
+            </summary>
+            <label class="google-field" for="google-path"
+              ><span data-i18n="Executable path (optional)"
+                >Executable path (optional)</span
+              ><input
+                id="google-path"
+                type="text"
+                maxlength="4096"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                aria-describedby="google-path-help"
+            /></label>
+            <p
+              id="google-path-help"
+              data-i18n="Leave empty for automatic detection. No API key is needed."
+            >
+              Leave empty for automatic detection. No API key is needed.
+            </p>
+          </details>
+          <div class="source-actions">
+            <button
+              class="source-primary"
+              id="google-save"
+              type="button"
+              data-i18n="Save source"
+            >
+              Save source</button
+            ><button
+              class="source-secondary"
+              id="google-remove"
+              type="button"
+              data-i18n="Remove service"
+              hidden
+            >
+              Remove service
+            </button>
+          </div>
+          <p
+            class="google-note"
+            data-i18n="Refreshes every 5 minutes while Companion and your computer are running. Desktop quota can be read with its window closed."
+          >
+            Refreshes every 5 minutes while Companion and your computer are
+            running. Desktop quota can be read with its window closed.
+          </p>
+          <p
+            class="google-note"
+            data-i18n="Companion only for now. Mobile devices and widgets continue syncing Codex with the existing pairing."
+          >
+            Companion only for now. Mobile devices and widgets continue syncing
+            Codex with the existing pairing.
+          </p>
+          <p
+            class="source-feedback"
+            id="google-feedback"
+            aria-live="polite"
+          ></p>
         </div>
 
         <div

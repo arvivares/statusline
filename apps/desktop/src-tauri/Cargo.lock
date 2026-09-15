@@ -3925,7 +3925,7 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
 name = "statusline-desktop"
-version = "0.1.21"
+version = "0.1.22"
 dependencies = [
  "base64 0.23.1",
  "dirs 7.0.0",
@@ -3947,8 +3947,10 @@ dependencies = [
  "tauri-plugin-updater",
  "tempfile",
  "thiserror 2.0.20",
+ "time",
  "tokio",
  "uuid",
+ "windows-sys 0.61.2",
  "winreg 0.56.0",
 ]
 

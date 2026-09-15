@@ -25,6 +25,11 @@ requests are welcome.
   shared English/Spanish catalog, generated resources and validation.
 - [Codex sources](architecture/codex-sources.md): macOS bundled-runtime discovery,
   CLI fallback, session boundaries and clean-device validation.
+- [Antigravity source research](architecture/antigravity-sources.md): official
+  Desktop/CLI documentation, Google-only quotas, CLI/Desktop/native-runtime evidence and
+  cross-platform integration gates; not yet a shipped provider.
+- [Antigravity Companion candidate](architecture/antigravity-companion.md): per-user
+  visibility, source setup, independent polling and unchanged v1/mobile pairings.
 - [Synchronization and freshness](architecture/synchronization.md): native desktop
   scheduling, independent iOS widgets, cache safety and verification limits.
 - [Companion window behavior](architecture/companion-window.md): cross-platform
@@ -44,7 +49,7 @@ requests are welcome.
 
 - [Public release runbook](release/release-runbook.md): canonical version, unified tag,
   required assets, SignPath inputs, provenance and publication procedure.
-- [Current beta candidate notes](release/notes/v0.1.20.md): curated user-facing notes and
+- [Current beta candidate notes](release/notes/v0.1.22.md): curated user-facing notes and
   known limitations for the next candidate.
 - [Desktop installers](release/desktop-installers.md): build matrix, signing, checksums and
   smoke tests.
@@ -62,6 +67,8 @@ requests are welcome.
 - [Privacy policy](../PRIVACY.md): data processing, retention and deletion.
 - [Security review](security/security-review.md): resolved findings, accepted dependency
   exceptions and operational risks.
+- [Antigravity security review](security/antigravity-security-review.md): collector
+  trust boundaries, resolved findings and outstanding platform validation.
 - [Code-signing policy](security/code-signing-policy.md): roles, trust boundaries and
   release controls.
 
