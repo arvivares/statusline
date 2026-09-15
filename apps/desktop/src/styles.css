@@ -141,6 +141,71 @@ summary:focus-visible {
   color: var(--ink);
   font-weight: 550;
 }
+.provider-switch {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: -12px;
+}
+.provider-switch button {
+  min-height: 36px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+.provider-switch button[aria-pressed="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--signal);
+}
+.provider-switch span {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.provider-switch:not([hidden]) + .identity {
+  display: none;
+}
+.panel-heading:has(.provider-switch:not([hidden])) {
+  padding-top: 14px;
+}
+.panel-heading:has(.provider-switch:not([hidden])) h2 {
+  margin-top: 0;
+}
+.settings-tabs {
+  gap: 18px;
+}
+.google-note {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.google-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.google-field select,
+.google-field input {
+  min-width: 0;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.google-field select:focus-visible,
+.google-field input:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
 .panel-heading h2 {
   font-size: 16px;
   font-weight: 550;

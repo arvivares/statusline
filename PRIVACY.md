@@ -1,6 +1,6 @@
 # Statusline — Privacy Policy
 
-Effective date: 11 September 2026
+Effective date: 15 September 2026
 
 Public policy: https://statusline.inmerzion.io/privacy
 
@@ -11,6 +11,23 @@ Statusline is designed to display Codex quota metadata without collecting Codex 
 The desktop companion starts the locally installed Codex App Server and reads only the fields needed to show usage windows, reset times, account type and plan. It does not read, copy or store Codex access tokens, API keys, prompts, source code or conversation content.
 
 When a user selects a Codex executable manually, Statusline stores that local file path in its application configuration directory. The path remains on that computer and can be cleared with Source Settings → Use automatic detection.
+
+### Optional Antigravity source in Companion 0.1.22
+
+Antigravity is disabled until you select a trusted Desktop or AGY CLI installation
+in Companion. Statusline reads Gemini weekly/five-hour quota metadata through the
+selected vendor runtime. Desktop's account-status response is checked in memory
+to confirm a signed-in subscription; identity fields are discarded and are not
+stored or sent to Statusline's relay or mobile apps. Claude/GPT quota buckets are
+discarded before the interface receives a reading.
+
+The vendor runtime manages its own authentication and contacts Google to retrieve
+quota. Statusline does not extract or copy Google access/refresh tokens or API
+keys. Polling uses temporary local runtime data; only the chosen source/path is
+persisted in Statusline's configuration, while quota readings remain in memory.
+Remove service clears the source preference and stops its collection without
+signing out of Google or changing an existing Codex/mobile pairing. Antigravity
+quota is not sent through the relay in this Companion-only release.
 
 ## Universal encrypted relay
 

@@ -76,7 +76,9 @@ describe("Still Signature layout contracts", () => {
     expect(html).not.toContain('data-i18n="CODEX.RUNTIME"');
     expect(html).not.toContain('data-i18n="EXECUTABLE.PATH"');
     const main = source("./main.ts");
-    expect(main).toContain('"button:not(:disabled), summary, [tabindex]"');
+    expect(main).toContain(
+      '"button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, [tabindex]"',
+    );
     expect(main).toContain("surface.inert = true");
     expect(main).toContain("surface.inert = false");
   });

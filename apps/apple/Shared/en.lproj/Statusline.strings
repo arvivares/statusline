@@ -22,9 +22,15 @@
 "ACCOUNT.CHANNEL" = "ACCOUNT.CHANNEL";
 "ACCOUNT.CONTROL" = "ACCOUNT.CONTROL";
 "ACCOUNT.PLAN" = "ACCOUNT.PLAN";
+"Add service" = "Add service";
 "AES-256-GCM · 30 DAY TTL" = "AES-256-GCM · 30 DAY TTL";
 "AES-256-GCM · UNIVERSAL" = "AES-256-GCM · UNIVERSAL";
 "An encrypted snapshot is available on this device." = "An encrypted snapshot is available on this device.";
+"Antigravity · {0}% left" = "Antigravity · {0}% left";
+"Antigravity · no weekly data" = "Antigravity · no weekly data";
+"Antigravity · unavailable" = "Antigravity · unavailable";
+"Antigravity did not respond. Codex and its mobile sync are unaffected." = "Antigravity did not respond. Codex and its mobile sync are unaffected.";
+"Antigravity settings could not be saved or read." = "Antigravity settings could not be saved or read.";
 "AUTH / REQUIRED" = "AUTH / REQUIRED";
 "AUTH.CHALLENGE" = "AUTH.CHALLENGE";
 "AUTHORIZE" = "AUTHORIZE";
@@ -103,6 +109,7 @@
 "CODEX.ACCOUNT" = "CODEX.ACCOUNT";
 "CODEX.RUNTIME" = "CODEX.RUNTIME";
 "CODEX.SESSION" = "CODEX.SESSION";
+"Companion only for now. Mobile devices and widgets continue syncing Codex with the existing pairing." = "Companion only for now. Mobile devices and widgets continue syncing Codex with the existing pairing.";
 "Companion updates" = "Companion updates";
 "Complete sign-in in your browser." = "Complete sign-in in your browser.";
 "CONFIG" = "CONFIG";
@@ -157,6 +164,7 @@
 "CREDENTIAL MANAGER" = "CREDENTIAL MANAGER";
 "Credentials" = "Credentials";
 "CURRENT" = "CURRENT";
+"Custom installation" = "Custom installation";
 "Data plane setup" = "Data plane setup";
 "DEMO" = "DEMO";
 "demo · local sample only" = "demo · local sample only";
@@ -194,13 +202,19 @@
 "ERROR" = "ERROR";
 "ERROR · NO CREDENTIALS EXPOSED" = "ERROR · NO CREDENTIALS EXPOSED";
 "Executable path" = "Executable path";
+"Executable path (optional)" = "Executable path (optional)";
 "EXECUTABLE.PATH" = "EXECUTABLE.PATH";
 "FALLBACK.INPUT" = "FALLBACK.INPUT";
 "FAULT" = "FAULT";
+"Gemini weekly limit" = "Gemini weekly limit";
 "Generating independent read/write credentials." = "Generating independent read/write credentials.";
 "Global npm" = "Global npm";
+"Google quota is connected. Credentials stay with Antigravity." = "Google quota is connected. Credentials stay with Antigravity.";
+"Google quota is unavailable. No remaining limit has been assumed." = "Google quota is unavailable. No remaining limit has been assumed.";
+"Google quota unavailable" = "Google quota unavailable";
 "How private sync works" = "How private sync works";
 "INDEPENDENT" = "INDEPENDENT";
+"Install Antigravity or choose the path to its native runtime." = "Install Antigravity or choose the path to its native runtime.";
 "Install Codex CLI, run codex and sign in with ChatGPT before refreshing." = "Install Codex CLI, run codex and sign in with ChatGPT before refreshing.";
 "Install Codex or select its executable manually." = "Install Codex or select its executable manually.";
 "Install the DEB or RPM from the official release page using your package manager." = "Install the DEB or RPM from the official release page using your package manager.";
@@ -214,11 +228,13 @@
 "Invalid source" = "Invalid source";
 "INVALID SOURCE" = "INVALID SOURCE";
 "LAST ATTEMPT {0} · CODEX LOCAL" = "LAST ATTEMPT {0} · CODEX LOCAL";
+"Last attempt: {0}" = "Last attempt: {0}";
 "LAST CODEX READ" = "LAST CODEX READ";
 "Last sample: {0}" = "Last sample: {0}";
 "Last sync" = "Last sync";
 "LAST.PUBLISH" = "LAST.PUBLISH";
 "Later" = "Later";
+"Leave empty for automatic detection. No API key is needed." = "Leave empty for automatic detection. No API key is needed.";
 "LEFT" = "LEFT";
 "LIVE" = "LIVE";
 "Loads a local sample and updates the widget without an account, a computer or the network." = "Loads a local sample and updates the widget without an account, a computer or the network.";
@@ -239,6 +255,7 @@
 "NEXT WEEKLY WINDOW" = "NEXT WEEKLY WINDOW";
 "No active QR" = "No active QR";
 "NO ACTIVE QR" = "NO ACTIVE QR";
+"No Antigravity service is enabled." = "No Antigravity service is enabled.";
 "No Codex data. Open Statusline Companion on your computer." = "No Codex data. Open Statusline Companion on your computer.";
 "No Codex executable detected" = "No Codex executable detected";
 "NO DATA" = "NO DATA";
@@ -253,6 +270,7 @@
 "NO SHORT WINDOW" = "NO SHORT WINDOW";
 "No Statusline data. Tap to open the app and connect a companion." = "No Statusline data. Tap to open the app and connect a companion.";
 "Not configured" = "Not configured";
+"Not connected" = "Not connected";
 "Not detected" = "Not detected";
 "NOT DETECTED" = "NOT DETECTED";
 "Not found" = "Not found";
@@ -265,6 +283,7 @@
 "OFFICIAL SETUP" = "OFFICIAL SETUP";
 "OFFLINE" = "OFFLINE";
 "OFFLINE · NO SAMPLE AVAILABLE" = "OFFLINE · NO SAMPLE AVAILABLE";
+"Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits." = "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits.";
 "Open OpenAI" = "Open OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Open Source Settings to detect or select a local Codex runtime.";
 "Open Source Settings to detect or select the local CLI." = "Open Source Settings to detect or select the local CLI.";
@@ -313,6 +332,7 @@
 "READER.STATE / LIVE" = "READER.STATE / LIVE";
 "READING" = "READING";
 "READING · LOCAL METADATA ONLY" = "READING · LOCAL METADATA ONLY";
+"Reading Antigravity" = "Reading Antigravity";
 "Reading Codex" = "Reading Codex";
 "READING CODEX" = "READING CODEX";
 "Reading from {0}" = "Reading from {0}";
@@ -325,6 +345,7 @@
 "Refresh" = "Refresh";
 "REFRESH" = "REFRESH";
 "REFRESH NOW" = "REFRESH NOW";
+"Refreshes every 5 minutes while Companion and your computer are running. Desktop quota can be read with its window closed." = "Refreshes every 5 minutes while Companion and your computer are running. Desktop quota can be read with its window closed.";
 "RELAY" = "RELAY";
 "Relay / config" = "Relay / config";
 "Relay / current" = "Relay / current";
@@ -345,6 +366,7 @@
 "remaining" = "remaining";
 "REMAINING" = "REMAINING";
 "Remove pairing" = "Remove pairing";
+"Remove service" = "Remove service";
 "Removing local relay credentials" = "Removing local relay credentials";
 "REMOVING LOCAL RELAY CREDENTIALS" = "REMOVING LOCAL RELAY CREDENTIALS";
 "Replace pairing" = "Replace pairing";
@@ -365,6 +387,7 @@
 "SAMPLE" = "SAMPLE";
 "SAMPLED {0} · CODEX LOCAL" = "SAMPLED {0} · CODEX LOCAL";
 "Save on this device" = "Save on this device";
+"Save source" = "Save source";
 "Saved path" = "Saved path";
 "SAVED PATH" = "SAVED PATH";
 "Scan again" = "Scan again";
@@ -396,6 +419,7 @@
 "SHORT.WINDOW" = "SHORT.WINDOW";
 "Show" = "Show";
 "Sign in to Codex in your desktop app or CLI, then refresh." = "Sign in to Codex in your desktop app or CLI, then refresh.";
+"Sign in to the selected Antigravity source, then refresh." = "Sign in to the selected Antigravity source, then refresh.";
 "SOURCE" = "SOURCE";
 "SOURCE / BUSY" = "SOURCE / BUSY";
 "SOURCE / CODEX LOCAL" = "SOURCE / CODEX LOCAL";
@@ -455,6 +479,7 @@
 "The last operation could not be completed." = "The last operation could not be completed.";
 "The latest quota sample is available to paired iOS and Android clients." = "The latest quota sample is available to paired iOS and Android clients.";
 "The link contains the decryption key. Do not share it." = "The link contains the decryption key. Do not share it.";
+"The local Antigravity runtime could not be verified." = "The local Antigravity runtime could not be verified.";
 "The pairing belongs to a different Statusline relay." = "The pairing belongs to a different Statusline relay.";
 "The pairing has expired or was already used. Create a new QR in the companion." = "The pairing has expired or was already used. Create a new QR in the companion.";
 "The pairing QR or link is invalid." = "The pairing QR or link is invalid.";
@@ -484,6 +509,7 @@
 "UNPAIRED" = "UNPAIRED";
 "Unsupported Codex state" = "Unsupported Codex state";
 "Up to date" = "Up to date";
+"Update AGY CLI to version 1.1.11 or newer in the 1.x series." = "Update AGY CLI to version 1.1.11 or newer in the 1.x series.";
 "Update available" = "Update available";
 "Update installed" = "Update installed";
 "Update needs attention" = "Update needs attention";
@@ -497,6 +523,7 @@
 "USE AUTOMATIC DETECTION" = "USE AUTOMATIC DETECTION";
 "Use device code" = "Use device code";
 "Use example" = "Use example";
+"Use the absolute path to agy, agy.exe, or the desktop language_server executable." = "Use the absolute path to agy, agy.exe, or the desktop language_server executable.";
 "Validating the encrypted pairing with the relay…" = "Validating the encrypted pairing with the relay…";
 "Verified" = "Verified";
 "VERIFIED" = "VERIFIED";
@@ -528,3 +555,4 @@
 "Working" = "Working";
 "WORKING" = "WORKING";
 "You're up to date" = "You're up to date";
+"Your services" = "Your services";

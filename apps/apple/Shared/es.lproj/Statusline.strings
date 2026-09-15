@@ -22,9 +22,15 @@
 "ACCOUNT.CHANNEL" = "CANAL.CUENTA";
 "ACCOUNT.CONTROL" = "CONTROL.CUENTA";
 "ACCOUNT.PLAN" = "PLAN.CUENTA";
+"Add service" = "Añadir servicio";
 "AES-256-GCM · 30 DAY TTL" = "AES-256-GCM · CADUCA EN 30 DÍAS";
 "AES-256-GCM · UNIVERSAL" = "AES-256-GCM · UNIVERSAL";
 "An encrypted snapshot is available on this device." = "Hay una muestra cifrada disponible en este dispositivo.";
+"Antigravity · {0}% left" = "Antigravity · {0}% libre";
+"Antigravity · no weekly data" = "Antigravity · sin datos semanales";
+"Antigravity · unavailable" = "Antigravity · no disponible";
+"Antigravity did not respond. Codex and its mobile sync are unaffected." = "Antigravity no respondió. Codex y su sincronización móvil no se ven afectados.";
+"Antigravity settings could not be saved or read." = "No se pudieron guardar o leer los ajustes de Antigravity.";
 "AUTH / REQUIRED" = "ACCESO / REQUERIDO";
 "AUTH.CHALLENGE" = "VERIFICACIÓN.ACCESO";
 "AUTHORIZE" = "AUTORIZAR";
@@ -103,6 +109,7 @@
 "CODEX.ACCOUNT" = "CUENTA.CODEX";
 "CODEX.RUNTIME" = "EJECUTABLE.CODEX";
 "CODEX.SESSION" = "SESIÓN.CODEX";
+"Companion only for now. Mobile devices and widgets continue syncing Codex with the existing pairing." = "Por ahora, solo en Companion. Los móviles y widgets siguen sincronizando Codex con el vínculo existente.";
 "Companion updates" = "Actualizaciones de Companion";
 "Complete sign-in in your browser." = "Completa el inicio de sesión en tu navegador.";
 "CONFIG" = "CONFIGURACIÓN";
@@ -157,6 +164,7 @@
 "CREDENTIAL MANAGER" = "ADMINISTRADOR DE CREDENCIALES";
 "Credentials" = "Credenciales";
 "CURRENT" = "AL DÍA";
+"Custom installation" = "Instalación personalizada";
 "Data plane setup" = "Configuración";
 "DEMO" = "DEMO";
 "demo · local sample only" = "demo · solo muestra local";
@@ -194,13 +202,19 @@
 "ERROR" = "ERROR";
 "ERROR · NO CREDENTIALS EXPOSED" = "ERROR · CREDENCIALES PROTEGIDAS";
 "Executable path" = "Ruta del ejecutable";
+"Executable path (optional)" = "Ruta del ejecutable (opcional)";
 "EXECUTABLE.PATH" = "RUTA.EJECUTABLE";
 "FALLBACK.INPUT" = "ENTRADA.MANUAL";
 "FAULT" = "ERROR";
+"Gemini weekly limit" = "Límite semanal de Gemini";
 "Generating independent read/write credentials." = "Generando credenciales independientes de lectura y escritura.";
 "Global npm" = "npm global";
+"Google quota is connected. Credentials stay with Antigravity." = "Cuota de Google conectada. Las credenciales permanecen en Antigravity.";
+"Google quota is unavailable. No remaining limit has been assumed." = "La cuota de Google no está disponible. No se ha supuesto ningún límite restante.";
+"Google quota unavailable" = "Cuota de Google no disponible";
 "How private sync works" = "Cómo funciona la sincronización privada";
 "INDEPENDENT" = "INDEPENDIENTE";
+"Install Antigravity or choose the path to its native runtime." = "Instala Antigravity o indica la ruta de su ejecutable nativo.";
 "Install Codex CLI, run codex and sign in with ChatGPT before refreshing." = "Instala Codex CLI, ejecuta codex e inicia sesión con ChatGPT antes de actualizar.";
 "Install Codex or select its executable manually." = "Instala Codex o selecciona su ejecutable manualmente.";
 "Install the DEB or RPM from the official release page using your package manager." = "Instala el DEB o RPM desde la página oficial de la versión con tu gestor de paquetes.";
@@ -214,11 +228,13 @@
 "Invalid source" = "Origen no válido";
 "INVALID SOURCE" = "ORIGEN NO VÁLIDO";
 "LAST ATTEMPT {0} · CODEX LOCAL" = "ÚLTIMO INTENTO {0} · CODEX LOCAL";
+"Last attempt: {0}" = "Último intento: {0}";
 "LAST CODEX READ" = "ÚLTIMA LECTURA DE CODEX";
 "Last sample: {0}" = "Última muestra: {0}";
 "Last sync" = "Última sincronización";
 "LAST.PUBLISH" = "ÚLTIMA.PUBLICACIÓN";
 "Later" = "Más tarde";
+"Leave empty for automatic detection. No API key is needed." = "Déjala vacía para usar la detección automática. No necesitas una clave API.";
 "LEFT" = "LIBRE";
 "LIVE" = "AL DÍA";
 "Loads a local sample and updates the widget without an account, a computer or the network." = "Carga una muestra local y actualiza el widget sin usar una cuenta, un ordenador ni la red.";
@@ -239,6 +255,7 @@
 "NEXT WEEKLY WINDOW" = "PRÓXIMO PERIODO SEMANAL";
 "No active QR" = "Sin QR activo";
 "NO ACTIVE QR" = "SIN QR ACTIVO";
+"No Antigravity service is enabled." = "No hay ningún servicio de Antigravity habilitado.";
 "No Codex data. Open Statusline Companion on your computer." = "Sin datos de Codex. Abre Statusline Companion en tu ordenador.";
 "No Codex executable detected" = "No se detectó ningún ejecutable de Codex";
 "NO DATA" = "SIN DATOS";
@@ -253,6 +270,7 @@
 "NO SHORT WINDOW" = "SIN PERIODO CORTO";
 "No Statusline data. Tap to open the app and connect a companion." = "Statusline sin datos. Toca para abrir la aplicación y conectar un companion.";
 "Not configured" = "Sin configurar";
+"Not connected" = "Sin conectar";
 "Not detected" = "No detectado";
 "NOT DETECTED" = "NO DETECTADO";
 "Not found" = "No encontrado";
@@ -265,6 +283,7 @@
 "OFFICIAL SETUP" = "INSTALACIÓN OFICIAL";
 "OFFLINE" = "SIN CONEXIÓN";
 "OFFLINE · NO SAMPLE AVAILABLE" = "SIN CONEXIÓN · SIN MUESTRA DISPONIBLE";
+"Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits." = "Habilita solo una instalación de Antigravity de confianza que utilices. Statusline lee la cuota de Google, no los límites de Claude o GPT.";
 "Open OpenAI" = "Abrir OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Abre la configuración de origen para detectar o seleccionar un ejecutable local de Codex.";
 "Open Source Settings to detect or select the local CLI." = "Abre la configuración de origen para detectar o seleccionar la CLI local.";
@@ -313,6 +332,7 @@
 "READER.STATE / LIVE" = "ESTADO.LECTOR / ACTIVO";
 "READING" = "LEYENDO";
 "READING · LOCAL METADATA ONLY" = "LEYENDO · SOLO METADATOS LOCALES";
+"Reading Antigravity" = "Leyendo Antigravity";
 "Reading Codex" = "Leyendo Codex";
 "READING CODEX" = "LEYENDO CODEX";
 "Reading from {0}" = "Lectura de {0}";
@@ -325,6 +345,7 @@
 "Refresh" = "Actualizar";
 "REFRESH" = "ACTUALIZAR";
 "REFRESH NOW" = "ACTUALIZAR";
+"Refreshes every 5 minutes while Companion and your computer are running. Desktop quota can be read with its window closed." = "Se actualiza cada 5 minutos mientras Companion esté abierto y el ordenador despierto. La cuota de Desktop se puede leer con su ventana cerrada.";
 "RELAY" = "RELAY";
 "Relay / config" = "Relay / configuración";
 "Relay / current" = "Relay / al día";
@@ -345,6 +366,7 @@
 "remaining" = "restante";
 "REMAINING" = "RESTANTE";
 "Remove pairing" = "Eliminar vínculo";
+"Remove service" = "Quitar servicio";
 "Removing local relay credentials" = "Eliminando credenciales locales del relay";
 "REMOVING LOCAL RELAY CREDENTIALS" = "ELIMINANDO CREDENCIALES LOCALES DEL RELAY";
 "Replace pairing" = "Reemplazar vínculo";
@@ -365,6 +387,7 @@
 "SAMPLE" = "MUESTRA";
 "SAMPLED {0} · CODEX LOCAL" = "LECTURA {0} · CODEX LOCAL";
 "Save on this device" = "Guardar en este dispositivo";
+"Save source" = "Guardar origen";
 "Saved path" = "Ruta guardada";
 "SAVED PATH" = "RUTA GUARDADA";
 "Scan again" = "Buscar de nuevo";
@@ -396,6 +419,7 @@
 "SHORT.WINDOW" = "PERIODO.CORTO";
 "Show" = "Mostrar";
 "Sign in to Codex in your desktop app or CLI, then refresh." = "Inicia sesión en Codex desde la app de escritorio o la CLI y actualiza.";
+"Sign in to the selected Antigravity source, then refresh." = "Inicia sesión en el origen de Antigravity seleccionado y actualiza.";
 "SOURCE" = "ORIGEN";
 "SOURCE / BUSY" = "ORIGEN / OCUPADO";
 "SOURCE / CODEX LOCAL" = "ORIGEN / CODEX LOCAL";
@@ -455,6 +479,7 @@
 "The last operation could not be completed." = "La última operación no pudo completarse.";
 "The latest quota sample is available to paired iOS and Android clients." = "La última muestra de cuota está disponible para los dispositivos iOS y Android vinculados.";
 "The link contains the decryption key. Do not share it." = "El vínculo contiene la clave de descifrado. No lo compartas.";
+"The local Antigravity runtime could not be verified." = "No se pudo verificar el ejecutable local de Antigravity.";
 "The pairing belongs to a different Statusline relay." = "El vínculo pertenece a otro servidor relay de Statusline.";
 "The pairing has expired or was already used. Create a new QR in the companion." = "El vínculo ha caducado o ya se utilizó. Crea un nuevo QR en el companion.";
 "The pairing QR or link is invalid." = "El QR o vínculo de emparejamiento no es válido.";
@@ -484,6 +509,7 @@
 "UNPAIRED" = "SIN VÍNCULO";
 "Unsupported Codex state" = "Estado de Codex no compatible";
 "Up to date" = "Al día";
+"Update AGY CLI to version 1.1.11 or newer in the 1.x series." = "Actualiza AGY CLI a la versión 1.1.11 o posterior de la serie 1.x.";
 "Update available" = "Actualización disponible";
 "Update installed" = "Actualización instalada";
 "Update needs attention" = "Revisar actualización";
@@ -497,6 +523,7 @@
 "USE AUTOMATIC DETECTION" = "USAR DETECCIÓN AUTOMÁTICA";
 "Use device code" = "Usar código de dispositivo";
 "Use example" = "Usar ejemplo";
+"Use the absolute path to agy, agy.exe, or the desktop language_server executable." = "Usa la ruta absoluta a agy, agy.exe o al ejecutable language_server de Desktop.";
 "Validating the encrypted pairing with the relay…" = "Validando el vínculo cifrado con el relay…";
 "Verified" = "Verificado";
 "VERIFIED" = "VERIFICADO";
@@ -528,3 +555,4 @@
 "Working" = "Procesando";
 "WORKING" = "PROCESANDO";
 "You're up to date" = "Estás al día";
+"Your services" = "Tus servicios";

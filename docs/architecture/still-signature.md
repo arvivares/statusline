@@ -45,7 +45,8 @@ Existing store screenshots are not evidence that the design has shipped there.
 ### Companion settings
 
 Settings extends the same 340 × 500 surface as the quota view. It uses a simple
-header, unboxed **Codex / Mobile sync** tabs, sentence-case labels, aligned rows
+header, unboxed **Codex / Add service / Mobile sync** tabs (Add service becomes
+Antigravity after it is configured in the 0.1.22 candidate), sentence-case labels, aligned rows
 and 36 px rounded actions. The active tab has a restrained gold underline.
 No legacy telemetry labels or nested grid panels are shown.
 
@@ -66,7 +67,12 @@ view is inert while Settings is open. EN/ES labels use the shared catalog.
 The desktop continues to show real Codex weekly and optional short-window data,
 account information and relay state. Mobile retains the weekly snapshot supported
 by protocol v1; it does not invent a short-window value or Antigravity quotas.
-Antigravity integration and a future multi-provider watchlist are separate work.
+The 0.1.22 candidate adds an opt-in Google-only Antigravity adapter in Companion.
+Its unboxed provider selector replaces the identity line only when both services
+are present, with the other service's weekly reading beside its name. It does not
+enlarge the 340 × 500 window. Unconfigured services have no quota placeholder;
+temporary failures stay explicit. Antigravity hides the Codex-only relay indicator.
+The [delivery contract](antigravity-companion.md) defers mobile/provider manifests.
 
 Refresh, pairing, manual fallback on iOS, local demos, legal links and updater
 controls remain available. Advanced mobile sync controls are disclosed below the
