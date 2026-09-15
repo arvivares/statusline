@@ -8,7 +8,15 @@
 - Sign-in required: No
 - Demo account: Not applicable
 
-## Review Notes
+## Current review notes — 1.1.0 (9)
+
+The current submission text is maintained in
+[1.1.0-review.txt](release-notes/1.1.0-review.txt). It adds Antigravity / Google
+Gemini alongside Codex, preserves existing pairing and explains the distinction
+between the Codex-only local demo and Companion synchronization. See the
+[version validation record](validation-1.1.0.md) for actual portal status.
+
+## Historical review notes — 1.0.1 (5)
 
 App Review preparation - 10 September 2026 - version 1.0.1 (5)
 This update adds independent widget refresh, existing-pairing migration, foreground refresh and website privacy/support links. Open the app once after upgrading to migrate the existing pairing for widget access. WidgetKit controls the refresh schedule; updates are not real-time. The English listing is named "Statusline: Agent Quota"; this release supports Codex only. Statusline does not offer chat or generate text, images or code.
