@@ -1,5 +1,9 @@
 import type { D1Database } from "./types";
-import type { SnapshotEnvelope } from "./protocol";
+import type {
+  SnapshotEnvelope,
+  ServicesEnvelope,
+  ServicesPublication,
+} from "./protocol";
 
 export interface RelayChannel {
   readonly id: string;
@@ -12,6 +16,8 @@ export interface RelayChannel {
   readonly sequence: number | null;
   readonly nonce: string | null;
   readonly ciphertext: string | null;
+  readonly services: ServicesEnvelope | null;
+  readonly servicesUpdatedAt: number | null;
   readonly createdAt: number;
   readonly updatedAt: number;
   readonly expiresAt: number;
@@ -44,6 +50,13 @@ export interface RelayStore {
     now: number,
     expiresAt: number,
   ): Promise<StoreResult<RelayChannel>>;
+  writeServices(
+    channelID: string,
+    publisherTokenHash: string,
+    publication: ServicesPublication,
+    now: number,
+    expiresAt: number,
+  ): Promise<StoreResult<RelayChannel>>;
   readSnapshot(
     channelID: string,
     readerTokenHash: string,
@@ -68,6 +81,10 @@ interface RelayChannelRow {
   readonly sequence: number | null;
   readonly nonce: string | null;
   readonly ciphertext: string | null;
+  readonly services_sequence: number | null;
+  readonly services_nonce: string | null;
+  readonly services_ciphertext: string | null;
+  readonly services_updated_at: number | null;
   readonly created_at: number;
   readonly updated_at: number;
   readonly expires_at: number;
@@ -169,16 +186,21 @@ export class D1RelayStore implements RelayStore {
       return current;
     }
     if (
-      current.value.sequence !== null &&
-      envelope.sequence <= current.value.sequence
+      envelope.sequence <=
+      Math.max(
+        current.value.sequence ?? 0,
+        current.value.services?.sequence ?? 0,
+      )
     ) {
       return { kind: "stale" };
     }
     const update = await this.database
       .prepare(
         `UPDATE relay_channels
-         SET protocol_version = ?, sequence = ?, nonce = ?, ciphertext = ?, updated_at = ?, expires_at = ?
-         WHERE id = ? AND publisher_token_hash = ? AND (sequence IS NULL OR sequence < ?)`,
+         SET protocol_version = ?, sequence = ?, nonce = ?, ciphertext = ?, updated_at = ?, expires_at = ?,
+             services_sequence = NULL, services_nonce = NULL, services_ciphertext = NULL, services_updated_at = NULL
+         WHERE id = ? AND publisher_token_hash = ? AND expires_at >= ?
+           AND (sequence IS NULL OR sequence < ?) AND (services_sequence IS NULL OR services_sequence < ?)`,
       )
       .bind(
         envelope.protocolVersion,
@@ -189,6 +211,8 @@ export class D1RelayStore implements RelayStore {
         expiresAt,
         channelID,
         publisherTokenHash,
+        now,
+        envelope.sequence,
         envelope.sequence,
       )
       .run();
@@ -198,6 +222,68 @@ export class D1RelayStore implements RelayStore {
     if ((update.meta.changes ?? 0) === 0) {
       return { kind: "stale" };
     }
+    return this.authorized(
+      channelID,
+      "publisher_token_hash",
+      publisherTokenHash,
+      now,
+    );
+  }
+
+  async writeServices(
+    channelID: string,
+    publisherTokenHash: string,
+    publication: ServicesPublication,
+    now: number,
+    expiresAt: number,
+  ): Promise<StoreResult<RelayChannel>> {
+    const current = await this.authorized(
+      channelID,
+      "publisher_token_hash",
+      publisherTokenHash,
+      now,
+    );
+    if (current.kind !== "ok") return current;
+    const { services, codex } = publication;
+    if (
+      services.sequence <=
+      Math.max(
+        current.value.sequence ?? 0,
+        current.value.services?.sequence ?? 0,
+      )
+    ) {
+      return { kind: "stale" };
+    }
+    // One atomic update: AGY-only writes preserve the old Codex sample and age.
+    const update = await this.database
+      .prepare(
+        `UPDATE relay_channels
+       SET services_sequence = ?, services_nonce = ?, services_ciphertext = ?, services_updated_at = ?,
+           sequence = COALESCE(?, sequence), nonce = COALESCE(?, nonce), ciphertext = COALESCE(?, ciphertext),
+           updated_at = CASE WHEN ? THEN ? ELSE updated_at END, expires_at = ?
+       WHERE id = ? AND publisher_token_hash = ? AND expires_at >= ?
+         AND (sequence IS NULL OR sequence < ?) AND (services_sequence IS NULL OR services_sequence < ?)`,
+      )
+      .bind(
+        services.sequence,
+        services.nonce,
+        services.ciphertext,
+        now,
+        codex?.sequence ?? null,
+        codex?.nonce ?? null,
+        codex?.ciphertext ?? null,
+        codex === null ? 0 : 1,
+        now,
+        expiresAt,
+        channelID,
+        publisherTokenHash,
+        now,
+        services.sequence,
+        services.sequence,
+      )
+      .run();
+    if (!update.success) throw new Error("D1 could not update services.");
+    if ((update.meta.changes ?? 0) === 0) return { kind: "stale" };
     return this.authorized(
       channelID,
       "publisher_token_hash",
@@ -292,6 +378,19 @@ function mapRow(row: RelayChannelRow): RelayChannel {
     sequence: row.sequence,
     nonce: row.nonce,
     ciphertext: row.ciphertext,
+    services:
+      row.services_sequence != null &&
+      row.services_nonce != null &&
+      row.services_ciphertext != null
+        ? {
+            protocolVersion: 1,
+            payloadKind: "services-v1",
+            sequence: row.services_sequence,
+            nonce: row.services_nonce,
+            ciphertext: row.services_ciphertext,
+          }
+        : null,
+    servicesUpdatedAt: row.services_updated_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     expiresAt: row.expires_at,

@@ -1,0 +1,13 @@
+Statusline 1.1.0 (9) — Antigravity en iPhone y widgets
+
+Requiere Statusline Companion 0.1.24 o posterior y un relay con soporte services-v1. No hace falta crear otro QR para los vínculos existentes. Las credenciales de Antigravity permanecen en tu ordenador; solo se sincronizan metadatos cifrados de la cuota de Google Gemini.
+
+Qué probar:
+1. Actualiza sin desconectar. Los datos de Codex deben seguir funcionando.
+2. Con Antigravity instalado y la sesión iniciada en el ordenador, comprueba que Gemini aparece automáticamente. Si Companion solo tiene Codex, no debe aparecer ningún espacio reservado para Gemini. Una instalación solo de Google no debe mostrar Codex.
+3. Selecciona Gemini o Codex en la lista secundaria. Compara las cuotas semanal y de cinco horas, porcentajes y reinicios con Companion.
+4. Conserva tus widgets actuales. El pequeño sigue el servicio seleccionado; el mediano muestra ambos cuando están presentes. Deja Companion abierto y el ordenador despierto para comprobar una actualización posterior del widget sin abrir la app del teléfono. iOS decide el momento real; espera más de 30 minutos.
+5. Revisa español/inglés, la antigüedad de los datos sin conexión y la recuperación. Una cuota no disponible no debe convertirse en 0% o 100%.
+6. Si decides desactivar Antigravity en Companion, comprueba que desaparece tras sincronizar sin perder Codex ni el emparejamiento.
+
+Este build es para TestFlight, no una publicación en App Store. Android sigue mostrando Codex. Envía comentarios con versión/build, sistema operativo, servicios visibles y horas de las muestras. No envíes vínculos QR privados, credenciales ni registros sin revisar.

@@ -21,6 +21,12 @@ sin rastreadores. El contenido y el origen público están versionados en
 
 ## Desarrollo local
 
+La extensión opcional [services-v1](../../protocol/statusline-services-v1.md)
+mantiene el snapshot de Codex para clientes antiguos y añade una lista cifrada de
+servicios para iOS actualizado. Aplica `0003_optional_services_snapshot.sql`
+**antes** del nuevo Worker. No hay que recrear la base ni volver a emparejar a
+los usuarios; un rollback del Worker conserva las columnas añadidas.
+
 1. Instala dependencias con `npm ci`.
 2. Aplica la migración: `npm run db:migrate:local`.
 3. Ejecuta `npm run dev`; el endpoint local habitual es `http://127.0.0.1:8787`.

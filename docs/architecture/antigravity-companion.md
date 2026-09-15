@@ -1,7 +1,9 @@
 # Antigravity in Companion
 
 Implemented in **0.1.22**, with automatic discovery and restored focus/watchlist
-in the **0.1.23 Companion candidate**. Mobile/widget support comes later.
+in **0.1.23**. The **0.1.24 candidate** adds encrypted iOS/widget sync through
+the [optional services extension](../../protocol/statusline-services-v1.md).
+Android remains Codex-only until its separate provider UI update.
 The [source research](antigravity-sources.md) records official documentation and
 observed vendor responses separately from implementation claims.
 
@@ -65,8 +67,10 @@ with monotonic revisions so an old event cannot resurrect a removed service.
   scheduler. Hidden WebViews do not own polling. Sleep may delay a read; missed
   ticks are skipped. Focus/manual requests reuse results under 60 seconds old.
   **Scan again** explicitly bypasses that cache without unpinning the source.
-- There is no new relay request for AGY. Codex publishes on its existing path
-  without waiting for Google. A Google timeout/error cannot replace Codex data.
+- From 0.1.24, independent collector results feed a coalesced encrypted inventory.
+  The first inventory waits for both discovery results; later slow Google reads
+  do not hold Codex's collection/UI lock. A Google failure cannot replace Codex
+  with fabricated quota. Older relays continue receiving the Codex projection.
 - CLI must be in the verified read-only command family: major 1, at least
   1.1.11. The only quota invocation is `--print /usage --output-format json`.
   Returned metadata must identify the built-in, zero turns and zero token counts.
@@ -107,7 +111,12 @@ The existing [v1 protocol](../../protocol/statusline-relay-v1.md) is unchanged:
 - If Codex becomes unavailable, no fabricated Codex snapshot is published.
   Existing mobile freshness behavior remains intact; AGY is local-only.
 
-### Required contract for the mobile follow-up
+### Mobile follow-up in 0.1.24 / iOS 1.1.0
+
+The [services-v1 specification](../../protocol/statusline-services-v1.md) defines
+the implemented additive rollout, cache rules and old-reader compatibility.
+The [security review](../security/services-sync/security-review.md) records its
+controls and outstanding release gates. The invariants below remain mandatory.
 
 Do not add static AGY/Claude tabs to mobile. The authenticated, encrypted
 Companion snapshot must carry the user's enabled provider manifest, separate

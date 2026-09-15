@@ -4,6 +4,9 @@ export const NONCE_BYTES = 12;
 export const MAX_CIPHERTEXT_BYTES = 4_096;
 export const CHANNEL_TTL_SECONDS = 30 * 24 * 60 * 60;
 export const PAIRING_TTL_SECONDS = 10 * 60;
+export const SERVICES_CAPABILITY = "services-v1";
+export const SERVICES_MEDIA_TYPE =
+  "application/vnd.statusline.services-v1+json";
 
 const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/u;
 const CHANNEL_PATTERN =
@@ -14,6 +17,38 @@ export interface SnapshotEnvelope {
   readonly sequence: number;
   readonly nonce: string;
   readonly ciphertext: string;
+}
+
+export interface ServicesEnvelope extends SnapshotEnvelope {
+  readonly payloadKind: "services-v1";
+}
+
+export interface ServicesPublication {
+  readonly services: ServicesEnvelope;
+  readonly codex: SnapshotEnvelope | null;
+}
+
+export function parseServicesPublication(value: unknown): ServicesPublication {
+  const object = readObject(value);
+  const rawServices = readObject(object.services);
+  if (rawServices.payloadKind !== SERVICES_CAPABILITY) {
+    throw new ProtocolError("Unsupported services payload.");
+  }
+  const services: ServicesEnvelope = {
+    ...parseSnapshotEnvelope(rawServices),
+    payloadKind: SERVICES_CAPABILITY,
+  };
+  const codex =
+    object.codex == null ? null : parseSnapshotEnvelope(object.codex);
+  if (
+    codex &&
+    (codex.sequence !== services.sequence || codex.nonce === services.nonce)
+  ) {
+    throw new ProtocolError(
+      "Snapshots require one sequence and independent nonces.",
+    );
+  }
+  return { services, codex };
 }
 
 export class ProtocolError extends Error {}

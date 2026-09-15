@@ -222,6 +222,7 @@ struct StatusRelayEnvelope: Codable, Equatable, Sendable {
     let sequence: Int64
     let nonce: String
     let ciphertext: String
+    var payloadKind: String? = nil
 }
 
 private struct CreateChannelResponse: Decodable, Sendable {
@@ -351,13 +352,16 @@ private final class StatusRelayAPIClient {
         try requireStatus(response, data: data, allowed: [201, 204])
     }
 
-    func fetch(_ credentials: StatusRelayReaderCredentials) async throws -> StatusRelayEnvelope? {
+    func fetch(_ credentials: StatusRelayReaderCredentials, services: Bool = false) async throws -> StatusRelayEnvelope? {
         var request = URLRequest(
             url: try configuration.endpoint(
                 "v1", "channels", credentials.channelID.uuidString.lowercased(), "snapshot"
             )
         )
         authorize(&request, token: credentials.readerToken)
+        if services {
+            request.setValue("application/vnd.statusline.services-v1+json", forHTTPHeaderField: "Accept")
+        }
         let (data, response) = try await perform(request)
         if response.statusCode == 404,
            let body = try? decoder.decode(RelayAPIErrorEnvelope.self, from: data),
@@ -444,6 +448,31 @@ private final class StatusRelayAPIClient {
 }
 
 enum StatusRelayCrypto {
+    static func decryptServices(
+        envelope: StatusRelayEnvelope,
+        credentials: StatusRelayReaderCredentials
+    ) throws -> AgentServicesSnapshot {
+        if envelope.payloadKind == nil {
+            var status = try decrypt(envelope: envelope, credentials: credentials)
+            status.relayChannelID = credentials.channelID
+            return .legacy(status, sequence: envelope.sequence)
+        }
+        guard envelope.protocolVersion == 1, envelope.payloadKind == "services-v1",
+              envelope.sequence > 0, envelope.sequence <= 9_007_199_254_740_991,
+              let nonce = envelope.nonce.base64URLData, nonce.count == 12,
+              let data = envelope.ciphertext.base64URLData, data.count > 16, data.count <= 4_096 else {
+            throw CodexRelayError.invalidSnapshot
+        }
+        do {
+            let sealed = try AES.GCM.SealedBox(nonce: AES.GCM.Nonce(data: nonce),
+                ciphertext: data.dropLast(16), tag: data.suffix(16))
+            let plaintext = try AES.GCM.open(sealed, using: SymmetricKey(data: credentials.encryptionKey),
+                authenticating: Data("statusline.services.v1|\(credentials.channelID.uuidString.lowercased())|\(envelope.sequence)".utf8))
+            return try AgentServicesSnapshot.decode(plaintext, channelID: credentials.channelID, sequence: envelope.sequence)
+        } catch let error as CodexRelayError { throw error }
+        catch { throw CodexRelayError.invalidSnapshot }
+    }
+
     static func encrypt(
         status: CodexUsageStatus,
         credentials: StatusRelayPublisherCredentials,
@@ -474,7 +503,7 @@ enum StatusRelayCrypto {
         envelope: StatusRelayEnvelope,
         credentials: StatusRelayReaderCredentials
     ) throws -> CodexUsageStatus {
-        guard envelope.protocolVersion == 1,
+        guard envelope.payloadKind == nil, envelope.protocolVersion == 1,
               envelope.sequence > 0,
               let nonceData = envelope.nonce.base64URLData,
               nonceData.count == 12,
@@ -656,7 +685,15 @@ protocol CodexRelayReading {
     func pairedChannelID() throws -> UUID?
     func pair(using uri: String) async throws
     func fetchStatus() async throws -> CodexUsageStatus?
+    func fetchServices() async throws -> AgentServicesSnapshot?
     func disconnect() throws
+}
+
+extension CodexRelayReading {
+    // Existing local/test adapters remain valid; production negotiates below.
+    func fetchServices() async throws -> AgentServicesSnapshot? {
+        try await fetchStatus().map { .legacy($0) }
+    }
 }
 
 @MainActor
@@ -738,6 +775,19 @@ final class CodexRelayReaderRepository: CodexRelayReading {
 
     func disconnect() throws {
         try store.deleteReader()
+    }
+
+    func fetchServices() async throws -> AgentServicesSnapshot? {
+        guard let configuration, let client else { throw CodexRelayError.notConfigured }
+        guard let credentials = try store.loadReader() else { throw CodexRelayError.notPaired }
+        guard credentials.protocolVersion == 1, credentials.relayOrigin == configuration.origin else {
+            throw CodexRelayError.endpointMismatch
+        }
+        let envelope = try await client.fetch(credentials, services: true)
+        try Task.checkCancellation()
+        guard try store.loadReader() == credentials else { throw CancellationError() }
+        guard let envelope else { return nil }
+        return try StatusRelayCrypto.decryptServices(envelope: envelope, credentials: credentials)
     }
 }
 

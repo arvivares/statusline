@@ -7,13 +7,17 @@
 "{0} D AGO" = "HACE {0} D";
 "{0} H AGO" = "HACE {0} H";
 "{0} LEFT" = "{0} LIBRE";
+"{0} min" = "{0} min";
 "{0} MIN AGO" = "HACE {0} MIN";
 "{0} percent remaining" = "{0} por ciento restante";
 "{0} percent remaining. Resets {1}" = "{0} por ciento restante. Reinicia {1}";
+"{0} quota" = "Cuota de {0}";
 "{0} WINDOW" = "PERIODO DE {0}";
 "{0}% downloaded" = "{0}% descargado";
+"{0}% left" = "{0}% libre";
 "{0}% LEFT" = "{0}% LIBRE";
 "{0}% of the weekly quota used." = "{0}% de la cuota semanal consumido.";
+"{0}h" = "{0}h";
 "/ COMPANION / DATA PLANE" = "/ COMPANION / DATOS";
 "% LEFT" = "% LIBRE";
 "A new version of Statusline Companion is ready." = "Hay una nueva versión de Statusline Companion disponible.";
@@ -25,6 +29,7 @@
 "Add service" = "Añadir servicio";
 "AES-256-GCM · 30 DAY TTL" = "AES-256-GCM · CADUCA EN 30 DÍAS";
 "AES-256-GCM · UNIVERSAL" = "AES-256-GCM · UNIVERSAL";
+"Agent usage" = "Uso de agentes";
 "An encrypted snapshot is available on this device." = "Hay una muestra cifrada disponible en este dispositivo.";
 "Antigravity · {0}% left" = "Antigravity · {0}% libre";
 "Antigravity · no weekly data" = "Antigravity · sin datos semanales";
@@ -57,6 +62,7 @@
 "Check relay" = "Comprobar relay";
 "Check scan" = "Comprobar escaneo";
 "Check that you are signed in to the CLI, then refresh." = "Comprueba que has iniciado sesión en la CLI y vuelve a actualizar.";
+"Check this service in Companion." = "Revisa este servicio en Companion.";
 "Check your Codex session in the desktop app or CLI, then refresh." = "Revisa tu sesión de Codex en la app de escritorio o la CLI y actualiza.";
 "Check your connection and try again in a few seconds." = "Comprueba la conexión y vuelve a intentarlo en unos segundos.";
 "CHECKING" = "COMPROBANDO";
@@ -194,6 +200,7 @@
 "E2E · UNIVERSAL" = "E2E · UNIVERSAL";
 "E2E / AES-256-GCM" = "E2E / AES-256-GCM";
 "E2E ENCRYPTED" = "CIFRADO E2E";
+"Enable a supported service in your Companion to see its quota here." = "Activa un servicio compatible en tu Companion para ver su cuota aquí.";
 "Encrypted relay active" = "Relay cifrado activo";
 "Encrypted snapshot" = "Muestra cifrada";
 "Encrypted snapshot published {0}." = "Muestra cifrada publicada {0}.";
@@ -210,6 +217,7 @@
 "EXECUTABLE.PATH" = "RUTA.EJECUTABLE";
 "FALLBACK.INPUT" = "ENTRADA.MANUAL";
 "FAULT" = "ERROR";
+"Gemini sync requires an updated relay and iOS app. Android continues showing Codex." = "La sincronización de Gemini requiere un relay y una app de iOS actualizados. Android sigue mostrando Codex.";
 "Gemini weekly limit" = "Límite semanal de Gemini";
 "Generating independent read/write credentials." = "Generando credenciales independientes de lectura y escritura.";
 "Global npm" = "npm global";
@@ -272,6 +280,7 @@
 "NO SAMPLE" = "SIN MUESTRA";
 "No sample published" = "Sin muestra publicada";
 "NO SAMPLE PUBLISHED" = "SIN MUESTRA PUBLICADA";
+"No services to show. Open Statusline Companion on your computer." = "No hay servicios para mostrar. Abre Statusline Companion en tu ordenador.";
 "NO SHORT WINDOW" = "SIN PERIODO CORTO";
 "No Statusline data. Tap to open the app and connect a companion." = "Statusline sin datos. Toca para abrir la aplicación y conectar un companion.";
 "Not configured" = "Sin configurar";
@@ -337,6 +346,8 @@
 "QR expires {0}" = "El QR caduca a las {0}";
 "QR EXPIRES {0}" = "EL QR CADUCA A LAS {0}";
 "Quit" = "Salir";
+"Quota period" = "Período de cuota";
+"Quotas from your Companion. The small widget follows the service selected in Statusline." = "Cuotas de tu Companion. El widget pequeño muestra el servicio seleccionado en Statusline.";
 "READER.STATE / LIVE" = "ESTADO.LECTOR / ACTIVO";
 "READING" = "LEYENDO";
 "READING · LOCAL METADATA ONLY" = "LEYENDO · SOLO METADATOS LOCALES";
@@ -427,6 +438,7 @@
 "Short window" = "Ventana corta";
 "SHORT.WINDOW" = "PERIODO.CORTO";
 "Show" = "Mostrar";
+"Show this service in the main view and small widget" = "Mostrar este servicio en la vista principal y el widget pequeño";
 "Sign in to Codex in your desktop app or CLI, then refresh." = "Inicia sesión en Codex desde la app de escritorio o la CLI y actualiza.";
 "Sign in to the selected Antigravity source, then refresh." = "Inicia sesión en el origen de Antigravity seleccionado y actualiza.";
 "SOURCE" = "ORIGEN";
@@ -455,6 +467,7 @@
 "Statusline could not complete the update. Please try again." = "Statusline no pudo completar la actualización. Inténtalo de nuevo.";
 "Statusline could not verify the selected Codex executable." = "Statusline no pudo verificar el ejecutable de Codex seleccionado.";
 "Statusline is an independent app and is not affiliated with or endorsed by OpenAI." = "Statusline es una aplicación independiente y no está afiliada ni respaldada por OpenAI.";
+"Statusline is independent and is not affiliated with or endorsed by OpenAI or Google." = "Statusline es independiente y no está afiliada ni respaldada por OpenAI o Google.";
 "Statusline needs a ChatGPT session, not an API key." = "Statusline necesita una sesión de ChatGPT, no una API key.";
 "Statusline needs camera permission to scan the QR. You can also paste the link manually." = "Statusline necesita permiso de cámara para escanear el QR. También puedes pegar el vínculo manualmente.";
 "Statusline stores only the selected local path." = "Statusline solo guarda la ruta local seleccionada.";
@@ -496,6 +509,7 @@
 "The read token, encryption key and latest sample will be removed from this device. The companion will keep its channel." = "Se eliminarán de este dispositivo el token de lectura, la clave de cifrado y la última muestra. El companion conservará su canal.";
 "The received snapshot has an invalid format." = "La muestra recibida no tiene un formato válido.";
 "The relay returned an unexpected response." = "El relay devolvió una respuesta inesperada.";
+"The relay stores only AES-256-GCM encrypted quota snapshots. Your agents’ credentials and the encryption key never reach the relay." = "El relay solo almacena muestras de cuota cifradas con AES-256-GCM. Las credenciales de tus agentes y la clave de cifrado nunca llegan al relay.";
 "The relay stores only an AES-256-GCM encrypted snapshot. Codex credentials and the encryption key never leave your devices." = "El relay almacena únicamente una muestra cifrada con AES-256-GCM. Las credenciales de Codex y la clave de cifrado nunca salen de tus dispositivos.";
 "The relay took too long to respond." = "El relay tardó demasiado en responder.";
 "The relay URL is invalid." = "La URL del relay no es válida.";
@@ -552,6 +566,7 @@
 "Volta" = "Volta";
 "VOLTA" = "VOLTA";
 "WAITING" = "EN ESPERA";
+"Waiting for a fresh sample" = "Esperando una muestra reciente";
 "Waiting for authorization" = "Esperando autorización";
 "Waiting for local sample" = "Esperando muestra local";
 "WAITING FOR LOCAL SAMPLE" = "ESPERANDO MUESTRA LOCAL";

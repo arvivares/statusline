@@ -8,9 +8,11 @@ use ring::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::services_snapshot::ServicesSnapshot;
 use crate::usage::UsageResponse;
 
 pub const PROTOCOL_VERSION: u8 = 1;
+pub const SERVICES_CAPABILITY: &str = "services-v1";
 const KEY_BYTES: usize = 32;
 const NONCE_BYTES: usize = 12;
 const TAG_BYTES: usize = 16;
@@ -53,6 +55,20 @@ pub struct SnapshotEnvelope {
     pub ciphertext: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ServicesEnvelope {
+    pub payload_kind: String,
+    #[serde(flatten)]
+    pub envelope: SnapshotEnvelope,
+}
+
+#[derive(Serialize)]
+pub struct ServicesPublication {
+    pub services: ServicesEnvelope,
+    pub codex: Option<SnapshotEnvelope>,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublisherCredentials {
@@ -67,6 +83,8 @@ pub struct PublisherCredentials {
     pub expires_at: i64,
     pub last_sequence: Option<u64>,
     pub last_published_at: Option<i64>,
+    #[serde(default)]
+    pub last_services_published_at: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -89,6 +107,9 @@ pub struct ChannelMetadata {
     pub pairing_expires_at: i64,
     pub last_published_at: Option<i64>,
     pub expires_at: i64,
+    #[serde(default)]
+    pub capabilities: Vec<String>,
+    pub services_last_published_at: Option<i64>,
 }
 
 #[derive(Debug, thiserror::Error, PartialEq)]
@@ -123,6 +144,7 @@ impl PublisherCredentials {
             expires_at: response.expires_at,
             last_sequence: None,
             last_published_at: None,
+            last_services_published_at: None,
         })
     }
 
@@ -163,6 +185,49 @@ fn encrypt_snapshot_with_nonce(
     key_bytes: &[u8],
     nonce_bytes: &[u8],
 ) -> Result<SnapshotEnvelope, ProtocolError> {
+    encrypt_payload(snapshot, sequence, key_bytes, nonce_bytes, &aad(channel_id))
+}
+
+pub fn encrypt_services(
+    snapshot: &ServicesSnapshot,
+    credentials: &PublisherCredentials,
+    sequence: u64,
+) -> Result<ServicesEnvelope, ProtocolError> {
+    let key = decode_exact(&credentials.encryption_key, KEY_BYTES)?;
+    let nonce = random_bytes(NONCE_BYTES)?;
+    encrypt_services_with_nonce(snapshot, &credentials.channel_id, sequence, &key, &nonce)
+}
+
+fn encrypt_services_with_nonce(
+    snapshot: &ServicesSnapshot,
+    channel_id: &str,
+    sequence: u64,
+    key_bytes: &[u8],
+    nonce_bytes: &[u8],
+) -> Result<ServicesEnvelope, ProtocolError> {
+    let authenticated = format!(
+        "statusline.services.v1|{}|{sequence}",
+        channel_id.to_ascii_lowercase()
+    );
+    Ok(ServicesEnvelope {
+        payload_kind: SERVICES_CAPABILITY.into(),
+        envelope: encrypt_payload(
+            snapshot,
+            sequence,
+            key_bytes,
+            nonce_bytes,
+            authenticated.as_bytes(),
+        )?,
+    })
+}
+
+fn encrypt_payload(
+    payload: &impl Serialize,
+    sequence: u64,
+    key_bytes: &[u8],
+    nonce_bytes: &[u8],
+    authenticated: &[u8],
+) -> Result<SnapshotEnvelope, ProtocolError> {
     if key_bytes.len() != KEY_BYTES || nonce_bytes.len() != NONCE_BYTES {
         return Err(ProtocolError::InvalidCredentials);
     }
@@ -173,8 +238,8 @@ fn encrypt_snapshot_with_nonce(
         .try_into()
         .map_err(|_| ProtocolError::InvalidCredentials)?;
     let nonce = Nonce::assume_unique_for_key(nonce_array);
-    let mut plaintext = serde_json::to_vec(snapshot).map_err(|_| ProtocolError::Encryption)?;
-    key.seal_in_place_append_tag(nonce, Aad::from(aad(channel_id)), &mut plaintext)
+    let mut plaintext = serde_json::to_vec(payload).map_err(|_| ProtocolError::Encryption)?;
+    key.seal_in_place_append_tag(nonce, Aad::from(authenticated), &mut plaintext)
         .map_err(|_| ProtocolError::Encryption)?;
     if plaintext.len() <= TAG_BYTES {
         return Err(ProtocolError::Encryption);
@@ -193,6 +258,9 @@ pub fn validate_channel_metadata(metadata: &ChannelMetadata) -> Result<(), Proto
         || metadata.expires_at <= 0
         || metadata.reader_claimed_at.is_some_and(|value| value <= 0)
         || metadata.last_published_at.is_some_and(|value| value <= 0)
+        || metadata
+            .services_last_published_at
+            .is_some_and(|value| value <= 0)
     {
         return Err(ProtocolError::InvalidCredentials);
     }
@@ -271,6 +339,44 @@ mod tests {
     const CHANNEL: &str = "018f47a0-7b52-4c15-9e55-5f0f266b7440";
 
     #[test]
+    fn services_matches_the_shared_node_and_swift_vector() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../protocol/fixtures/aes-gcm-services-v1.json"
+        ))
+        .unwrap();
+        let snapshot = serde_json::from_value(fixture["plaintext"].clone()).unwrap();
+        let encrypted =
+            super::encrypt_services_with_nonce(&snapshot, CHANNEL, 42, &[7_u8; 32], &[4_u8; 12])
+                .unwrap();
+        assert_eq!(encrypted.payload_kind, "services-v1");
+        assert_eq!(
+            encrypted.envelope.ciphertext,
+            fixture["ciphertextAndTag"].as_str().unwrap()
+        );
+        assert_eq!(
+            serde_json::to_string(&snapshot).unwrap(),
+            fixture["plaintextUtf8"].as_str().unwrap()
+        );
+        for aad in [
+            format!("statusline.services.v1|{CHANNEL}|43"),
+            String::from_utf8(super::aad(CHANNEL)).unwrap(),
+        ] {
+            let key = LessSafeKey::new(UnboundKey::new(&aead::AES_256_GCM, &[7_u8; 32]).unwrap());
+            let mut bytes = URL_SAFE_NO_PAD
+                .decode(&encrypted.envelope.ciphertext)
+                .unwrap();
+            assert!(
+                key.open_in_place(
+                    Nonce::assume_unique_for_key([4_u8; 12]),
+                    Aad::from(aad.as_bytes()),
+                    &mut bytes
+                )
+                .is_err()
+            );
+        }
+    }
+
+    #[test]
     fn pairing_uri_contains_only_short_lived_reader_material() {
         let credentials = PublisherCredentials {
             protocol_version: PROTOCOL_VERSION,
@@ -283,6 +389,7 @@ mod tests {
             expires_at: 1_902_592_000,
             last_sequence: None,
             last_published_at: None,
+            last_services_published_at: None,
         };
 
         let uri = credentials.pairing_uri().expect("valid pairing URI");

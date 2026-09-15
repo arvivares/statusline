@@ -13,6 +13,8 @@ pub mod macos_update;
 pub mod refresh;
 #[path = "../../src-tauri/src/relay_protocol.rs"]
 pub mod relay_protocol;
+#[path = "../../src-tauri/src/services_snapshot.rs"]
+pub mod services_snapshot;
 #[path = "../../src-tauri/src/update_policy.rs"]
 pub mod update_policy;
 #[path = "../../src-tauri/src/update_signature.rs"]
