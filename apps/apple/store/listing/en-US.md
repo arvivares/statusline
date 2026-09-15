@@ -54,10 +54,13 @@ https://statusline.inmerzion.io/support
 
 https://statusline.inmerzion.io/
 
-## What's new — 1.0.1
+## What's new — 1.0.3
 
-• The widget can now request the latest synchronized sample without opening the app. iOS determines the refresh schedule.
-• Automatic refresh while the app is open, clearer sample age, and safer offline and re-pairing behavior.
-• Privacy and support pages on the official website, in English and Spanish.
+Meet Still Signature: a cleaner way to check your Codex quota.
 
-After updating, open Statusline once to preserve your existing pairing and enable shared widget access.
+• Refreshed iPhone dashboard and Home Screen widget with softer corners and simpler typography.
+• Segmented progress bars inspired by the Statusline icon, with a white marker at the end of the remaining quota.
+• More space between the quota number and percent symbol.
+• Private sync and manual-update controls expand only when you need them.
+
+Your existing pairing is preserved. The widget synchronization fix from 1.0.2 is included. Open the app once after updating; keep Companion running on an awake computer. iOS determines widget refresh timing.

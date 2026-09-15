@@ -19,8 +19,8 @@
       "versionCode": 17
     },
     "ios": {
-      "version": "1.0.1",
-      "build": 6,
+      "version": "1.0.3",
+      "build": 8,
       "distribution": "app-store-manual"
     }
   }

@@ -1,0 +1,1 @@
+Android beta aligned with Statusline 0.1.17. The existing QR/manual pairing and widget behavior are unchanged. Install Companion 0.1.17 separately for desktop update notifications. Please test the Google Play update and confirm that your pairing, quota display and widget are preserved.

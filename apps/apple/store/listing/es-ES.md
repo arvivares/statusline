@@ -54,10 +54,13 @@ https://statusline.inmerzion.io/es/support
 
 https://statusline.inmerzion.io/es/
 
-## Novedades — 1.0.1
+## Novedades — 1.0.3
 
-• El widget puede solicitar la última muestra sincronizada sin abrir la app. iOS decide cuándo se actualiza.
-• Actualización automática con la app abierta, antigüedad de la muestra más clara y mejoras al trabajar sin conexión o volver a emparejar.
-• Páginas de privacidad y soporte en el sitio oficial, en español e inglés.
+Presentamos Still Signature: una forma más sencilla de consultar tu cuota de Codex.
 
-Después de actualizar, abre Statusline una vez para conservar el emparejamiento y habilitar el acceso compartido del widget.
+• Panel del iPhone y widget renovados, con esquinas suaves y una tipografía más sencilla.
+• Barras segmentadas inspiradas en el icono de Statusline, con un marcador blanco al final de la cuota restante.
+• Más espacio entre el número y el símbolo de porcentaje.
+• Los controles de sincronización privada y actualización manual se despliegan cuando los necesitas.
+
+Se conserva tu emparejamiento y la corrección de sincronización del widget de la versión 1.0.2. Abre la app una vez después de actualizar y mantén Companion ejecutándose en un ordenador despierto. iOS decide cuándo actualiza el widget.
