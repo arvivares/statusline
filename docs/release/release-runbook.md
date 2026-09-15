@@ -13,12 +13,13 @@ component versions and curated release-notes path. For the current public beta:
 - prepared product tag: `v0.1.21` (not created merely by preparing this file);
 - desktop and Android candidate version: `0.1.21`;
 - Android candidate: `versionCode 17` (Google Play submission is separate);
-- recorded iOS source version: `1.0.1 (6)`, unchanged by this maintenance
-  release. This metadata is not a live App Store/TestFlight status report.
-  iOS delivery is manual; verify the actual candidate in App Store Connect
-  before taking any store action. Build 5 has an empty widget endpoint and
-  must not be publicly released. Historical device and submission evidence is
-  in [iOS validation](../../apps/apple/store/validation.md).
+- recorded iOS source version: `1.0.3 (8)`, the separate App Store delivery.
+  App Store Connect and the public Spanish listing were verified on 14 September
+  2026: **Ready for Distribution**, version **1.0.3**. This dated observation is
+  not a live status report; verify App Store Connect before any store action.
+  It includes Still Signature and the widget fix previously validated in build 6
+  and released in 1.0.2. Do not reuse the defective build 5.
+  See [iOS 1.0.3 evidence](../../apps/apple/store/validation-1.0.3.md).
 - GitHub prerelease platforms: Windows, Linux, macOS and Android. Windows explicitly
   uses `windowsSigning: unsigned-preview`; no SignPath certificate has been approved.
 
@@ -174,8 +175,10 @@ draft is published automatically with GitHub's **Pre-release** flag.
   record the [Still Signature checks](../architecture/still-signature.md): native
   corner clipping, Linux/XWayland rendering, Windows first launch and Android
   widgets at minimum size, larger text, empty data and 100% quota in EN/ES.
-- There are no iOS source changes since 0.1.20. Do not rebuild or replace its
-  separate TestFlight/App Review submission as part of this maintenance release.
+- There are no iOS runtime changes since 0.1.20. Its separately uploaded
+  `1.0.3 (8)` is published; recording its version here does not require rebuilding
+  or replacing the binary. The build-6 TestFlight confirmation is historical QA,
+  not a new physical-device test of build 8.
   GitHub Actions never builds iOS; App Store and Google Play actions are separate.
 
 Release assets use portable ASCII filenames. Whitespace emitted by native packagers is

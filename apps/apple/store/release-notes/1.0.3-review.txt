@@ -1,0 +1,40 @@
+App Review information - 13 September 2026 - version 1.0.3 (8)
+
+This update introduces the Still Signature design for the iPhone dashboard and WidgetKit widget. It retains the widget relay configuration fix distributed in 1.0.2 (7), existing pairing and the same encryption/synchronization protocol. It supports Codex only; it does not provide chat or generate content. The English listing remains "Statusline: Agent Quota".
+
+1. Screen recording and screenshots
+A 52-second physical-iPhone recording from the original submission is attached again for reference. It demonstrates launch, QR pairing, refreshing and adding the widget; it predates the new visual design and must not be treated as a recording of build 8. Each localization has five new Still Focus images: quota, reset/sample age, pairing, the actual Home Screen widget, and privacy/local control. They use the current native UI on an isolated iPhone simulator and the public 70% local example, not live account data. The app layout passed both localized screenshot UI tests. No new physical-device test of build 8 is claimed.
+
+2. Purpose and target audience
+Statusline is an independent, open-source utility for developers using Codex. It shows remaining weekly quota, reset time and sample age on an iPhone and Home Screen widget, so users can check usage away from their computer.
+
+3. Setup and access
+No Statusline account, registration, login, account deletion, subscription, advertising, paid features or in-app purchases. No reviewer credentials or sample files are required.
+
+Without external setup:
+1. Launch Statusline.
+2. Tap "View local demo" / "Ver demo local" in the quota panel.
+3. The app stores a 70% example locally; add the Statusline widget from the iPhone Home Screen.
+4. Expand "Manual update" / "Actualización manual" to paste and save a complete weekly-limit line if desired.
+
+Optional live synchronization:
+1. Have a compatible local Codex installation signed in to your own account. A supported desktop app's bundled runtime may be discovered without a separate CLI installation.
+2. Install the free Statusline Companion on Windows, Linux or macOS.
+3. Open Settings, check the Codex tab, then select Mobile sync > Create pairing.
+4. On iPhone expand "Private sync" / "Sincronización privada", then use "Scan QR" / "Escanear QR" or paste the private link.
+5. Keep the computer awake and Companion running. Open the iPhone app once after an upgrade for shared widget access. App and widget read encrypted samples independently; iOS determines widget refresh timing, not a guaranteed real-time interval.
+
+4. External services and tools
+- OpenAI Codex / local Codex App Server: Companion reads quota metadata from the user's authenticated local session. Codex credentials, prompts, conversations and source code are not sent to the phone or relay.
+- Cloudflare Workers and D1: optional relay for AES-256-GCM encrypted quota snapshots. It stores credential hashes, operational timestamps and opaque ciphertext, not the encryption key or plaintext quota.
+- Apple camera APIs: user-initiated QR scanning processed on device; camera frames are not stored by Statusline.
+- WidgetKit, App Groups and Keychain: native widget, local shared cache and private credential storage.
+
+5. Regions
+China mainland remains excluded. Features, content and free pricing are consistent across the enabled storefronts.
+
+6. Regulated industry / protected material
+Statusline is not a regulated-industry service and does not distribute protected third-party content. It is not affiliated with, sponsored by or endorsed by OpenAI. Product names identify compatibility with locally installed software.
+
+Privacy: https://statusline.inmerzion.io/privacy
+Source and setup: https://github.com/arvivares/statusline
