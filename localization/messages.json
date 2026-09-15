@@ -555,5 +555,17 @@
   "Details": "Detalles",
   "Codex": "Codex",
   "Statusline": "Statusline",
-  "OpenAI · Codex": "OpenAI · Codex"
+  "OpenAI · Codex": "OpenAI · Codex",
+  "Other limits": "Otras cuotas",
+  "Other window": "Otra ventana",
+  "Services": "Servicios",
+  "Disabled": "Desactivado",
+  "Antigravity is detected automatically. Only Google quota is read; Claude and GPT limits are excluded.": "Antigravity se detecta automáticamente. Solo se lee la cuota de Google; se excluyen los límites de Claude y GPT.",
+  "On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically.": "En la primera detección, Desktop tiene prioridad sobre CLI. Se recuerda la fuente elegida y nunca se cambia de cuenta automáticamente.",
+  "View {0}: {1}% remaining": "Ver {0}: {1}% restante",
+  "Unavailable": "No disponible",
+  "Stale · {0}": "Sin actualizar · {0}",
+  "Detected source: {0}": "Fuente detectada: {0}",
+  "No Antigravity installation found. Discovery will check again automatically.": "No se encontró una instalación de Antigravity. Se volverá a buscar automáticamente.",
+  "Antigravity is disabled. Enable automatic detection to show it again.": "Antigravity está desactivado. Activa la detección automática para volver a mostrarlo."
 }

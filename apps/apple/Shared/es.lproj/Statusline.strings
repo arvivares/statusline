@@ -30,6 +30,8 @@
 "Antigravity · no weekly data" = "Antigravity · sin datos semanales";
 "Antigravity · unavailable" = "Antigravity · no disponible";
 "Antigravity did not respond. Codex and its mobile sync are unaffected." = "Antigravity no respondió. Codex y su sincronización móvil no se ven afectados.";
+"Antigravity is detected automatically. Only Google quota is read; Claude and GPT limits are excluded." = "Antigravity se detecta automáticamente. Solo se lee la cuota de Google; se excluyen los límites de Claude y GPT.";
+"Antigravity is disabled. Enable automatic detection to show it again." = "Antigravity está desactivado. Activa la detección automática para volver a mostrarlo.";
 "Antigravity settings could not be saved or read." = "No se pudieron guardar o leer los ajustes de Antigravity.";
 "AUTH / REQUIRED" = "ACCESO / REQUERIDO";
 "AUTH.CHALLENGE" = "VERIFICACIÓN.ACCESO";
@@ -176,11 +178,13 @@
 "DESKTOP APP" = "APP DE ESCRITORIO";
 "Desktop companion" = "Companion de escritorio";
 "Details" = "Detalles";
+"Detected source: {0}" = "Fuente detectada: {0}";
 "Detected via" = "Detectado mediante";
 "Device connected with encryption." = "Dispositivo conectado de forma cifrada.";
 "Device connected. Waiting for the companion’s first sample." = "Dispositivo conectado. Esperando la primera muestra del companion.";
 "Device connected. Waiting for the first publication." = "Dispositivo conectado. Esperando la primera publicación.";
 "DEVICE.PAIRING" = "VINCULAR.DISPOSITIVO";
+"Disabled" = "Desactivado";
 "Disconnect" = "Desconectar";
 "DISCONNECT" = "DESCONECTAR";
 "DISCONNECT.READER" = "DESCONECTAR.LECTOR";
@@ -255,6 +259,7 @@
 "NEXT WEEKLY WINDOW" = "PRÓXIMO PERIODO SEMANAL";
 "No active QR" = "Sin QR activo";
 "NO ACTIVE QR" = "SIN QR ACTIVO";
+"No Antigravity installation found. Discovery will check again automatically." = "No se encontró una instalación de Antigravity. Se volverá a buscar automáticamente.";
 "No Antigravity service is enabled." = "No hay ningún servicio de Antigravity habilitado.";
 "No Codex data. Open Statusline Companion on your computer." = "Sin datos de Codex. Abre Statusline Companion en tu ordenador.";
 "No Codex executable detected" = "No se detectó ningún ejecutable de Codex";
@@ -283,6 +288,7 @@
 "OFFICIAL SETUP" = "INSTALACIÓN OFICIAL";
 "OFFLINE" = "SIN CONEXIÓN";
 "OFFLINE · NO SAMPLE AVAILABLE" = "SIN CONEXIÓN · SIN MUESTRA DISPONIBLE";
+"On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically." = "En la primera detección, Desktop tiene prioridad sobre CLI. Se recuerda la fuente elegida y nunca se cambia de cuenta automáticamente.";
 "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits." = "Habilita solo una instalación de Antigravity de confianza que utilices. Statusline lee la cuota de Google, no los límites de Claude o GPT.";
 "Open OpenAI" = "Abrir OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Abre la configuración de origen para detectar o seleccionar un ejecutable local de Codex.";
@@ -293,6 +299,8 @@
 "Opens an external web page" = "Abre una página web externa";
 "OR PASTE" = "O PEGA EL VÍNCULO";
 "ORIGIN" = "ORIGEN";
+"Other limits" = "Otras cuotas";
+"Other window" = "Otra ventana";
 "PAIR DEVICE" = "VINCULAR DISPOSITIVO";
 "Pair this device with Statusline Companion first." = "Empareja primero este dispositivo con Statusline Companion.";
 "PAIR.READER" = "VINCULAR.LECTOR";
@@ -411,6 +419,7 @@
 "Select a Codex executable or macOS app" = "Selecciona un ejecutable de Codex o una app de macOS";
 "SELECT EXECUTABLE" = "ELEGIR EJECUTABLE";
 "Select the Codex executable" = "Selecciona el ejecutable de Codex";
+"Services" = "Servicios";
 "SESSION STAYS ON MAC" = "SESIÓN SOLO EN EL MAC";
 "SESSION.STORAGE" = "ALMACÉN.SESIÓN";
 "Set up Codex" = "Configurar Codex";
@@ -427,6 +436,7 @@
 "SOURCE / OFFLINE" = "ORIGEN / SIN CONEXIÓN";
 "SOURCE / TIMEOUT" = "ORIGEN / TIEMPO AGOTADO";
 "SOURCE.HOST" = "EQUIPO.ORIGEN";
+"Stale · {0}" = "Sin actualizar · {0}";
 "STANDALONE" = "INSTALACIÓN DIRECTA";
 "Standalone install" = "Instalación independiente";
 "STATUS" = "ESTADO";
@@ -501,6 +511,7 @@
 "This is the latest version of Statusline Companion." = "Esta es la última versión de Statusline Companion.";
 "This private QR has expired. Create a new pairing when the mobile device is ready." = "Este QR privado ha caducado. Crea un nuevo vínculo cuando el móvil esté listo.";
 "Too many requests. Wait a moment before trying again." = "Demasiadas solicitudes. Espera un momento antes de reintentar.";
+"Unavailable" = "No disponible";
 "UNAVAILABLE" = "NO DISPONIBLE";
 "Unexpected quota format" = "Formato de cuota inesperado";
 "UNIVERSAL / E2E" = "UNIVERSAL / E2E";
@@ -534,6 +545,7 @@
 "VERSION" = "VERSIÓN";
 "Version manager" = "Gestor de versiones";
 "VERSION MANAGER" = "GESTOR DE VERSIONES";
+"View {0}: {1}% remaining" = "Ver {0}: {1}% restante";
 "VIEW DEMO" = "VER DEMO";
 "View downloads" = "Ver descargas";
 "View local demo" = "Ver demo local";

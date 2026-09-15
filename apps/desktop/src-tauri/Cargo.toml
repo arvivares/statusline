@@ -1,6 +1,6 @@
 [package]
 name = "statusline-desktop"
-version = "0.1.22"
+version = "0.1.23"
 description = "The cross-platform Statusline companion for Codex usage"
 authors = ["Inmerzion"]
 license = "MIT"

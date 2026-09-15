@@ -222,10 +222,14 @@ async fn current_usage(app: AppHandle) -> Result<UsageResponse, String> {
 }
 
 async fn refresh_antigravity_native(app: &AppHandle) -> antigravity::View {
+    refresh_antigravity_with_age(app, FOCUS_REFRESH_AGE).await
+}
+
+async fn refresh_antigravity_with_age(app: &AppHandle, age: Duration) -> antigravity::View {
     let directory = app.path().app_config_dir().ok();
     let view = app
         .state::<antigravity::State>()
-        .refresh(directory.as_deref(), FOCUS_REFRESH_AGE)
+        .refresh(directory.as_deref(), age)
         .await;
     let _ = app.emit("antigravity-updated", &view);
     update_provider_tooltip(app, None, Some(&view));
@@ -233,8 +237,16 @@ async fn refresh_antigravity_native(app: &AppHandle) -> antigravity::View {
 }
 
 #[tauri::command]
-async fn antigravity_status(app: AppHandle) -> antigravity::View {
-    refresh_antigravity_native(&app).await
+async fn antigravity_status(app: AppHandle, force: Option<bool>) -> antigravity::View {
+    refresh_antigravity_with_age(
+        &app,
+        if force == Some(true) {
+            Duration::ZERO
+        } else {
+            FOCUS_REFRESH_AGE
+        },
+    )
+    .await
 }
 
 #[tauri::command]

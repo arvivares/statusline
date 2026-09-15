@@ -31,13 +31,17 @@ export type GoogleUsage =
     }>;
 export type GoogleView = Readonly<{
   revision: number;
-  settings: { source: GoogleSource | null; path: string | null };
+  settings: {
+    source: GoogleSource | null;
+    path: string | null;
+    automatic: boolean;
+  };
   usage: GoogleUsage;
 }>;
 
 export const disabledGoogle: GoogleView = {
   revision: 0,
-  settings: { source: null, path: null },
+  settings: { source: null, path: null, automatic: false },
   usage: { status: "disabled" },
 };
 
@@ -104,6 +108,11 @@ export function parseGoogleView(input: unknown): GoogleView {
     raw = record(envelope.usage);
   const selected = source(settings.source);
   if (
+    settings.automatic !== undefined &&
+    typeof settings.automatic !== "boolean"
+  )
+    throw new Error("Invalid Google discovery policy");
+  if (
     typeof envelope.revision !== "number" ||
     !Number.isSafeInteger(envelope.revision) ||
     envelope.revision < 0
@@ -146,7 +155,11 @@ export function parseGoogleView(input: unknown): GoogleView {
   } else throw new Error("Invalid Google state");
   return {
     revision: envelope.revision,
-    settings: { source: selected, path: settings.path as string | null },
+    settings: {
+      source: selected,
+      path: settings.path as string | null,
+      automatic: settings.automatic === true,
+    },
     usage,
   };
 }

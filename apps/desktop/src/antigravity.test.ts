@@ -23,9 +23,28 @@ describe("per-user Google service", () => {
     const removed = { ...disabledGoogle, revision: 2 };
     expect(newerGoogleView(removed, parseGoogleView(sample()))).toBe(removed);
   });
-  it("does not create a service on upgrade", () => {
+  it("does not create a placeholder for a disabled or absent service", () => {
     expect(parseGoogleView(disabledGoogle)).toEqual(disabledGoogle);
     expect(googleIsVisible(disabledGoogle)).toBe(false);
+  });
+  it("accepts automatic discovery while preserving the selected source identity", () => {
+    const data = {
+      ...sample(),
+      settings: { source: "desktop", path: null, automatic: true },
+    };
+    expect(parseGoogleView(data).settings.automatic).toBe(true);
+    expect(googleIsVisible(parseGoogleView(data))).toBe(true);
+    const absent = {
+      ...disabledGoogle,
+      settings: { ...disabledGoogle.settings, automatic: true },
+    };
+    expect(googleIsVisible(parseGoogleView(absent))).toBe(false);
+    expect(() =>
+      parseGoogleView({
+        ...data,
+        settings: { ...data.settings, automatic: "yes" },
+      }),
+    ).toThrow();
   });
   it("shows only the configured source", () => {
     expect(googleIsVisible(parseGoogleView(sample()))).toBe(true);

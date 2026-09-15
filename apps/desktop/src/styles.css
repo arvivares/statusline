@@ -45,6 +45,17 @@ button {
 [hidden] {
   display: none !important;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 button:focus-visible,
 summary:focus-visible {
   outline: 2px solid var(--signal);
@@ -141,38 +152,128 @@ summary:focus-visible {
   color: var(--ink);
   font-weight: 550;
 }
-.provider-switch {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-top: -12px;
+.following {
+  margin-top: 18px;
 }
-.provider-switch button {
-  min-height: 36px;
-  padding: 4px 0;
+.following h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 550;
+  color: var(--muted);
+}
+.quota-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 0;
   border: 0;
-  border-bottom: 2px solid transparent;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+.quota-row:hover .row-name {
+  color: var(--signal);
+}
+.row-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 550;
+  letter-spacing: -0.02em;
+}
+.row-source,
+.row-age {
+  display: block;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.row-reading {
+  text-align: right;
+  flex-shrink: 0;
+}
+.row-number {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.05em;
+}
+.row-percent {
+  margin-left: 5px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.row-age {
+  font-size: 9px;
+}
+.quota-row[data-stale="true"] .row-age,
+.quota-row[data-status="unavailable"] .row-age {
+  color: var(--critical);
+}
+/* Keep the approved three-provider hierarchy compact without shrinking type.
+   More rows can scroll naturally; absent adapters never allocate a row. */
+body[data-many-providers="true"] .panel-heading {
+  padding-top: 8px;
+}
+body[data-many-providers="true"] .hero {
+  margin-top: 6px;
+}
+body[data-many-providers="true"] .meter-block {
+  margin-top: 14px;
+}
+body[data-many-providers="true"] .following {
+  margin-top: 8px;
+}
+body[data-many-providers="true"] .following h3 {
+  margin-bottom: 4px;
+}
+body[data-many-providers="true"] .quota-row {
+  min-height: 52px;
+  padding-block: 8px;
+}
+body[data-many-providers="true"] .footer {
+  margin-top: 7px;
+}
+body[data-many-providers="true"] .footer-meta {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+body[data-many-providers="true"] .footer-meta .updated {
+  flex: 1 1 auto;
+  text-align: left;
+}
+body[data-many-providers="true"] .update-button {
+  margin: 0;
+  flex-shrink: 0;
+}
+.window-choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 10px;
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
 }
-.provider-switch button[aria-pressed="true"] {
+.window-choice strong {
   color: var(--ink);
-  border-bottom-color: var(--signal);
+  font-weight: 550;
 }
-.provider-switch span {
-  margin-left: 4px;
-  color: var(--muted);
-  font-size: 10px;
+.window-choice:hover {
+  color: var(--ink);
+  background: var(--track);
 }
-.provider-switch:not([hidden]) + .identity {
+body[data-multi-provider="true"] .metric-cell:nth-child(n + 3),
+body[data-provider="google"] .metric-cell:nth-child(n + 3) {
   display: none;
-}
-.panel-heading:has(.provider-switch:not([hidden])) {
-  padding-top: 14px;
-}
-.panel-heading:has(.provider-switch:not([hidden])) h2 {
-  margin-top: 0;
 }
 .settings-tabs {
   gap: 18px;
@@ -336,7 +437,7 @@ body:not([data-state="ready"]) .metric-cell:last-child {
   flex-wrap: wrap;
   gap: 7px;
   border: 0;
-  padding: 7px 0 12px;
+  padding: 0 0 4px;
 }
 .metric-cell--accent {
   grid-column: 1/-1;
@@ -1108,6 +1209,14 @@ body[data-state="error"] .record-signal {
 .update-button {
   font-size: 10px;
   letter-spacing: 0;
+}
+.topbar .refresh-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  min-height: 36px;
+  padding: 8px;
+  border-radius: 50%;
 }
 .update-button {
   min-height: 32px;

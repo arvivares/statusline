@@ -30,6 +30,8 @@
 "Antigravity · no weekly data" = "Antigravity · no weekly data";
 "Antigravity · unavailable" = "Antigravity · unavailable";
 "Antigravity did not respond. Codex and its mobile sync are unaffected." = "Antigravity did not respond. Codex and its mobile sync are unaffected.";
+"Antigravity is detected automatically. Only Google quota is read; Claude and GPT limits are excluded." = "Antigravity is detected automatically. Only Google quota is read; Claude and GPT limits are excluded.";
+"Antigravity is disabled. Enable automatic detection to show it again." = "Antigravity is disabled. Enable automatic detection to show it again.";
 "Antigravity settings could not be saved or read." = "Antigravity settings could not be saved or read.";
 "AUTH / REQUIRED" = "AUTH / REQUIRED";
 "AUTH.CHALLENGE" = "AUTH.CHALLENGE";
@@ -176,11 +178,13 @@
 "DESKTOP APP" = "DESKTOP APP";
 "Desktop companion" = "Desktop companion";
 "Details" = "Details";
+"Detected source: {0}" = "Detected source: {0}";
 "Detected via" = "Detected via";
 "Device connected with encryption." = "Device connected with encryption.";
 "Device connected. Waiting for the companion’s first sample." = "Device connected. Waiting for the companion’s first sample.";
 "Device connected. Waiting for the first publication." = "Device connected. Waiting for the first publication.";
 "DEVICE.PAIRING" = "DEVICE.PAIRING";
+"Disabled" = "Disabled";
 "Disconnect" = "Disconnect";
 "DISCONNECT" = "DISCONNECT";
 "DISCONNECT.READER" = "DISCONNECT.READER";
@@ -255,6 +259,7 @@
 "NEXT WEEKLY WINDOW" = "NEXT WEEKLY WINDOW";
 "No active QR" = "No active QR";
 "NO ACTIVE QR" = "NO ACTIVE QR";
+"No Antigravity installation found. Discovery will check again automatically." = "No Antigravity installation found. Discovery will check again automatically.";
 "No Antigravity service is enabled." = "No Antigravity service is enabled.";
 "No Codex data. Open Statusline Companion on your computer." = "No Codex data. Open Statusline Companion on your computer.";
 "No Codex executable detected" = "No Codex executable detected";
@@ -283,6 +288,7 @@
 "OFFICIAL SETUP" = "OFFICIAL SETUP";
 "OFFLINE" = "OFFLINE";
 "OFFLINE · NO SAMPLE AVAILABLE" = "OFFLINE · NO SAMPLE AVAILABLE";
+"On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically." = "On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically.";
 "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits." = "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits.";
 "Open OpenAI" = "Open OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Open Source Settings to detect or select a local Codex runtime.";
@@ -293,6 +299,8 @@
 "Opens an external web page" = "Opens an external web page";
 "OR PASTE" = "OR PASTE";
 "ORIGIN" = "ORIGIN";
+"Other limits" = "Other limits";
+"Other window" = "Other window";
 "PAIR DEVICE" = "PAIR DEVICE";
 "Pair this device with Statusline Companion first." = "Pair this device with Statusline Companion first.";
 "PAIR.READER" = "PAIR.READER";
@@ -411,6 +419,7 @@
 "Select a Codex executable or macOS app" = "Select a Codex executable or macOS app";
 "SELECT EXECUTABLE" = "SELECT EXECUTABLE";
 "Select the Codex executable" = "Select the Codex executable";
+"Services" = "Services";
 "SESSION STAYS ON MAC" = "SESSION STAYS ON MAC";
 "SESSION.STORAGE" = "SESSION.STORAGE";
 "Set up Codex" = "Set up Codex";
@@ -427,6 +436,7 @@
 "SOURCE / OFFLINE" = "SOURCE / OFFLINE";
 "SOURCE / TIMEOUT" = "SOURCE / TIMEOUT";
 "SOURCE.HOST" = "SOURCE.HOST";
+"Stale · {0}" = "Stale · {0}";
 "STANDALONE" = "STANDALONE";
 "Standalone install" = "Standalone install";
 "STATUS" = "STATUS";
@@ -501,6 +511,7 @@
 "This is the latest version of Statusline Companion." = "This is the latest version of Statusline Companion.";
 "This private QR has expired. Create a new pairing when the mobile device is ready." = "This private QR has expired. Create a new pairing when the mobile device is ready.";
 "Too many requests. Wait a moment before trying again." = "Too many requests. Wait a moment before trying again.";
+"Unavailable" = "Unavailable";
 "UNAVAILABLE" = "UNAVAILABLE";
 "Unexpected quota format" = "Unexpected quota format";
 "UNIVERSAL / E2E" = "UNIVERSAL / E2E";
@@ -534,6 +545,7 @@
 "VERSION" = "VERSION";
 "Version manager" = "Version manager";
 "VERSION MANAGER" = "VERSION MANAGER";
+"View {0}: {1}% remaining" = "View {0}: {1}% remaining";
 "VIEW DEMO" = "VIEW DEMO";
 "View downloads" = "View downloads";
 "View local demo" = "View local demo";
