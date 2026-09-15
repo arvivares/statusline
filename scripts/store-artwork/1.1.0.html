@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Statusline · Still Focus · Store artwork</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --surface: #181813;
+        --ink: #f2f0eb;
+        --muted: #a09e97;
+        --gold: #efc65a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--surface);
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #stage {
+        width: 1320px;
+        height: 2868px;
+        position: relative;
+        overflow: hidden;
+        transform-origin: top left;
+        color: var(--ink);
+        background: var(--surface);
+      }
+      .brand {
+        position: absolute;
+        top: 98px;
+        left: 98px;
+        display: flex;
+        align-items: center;
+        gap: 23px;
+        font-size: 45px;
+        font-weight: 560;
+        letter-spacing: -1.5px;
+      }
+      .brand img {
+        width: 70px;
+        height: 70px;
+      }
+      .intro {
+        position: absolute;
+        left: 98px;
+        right: 98px;
+        top: 276px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 148px;
+        font-weight: 570;
+        letter-spacing: -7px;
+        line-height: 1.025;
+      }
+      h1 em {
+        color: var(--gold);
+        font-style: normal;
+      }
+      .subtitle {
+        font-size: 42px;
+        line-height: 1.3;
+        letter-spacing: -0.8px;
+        font-weight: 400;
+        margin: 38px 0 0;
+        color: var(--muted);
+      }
+      .visual {
+        position: absolute;
+        width: 1040px;
+        left: 140px;
+        top: 835px;
+        overflow: hidden;
+      }
+      .visual.phone {
+        border: 3px solid #5b5a50;
+        border-radius: 100px;
+        padding: 12px;
+        box-shadow: 0 42px 130px #0005;
+      }
+      .phone img {
+        border-radius: 85px;
+      }
+      .raw {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .detail {
+        width: 1124px;
+        left: 98px;
+        border-radius: 38px;
+      }
+      .reset .visual {
+        height: 1480px;
+      }
+      .reset .raw {
+        transform: translateY(-440px);
+      }
+      .pairing .visual {
+        top: 850px;
+        height: 950px;
+      }
+      .pairing .raw {
+        transform: translateY(-803px);
+      }
+      .privacy .visual {
+        top: 860px;
+        height: 1450px;
+      }
+      .privacy .raw {
+        transform: translateY(-865px);
+      }
+      .widget .visual {
+        top: 1000px;
+        height: 630px;
+        border-radius: 48px;
+      }
+      .widget .raw {
+        width: 1278px;
+        max-width: none;
+        transform: translate(-77px, -270px);
+      }
+      .widget .caption {
+        bottom: 425px;
+      }
+      .caption {
+        position: absolute;
+        left: 98px;
+        right: 98px;
+        bottom: 340px;
+        font-size: 46px;
+        line-height: 1.34;
+        letter-spacing: -1px;
+      }
+      .caption p {
+        margin: 0 0 26px;
+      }
+      .caption small {
+        display: block;
+        font-size: 32px;
+        line-height: 1.4;
+        color: var(--muted);
+        letter-spacing: 0;
+      }
+      .reset .caption {
+        bottom: 245px;
+      }
+      .privacy .caption {
+        bottom: 285px;
+      }
+      .note {
+        position: absolute;
+        left: 98px;
+        right: 98px;
+        bottom: 76px;
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        font-size: 25px;
+        color: var(--muted);
+      }
+      .overview .note {
+        display: none;
+      }
+      .steps {
+        display: flex;
+        gap: 40px;
+      }
+      .steps p {
+        flex: 1;
+        font-size: 38px;
+      }
+      .steps b {
+        display: block;
+        color: var(--gold);
+        font-size: 29px;
+        margin-bottom: 22px;
+        font-weight: 500;
+      }
+      #error {
+        color: #ffb4ab;
+        font-size: 40px;
+        padding: 60px;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="stage">
+      <div class="brand">
+        <img src="../../branding/statusline-symbol.svg" alt="" /><span
+          >Statusline</span
+        >
+      </div>
+      <header class="intro">
+        <h1></h1>
+        <p class="subtitle"></p>
+      </header>
+      <div class="visual"><img class="raw" alt="" /></div>
+      <div class="caption"></div>
+      <footer class="note">
+        <span class="context"></span><span class="number"></span>
+      </footer>
+    </main>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const lang = params.get("lang") === "es" ? "es" : "en";
+      const locale = lang === "es" ? "es-ES" : "en-US";
+      const platform = params.get("platform") || "ios";
+      const slide = Number(params.get("slide") || 1);
+      const copy = {
+        en: [
+          {
+            kind: "overview",
+            title: "Your quota.<br><em>At a glance.</em>",
+            sub: "Codex and Gemini, together.<br>Without returning to your desk.",
+            image: "01-quota",
+            alt: "Actual iPhone app showing Codex and Gemini with synthetic quota samples.",
+          },
+          {
+            kind: "reset",
+            title: "Know when.<br><em>Plan ahead.</em>",
+            sub: "Gemini quota from Antigravity.<br>Your reset time and latest sample.",
+            image: "02-gemini",
+            caption:
+              "<p>Remaining quota. Reset time.<br>One quiet view.</p><small>Only services enabled in your Companion appear.</small>",
+            alt: "Detail of the real quota screen, including reset and sample times.",
+          },
+          {
+            kind: "pairing",
+            title: "One scan.<br><em>You’re paired.</em>",
+            sub: "Connect your phone to Statusline Companion<br>on your computer.",
+            image: "03-private-sync",
+            caption:
+              '<div class="steps"><p><b>01</b>Open Companion<br>on your computer.</p><p><b>02</b>Show its<br>pairing QR.</p><p><b>03</b>Scan it<br>with Statusline.</p></div><small>Companion is available for macOS, Windows and Linux.</small>',
+            alt: "Actual unpaired private sync controls with the Scan QR button.",
+          },
+          {
+            kind: "widget",
+            title: "Less opening.<br><em>More knowing.</em>",
+            sub: "Add Statusline to your Home Screen.<br>Your quota stays within a glance.",
+            image: "04-widget",
+            caption:
+              "<p>Touch and hold your Home Screen.<br>Add the Statusline widget.</p><small>Widget refresh timing is managed by iOS.<br>Open Statusline to request a fresh update.</small>",
+            alt: "Actual Statusline widget on the simulator Home Screen.",
+          },
+          {
+            kind: "privacy",
+            title: "Your data.<br><em>Your control.</em>",
+            sub: "Pair privately. Stay in control.<br>Service credentials stay on your computer.",
+            image: "05-privacy",
+            caption:
+              "<p>Quota snapshots are encrypted<br>before they reach the relay.</p><small>AES-256-GCM encryption. The relay does not receive<br>your encryption key or service credentials.</small>",
+            alt: "Actual private sync and privacy controls on an unpaired simulator.",
+          },
+        ],
+        es: [
+          {
+            kind: "overview",
+            title: "Tu cuota.<br><em>A la vista.</em>",
+            sub: "Codex y Gemini, juntos.<br>Sin volver al ordenador.",
+            image: "01-quota",
+            alt: "App real de iPhone con Codex y Gemini y cuotas de ejemplo.",
+          },
+          {
+            kind: "reset",
+            title: "Tu próximo<br><em>reinicio.</em>",
+            sub: "Cuota de Gemini desde Antigravity.<br>Tu reinicio y la última muestra.",
+            image: "02-gemini",
+            caption:
+              "<p>Cuota restante. Próximo reinicio.<br>Todo en una sola vista.</p><small>Solo aparecen los servicios habilitados en tu Companion.</small>",
+            alt: "Detalle real de la cuota, el reinicio y la antigüedad de la muestra.",
+          },
+          {
+            kind: "pairing",
+            title: "Un escaneo.<br><em>Y conectados.</em>",
+            sub: "Vincula el móvil con Statusline Companion<br>en tu ordenador.",
+            image: "03-private-sync",
+            caption:
+              '<div class="steps"><p><b>01</b>Abre Companion<br>en el ordenador.</p><p><b>02</b>Muestra su QR<br>de vinculación.</p><p><b>03</b>Escanéalo<br>con Statusline.</p></div><small>Companion está disponible para macOS, Windows y Linux.</small>',
+            alt: "Controles reales de sincronización sin vincular y botón Escanear QR.",
+          },
+          {
+            kind: "widget",
+            title: "Tu cuota.<br><em>Sin abrir la app.</em>",
+            sub: "Añade Statusline a tu pantalla de inicio.<br>Tu cuota, de un vistazo.",
+            image: "04-widget",
+            caption:
+              "<p>Mantén pulsada la pantalla de inicio<br>y añade el widget de Statusline.</p><small>iOS decide cuándo se actualiza el widget.<br>Abre Statusline para solicitar una actualización.</small>",
+            alt: "Widget real de Statusline en la pantalla de inicio del simulador.",
+          },
+          {
+            kind: "privacy",
+            title: "Tus datos.<br><em>Tú decides.</em>",
+            sub: "Vincula en privado. Mantén el control.<br>Las credenciales se quedan en el ordenador.",
+            image: "05-privacy",
+            caption:
+              "<p>La cuota se cifra antes<br>de enviarse al relay.</p><small>Cifrado AES-256-GCM. El relay no recibe tu clave<br>de cifrado ni las credenciales de tus servicios.</small>",
+            alt: "Controles reales de sincronización y privacidad en un simulador sin vincular.",
+          },
+        ],
+      };
+      const selected = copy[lang][slide - 1];
+      if (platform !== "ios" || !selected)
+        throw new Error(
+          "Current native iOS assets only. Android artwork requires verified Android captures.",
+        );
+      document.documentElement.lang = lang;
+      document.title = `Statusline · Still Focus · ${locale} · ${slide}`;
+      const stage = document.querySelector("#stage");
+      stage.className = selected.kind;
+      document.querySelector("h1").innerHTML = selected.title;
+      document.querySelector(".subtitle").innerHTML = selected.sub;
+      document.querySelector(".caption").innerHTML = selected.caption || "";
+      document
+        .querySelector(".visual")
+        .classList.add(slide === 1 ? "phone" : "detail");
+      const img = document.querySelector(".raw");
+      img.alt = selected.alt;
+      img.src = `../../apps/apple/store/assets/1.1.0/source/${locale}/${selected.image}.png`;
+      img.onerror = () => {
+        document.body.dataset.ready = "error";
+        stage.innerHTML =
+          '<p id="error">Missing verified native capture — not ready for upload.</p>';
+      };
+      Promise.all([...document.images].map((i) => i.decode()))
+        .then(() => {
+          document.body.dataset.ready = "true";
+        })
+        .catch(() => {
+          document.body.dataset.ready = "error";
+        });
+      document.querySelector(".context").textContent =
+        lang === "es"
+          ? "Interfaz real · Datos de ejemplo"
+          : "Actual app · Sample data";
+      document.querySelector(".number").textContent = `0${slide} / 05`;
+      function fit() {
+        const scale = Math.min(innerWidth / 1320, 1);
+        stage.style.transform = `scale(${scale})`;
+        document.body.style.height = `${2868 * scale}px`;
+        document.body.style.width = `${1320 * scale}px`;
+      }
+      addEventListener("resize", fit);
+      fit();
+    </script>
+  </body>
+</html>
