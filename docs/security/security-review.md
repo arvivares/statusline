@@ -230,6 +230,33 @@ merged and its dependency graph is rescanned; it has not been dismissed.
 
 ## Publication gate
 
+### Companion 0.1.23 follow-up — 15 September 2026
+
+The focused discovery/display review found no open high or critical issue.
+This is a scoped source review, not an independent audit or live Windows/Linux
+account certification. Full findings and residual limitations are recorded in
+the [Antigravity security review](antigravity-security-review.md).
+
+- **Medium, mitigated — account/source substitution:** desktop
+  `src-tauri/src/antigravity.rs:349` persists first discovery before collection;
+  legacy manual selections and disabled services remain unchanged.
+  **Recommendation:** retain source-pinning and migration regression tests.
+- **Medium, mitigated — implicit executable lookup:** desktop
+  `src-tauri/src/antigravity.rs:323` limits automatic lookup to conventional
+  installation roots, not arbitrary project PATH entries.
+  **Recommendation:** keep custom paths explicit and record Windows/Linux
+  publisher-verification limitations.
+- **Low, checked — display versus publisher boundary:** desktop
+  `src/provider-focus.ts:24` and `src/main.ts` build rows with text content and
+  change local focus without publishing Google data. The relay protocol,
+  publisher implementation and encryption fixture have no diff.
+  **Recommendation:** preserve this boundary when adding mobile providers.
+
+The desktop npm audit reports zero known vulnerabilities; dependency lockfile
+changes are limited to the application's version. Native release signing and
+platform checks remain mandatory CI gates. Windows continues to be disclosed
+as an unsigned preview, not a trusted Authenticode publisher.
+
 The source-publication, account-security and repository-visibility gates are complete.
 Applied GitHub controls and the remaining binary-release gates are maintained in the
 [public repository launch checklist](../release/public-repository-checklist.md).

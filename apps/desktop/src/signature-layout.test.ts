@@ -5,6 +5,19 @@ const source = (path: string) =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 describe("Still Signature layout contracts", () => {
+  it("uses the approved focus plus open watchlist rather than provider tabs", () => {
+    const html = source("../index.html");
+    expect(html).toContain('id="provider-watchlist"');
+    expect(html).toContain('id="focus-window"');
+    expect(html.indexOf('id="provider-watchlist"')).toBeGreaterThan(
+      html.indexOf('id="meter-track"'),
+    );
+    expect(html).not.toContain('id="provider-switch"');
+    expect(html).not.toContain('id="provider-google"');
+    const css = source("./styles.css");
+    expect(css).toMatch(/\.quota-row\s*\{[^}]*background:\s*transparent/s);
+    expect(css).toMatch(/\.quota-row\s*\{[^}]*border-radius:\s*0/s);
+  });
   for (const name of [
     "statusline_widget",
     "statusline_widget_small",

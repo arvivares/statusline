@@ -4,6 +4,36 @@ Date: 2026-09-15. Scope: 0.1.22 candidate's local collector, source settings, IP
 service visibility and unchanged v1 publisher boundary. This is not an external
 audit or a certification of the vendor runtime.
 
+## 0.1.23 candidate: automatic discovery and watchlist
+
+The product request now explicitly calls for automatic discovery. This supersedes
+the default-disabled policy below for installations without saved preferences;
+historical 0.1.22 behavior is retained for explicit manual/disabled files.
+
+- **Medium — implicit executable lookup:** `antigravity.rs:289` and
+  `antigravity.rs:323` restrict automatic lookup to conventional OS/current-user
+  installation roots, not arbitrary inherited PATH/project entries. Native
+  format checks and the existing macOS signer/read-only CLI guards remain.
+  **Recommendation:** keep custom paths an explicit advanced action; actual
+  Windows/Linux vendor-publisher verification remains a documented limitation.
+- **Medium — account substitution on discovery/failure:**
+  `antigravity.rs:349` persists the first selected source before collection.
+  Desktop takes priority only on first discovery, never when a pinned CLI source
+  fails or a Desktop install appears later. `antigravity.rs:111` deserializes
+  existing files without `automatic` as manual/disabled.
+  **Recommendation:** retain migration, restart, opt-out and no-failover tests.
+- **Low — UI focus mistaken for sync source:** `src/provider-focus.ts:24` and
+  `src/main.ts` derive local focus/watchlist values without mutating Codex usage
+  or invoking the publisher. No static Claude slot or third-party AGY quota is
+  introduced. Rows use DOM `textContent`, not vendor-controlled HTML.
+  **Recommendation:** keep the relay v1 files and encrypted fixtures unchanged;
+  add future providers only through registered adapters.
+
+No outstanding high/critical finding was identified in this focused follow-up.
+Live macOS automatic discovery passed using an isolated temporary configuration;
+no saved Companion preferences, vendor account settings or pairings were modified.
+Native cross-platform and installed-upgrade QA for this follow-up remain pending.
+
 ## Resolved within this change
 
 - **High — a CLI version could interpret `/usage` as a prompt:** guard the

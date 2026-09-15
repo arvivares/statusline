@@ -1,6 +1,7 @@
 # Antigravity in Companion
 
-Candidate: **0.1.22**. Companion first; mobile and widget support comes later.
+Implemented in **0.1.22**, with automatic discovery and restored focus/watchlist
+in the **0.1.23 Companion candidate**. Mobile/widget support comes later.
 The [source research](antigravity-sources.md) records official documentation and
 observed vendor responses separately from implementation claims.
 
@@ -9,29 +10,35 @@ observed vendor responses separately from implementation claims.
 Companion is the authority for a user's service list, not a global list of all
 providers Statusline might support.
 
-| Local state                                            | Main view                                       | Collection                                                   |
-| ------------------------------------------------------ | ----------------------------------------------- | ------------------------------------------------------------ |
-| Existing Codex-only installation                       | Codex, no AGY tab or empty slot                 | Existing Codex path unchanged                                |
-| AGY not enabled                                        | No AGY placeholder                              | No AGY executable or account accessed                        |
-| AGY installed and explicitly enabled                   | Antigravity; Codex alongside it only if present | Selected Desktop **or** CLI session                          |
-| Configured AGY temporarily unavailable/signed out      | Unavailable, never an invented percentage       | Bounded retry on normal cadence                              |
-| AGY removed from Settings / executable no longer found | No AGY quota slot                               | Removal stops collection; missing executable returns locally |
-| Claude                                                 | Not offered in this release                     | No Claude collector                                          |
+| Local state                                            | Main view                                     | Collection                                                   |
+| ------------------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------ |
+| Existing Codex-only installation                       | Codex, no AGY tab or empty slot               | Existing Codex path unchanged                                |
+| AGY absent or explicitly disabled                      | No AGY placeholder                            | No AGY executable or account accessed                        |
+| AGY detected in a supported installation               | Gemini focus/watchlist; Codex only if present | Remembered Desktop **or** CLI session                        |
+| Configured AGY temporarily unavailable/signed out      | Unavailable, never an invented percentage     | Bounded retry on normal cadence                              |
+| AGY removed from Settings / executable no longer found | No AGY quota slot                             | Removal stops collection; missing executable returns locally |
+| Claude                                                 | Not offered in this release                   | No Claude collector                                          |
 
-Settings → **Add service** is a discovery/configuration action, not evidence that
-the user has that provider. It becomes **Antigravity** once enabled. Saving a
-missing installation fails without replacing the previous setting. Disabling
+Settings → **Services** offers discovery status and advanced controls, not a
+required manual add step. It becomes **Antigravity** when a source is selected.
+Saving a missing manual installation fails without replacing the previous setting. Disabling
 AGY neither signs out of Google nor disconnects a paired phone.
 
 ## Setup
 
 1. Install and sign in to the official Antigravity Desktop or AGY CLI yourself.
-2. Open Companion → Settings → Add service. Select **Desktop app** or **AGY CLI**.
-3. Leave the path empty for automatic discovery, or enter the absolute native
-   executable path. A macOS `.app` directory is also accepted.
-4. Save the source. Google weekly/five-hour limits appear when available. If
-   Codex is also installed, select either service; the other weekly reading
-   remains visible beside its name. Only one AGY session is selected at a time.
+2. Open Companion. It discovers supported local installations without requiring
+   a manual service or executable path. First discovery prefers Desktop, then CLI.
+3. The selected source is remembered **before** accessing its session. Installing
+   Desktop later, a sign-out or a failed read never switches a CLI user's account.
+4. Choose any row under **Other limits** to focus it. The other window remains a
+   small, selectable reading below the meter. Only one AGY session is selected.
+
+For advanced cases, Settings shows the detected source and **Scan again**. The
+source selector permits an explicit Desktop/CLI choice or disabling collection.
+Custom native paths (including a macOS `.app` folder) are optional, not onboarding.
+If both sources exist but the preferred one is signed out, sign in there or
+explicitly select the other source; do not merge their quotas or assume identity.
 
 The adapter does not fall back between CLI/Desktop accounts implicitly. No API
 key, Google token, account email or password is needed by Statusline. Native
@@ -45,11 +52,19 @@ Production code is in `apps/desktop/src-tauri/src/antigravity.rs` and
 `antigravity_runtime.rs`. Native IPC returns a Google-only discriminated state,
 with monotonic revisions so an old event cannot resurrect a removed service.
 
-- Default is disabled, stored separately in `antigravity-source-v1.json`.
-  There is no modification to Codex settings or the relay credential store.
+- Missing preferences default to automatic discovery. Existing v0.1.22 files
+  without `automatic` keep their explicit source or disabled state. New source
+  preferences and the automatic/disabled flag use the same separate
+  `antigravity-source-v1.json`; Codex settings and relay credentials are untouched.
+- Automatic lookup uses supported OS/current-user installation roots and trusted
+  conventional CLI directories, **not arbitrary inherited PATH entries**. Missing
+  installations are revisited on the normal native cadence. An already selected
+  source never falls back between Desktop and CLI. Advanced manual selection may
+  use PATH or an absolute custom executable as before.
 - A separate cache/lock runs alongside Codex on the existing 300-second native
   scheduler. Hidden WebViews do not own polling. Sleep may delay a read; missed
   ticks are skipped. Focus/manual requests reuse results under 60 seconds old.
+  **Scan again** explicitly bypasses that cache without unpinning the source.
 - There is no new relay request for AGY. Codex publishes on its existing path
   without waiting for Google. A Google timeout/error cannot replace Codex data.
 - CLI must be in the verified read-only command family: major 1, at least
@@ -78,7 +93,7 @@ with monotonic revisions so an old event cannot resurrect a removed service.
   ownership and use normal TLS verification, no proxy and no redirects.
   This is an internal vendor protocol, not a public API stability guarantee.
 
-## Relay compatibility: no migration in 0.1.22
+## Relay compatibility: no migration in 0.1.22 or 0.1.23
 
 The existing [v1 protocol](../../protocol/statusline-relay-v1.md) is unchanged:
 
@@ -112,6 +127,7 @@ An explicit local probe uses the production collector without Tauri, modifying
 no saved Statusline preferences or pairing:
 
 ```sh
+cargo run --manifest-path apps/desktop/runtime-tests/Cargo.toml --example antigravity_probe -- auto
 cargo run --manifest-path apps/desktop/runtime-tests/Cargo.toml --example antigravity_probe -- desktop
 cargo run --manifest-path apps/desktop/runtime-tests/Cargo.toml --example antigravity_probe -- cli
 ```
@@ -121,7 +137,8 @@ sanitized Google quota, not raw vendor responses. The standard test suite/CI
 does not invoke this example or require a vendor account.
 
 Local verification covers macOS CLI/Desktop reads, parser/error fixtures,
-preserved default settings, stale event rejection, v1 relay crypto fixtures,
+automatic Desktop discovery using a temporary preference directory, legacy
+disabled/manual settings, source precedence/pinning, stale event rejection, v1 relay crypto fixtures,
 production frontend compilation and 340 × 500 EN/ES previews. Windows/Linux
 actual account runs, installed-app background cadence, signed updater/installer
 round trips and an unchanged paired phone are required before claiming full

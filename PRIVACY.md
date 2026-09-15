@@ -12,10 +12,13 @@ The desktop companion starts the locally installed Codex App Server and reads on
 
 When a user selects a Codex executable manually, Statusline stores that local file path in its application configuration directory. The path remains on that computer and can be cleared with Source Settings → Use automatic detection.
 
-### Optional Antigravity source in Companion 0.1.22
+### Antigravity source in Companion
 
-Antigravity is disabled until you select a trusted Desktop or AGY CLI installation
-in Companion. Statusline reads Gemini weekly/five-hour quota metadata through the
+Companion 0.1.22 requires manual opt-in. Companion 0.1.23 automatically
+discovers installed Antigravity Desktop/AGY CLI sources, preferring Desktop on
+first discovery and remembering that choice. Existing explicit selections and
+disabled services are preserved; Settings lets you disable discovery or select
+another source. There is no automatic account failover. Statusline reads Gemini weekly/five-hour quota metadata through the
 selected vendor runtime. Desktop's account-status response is checked in memory
 to confirm a signed-in subscription; identity fields are discarded and are not
 stored or sent to Statusline's relay or mobile apps. Claude/GPT quota buckets are
@@ -23,9 +26,9 @@ discarded before the interface receives a reading.
 
 The vendor runtime manages its own authentication and contacts Google to retrieve
 quota. Statusline does not extract or copy Google access/refresh tokens or API
-keys. Polling uses temporary local runtime data; only the chosen source/path is
+keys. Polling uses temporary local runtime data; only the chosen source/path and discovery preference are
 persisted in Statusline's configuration, while quota readings remain in memory.
-Remove service clears the source preference and stops its collection without
+Remove service persists a disabled preference and stops its collection without
 signing out of Google or changing an existing Codex/mobile pairing. Antigravity
 quota is not sent through the relay in this Companion-only release.
 

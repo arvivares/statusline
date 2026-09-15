@@ -21,15 +21,37 @@ pub enum Source {
     Cli,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
-    /// None is the upgrade-safe default: installing an update does not opt a
-    /// user into launching another vendor's runtime or reading its session.
+    /// A discovered source is pinned just like a manual selection. Never switch
+    /// Desktop/CLI accounts because an existing source fails or disappears.
     #[serde(default)]
     pub source: Option<Source>,
     #[serde(default)]
     pub path: Option<PathBuf>,
+    /// Missing in v0.1.22 files means manual/disabled, preserving explicit choices.
+    #[serde(default)]
+    pub automatic: bool,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            source: None,
+            path: None,
+            automatic: true,
+        }
+    }
+}
+
+impl Settings {
+    pub fn disabled() -> Self {
+        Self {
+            automatic: false,
+            ..Self::default()
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -272,13 +294,19 @@ pub fn resolve(settings: &Settings) -> Result<PathBuf, Failure> {
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).map(PathBuf::from);
     let local = env::var_os("LOCALAPPDATA").map(PathBuf::from);
     let program_files = env::var_os("ProgramFiles").map(PathBuf::from);
-    let path_dirs = env::var_os("PATH")
-        .map(|v| {
-            env::split_paths(&v)
-                .filter(|p| p.is_absolute())
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
+    let path_dirs = if settings.automatic {
+        // Automatic discovery must not execute a project-local binary from an
+        // inherited PATH. Custom locations remain an explicit advanced choice.
+        automatic_path_dirs(env::consts::OS)
+    } else {
+        env::var_os("PATH")
+            .map(|v| {
+                env::split_paths(&v)
+                    .filter(|p| p.is_absolute())
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default()
+    };
     candidates(
         source,
         env::consts::OS,
@@ -290,6 +318,48 @@ pub fn resolve(settings: &Settings) -> Result<PathBuf, Failure> {
     .iter()
     .find_map(|candidate| normalize_path(candidate, source).ok())
     .ok_or(Failure::NotFound)
+}
+
+fn automatic_path_dirs(platform: &str) -> Vec<PathBuf> {
+    match platform {
+        "macos" => ["/opt/homebrew/bin", "/usr/local/bin"]
+            .into_iter()
+            .map(PathBuf::from)
+            .collect(),
+        "linux" => ["/usr/local/bin", "/usr/bin"]
+            .into_iter()
+            .map(PathBuf::from)
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn select_discovered_source(
+    mut settings: Settings,
+    mut installed: impl FnMut(Source) -> bool,
+) -> Settings {
+    if settings.automatic && settings.source.is_none() && settings.path.is_none() {
+        settings.source = [Source::Desktop, Source::Cli]
+            .into_iter()
+            .find(|source| installed(*source));
+    }
+    settings
+}
+
+fn prepare_settings(directory: &Path, settings: Settings) -> Result<Settings, Failure> {
+    let selected = select_discovered_source(settings.clone(), |source| {
+        resolve(&Settings {
+            source: Some(source),
+            ..Settings::default()
+        })
+        .is_ok()
+    });
+    // Persist before reading a session. A restart or later install must not
+    // silently move a user from CLI to Desktop (or the reverse).
+    if selected != settings {
+        save_settings(directory, &selected)?;
+    }
+    Ok(selected)
 }
 
 pub fn supported_cli_version(raw: &str) -> bool {
@@ -468,7 +538,7 @@ impl State {
         }
         let settings = directory
             .ok_or(Failure::SettingsUnavailable)
-            .and_then(load_settings);
+            .and_then(|directory| prepare_settings(directory, load_settings(directory)?));
         let revision = cache.as_ref().map_or(1, |(_, view)| view.revision + 1);
         let view = match settings {
             Ok(settings) => View {
@@ -494,6 +564,7 @@ impl State {
         // Serialize with collection so disabling cannot be undone by an older
         // in-flight result. A missing new installation never creates a service.
         let mut cache = self.0.lock().await;
+        let settings = prepare_settings(directory, settings)?;
         if settings.source.is_some() {
             resolve(&settings)?;
         }
@@ -513,11 +584,105 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    #[test]
+    fn discovery_selects_desktop_then_cli_without_requiring_configuration() {
+        for (desktop, cli, expected) in [
+            (true, true, Some(Source::Desktop)),
+            (true, false, Some(Source::Desktop)),
+            (false, true, Some(Source::Cli)),
+            (false, false, None),
+        ] {
+            let selected = select_discovered_source(Settings::default(), |source| match source {
+                Source::Desktop => desktop,
+                Source::Cli => cli,
+            });
+            assert_eq!(selected.source, expected);
+            assert!(selected.automatic);
+        }
+    }
+
+    #[test]
+    fn discovery_never_overrides_a_pinned_source_or_explicit_opt_out() {
+        for original in [
+            Settings::disabled(),
+            Settings {
+                source: Some(Source::Cli),
+                ..Settings::default()
+            },
+            Settings {
+                source: Some(Source::Desktop),
+                automatic: false,
+                path: None,
+            },
+        ] {
+            let selected = select_discovered_source(original.clone(), |_| {
+                panic!("must not probe another account")
+            });
+            assert_eq!(selected, original);
+        }
+    }
+
+    #[test]
+    fn discovering_later_preserves_source_across_restart_and_other_settings() {
+        let absent = select_discovered_source(Settings::default(), |_| false);
+        assert_eq!(absent.source, None);
+        let selected = select_discovered_source(absent, |source| source == Source::Cli);
+        let directory = tempfile::tempdir().unwrap();
+        fs::write(
+            directory.path().join("settings.json"),
+            b"unchanged Codex settings",
+        )
+        .unwrap();
+        save_settings(directory.path(), &selected).unwrap();
+        let restored = select_discovered_source(load_settings(directory.path()).unwrap(), |_| {
+            panic!("new Desktop install must not change the pinned CLI source")
+        });
+        assert_eq!(restored.source, Some(Source::Cli));
+        assert!(restored.automatic);
+        assert_eq!(
+            fs::read(directory.path().join("settings.json")).unwrap(),
+            b"unchanged Codex settings"
+        );
+    }
+
+    #[test]
+    fn legacy_settings_keep_manual_selections_and_disabled_services() {
+        let directory = tempfile::tempdir().unwrap();
+        assert!(load_settings(directory.path()).unwrap().automatic);
+        for source in [Value::Null, json!("cli"), json!("desktop")] {
+            fs::write(
+                directory.path().join(SETTINGS_FILE),
+                serde_json::to_vec(&json!({"source":source,"path":null})).unwrap(),
+            )
+            .unwrap();
+            let settings = load_settings(directory.path()).unwrap();
+            assert!(!settings.automatic);
+            assert_eq!(serde_json::to_value(settings.source).unwrap(), source);
+        }
+    }
+
+    #[test]
+    fn automatic_discovery_does_not_use_inherited_project_paths() {
+        assert_eq!(
+            automatic_path_dirs("linux"),
+            vec![PathBuf::from("/usr/local/bin"), PathBuf::from("/usr/bin")]
+        );
+        assert_eq!(
+            automatic_path_dirs("macos"),
+            vec![
+                PathBuf::from("/opt/homebrew/bin"),
+                PathBuf::from("/usr/local/bin")
+            ]
+        );
+        assert!(automatic_path_dirs("windows").is_empty());
+    }
+
     #[tokio::test]
-    async fn upgrade_disabled_refresh_and_remove_never_touch_legacy_state() {
+    async fn explicitly_disabled_refresh_and_remove_never_touch_legacy_state() {
         let directory = tempfile::tempdir().unwrap();
         let legacy = directory.path().join("settings.json");
         fs::write(&legacy, b"original Codex settings").unwrap();
+        save_settings(directory.path(), &Settings::disabled()).unwrap();
         let state = State::default();
         let initial = state
             .refresh(Some(directory.path()), std::time::Duration::from_secs(60))
@@ -529,7 +694,7 @@ mod tests {
             .await;
         assert_eq!(cached.revision, 1);
         let removed = state
-            .configure(directory.path(), Settings::default())
+            .configure(directory.path(), Settings::disabled())
             .await
             .unwrap();
         assert_eq!(removed.revision, 2);
@@ -540,20 +705,21 @@ mod tests {
     #[tokio::test]
     async fn a_missing_new_source_does_not_replace_settings() {
         let directory = tempfile::tempdir().unwrap();
-        save_settings(directory.path(), &Settings::default()).unwrap();
+        save_settings(directory.path(), &Settings::disabled()).unwrap();
         let result = State::default()
             .configure(
                 directory.path(),
                 Settings {
                     source: Some(Source::Desktop),
                     path: Some(directory.path().join("missing/language_server")),
+                    automatic: false,
                 },
             )
             .await;
         assert!(result.is_err());
         assert_eq!(
             load_settings(directory.path()).unwrap(),
-            Settings::default()
+            Settings::disabled()
         );
     }
 
@@ -657,6 +823,7 @@ mod tests {
             &Settings {
                 source: Some(Source::Desktop),
                 path: None,
+                automatic: false,
             },
         )
         .unwrap();
@@ -668,7 +835,7 @@ mod tests {
             load_settings(dir.path()).unwrap().source,
             Some(Source::Desktop)
         );
-        save_settings(dir.path(), &Settings::default()).unwrap();
+        save_settings(dir.path(), &Settings::disabled()).unwrap();
         assert!(load_settings(dir.path()).unwrap().source.is_none());
     }
     #[cfg(unix)]

@@ -22,6 +22,19 @@
             <span id="live-label" data-i18n="READING">READING</span>
           </div>
           <button
+            class="settings-button refresh-button"
+            id="refresh-button"
+            type="button"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M15.7 7.1A6.2 6.2 0 1 0 16 11" />
+              <path d="M12.8 3.8h3.6v3.6" />
+            </svg>
+            <span class="sr-only" id="refresh-label" data-i18n="Refresh"
+              >Refresh</span
+            >
+          </button>
+          <button
             class="settings-button"
             id="settings-button"
             type="button"
@@ -42,30 +55,10 @@
 
       <section class="quota-plane" aria-live="polite">
         <header class="panel-heading">
-          <div
-            class="provider-switch"
-            id="provider-switch"
-            role="group"
-            aria-label="Your services"
-            data-i18n-aria-label="Your services"
-            hidden
-          >
-            <button type="button" id="provider-codex" aria-pressed="true">
-              Codex <span id="watch-codex"></span>
-            </button>
-            <button
-              type="button"
-              id="provider-google"
-              aria-pressed="false"
-              hidden
-            >
-              Antigravity <span id="watch-google"></span>
-            </button>
-          </div>
           <p class="identity" id="provider-identity">
             OpenAI · <strong>Codex</strong>
           </p>
-          <h2 data-i18n="Weekly">Weekly</h2>
+          <h2 id="focus-heading" tabindex="-1" data-i18n="Weekly">Weekly</h2>
         </header>
 
         <div class="hero">
@@ -134,11 +127,19 @@
           </div>
 
           <div class="metric-cell">
-            <dt data-i18n="Short window">Short window</dt>
-            <dd id="short-value">—</dd>
-            <span id="short-detail" data-i18n="NOT PUBLISHED"
-              >NOT PUBLISHED</span
-            >
+            <dt class="sr-only" data-i18n="Other window">Other window</dt>
+            <dd>
+              <button
+                class="window-choice"
+                id="focus-window"
+                type="button"
+                hidden
+              >
+                <span id="short-detail">—</span>
+                <strong id="short-value">—</strong>
+                <span aria-hidden="true">↗</span>
+              </button>
+            </dd>
           </div>
 
           <div class="metric-cell">
@@ -156,6 +157,16 @@
           </div>
         </dl>
 
+        <section
+          class="following"
+          id="provider-watchlist"
+          aria-labelledby="following-title"
+          hidden
+        >
+          <h3 id="following-title" data-i18n="Other limits">Other limits</h3>
+          <div id="provider-rows"></div>
+        </section>
+
         <div class="record-line" hidden>
           <div>
             <span class="record-label" data-i18n="STATUS.RECORD"
@@ -170,13 +181,6 @@
       </section>
 
       <footer class="footer">
-        <button class="refresh-button" id="refresh-button" type="button">
-          <svg viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M15.7 7.1A6.2 6.2 0 1 0 16 11" />
-            <path d="M12.8 3.8h3.6v3.6" />
-          </svg>
-          <span id="refresh-label" data-i18n="REFRESH NOW">REFRESH NOW</span>
-        </button>
         <div class="footer-meta">
           <p
             class="updated"
@@ -247,9 +251,9 @@
             aria-selected="false"
             aria-controls="google-settings-view"
             tabindex="-1"
-            data-i18n="Add service"
+            data-i18n="Services"
           >
-            Add service
+            Services
           </button>
           <button
             class="settings-tab"
@@ -361,21 +365,32 @@
           </div>
           <p
             class="google-note"
-            data-i18n="Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits."
+            data-i18n="Antigravity is detected automatically. Only Google quota is read; Claude and GPT limits are excluded."
           >
-            Only enable a trusted Antigravity installation that you use.
-            Statusline reads Google quota, not Claude or GPT limits.
+            Antigravity is detected automatically. Only Google quota is read;
+            Claude and GPT limits are excluded.
           </p>
+          <p class="google-note" id="google-detection" aria-live="polite"></p>
           <label class="google-field" for="google-source"
             ><span data-i18n="Local source">Local source</span>
             <select id="google-source">
-              <option value="" data-i18n="Not connected">Not connected</option>
+              <option value="automatic" data-i18n="Automatic detection">
+                Automatic detection
+              </option>
+              <option value="" data-i18n="Disabled">Disabled</option>
               <option value="desktop" data-i18n="Desktop app">
                 Desktop app
               </option>
               <option value="cli">AGY CLI</option>
             </select>
           </label>
+          <p
+            class="google-note"
+            data-i18n="On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically."
+          >
+            On first detection, Desktop takes priority over CLI. The selected
+            source is remembered and never switches accounts automatically.
+          </p>
           <details class="source-guidance">
             <summary data-i18n="Custom installation">
               Custom installation
@@ -401,6 +416,13 @@
           </details>
           <div class="source-actions">
             <button
+              class="source-secondary"
+              id="google-scan"
+              type="button"
+              data-i18n="Scan again"
+            >
+              Scan again</button
+            ><button
               class="source-primary"
               id="google-save"
               type="button"

@@ -45,8 +45,8 @@ Existing store screenshots are not evidence that the design has shipped there.
 ### Companion settings
 
 Settings extends the same 340 × 500 surface as the quota view. It uses a simple
-header, unboxed **Codex / Add service / Mobile sync** tabs (Add service becomes
-Antigravity after it is configured in the 0.1.22 candidate), sentence-case labels, aligned rows
+header, unboxed **Codex / Services / Mobile sync** tabs (Services becomes
+Antigravity when detected), sentence-case labels, aligned rows
 and 36 px rounded actions. The active tab has a restrained gold underline.
 No legacy telemetry labels or nested grid panels are shown.
 
@@ -67,11 +67,30 @@ view is inert while Settings is open. EN/ES labels use the shared catalog.
 The desktop continues to show real Codex weekly and optional short-window data,
 account information and relay state. Mobile retains the weekly snapshot supported
 by protocol v1; it does not invent a short-window value or Antigravity quotas.
-The 0.1.22 candidate adds an opt-in Google-only Antigravity adapter in Companion.
-Its unboxed provider selector replaces the identity line only when both services
-are present, with the other service's weekly reading beside its name. It does not
-enlarge the 340 × 500 window. Unconfigured services have no quota placeholder;
-temporary failures stay explicit. Antigravity hides the Codex-only relay indicator.
+Companion 0.1.23 restores the approved **focus + watchlist** structure;
+the provider tabs shipped in 0.1.22 were not the approved multi-agent layout.
+
+- Keep a centered source/name identity, a window heading, the main number and
+  segmented meter. Codex starts on weekly; Gemini starts on five hours when
+  available. An unboxed secondary-window button changes focus, not relay data.
+- Below it, **Other limits / Otras cuotas** contains open, full-width rows for
+  every other detected provider: name, source/window, remaining value and sample
+  time. Use one thin separator per row, no enclosing card and no provider tabs.
+- Selecting a row exchanges it with the main focus, preserving the last selected
+  window for each provider while Companion runs. Keyboard focus moves to the new
+  heading; background row updates preserve the focused row when it still exists.
+- `provider-focus.ts` defines an adapter-driven list rather than fixed slots for
+  Codex/AGY/Claude. Claude is not rendered or offered before its adapter exists.
+  A one-service installation has no empty watchlist or missing-provider prompt.
+- Refresh is an accessible header action next to Settings. The footer keeps the
+  sample time and updater. Do not enlarge the 340 × 500 window or reintroduce
+  nested account/source cards to accommodate the watchlist.
+- Preserve the later approved refinements: 28 px outer corners, compact type,
+  12 px percent gap, logo-rhythm stripes and a fully white terminal stripe.
+
+Antigravity is discovered automatically in 0.1.23; explicit disabled
+and manually selected sources from 0.1.22 survive the upgrade. Temporary failures
+stay explicit. Antigravity never inherits Codex's mobile-sync indicator.
 The [delivery contract](antigravity-companion.md) defers mobile/provider manifests.
 
 Refresh, pairing, manual fallback on iOS, local demos, legal links and updater
