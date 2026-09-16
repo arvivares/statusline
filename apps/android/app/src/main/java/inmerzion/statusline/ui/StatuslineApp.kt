@@ -3,10 +3,10 @@ package inmerzion.statusline.ui
 import inmerzion.statusline.localization.L10n
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.platform.LocalDensity
 import kotlin.math.ceil
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,13 +42,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,7 +68,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import inmerzion.statusline.StatuslineUiState
 import inmerzion.statusline.StatuslineViewModel
 import inmerzion.statusline.SyncPhase
-import inmerzion.statusline.protocol.UsageStatus
+import inmerzion.statusline.protocol.AgentProviderId
+import inmerzion.statusline.protocol.AgentProviderReading
+import inmerzion.statusline.protocol.AgentQuotaPeriod
+import inmerzion.statusline.protocol.AgentQuotaWindow
 import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.math.max
@@ -67,6 +79,7 @@ import kotlin.math.max
 @Composable
 fun StatuslineApp(
     viewModel: StatuslineViewModel,
+    onSelectProvider: (AgentProviderId) -> Unit,
     onScanPairing: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenSupport: () -> Unit,
@@ -74,7 +87,21 @@ fun StatuslineApp(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var pairingPresented by remember { mutableStateOf(false) }
     var disconnectPresented by remember { mutableStateOf(false) }
-    var syncExpanded by remember { mutableStateOf(false) }
+    var syncExpanded by rememberSaveable { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+    val focusHeading = remember { FocusRequester() }
+    var requestedFocus by remember { mutableStateOf<AgentProviderId?>(null) }
+    val periods = remember { mutableStateMapOf<AgentProviderId, AgentQuotaPeriod>() }
+    val focused = state.focusedProvider
+
+    LaunchedEffect(focused?.id) {
+        // A background refresh must not steal focus from a control or an open dialog.
+        if (requestedFocus != null && focused?.id == requestedFocus) {
+            scrollState.scrollTo(0)
+            focusHeading.requestFocus()
+        }
+        requestedFocus = null
+    }
 
     LaunchedEffect(state.phase) {
         if (state.phase == SyncPhase.SYNCED || state.phase == SyncPhase.WAITING_FOR_DESKTOP) {
@@ -90,37 +117,60 @@ fun StatuslineApp(
         ) {
             Column(
                 modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .widthIn(max = 720.dp)
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(horizontal = 28.dp, vertical = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 DataPlaneHeader(state.phase)
-                state.status?.let { status ->
-                    QuotaPanel(status, state.phase)
-                } ?: WaitingPanel(state.phase)
-                if (state.status != null) {
+                if (focused != null) {
+                    AgentFocusPanel(
+                        provider = focused,
+                        period = periods[focused.id] ?: focused.defaultPeriod,
+                        onSelectPeriod = { periods[focused.id] = it },
+                        isDemo = state.isDemo,
+                        focusRequester = focusHeading,
+                    )
+                    AgentWatchlist(
+                        providers = state.inventory?.providers.orEmpty().filter { it.id != focused.id },
+                        periods = periods,
+                        isDemo = state.isDemo,
+                        onSelect = { id ->
+                            requestedFocus = id
+                            onSelectProvider(id)
+                        },
+                    )
                     SecondaryButton(
                         label = L10n.text("Refresh"),
-                        enabled = !state.isBusy,
+                        enabled = state.isPaired && !state.isBusy,
                         onClick = { viewModel.refresh() },
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                     )
                     PlaneDivider()
-                    TextButton(onClick = { syncExpanded = !syncExpanded }) {
+                    TextButton(
+                        onClick = { syncExpanded = !syncExpanded },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).semantics {
+                            stateDescription = L10n.text(if (syncExpanded) "Expanded" else "Collapsed")
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = DataPlaneColors.Ink),
+                    ) {
                         Text(L10n.text("Private sync"))
                         Spacer(Modifier.weight(1f))
-                        Text(if (syncExpanded) "−" else "+")
+                        Text(if (syncExpanded) "−" else "+", modifier = Modifier.clearAndSetSemantics {})
                     }
+                } else {
+                    WaitingPanel(state.phase, hasInventory = state.inventory != null)
                 }
-                if (state.status == null || syncExpanded) RelayPanel(
+                if (focused == null || syncExpanded) RelayPanel(
                     state = state,
                     onRefresh = { viewModel.refresh() },
                     onPair = { pairingPresented = true },
                     onDisconnect = { disconnectPresented = true },
-                    onShowDemo = viewModel::showDemo,
-                    onClearDemo = viewModel::clearDemo,
+                    onShowDemo = { if (!state.isPaired && !state.isBusy) viewModel.showDemo() },
+                    onClearDemo = { if (!state.isPaired && !state.isBusy) viewModel.clearDemo() },
                 )
                 state.feedback?.let { feedback ->
                     FeedbackPanel(
@@ -169,65 +219,276 @@ private fun DataPlaneHeader(phase: SyncPhase) {
 }
 
 @Composable
-private fun QuotaPanel(status: UsageStatus, phase: SyncPhase) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(L10n.text("OpenAI · Codex"), style = MaterialTheme.typography.bodyMedium, color = DataPlaneColors.Muted)
-        Text(L10n.text("Weekly"), fontSize = 20.sp, fontWeight = FontWeight.Medium,
-            color = DataPlaneColors.Ink, modifier = Modifier.padding(top = 8.dp))
-        BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 22.dp)) {
-            val numeralSize = (maxWidth.value / 3.0f / LocalDensity.current.fontScale).coerceAtMost(120f).sp
+private fun AgentFocusPanel(
+    provider: AgentProviderReading,
+    period: AgentQuotaPeriod,
+    onSelectPeriod: (AgentQuotaPeriod) -> Unit,
+    isDemo: Boolean,
+    focusRequester: FocusRequester,
+) {
+    val activePeriod = provider.activePeriod(period)
+    val window = provider.window(activePeriod)
+    val ready = provider.status == "ready" && window != null
+    val percentage = window?.remainingPercentage?.coerceIn(0, 100) ?: 0
+    val providerName = provider.displayLabel
+    val windowLabel = window?.displayLabel ?: L10n.text("Unavailable")
+
+    DataPlaneSurface {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Row(
-                modifier = Modifier.align(Alignment.Center).clearAndSetSemantics {
-                    contentDescription = L10n.text("{0} percent remaining", status.remainingPercentage)
-                },
-                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(status.remainingPercentage.toString(), fontSize = numeralSize,
-                    fontWeight = FontWeight.Medium, letterSpacing = (-4).sp,
-                    color = DataPlaneColors.Ink, maxLines = 1)
-                Text("%", fontSize = 32.sp, color = DataPlaneColors.Muted,
-                    modifier = Modifier.padding(start = 12.dp, bottom = 14.dp))
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(focusRequester)
+                        .focusable()
+                        .semantics {
+                            contentDescription = L10n.text("Focused service: {0}", providerName)
+                        },
+                ) {
+                    Text(
+                        providerName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = DataPlaneColors.Ink,
+                    )
+                    PlaneLabel(provider.sourceLabel)
+                }
+                PlaneLabel(
+                    if (ready) windowLabel else L10n.text("Unavailable"),
+                    tint = if (ready) DataPlaneColors.Signal else DataPlaneColors.Muted,
+                )
+            }
+            PlaneDivider()
+            Column(
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clearAndSetSemantics {
+                            contentDescription = if (ready) {
+                                L10n.text("{0} percent remaining", percentage)
+                            } else {
+                                L10n.text("Unavailable")
+                            }
+                        },
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = if (ready) percentage.toString() else "—",
+                        fontSize = 88.sp,
+                        lineHeight = 88.sp,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = (-4).sp,
+                        color = DataPlaneColors.Ink,
+                        maxLines = 1,
+                    )
+                    Text(
+                        text = if (ready) "%" else L10n.text("NO DATA"),
+                        fontSize = if (ready) 30.sp else 12.sp,
+                        color = DataPlaneColors.Muted,
+                        modifier = Modifier.padding(start = 12.dp, bottom = if (ready) 12.dp else 18.dp),
+                    )
+                }
+                Text(
+                    text = if (ready) L10n.text("remaining") else L10n.text("Check this service in Companion."),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DataPlaneColors.Muted,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                )
+                QuotaMeter(percentage, empty = !ready)
+                if (ready) {
+                    Text(
+                        text = L10n.text("Resets") + " " + formatDate(window.resetAtEpochSeconds, "dd MMM · HH:mm"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = DataPlaneColors.Muted,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    )
+                }
+                if (provider.hasBothWindows) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .heightIn(min = 48.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        listOf(AgentQuotaPeriod.WEEKLY, AgentQuotaPeriod.SHORT_WINDOW).forEach { candidate ->
+                            val selected = activePeriod == candidate
+                            TextButton(
+                                onClick = { onSelectPeriod(candidate) },
+                                modifier = Modifier
+                                    .heightIn(min = 48.dp)
+                                    .semantics {
+                                        stateDescription = if (selected) L10n.text("Selected") else L10n.text("Not selected")
+                                    },
+                                colors = ButtonDefaults.textButtonColors(
+                                    contentColor = if (selected) DataPlaneColors.Ink else DataPlaneColors.Muted,
+                                ),
+                            ) {
+                                Text(
+                                    candidate.label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                )
+                            }
+                        }
+                    }
+                }
+                Text(
+                    text = when {
+                        isDemo -> L10n.text("DEMO SAMPLE")
+                        !ready -> L10n.text("Waiting for a fresh sample")
+                        else -> L10n.text("Last sample: {0}", relativeAge(provider.updatedAtEpochSeconds))
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DataPlaneColors.Muted,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                )
             }
         }
-        Text(L10n.text("remaining"), style = MaterialTheme.typography.bodyMedium, color = DataPlaneColors.Muted)
-        Spacer(Modifier.height(28.dp))
-        QuotaMeter(status.remainingPercentage)
-        Text(
-            L10n.text("Resets") + " " + formatDate(status.resetAtEpochSeconds, "dd MMM · HH:mm"),
-            style = MaterialTheme.typography.bodySmall, color = DataPlaneColors.Muted,
-            modifier = Modifier.padding(top = 14.dp),
-        )
-        Text(
-            if (status.isDemo) L10n.text("DEMO SAMPLE")
-            else L10n.text("Last sample: {0}", relativeAge(status.updatedAtEpochSeconds)),
-            style = MaterialTheme.typography.bodySmall,
-            color = if (phase == SyncPhase.ERROR) DataPlaneColors.Critical else DataPlaneColors.Muted,
-            modifier = Modifier.padding(top = 28.dp),
-        )
     }
 }
 
 @Composable
-private fun WaitingPanel(phase: SyncPhase) {
+private fun AgentWatchlist(
+    providers: List<AgentProviderReading>,
+    periods: Map<AgentProviderId, AgentQuotaPeriod>,
+    isDemo: Boolean,
+    onSelect: (AgentProviderId) -> Unit,
+) {
+    if (providers.isEmpty()) return
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PlaneLabel(L10n.text("WATCHLIST"), tint = DataPlaneColors.Ink)
+            Spacer(Modifier.weight(1f))
+            PlaneLabel(L10n.text("SELECT SERVICE"))
+        }
+        Spacer(Modifier.height(4.dp))
+        providers.forEach { provider ->
+            val period = provider.activePeriod(periods[provider.id] ?: provider.defaultPeriod)
+            val window = provider.window(period)
+            val ready = provider.status == "ready" && window != null
+            val percentage = window?.remainingPercentage?.coerceIn(0, 100)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .clickable { onSelect(provider.id) }
+                    .semantics {
+                        contentDescription = provider.watchlistDescription(isDemo)
+                    }
+                    .padding(horizontal = 2.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        provider.displayLabel,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DataPlaneColors.Ink,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    PlaneLabel(if (ready) window.displayLabel else L10n.text("Unavailable"))
+                }
+                Text(
+                    if (ready) "$percentage%" else "—",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (ready) DataPlaneColors.Ink else DataPlaneColors.Muted,
+                )
+                Text(
+                    "›",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = DataPlaneColors.Muted,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            PlaneDivider()
+        }
+    }
+}
+
+private val AgentQuotaPeriod.label: String
+    get() = when (this) {
+        AgentQuotaPeriod.WEEKLY -> L10n.text("Weekly")
+        AgentQuotaPeriod.SHORT_WINDOW -> L10n.text("Short window")
+    }
+
+private val AgentProviderReading.sourceLabel: String
+    get() = when (id) {
+        AgentProviderId.CODEX -> "OpenAI"
+        AgentProviderId.ANTIGRAVITY -> "Antigravity · Google"
+    }
+
+private val AgentProviderReading.displayLabel: String
+    get() = when (id) {
+        AgentProviderId.CODEX -> L10n.text("OpenAI · Codex")
+        AgentProviderId.ANTIGRAVITY -> L10n.text("Antigravity · Gemini")
+    }
+
+private val AgentProviderReading.hasBothWindows: Boolean
+    get() = weekly != null && shortWindow != null
+
+private fun AgentProviderReading.activePeriod(requested: AgentQuotaPeriod): AgentQuotaPeriod = when {
+    requested == AgentQuotaPeriod.WEEKLY && weekly != null -> requested
+    requested == AgentQuotaPeriod.SHORT_WINDOW && shortWindow != null -> requested
+    weekly != null -> AgentQuotaPeriod.WEEKLY
+    else -> AgentQuotaPeriod.SHORT_WINDOW
+}
+
+private val AgentQuotaWindow.displayLabel: String
+    get() = when {
+        windowMinutes >= 8_640 -> L10n.text("Weekly")
+        windowMinutes % 60 == 0 -> L10n.text("{0}h", windowMinutes / 60)
+        else -> L10n.text("{0} min", windowMinutes)
+    }
+
+private fun AgentProviderReading.watchlistDescription(isDemo: Boolean): String {
+    val window = window(activePeriod(defaultPeriod))
+    val value = if (status == "ready" && window != null) {
+        L10n.text("{0} percent remaining", window.remainingPercentage)
+    } else {
+        L10n.text("Unavailable")
+    }
+    return buildList {
+        add(displayLabel)
+        add(value)
+        add(if (isDemo) L10n.text("DEMO SAMPLE") else L10n.text("Tap to focus"))
+    }.joinToString(". ")
+}
+
+@Composable
+private fun WaitingPanel(phase: SyncPhase, hasInventory: Boolean) {
     DataPlaneSurface() {
         Column {
-            PanelHeader(L10n.text("CDX.WEEKLY.QUOTA"), L10n.text("NO SAMPLE"), accent = false)
+            PanelHeader(L10n.text("Your services"), L10n.text("NO SAMPLE"), accent = false)
             PlaneDivider()
             Column(
                 modifier = Modifier.padding(18.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                Row(verticalAlignment = Alignment.Bottom) {
+                Row(modifier = Modifier.clearAndSetSemantics {
+                    contentDescription = L10n.text("No quota sample")
+                }, verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = "--",
                         style = MaterialTheme.typography.headlineLarge,
                         color = DataPlaneColors.Ink,
                     )
                     Text(
-                        text = L10n.text("% LEFT"),
+                        text = L10n.text("NO SAMPLE"),
                         style = MaterialTheme.typography.labelSmall,
                         color = DataPlaneColors.Muted,
                         modifier = Modifier.padding(start = 5.dp, bottom = 5.dp),
@@ -235,7 +496,11 @@ private fun WaitingPanel(phase: SyncPhase) {
                 }
                 QuotaMeter(0, empty = true)
                 Text(
-                    text = L10n.text("Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample."),
+                    text = when {
+                        hasInventory -> L10n.text("Enable a supported service in your Companion to see its quota here.")
+                        phase == SyncPhase.WAITING_FOR_DESKTOP -> L10n.text("Device connected. Waiting for the companion’s first sample.")
+                        else -> L10n.text("Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample.")
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = DataPlaneColors.Muted,
                 )
@@ -285,7 +550,7 @@ private fun RelayPanel(
                 },
             )
             Text(
-                text = L10n.text("The relay stores only an AES-256-GCM encrypted snapshot. Codex credentials and the encryption key never leave your devices."),
+                text = L10n.text("The relay stores only AES-256-GCM encrypted quota snapshots. Your agents’ credentials and the encryption key never reach the relay."),
                 style = MaterialTheme.typography.bodyMedium,
                 color = DataPlaneColors.Muted,
             )
@@ -353,7 +618,8 @@ private fun FeedbackPanel(
                 1.dp,
                 if (isError) DataPlaneColors.Critical else DataPlaneColors.Line,
             )
-            .padding(start = 14.dp, top = 11.dp, bottom = 11.dp, end = 6.dp),
+            .padding(start = 14.dp, top = 11.dp, bottom = 11.dp, end = 6.dp)
+            .semantics { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -369,7 +635,7 @@ private fun FeedbackPanel(
                 .weight(1f)
                 .padding(horizontal = 10.dp),
         )
-        TextButton(onClick = onDismiss) {
+        TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) {
             Text(L10n.text("CLOSE"), style = MaterialTheme.typography.labelSmall)
         }
     }
@@ -410,7 +676,7 @@ private fun PublicLinksFooter(
             )
         }
         Text(
-            text = L10n.text("Statusline is an independent app and is not affiliated with or endorsed by OpenAI."),
+            text = L10n.text("Statusline is independent and is not affiliated with or endorsed by OpenAI or Google."),
             style = MaterialTheme.typography.bodySmall,
             color = DataPlaneColors.Muted,
         )
@@ -433,7 +699,7 @@ private fun PairingDialog(
             border = androidx.compose.foundation.BorderStroke(1.dp, DataPlaneColors.Line),
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(15.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -515,7 +781,7 @@ private fun ConfirmDisconnectDialog(
             border = androidx.compose.foundation.BorderStroke(1.dp, DataPlaneColors.Line),
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState()).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(15.dp),
             ) {
                 PlaneLabel(L10n.text("DISCONNECT.READER"), tint = DataPlaneColors.Ink)
@@ -606,13 +872,11 @@ private fun StatusIndicator(label: String, tint: Color) {
 }
 
 @Composable
-private fun QuotaMeter(remainingPercentage: Int, empty: Boolean = false) {
+internal fun QuotaMeter(remainingPercentage: Int, empty: Boolean = false) {
     val normalized = if (empty) 0 else remainingPercentage.coerceIn(0, 100)
     Canvas(
-        Modifier.fillMaxWidth().height(8.dp).clearAndSetSemantics {
-            contentDescription = if (empty) L10n.text("No quota sample")
-                else L10n.text("{0} percent remaining", normalized)
-        },
+        // The adjacent quota value provides the reading once to accessibility services.
+        Modifier.fillMaxWidth().height(8.dp).clearAndSetSemantics {},
     ) {
         val stripe = 4.dp.toPx()
         val step = 6.dp.toPx()
@@ -623,7 +887,7 @@ private fun QuotaMeter(remainingPercentage: Int, empty: Boolean = false) {
         while (x < size.width) {
             drawRect(
                 color = when {
-                    index == terminal -> Color.White
+                    index == terminal -> DataPlaneColors.Terminal
                     x < edge -> DataPlaneColors.Signal
                     else -> DataPlaneColors.Track
                 },
@@ -637,7 +901,7 @@ private fun QuotaMeter(remainingPercentage: Int, empty: Boolean = false) {
 }
 
 @Composable
-private fun PlaneDivider(modifier: Modifier = Modifier) {
+internal fun PlaneDivider(modifier: Modifier = Modifier) {
     HorizontalDivider(modifier, thickness = 1.dp, color = DataPlaneColors.Line)
 }
 
@@ -661,7 +925,7 @@ private fun PrimaryButton(
             disabledContentColor = DataPlaneColors.Canvas.copy(alpha = 0.7f),
         ),
     ) {
-        Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -684,7 +948,7 @@ private fun SecondaryButton(
             disabledContentColor = DataPlaneColors.Muted.copy(alpha = 0.5f),
         ),
     ) {
-        Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -722,7 +986,7 @@ private val SyncPhase.message: String
         SyncPhase.UNPAIRED ->
             L10n.text("Scan the QR shown by Statusline Companion to connect this device.")
         SyncPhase.DEMO ->
-            L10n.text("Local sample to explore the app and widget. No network or Codex account is used.")
+            L10n.text("Local demo enabled. The app and widget show an example sample.")
         SyncPhase.PAIRING -> L10n.text("Validating the encrypted pairing with the relay…")
         SyncPhase.SYNCING -> L10n.text("Looking for the latest encrypted snapshot…")
         SyncPhase.WAITING_FOR_DESKTOP ->
@@ -731,11 +995,11 @@ private val SyncPhase.message: String
         SyncPhase.ERROR -> L10n.text("The last operation could not be completed.")
     }
 
-private fun formatDate(epochSeconds: Long, pattern: String): String =
+internal fun formatDate(epochSeconds: Long, pattern: String): String =
     SimpleDateFormat(pattern, L10n.locale).format(Date(epochSeconds * 1_000))
 
-private fun relativeAge(epochSeconds: Long): String {
-    val elapsed = max(0, System.currentTimeMillis() / 1_000 - epochSeconds)
+internal fun relativeAge(epochSeconds: Long, nowEpochSeconds: Long = System.currentTimeMillis() / 1_000): String {
+    val elapsed = max(0, nowEpochSeconds - epochSeconds)
     return when {
         elapsed < 60 -> L10n.text("NOW")
         elapsed < 3_600 -> L10n.text("{0} MIN AGO", elapsed / 60)

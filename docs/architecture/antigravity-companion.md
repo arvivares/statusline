@@ -1,9 +1,9 @@
 # Antigravity in Companion
 
 Implemented in **0.1.22**, with automatic discovery and restored focus/watchlist
-in **0.1.23**. The **0.1.24 candidate** adds encrypted iOS/widget sync through
-the [optional services extension](../../protocol/statusline-services-v1.md).
-Android remains Codex-only until its separate provider UI update.
+in **0.1.23**. Companion publishes the encrypted inventory through the
+[optional services extension](../../protocol/statusline-services-v1.md), consumed
+by iOS 1.1.0 and Android 0.1.25. Existing Codex-only readers remain compatible.
 The [source research](antigravity-sources.md) records official documentation and
 observed vendor responses separately from implementation claims.
 
@@ -106,12 +106,14 @@ The existing [v1 protocol](../../protocol/statusline-relay-v1.md) is unchanged:
   mean **Codex weekly**, never whichever service is selected in the UI.
 - Same AES-256-GCM, AAD, nonce format, keyring namespace, publisher/reader tokens,
   sequence policy, retention and private pairing link.
-- Existing iPhone/Android releases keep displaying Codex. Selecting AGY locally
-  does not relabel it as synced, publish Gemini as Codex, or create a new QR.
+- Existing pre-services iPhone/Android releases keep displaying Codex. Selecting
+  AGY does not relabel it as synced for those readers, publish Gemini as Codex,
+  or create a new QR.
 - If Codex becomes unavailable, no fabricated Codex snapshot is published.
-  Existing mobile freshness behavior remains intact; AGY is local-only.
+  Existing mobile freshness behavior remains intact; services-v1 readers receive
+  the explicit unavailable state for the enabled service.
 
-### Mobile follow-up in 0.1.24 / iOS 1.1.0
+### Mobile delivery in iOS 1.1.0 / Android 0.1.25
 
 The [services-v1 specification](../../protocol/statusline-services-v1.md) defines
 the implemented additive rollout, cache rules and old-reader compatibility.
@@ -123,12 +125,14 @@ Companion snapshot must carry the user's enabled provider manifest, separate
 provider IDs, window semantics, sample times and explicit unavailable/removal
 states. Each mobile client renders only that Companion's services.
 
-Add receiver capability negotiation/versioned decoding **before** introducing a
-manifest-only channel for AGY-only users. Preserve the old Codex projection for
-v1 readers; do not replace the single stored v1 snapshot with an incompatible
-payload. Test old/new publisher-reader combinations, source removal, temporary
-failure, offline stale data, app/widget caches and continued pairing identity.
-Do not count absence of a failed response as deliberate service removal.
+Both mobile clients use receiver capability negotiation and versioned decoding;
+the Android implementation is in `apps/android/app/src/main/java/inmerzion/statusline`.
+The authenticated, encrypted manifest is authoritative for the new clients while
+the old Codex projection remains available to v1 readers. The implementation
+does not replace the existing pairing or rotate its keys. Test old/new
+publisher-reader combinations, source removal, temporary failure, offline stale
+data, app/widget caches and continued pairing identity. Do not count absence of
+a failed response as deliberate service removal.
 
 ## Validation and release gates
 

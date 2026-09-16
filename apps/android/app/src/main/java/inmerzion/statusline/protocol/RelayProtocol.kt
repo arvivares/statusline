@@ -13,6 +13,8 @@ import javax.crypto.spec.SecretKeySpec
 object RelayProtocol {
     const val VERSION = 1
     const val SNAPSHOT_AAD_PREFIX = "statusline.snapshot.v1|"
+    const val SERVICES_KIND = "services-v1"
+    const val SERVICES_ACCEPT = "application/vnd.statusline.services-v1+json"
     private val channelPattern = Regex(
         "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
     )
@@ -74,7 +76,8 @@ object RelayProtocol {
             envelope.protocolVersion != VERSION ||
             envelope.sequence <= 0 ||
             !validateChannelId(channelId) ||
-            encryptionKey.size != 32
+            encryptionKey.size != 32 ||
+            envelope.payloadKind !in listOf(null, SERVICES_KIND)
         ) {
             throw invalidSnapshot()
         }
@@ -83,6 +86,7 @@ object RelayProtocol {
             val nonce = Base64Url.decode(envelope.nonce)
             val ciphertextAndTag = Base64Url.decode(envelope.ciphertext)
             require(nonce.size == 12 && ciphertextAndTag.size > 16)
+            require(ciphertextAndTag.size <= 4_096 + 16)
 
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(
@@ -90,7 +94,9 @@ object RelayProtocol {
                 SecretKeySpec(encryptionKey, "AES"),
                 GCMParameterSpec(128, nonce),
             )
-            val aad = SNAPSHOT_AAD_PREFIX + channelId.lowercase(Locale.ROOT)
+            val aad = if (envelope.payloadKind == SERVICES_KIND) {
+                "statusline.services.v1|${channelId.lowercase(Locale.ROOT)}|${envelope.sequence}"
+            } else SNAPSHOT_AAD_PREFIX + channelId.lowercase(Locale.ROOT)
             cipher.updateAAD(aad.toByteArray(StandardCharsets.UTF_8))
             return cipher.doFinal(ciphertextAndTag)
         } catch (error: AEADBadTagException) {
@@ -110,6 +116,7 @@ object RelayProtocol {
         envelope: RelayEnvelope,
         credentials: ReaderCredentials,
     ): UsageStatus {
+        if (envelope.payloadKind != null) throw invalidSnapshot()
         val plaintext = decrypt(
             envelope = envelope,
             channelId = credentials.channelId,
@@ -117,16 +124,76 @@ object RelayProtocol {
         )
         try {
             val body = JSONObject(String(plaintext, StandardCharsets.UTF_8))
-            require(body.getInt("schemaVersion") == 1)
-            val remaining = body.getInt("remainingPercentage")
-            val resetAt = body.getLong("resetAt")
-            val updatedAt = body.getLong("updatedAt")
-            require(remaining in 0..100 && resetAt > 0 && updatedAt > 0)
-            return UsageStatus(remaining, resetAt, updatedAt)
+            require(body.strictLong("schemaVersion") == 1L)
+            val remaining = body.strictLong("remainingPercentage")
+            val resetAt = body.strictLong("resetAt")
+            val updatedAt = body.strictLong("updatedAt")
+            require(remaining in 0..100 && validTimestamp(resetAt) && validTimestamp(updatedAt))
+            return UsageStatus(remaining.toInt(), resetAt, updatedAt)
         } catch (error: Exception) {
             throw invalidSnapshot(error)
         }
     }
+
+    fun decodeServices(envelope: RelayEnvelope, credentials: ReaderCredentials): AgentServicesSnapshot {
+        if (envelope.payloadKind == null) return AgentServicesSnapshot.fromLegacy(
+            decodeStatus(envelope, credentials), credentials.channelId, envelope.sequence,
+        )
+        return decodeServicesPayload(decrypt(envelope, credentials.channelId, credentials.encryptionKey),
+            credentials.channelId, envelope.sequence)
+    }
+
+    internal fun decodeServicesPayload(data: ByteArray, channelId: String?, sequence: Long): AgentServicesSnapshot {
+        try {
+            require(data.size <= 4_096)
+            val body = JSONObject(data.decodeToString(throwOnInvalidSequence = true))
+            require(body.strictLong("schemaVersion") == 1L)
+            val updatedAt = body.strictLong("updatedAt")
+            require(validTimestamp(updatedAt))
+            val values = body.getJSONArray("providers")
+            require(values.length() <= 16)
+            val seen = mutableSetOf<String>()
+            val providers = buildList {
+                for (index in 0 until values.length()) {
+                    val value = values.getJSONObject(index)
+                    val wireId = value.get("id") as? String ?: error("Invalid provider ID")
+                    require(Regex("^[a-z0-9-]{1,64}$").matches(wireId) && seen.add(wireId))
+                    // Do not impose today's known-provider schema on future adapters.
+                    val id = AgentProviderId.fromWire(wireId) ?: continue
+                    val sampleTime = value.strictLong("updatedAt")
+                    require(validTimestamp(sampleTime) && sampleTime <= updatedAt)
+                    val status = value.get("status") as? String
+                    require(status == "ready" || status == "unavailable")
+                    fun window(key: String): AgentQuotaWindow? {
+                        if (value.isNull(key)) return null
+                        val raw = value.getJSONObject(key)
+                        val remaining = raw.strictLong("remainingPercentage")
+                        val reset = raw.strictLong("resetAt")
+                        val minutes = raw.strictLong("windowMinutes")
+                        require(remaining in 0..100 && validTimestamp(reset) && minutes in 1..11_520)
+                        require(if (key == "weekly") minutes in 8_640..11_520 else minutes < 8_640)
+                        if (id == AgentProviderId.ANTIGRAVITY) require(minutes == if (key == "weekly") 10_080L else 300L)
+                        return AgentQuotaWindow(remaining.toInt(), reset, minutes.toInt())
+                    }
+                    val weekly = window("weekly")
+                    val short = window("shortWindow")
+                    require(if (status == "ready") weekly != null || short != null else weekly == null && short == null)
+                    add(AgentProviderReading(id, requireNotNull(status), sampleTime, weekly, short))
+                }
+            }
+            return AgentServicesSnapshot(providers, updatedAt, channelId, sequence)
+        } catch (error: Exception) {
+            throw invalidSnapshot(error)
+        }
+    }
+
+    internal fun JSONObject.strictLong(key: String): Long = when (val value = get(key)) {
+        is Int -> value.toLong()
+        is Long -> value
+        else -> throw invalidSnapshot()
+    }
+
+    private fun validTimestamp(value: Long) = value in 1..253_402_300_799L
 
     private fun invalidSnapshot(cause: Throwable? = null) = StatuslineException(
         FailureKind.INVALID_SNAPSHOT,

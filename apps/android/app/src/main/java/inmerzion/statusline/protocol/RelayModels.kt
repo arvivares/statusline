@@ -45,6 +45,7 @@ data class RelayEnvelope(
     val sequence: Long,
     val nonce: String,
     val ciphertext: String,
+    val payloadKind: String? = null,
 )
 
 data class UsageStatus(

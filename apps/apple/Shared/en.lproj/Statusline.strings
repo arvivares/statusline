@@ -32,6 +32,7 @@
 "Agent usage" = "Agent usage";
 "An encrypted snapshot is available on this device." = "An encrypted snapshot is available on this device.";
 "Antigravity · {0}% left" = "Antigravity · {0}% left";
+"Antigravity · Gemini" = "Antigravity · Gemini";
 "Antigravity · no weekly data" = "Antigravity · no weekly data";
 "Antigravity · unavailable" = "Antigravity · unavailable";
 "Antigravity did not respond. Codex and its mobile sync are unaffected." = "Antigravity did not respond. Codex and its mobile sync are unaffected.";
@@ -217,6 +218,7 @@
 "EXECUTABLE.PATH" = "EXECUTABLE.PATH";
 "FALLBACK.INPUT" = "FALLBACK.INPUT";
 "FAULT" = "FAULT";
+"Focused service: {0}" = "Focused service: {0}";
 "Gemini sync requires an updated relay and iOS app. Android continues showing Codex." = "Gemini sync requires an updated relay and iOS app. Android continues showing Codex.";
 "Gemini weekly limit" = "Gemini weekly limit";
 "Generating independent read/write credentials." = "Generating independent read/write credentials.";
@@ -290,6 +292,7 @@
 "Not found" = "Not found";
 "NOT FOUND" = "NOT FOUND";
 "NOT PUBLISHED" = "NOT PUBLISHED";
+"Not selected" = "Not selected";
 "NOT UPLOADED" = "NOT UPLOADED";
 "Notify me about new versions. Installation always needs my approval." = "Notify me about new versions. Installation always needs my approval.";
 "NOW" = "NOW";
@@ -429,7 +432,9 @@
 "See your remaining weekly quota and its next reset." = "See your remaining weekly quota and its next reset.";
 "Select a Codex executable or macOS app" = "Select a Codex executable or macOS app";
 "SELECT EXECUTABLE" = "SELECT EXECUTABLE";
+"SELECT SERVICE" = "SELECT SERVICE";
 "Select the Codex executable" = "Select the Codex executable";
+"Selected" = "Selected";
 "Services" = "Services";
 "SESSION STAYS ON MAC" = "SESSION STAYS ON MAC";
 "SESSION.STORAGE" = "SESSION.STORAGE";
@@ -493,6 +498,7 @@
 "SYSTEM KEYCHAIN" = "SYSTEM KEYCHAIN";
 "System PATH" = "System PATH";
 "SYSTEM PATH" = "SYSTEM PATH";
+"Tap to focus" = "Tap to focus";
 "That QR is not from Statusline. Keep the companion’s QR open." = "That QR is not from Statusline. Keep the companion’s QR open.";
 "The camera is unavailable here. Paste the private link shown by the companion below." = "The camera is unavailable here. Paste the private link shown by the companion below.";
 "The camera opened, but the QR reader could not start. You can paste the link manually." = "The camera opened, but the QR reader could not start. You can paste the link manually.";
@@ -573,6 +579,7 @@
 "Waiting for relay" = "Waiting for relay";
 "WAITING FOR RELAY" = "WAITING FOR RELAY";
 "Waiting for the QR scan. Expires {0}." = "Waiting for the QR scan. Expires {0}.";
+"WATCHLIST" = "WATCHLIST";
 "Weekly" = "Weekly";
 "WEEKLY LIMIT" = "WEEKLY LIMIT";
 "Weekly quota" = "Weekly quota";

@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import inmerzion.statusline.data.StatuslineRepository
+import inmerzion.statusline.protocol.AgentProviderId
+import inmerzion.statusline.protocol.AgentProviderReading
+import inmerzion.statusline.protocol.AgentServicesSnapshot
 import inmerzion.statusline.protocol.FailureKind
 import inmerzion.statusline.protocol.StatuslineException
 import inmerzion.statusline.protocol.UsageStatus
@@ -32,7 +35,10 @@ data class UserFeedback(
 )
 
 data class StatuslineUiState(
+    /** Compatibility projection for older UI/tests and the legacy Codex model. */
     val status: UsageStatus? = null,
+    val inventory: AgentServicesSnapshot? = null,
+    val focusId: AgentProviderId? = null,
     val phase: SyncPhase = SyncPhase.UNPAIRED,
     val endpoint: String? = null,
     val feedback: UserFeedback? = null,
@@ -42,16 +48,26 @@ data class StatuslineUiState(
         get() = phase == SyncPhase.PAIRING || phase == SyncPhase.SYNCING
 
     val isDemo: Boolean
-        get() = status?.isDemo == true
+        get() = inventory?.isDemo == true || status?.isDemo == true
+
+    val focusedProvider: AgentProviderReading?
+        get() = inventory?.focusedProvider(focusId)
 }
 
 class StatuslineViewModel(application: Application) : AndroidViewModel(application) {
     private val repositoryResult = runCatching { StatuslineRepository(application) }
     private val repository = repositoryResult.getOrNull()
-    private val initialStatus = runCatching { repository?.cachedStatus() }.getOrNull()
+    private val initialInventory = runCatching { repository?.cachedServices() }.getOrNull()
+    private val initialFocus = runCatching { repository?.focusedProviderId() }.getOrNull()
+    private val initialStatus = initialInventory
+        ?.focusedProvider(initialFocus)
+        ?.usageStatus(initialInventory.isDemo)
+        ?: runCatching { repository?.cachedStatus() }.getOrNull()
     private val mutableState = MutableStateFlow(
         StatuslineUiState(
             status = initialStatus,
+            inventory = initialInventory,
+            focusId = initialFocus,
             endpoint = repository?.endpoint,
         ),
     )
@@ -98,15 +114,11 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
         operation = viewModelScope.launch {
             runCatching {
                 withContext(Dispatchers.IO) { activeRepository.pair(rawValue) }
-            }.onSuccess { status ->
-                mutableState.value = mutableState.value.copy(
-                    status = status,
-                    isPaired = true,
-                    phase = if (status == null) {
-                        SyncPhase.WAITING_FOR_DESKTOP
-                    } else {
-                        SyncPhase.SYNCED
-                    },
+            }.onSuccess { snapshot ->
+                applySnapshot(
+                    snapshot = snapshot,
+                    phase = if (snapshot == null) SyncPhase.WAITING_FOR_DESKTOP else SyncPhase.SYNCED,
+                    paired = true,
                     feedback = UserFeedback(
                         "Device connected with encryption.",
                         isError = false,
@@ -129,11 +141,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
             }
             if (!paired) {
                 mutableState.value = mutableState.value.copy(
-                    phase = if (mutableState.value.isDemo) {
-                        SyncPhase.DEMO
-                    } else {
-                        SyncPhase.UNPAIRED
-                    },
+                    phase = if (mutableState.value.isDemo) SyncPhase.DEMO else SyncPhase.UNPAIRED,
                     feedback = null,
                     isPaired = false,
                 )
@@ -147,14 +155,11 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
             )
             runCatching {
                 withContext(Dispatchers.IO) { activeRepository.refresh() }
-            }.onSuccess { status ->
-                mutableState.value = mutableState.value.copy(
-                    status = status,
-                    phase = if (status == null) {
-                        SyncPhase.WAITING_FOR_DESKTOP
-                    } else {
-                        SyncPhase.SYNCED
-                    },
+            }.onSuccess { snapshot ->
+                applySnapshot(
+                    snapshot = snapshot,
+                    phase = if (snapshot == null) SyncPhase.WAITING_FOR_DESKTOP else SyncPhase.SYNCED,
+                    paired = true,
                     feedback = if (userInitiated) {
                         UserFeedback("Encrypted snapshot updated.", isError = false)
                     } else {
@@ -167,9 +172,20 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun refreshIfPaired() {
-        if (mutableState.value.isPaired) {
-            refresh(userInitiated = false)
-        }
+        if (mutableState.value.isPaired) refresh(userInitiated = false)
+    }
+
+    fun selectProvider(provider: AgentProviderId) {
+        val activeRepository = repository ?: return
+        val snapshot = mutableState.value.inventory ?: return
+        if (snapshot.providers.none { it.id == provider }) return
+        activeRepository.selectProvider(provider)
+        val status = snapshot.focusedProvider(provider)?.usageStatus(snapshot.isDemo)
+        mutableState.value = mutableState.value.copy(
+            focusId = provider,
+            status = status,
+        )
+        updateWidgets()
     }
 
     fun showDemo() {
@@ -178,15 +194,15 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
         operation = viewModelScope.launch {
             runCatching {
                 withContext(Dispatchers.IO) { activeRepository.enableDemo() }
-            }.onSuccess { status ->
-                mutableState.value = mutableState.value.copy(
-                    status = status,
+            }.onSuccess { snapshot ->
+                applySnapshot(
+                    snapshot = snapshot,
                     phase = SyncPhase.DEMO,
+                    paired = false,
                     feedback = UserFeedback(
                         "Demo sample loaded on this device only.",
                         isError = false,
                     ),
-                    isPaired = false,
                 )
                 updateWidgets()
             }.onFailure(::showFailure)
@@ -200,14 +216,9 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
             runCatching {
                 withContext(Dispatchers.IO) { activeRepository.disableDemo() }
             }.onSuccess {
-                mutableState.value = mutableState.value.copy(
-                    status = null,
-                    phase = SyncPhase.UNPAIRED,
-                    feedback = UserFeedback(
-                        "Demo sample removed.",
-                        isError = false,
-                    ),
-                    isPaired = false,
+                mutableState.value = StatuslineUiState(
+                    endpoint = activeRepository.endpoint,
+                    feedback = UserFeedback("Demo sample removed.", isError = false),
                 )
                 updateWidgets()
             }.onFailure(::showFailure)
@@ -255,6 +266,25 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
         mutableState.value = mutableState.value.copy(feedback = null)
     }
 
+    private fun applySnapshot(
+        snapshot: AgentServicesSnapshot?,
+        phase: SyncPhase,
+        paired: Boolean,
+        feedback: UserFeedback?,
+    ) {
+        val activeRepository = repository
+        val focus = activeRepository?.focusedProviderId()
+        val status = snapshot?.focusedProvider(focus)?.usageStatus(snapshot.isDemo)
+        mutableState.value = mutableState.value.copy(
+            inventory = snapshot,
+            focusId = focus,
+            status = status,
+            phase = phase,
+            isPaired = paired,
+            feedback = feedback,
+        )
+    }
+
     private fun showFailure(error: Throwable) {
         val failure = error as? StatuslineException
         mutableState.value = mutableState.value.copy(
@@ -263,15 +293,8 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
             } else {
                 SyncPhase.ERROR
             },
-            isPaired = if (failure?.kind == FailureKind.NOT_PAIRED) {
-                false
-            } else {
-                mutableState.value.isPaired
-            },
-            feedback = UserFeedback(
-                failureMessage(failure?.kind),
-                isError = true,
-            ),
+            isPaired = if (failure?.kind == FailureKind.NOT_PAIRED) false else mutableState.value.isPaired,
+            feedback = UserFeedback(failureMessage(failure?.kind), isError = true),
         )
     }
 
