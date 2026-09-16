@@ -114,11 +114,19 @@ function githubAPI(endpoint, body) {
 // regenerate signatures, or change updater.json while applying them.
 export function applyReleaseLabels(manifest, api = githubAPI) {
   const labels = releaseAssetLabels(manifest);
-  const endpoint = `repos/${repository}/releases/tags/${manifest.tag}`;
+  const releasesEndpoint = `repos/${repository}/releases?per_page=100`;
   function readDraft() {
-    const release = api(endpoint);
+    const releases = api(releasesEndpoint);
+    assert(Array.isArray(releases), "GitHub returned an invalid release list");
+    const matches = releases.filter(
+      (release) => release.tag_name === manifest.tag,
+    );
+    assert(matches.length === 1, "expected exactly one matching draft release");
+    const [release] = matches;
     assert(
-      release.tag_name === manifest.tag && release.draft === true,
+      Number.isSafeInteger(release.id) &&
+        release.id > 0 &&
+        release.draft === true,
       "labels can only be applied to the matching draft release",
     );
     assert(
