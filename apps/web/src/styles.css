@@ -3869,26 +3869,69 @@ html:not(.js) .demo-segments {
 }
 
 /* Still Signature: real product captures, shared with the README. */
-.hero-scene.still-scene {
+.hero-real-device {
+  top: 58px;
+  left: 44px;
+  width: 316px;
+  border-radius: 15px;
+  box-shadow:
+    0 34px 80px #000b,
+    0 0 0 4px #22221980,
+    inset 0 1px #b5b17d30;
+  transform: perspective(1100px) rotateY(calc(-9deg + var(--scene-ry)))
+    rotateX(calc(6deg + var(--scene-rx))) rotate(-4deg);
+}
+.hero-real-device .window-bar {
+  height: 29px;
+  padding-inline: 11px;
+  font-size: 7px;
+}
+.hero-real-device .window-dots {
+  gap: 4px;
+}
+.hero-real-device .window-dots i {
+  width: 4px;
+  height: 4px;
+}
+.hero-real-device .window-bar > .icon {
+  width: 11px;
+  height: 11px;
+}
+.capture-window {
+  padding: 5px;
+  background: #0b0d09;
+}
+.capture-window img {
+  display: block;
   width: 100%;
   height: auto;
-  min-width: 0;
-  margin: 0;
-  padding: 32px 0;
-  transform: none;
-  align-self: center;
+  border-radius: 21px;
+  box-shadow: 0 0 0 1px #343629;
 }
-.still-scene-label {
-  margin: 0 0 24px;
-  color: var(--gold);
-  font-size: 10px;
-  letter-spacing: 0.1em;
+.hero-real-device .device-bottom {
+  padding: 8px 11px;
+  font-size: 5px;
 }
-.still-devices {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  align-items: center;
-  gap: 20px;
+.hero-real-phone {
+  top: 207px;
+  right: 20px;
+  width: 172px;
+  height: auto;
+  padding: 6px;
+  border-radius: 31px;
+  box-shadow:
+    0 30px 55px #000b,
+    0 0 0 3px #202219,
+    inset 0 0 0 4px #10130c;
+  transform: perspective(1000px) rotateY(calc(-10deg + var(--scene-ry)))
+    rotateX(var(--scene-rx)) rotate(7deg);
+  transition: transform 0.5s ease-out;
+}
+.hero-real-phone img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 24px;
 }
 .still-capture {
   margin: 0;
@@ -3900,9 +3943,6 @@ html:not(.js) .demo-segments {
   height: auto;
   border-radius: 26px;
   box-shadow: 0 24px 64px #0005;
-}
-.still-iphone img {
-  border-radius: 24px;
 }
 .still-capture figcaption {
   margin-top: 18px;
@@ -3958,25 +3998,9 @@ html:not(.js) .demo-segments {
 .widget-value > span {
   margin-left: 8px;
 }
-@media (max-width: 1000px) {
-  .hero-inner {
-    grid-template-columns: 1fr;
-  }
-  .hero-scene.still-scene {
-    max-width: 600px;
-    justify-self: center;
-    padding: 0 0 40px;
-  }
-}
 @media (max-width: 580px) {
-  .still-devices {
-    gap: 12px;
-  }
   .still-capture img {
     border-radius: 18px;
-  }
-  .still-scene-label {
-    font-size: 9px;
   }
   .still-capture figcaption {
     font-size: 11px;

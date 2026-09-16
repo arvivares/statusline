@@ -229,12 +229,35 @@
             </div>
           </div>
 
-          <div class="hero-scene still-scene">
-            <p class="still-scene-label mono" data-i18n="screens.design">
-              STILL SIGNATURE / LESS, BUT CLEARER
-            </p>
-            <div class="still-devices">
-              <figure class="still-capture still-companion">
+          <div
+            class="hero-scene"
+            aria-label="Illustrative Statusline desktop and mobile view with 73 percent of weekly quota remaining"
+            data-i18n-aria-label="hero.previewLabel"
+          >
+            <span
+              class="scene-coordinate coordinate-top"
+              data-i18n="hero.systems"
+              >STL / CONNECTED SYSTEMS</span
+            >
+            <span class="scene-coordinate coordinate-side"
+              >41° 23′ 08″ N — DATA PLANE</span
+            >
+            <div class="orbital-glow" aria-hidden="true"></div>
+            <div class="orbit orbit-one" aria-hidden="true"><i></i></div>
+            <div class="orbit orbit-two" aria-hidden="true"><i></i></div>
+            <div class="orbit orbit-three" aria-hidden="true"></div>
+            <div class="scene-cross cross-one" aria-hidden="true">+</div>
+            <div class="scene-cross cross-two" aria-hidden="true">+</div>
+            <div class="desktop-device hero-real-device">
+              <div class="window-bar">
+                <span class="window-dots" aria-hidden="true"
+                  ><i></i><i></i><i></i></span
+                ><span>STATUSLINE COMPANION</span
+                ><svg class="icon small" aria-hidden="true">
+                  <use href="#icon-settings" />
+                </svg>
+              </div>
+              <div class="capture-window">
                 <img
                   src="/assets/still-signature-020/companion-en.png"
                   data-product-image="companion"
@@ -244,29 +267,42 @@
                   alt="Statusline Companion showing a 53 percent sample quota"
                   data-i18n-alt="screens.companionAlt"
                 />
-                <figcaption data-i18n="screens.companion">
-                  Companion · 0.1.20
-                </figcaption>
-              </figure>
-              <figure class="still-capture still-iphone">
-                <img
-                  src="/assets/still-signature-020/iphone-en.png"
-                  data-product-image="iphone"
-                  width="1206"
-                  height="2622"
-                  decoding="async"
-                  alt="The native iPhone app with its unpaired 70 percent local example"
-                  data-i18n-alt="screens.iphoneAlt"
-                />
-                <figcaption data-i18n="screens.iphone">
-                  iPhone · Native app
-                </figcaption>
-              </figure>
+              </div>
+              <div class="device-bottom">
+                <span
+                  ><span class="status-dot"></span>
+                  <span data-i18n="hero.codexConnected"
+                    >CODEX CONNECTED</span
+                  ></span
+                ><span data-i18n="hero.sampleData">SAMPLE DATA</span>
+              </div>
             </div>
-            <p class="still-scene-note" data-i18n="screens.note">
-              Real interfaces. Separate demo samples, not a live connection.
-              Captured from the latest source; store versions may differ.
-            </p>
+            <div class="mobile-device hero-real-phone">
+              <img
+                src="/assets/still-signature-020/iphone-en.png"
+                data-product-image="iphone"
+                width="1206"
+                height="2622"
+                loading="eager"
+                decoding="async"
+                alt="The native iPhone app with its unpaired 70 percent local example"
+                data-i18n-alt="screens.iphoneAlt"
+              />
+            </div>
+            <div class="floating-label">
+              <span class="connection-icon" aria-hidden="true"
+                ><svg class="icon"><use href="#icon-link" /></svg
+              ></span>
+              <div data-i18n-html="hero.allDevices">
+                One status. All your devices.<span>ENCRYPTED CONNECTION</span>
+              </div>
+              <span class="status-dot"></span>
+            </div>
+            <span
+              class="scene-coordinate coordinate-bottom"
+              data-i18n="hero.devices"
+              >01 — DESKTOP ↔ MOBILE ↔ WIDGETS</span
+            >
           </div>
         </div>
         <div class="container hero-footer">
