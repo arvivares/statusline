@@ -2,6 +2,8 @@
 pub mod antigravity;
 #[path = "../../src-tauri/src/app_server.rs"]
 pub mod app_server;
+#[path = "../../src-tauri/src/claude.rs"]
+pub mod claude;
 #[path = "../../src-tauri/src/codex_installation.rs"]
 pub mod codex_installation;
 #[path = "../../src-tauri/src/localization.rs"]

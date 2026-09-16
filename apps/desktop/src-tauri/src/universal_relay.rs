@@ -267,6 +267,12 @@ pub struct UniversalRelayState {
 }
 
 impl UniversalRelayState {
+    pub async fn record_claude(&self, view: &crate::claude::View) {
+        if self.inventory.lock().await.record_claude(view) {
+            self.publication_requested.notify_one();
+        }
+    }
+
     pub async fn record_codex(&self, usage: &UsageResponse) {
         if self.inventory.lock().await.record_codex(usage) {
             self.publication_requested.notify_one();

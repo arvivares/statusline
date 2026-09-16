@@ -38,6 +38,24 @@ const google = parseGoogleView({
 });
 
 describe("Still Signature focus and watchlist", () => {
+  it("places a detected Claude beside real Codex and Gemini without fabricating a third quota", () => {
+    const providers = companionProviders(codex, null, google, {
+      revision: 1,
+      checkedAt: 1900000000,
+      installations: { cli: false, desktop: true },
+      status: "quotaUnavailable",
+    });
+    expect(providers.map((p) => p.id)).toEqual(["codex", "google", "claude"]);
+    expect(providerWatchlist(providers, "google").map((p) => p.name)).toEqual([
+      "Codex",
+      "Claude",
+    ]);
+    expect(providers[2]?.weekly).toBeNull();
+    expect(providers[2]?.short).toBeNull();
+    expect(providers.slice(0, 2)).toEqual(
+      companionProviders(codex, null, google),
+    );
+  });
   it("does not create absent providers or a static Claude slot", () => {
     expect(companionProviders(null, null, disabledGoogle)).toEqual([]);
     const providers = companionProviders(codex, null, disabledGoogle);

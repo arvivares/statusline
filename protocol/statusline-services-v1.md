@@ -96,7 +96,11 @@ Swift; its deterministic key/nonce are test-only, never production credentials.
 ```
 
 - IDs are stable adapter identifiers: codex and antigravity (Google Gemini only).
-  No static Claude entry, account email, vendor token, path or prompt is sent.
+  The experimental Claude foundation adds `claude` **only when locally detected**,
+  with `status: "unavailable"` and no windows. Detection is not quota or login.
+  Existing iOS/Android releases ignore this unknown ID and retain Codex/Gemini.
+  No static entry for an absent service, account email, vendor token, path or
+  prompt is sent. See [Claude source gates](../docs/architecture/claude-sources.md).
 - The list is authoritative and bounded to 16 unique IDs (lowercase ASCII
   letters, digits and hyphens, 1–64 characters). Unknown future IDs are ignored
   by readers without imposing today's provider-specific schema on them.

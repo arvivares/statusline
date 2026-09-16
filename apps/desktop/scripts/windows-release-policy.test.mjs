@@ -34,12 +34,13 @@ describe("Windows release policy", () => {
   it("forbids unsigned installers in stable releases", () => {
     expect(() =>
       windowsReleasePolicy(metadata("unsigned-preview", { channel: "stable" })),
-    ).toThrow("restricted to beta prereleases");
+    ).toThrow("restricted to the beta channel");
+  });
+
+  it("allows a visible Latest beta without relabelling Windows as signed", () => {
     const data = metadata("unsigned-preview");
     data.distribution.publishPrerelease = false;
-    expect(() => windowsReleasePolicy(data)).toThrow(
-      "restricted to beta prereleases",
-    );
+    expect(windowsReleasePolicy(data)).toBe("unsigned-preview");
   });
 
   it("rejects an enabled platform also marked deferred", () => {

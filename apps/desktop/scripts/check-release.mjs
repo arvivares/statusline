@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { windowsReleasePolicy } from "./windows-release-policy.mjs";
+import { githubReleasePolicy } from "./github-release-policy.mjs";
 import { parseUpdaterPublicKey } from "./updater-artifacts.mjs";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -162,6 +163,7 @@ const macosNotarizationScript = readText("scripts/notarize-macos-artifact.sh");
 const macosSigningCleanupScript = readText("scripts/cleanup-macos-signing.sh");
 const checksumScript = readText("scripts/generate-checksums.mjs");
 const releaseAssetScript = readText("scripts/prepare-release-assets.mjs");
+const releaseAssetLabelsScript = readText("scripts/release-asset-labels.mjs");
 const windowsSignPathScript = readText(
   "scripts/windows-signpath-artifacts.ps1",
 );
@@ -336,6 +338,7 @@ const isUnixPreviewProfile = releasePlatformProfile === "linux,macos,android";
 const isCompleteProfile =
   releasePlatformProfile === "windows,linux,macos,android";
 const windowsSigning = windowsReleasePolicy(releaseMetadata);
+githubReleasePolicy(releaseMetadata);
 assert(
   uniqueVersions.size === 1 && !uniqueVersions.has(undefined),
   `versions differ: ${Object.entries(versions)
@@ -349,7 +352,7 @@ assert(
     releaseMetadata.tag === `v${releaseMetadata.version}` &&
     releaseMetadata.notes ===
       `docs/release/notes/v${releaseMetadata.version}.md` &&
-    releaseMetadata.distribution?.publishPrerelease === true &&
+    typeof releaseMetadata.distribution?.publishPrerelease === "boolean" &&
     (isUnixPreviewProfile || isCompleteProfile) &&
     (isCompleteProfile
       ? releaseMetadata.distribution?.deferred?.windows === undefined
@@ -386,7 +389,7 @@ assert(
     (releaseNotes.includes("unsigned") &&
       releaseNotes.includes("SmartScreen") &&
       releaseNotes.includes("Authenticode")),
-  "unsigned Windows prereleases must disclose Authenticode and SmartScreen limitations",
+  "unsigned Windows beta releases must disclose Authenticode and SmartScreen limitations",
 );
 assert(
   releaseWorkflow.includes("windows-release-policy.mjs") &&
@@ -474,6 +477,8 @@ for (const relativePath of [
   "scripts/generate-checksums.mjs",
   "scripts/prepare-release-assets.mjs",
   "scripts/prepare-release-assets.test.mjs",
+  "scripts/release-asset-labels.mjs",
+  "scripts/release-asset-labels.test.mjs",
   "scripts/updater-artifacts.mjs",
   "scripts/build-updater-verifier.mjs",
   "scripts/updater-verifier/Cargo.toml",
@@ -658,6 +663,17 @@ assert(
     ),
   "public updater assets require dedicated signing, verified inventory, recovery validation and remote byte verification",
 );
+assert(
+  releaseAssetLabelsScript.includes(
+    "labels can only be applied to the matching draft release",
+  ) &&
+    releaseAssetLabelsScript.includes("filename and URLs unchanged") &&
+    releaseAssetLabelsScript.includes("browser_download_url") &&
+    releaseAssetLabelsScript.includes("digest") &&
+    releaseWorkflow.includes("release-asset-labels.mjs") &&
+    recoveryWorkflow.includes("release-asset-labels.mjs"),
+  "asset labels must remain display-only metadata and be verified while the release is still a draft",
+);
 for (const [before, after] of [
   [
     "Prepare AppImage compatibility policy before signing",
@@ -787,8 +803,10 @@ for (const requiredReleaseWorkflowToken of [
   "subject-checksums:",
   "attempt-${{ github.run_attempt }}",
   "Verify draft release inventory",
-  "Publish verified prerelease",
-  "Verified assets were not published as a prerelease",
+  "Apply and verify asset display labels",
+  "Publish verified release",
+  "github-release-policy.mjs",
+  "Published release visibility does not match release.json",
 ]) {
   assert(
     releaseWorkflow.includes(requiredReleaseWorkflowToken),
@@ -804,7 +822,9 @@ for (const requiredRecoveryWorkflowToken of [
   "STATUSLINE_RELEASE_COMMIT",
   "Replace draft assets with normalized verified assets",
   "Verify exact draft inventory",
-  "Publish recovered prerelease",
+  "Apply and verify asset display labels",
+  "Publish recovered release",
+  "github-release-policy.mjs",
 ]) {
   assert(
     recoveryWorkflow.includes(requiredRecoveryWorkflowToken),

@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "project": "statusline-claude-foundation",
+    "analyzed_at": "2026-09-16",
+    "git_ref": "6eb0bb5 + working-tree Claude foundation",
+    "scope": "diff:Claude discovery, parser, IPC and inventory; no live transport",
+    "tool_version": "threat-model"
+  },
+  "findings": [],
+  "systemic": [],
+  "chains": []
+}

@@ -44,6 +44,7 @@
 "AUTHORIZE" = "AUTHORIZE";
 "AUTO DETECT" = "AUTO DETECT";
 "Automatic detection" = "Automatic detection";
+"Automatic quota reading is not available yet. Statusline does not access your Claude credentials or conversations." = "Automatic quota reading is not available yet. Statusline does not access your Claude credentials or conversations.";
 "AVAILABLE" = "AVAILABLE";
 "available · quota metadata only" = "available · quota metadata only";
 "AVAILABLE · QUOTA METADATA ONLY" = "AVAILABLE · QUOTA METADATA ONLY";
@@ -77,7 +78,10 @@
 "Choose executable" = "Choose executable";
 "CLAIMING" = "CLAIMING";
 "CLAIMING…" = "CLAIMING…";
+"Claude detected · quota pending" = "Claude detected · quota pending";
+"Claude discovery could not finish. Your last detected installation is kept." = "Claude discovery could not finish. Your last detected installation is kept.";
 "CLEAR DEMO" = "CLEAR DEMO";
+"CLI and desktop app" = "CLI and desktop app";
 "Clipboard access failed. Select and copy the private link manually." = "Clipboard access failed. Select and copy the private link manually.";
 "Close" = "Close";
 "CLOSE" = "CLOSE";
@@ -233,7 +237,9 @@
 "Install Codex CLI, run codex and sign in with ChatGPT before refreshing." = "Install Codex CLI, run codex and sign in with ChatGPT before refreshing.";
 "Install Codex or select its executable manually." = "Install Codex or select its executable manually.";
 "Install the DEB or RPM from the official release page using your package manager." = "Install the DEB or RPM from the official release page using your package manager.";
+"Installation checked: {0}" = "Installation checked: {0}";
 "Installation continues in the background. Statusline Companion will restart when ready." = "Installation continues in the background. Statusline Companion will restart when ready.";
+"Installation detected · session not checked" = "Installation detected · session not checked";
 "Installed version" = "Installed version";
 "INSTALLER CONFIG" = "INSTALLER CONFIG";
 "Installing update" = "Installing update";
@@ -280,6 +286,7 @@
 "NO NETWORK" = "NO NETWORK";
 "No percentage followed by ‘% left’ was found." = "No percentage followed by ‘% left’ was found.";
 "No quota sample" = "No quota sample";
+"No quota sample available" = "No quota sample available";
 "NO SAMPLE" = "NO SAMPLE";
 "No sample published" = "No sample published";
 "NO SAMPLE PUBLISHED" = "NO SAMPLE PUBLISHED";

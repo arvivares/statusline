@@ -12,6 +12,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  createUpdaterManifest,
+  updaterKinds,
   parseUpdaterPublicKey,
   verifyUpdaterSignature,
 } from "./updater-artifacts.mjs";
@@ -37,6 +39,44 @@ afterEach(async () => {
 });
 
 describe("updater signature verification", () => {
+  it("keeps the same update manifest for Latest and prerelease beta publication", () => {
+    const metadata = {
+      version: "0.1.26",
+      tag: "v0.1.26",
+      channel: "beta",
+      distribution: { publishPrerelease: true },
+    };
+    const records = [...updaterKinds].map((kind) => ({
+      kind,
+      name: `fixture-${kind}`,
+    }));
+    const signatures = new Map(
+      records.map((record) => [record.name, "already-verified-test-signature"]),
+    );
+    const before = createUpdaterManifest(metadata, records, signatures);
+    metadata.distribution.publishPrerelease = false;
+    expect(createUpdaterManifest(metadata, records, signatures)).toEqual(
+      before,
+    );
+    signatures.delete(records[0].name);
+    expect(() => createUpdaterManifest(metadata, records, signatures)).toThrow(
+      "missing verified signature",
+    );
+  });
+  it("fails closed for an implicit visibility policy", () => {
+    expect(() =>
+      createUpdaterManifest(
+        {
+          version: "0.1.26",
+          tag: "v0.1.26",
+          channel: "beta",
+          distribution: {},
+        },
+        [],
+        new Map(),
+      ),
+    ).toThrow("explicit publishPrerelease");
+  });
   it("does not pass private signing material to Cargo or the verifier", () => {
     expect(
       verificationEnvironment({

@@ -30,6 +30,8 @@ requests are welcome.
   cross-platform integration gates; not yet a shipped provider.
 - [Antigravity Companion candidate](architecture/antigravity-companion.md): per-user
   visibility, source setup, independent polling and unchanged v1/mobile pairings.
+- [Claude foundation](architecture/claude-sources.md): passive discovery, documented
+  quota normalization, privacy boundaries and gates before enabling live reads.
 - [Synchronization and freshness](architecture/synchronization.md): native desktop
   scheduling, independent iOS widgets, cache safety and verification limits.
 - [Companion window behavior](architecture/companion-window.md): cross-platform
@@ -49,7 +51,7 @@ requests are welcome.
 
 - [Public release runbook](release/release-runbook.md): canonical version, unified tag,
   required assets, SignPath inputs, provenance and publication procedure.
-- [Current beta candidate notes](release/notes/v0.1.22.md): curated user-facing notes and
+- [Current beta candidate notes](release/notes/v0.1.26.md): curated user-facing notes and
   known limitations for the next candidate.
 - [Desktop installers](release/desktop-installers.md): build matrix, signing, checksums and
   smoke tests.

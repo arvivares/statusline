@@ -1,5 +1,6 @@
 pub mod antigravity;
 pub mod app_server;
+pub mod claude;
 pub mod codex_installation;
 pub mod localization;
 #[cfg(target_os = "macos")]
@@ -208,7 +209,10 @@ type RefreshState = RefreshCoordinator<UsageResponse>;
 async fn refresh_usage(app: AppHandle) -> Result<UsageResponse, String> {
     let google_app = app.clone();
     tauri::async_runtime::spawn(async move {
-        refresh_antigravity_native(&google_app).await;
+        tokio::join!(
+            refresh_antigravity_native(&google_app),
+            refresh_claude_native(&google_app)
+        );
     });
     Ok(refresh_native(&app, Duration::ZERO).await)
 }
@@ -217,9 +221,26 @@ async fn refresh_usage(app: AppHandle) -> Result<UsageResponse, String> {
 async fn current_usage(app: AppHandle) -> Result<UsageResponse, String> {
     let google_app = app.clone();
     tauri::async_runtime::spawn(async move {
-        refresh_antigravity_native(&google_app).await;
+        tokio::join!(
+            refresh_antigravity_native(&google_app),
+            refresh_claude_native(&google_app)
+        );
     });
     Ok(refresh_native(&app, FOCUS_REFRESH_AGE).await)
+}
+
+async fn refresh_claude_native(app: &AppHandle) -> claude::View {
+    let view = claude::refresh(&app.state::<claude::State>(), FOCUS_REFRESH_AGE).await;
+    app.state::<UniversalRelayState>()
+        .record_claude(&view)
+        .await;
+    let _ = app.emit("claude-updated", &view);
+    view
+}
+
+#[tauri::command]
+async fn claude_status(app: AppHandle) -> claude::View {
+    refresh_claude_native(&app).await
 }
 
 async fn refresh_antigravity_native(app: &AppHandle) -> antigravity::View {
@@ -382,6 +403,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(RefreshState::default())
         .manage(antigravity::State::default())
+        .manage(claude::State::default())
         .manage(ProviderTrayState::default())
         .manage(WindowBehaviorState::default())
         .manage(UniversalRelayState::default())
@@ -435,7 +457,8 @@ pub fn run() {
                         tauri::async_runtime::spawn(async move {
                             tokio::join!(
                                 refresh_native(&app, Duration::ZERO),
-                                refresh_antigravity_native(&app)
+                                refresh_antigravity_native(&app),
+                                refresh_claude_native(&app)
                             );
                         });
                     }
@@ -518,7 +541,8 @@ pub fn run() {
                     interval.tick().await;
                     tokio::join!(
                         refresh_native(&refresh_app, Duration::ZERO),
-                        refresh_antigravity_native(&refresh_app)
+                        refresh_antigravity_native(&refresh_app),
+                        refresh_claude_native(&refresh_app)
                     );
                 }
             });
@@ -546,6 +570,7 @@ pub fn run() {
             refresh_usage,
             current_usage,
             antigravity_status,
+            claude_status,
             configure_antigravity,
             relay_status,
             create_relay_pairing,

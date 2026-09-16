@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { githubReleasePolicy } from "./github-release-policy.mjs";
 import {
   buildUpdaterVerifier,
   verificationEnvironment,
@@ -79,10 +80,10 @@ export function createUpdaterManifest(metadata, records, signatures) {
   );
   requireValue(metadata.tag === `v${metadata.version}`, "tag/version mismatch");
   requireValue(
-    metadata.channel === "beta" &&
-      metadata.distribution?.publishPrerelease === true,
-    "updater requires the beta prerelease policy",
+    metadata.channel === "beta",
+    "updater requires the beta channel",
   );
+  githubReleasePolicy(metadata);
   const platforms = {};
   for (const [target, kind] of updaterTargets) {
     const matches = records.filter((record) => record.kind === kind);
