@@ -32,6 +32,7 @@
 "Agent usage" = "Uso de agentes";
 "An encrypted snapshot is available on this device." = "Hay una muestra cifrada disponible en este dispositivo.";
 "Antigravity · {0}% left" = "Antigravity · {0}% libre";
+"Antigravity · Gemini" = "Antigravity · Gemini";
 "Antigravity · no weekly data" = "Antigravity · sin datos semanales";
 "Antigravity · unavailable" = "Antigravity · no disponible";
 "Antigravity did not respond. Codex and its mobile sync are unaffected." = "Antigravity no respondió. Codex y su sincronización móvil no se ven afectados.";
@@ -72,6 +73,7 @@
 "Checking the relay…" = "Comprobando el relay universal…";
 "Checking your Codex session…" = "Comprobando tu sesión de Codex…";
 "Checking…" = "Buscando…";
+"Chevron right" = "›";
 "Choose executable" = "Elegir ejecutable";
 "CLAIMING" = "VINCULANDO";
 "CLAIMING…" = "VINCULANDO…";
@@ -217,6 +219,7 @@
 "EXECUTABLE.PATH" = "RUTA.EJECUTABLE";
 "FALLBACK.INPUT" = "ENTRADA.MANUAL";
 "FAULT" = "ERROR";
+"Focused service: {0}" = "Servicio enfocado: {0}";
 "Gemini sync requires an updated relay and iOS app. Android continues showing Codex." = "La sincronización de Gemini requiere un relay y una app de iOS actualizados. Android sigue mostrando Codex.";
 "Gemini weekly limit" = "Límite semanal de Gemini";
 "Generating independent read/write credentials." = "Generando credenciales independientes de lectura y escritura.";
@@ -290,6 +293,7 @@
 "Not found" = "No encontrado";
 "NOT FOUND" = "NO ENCONTRADO";
 "NOT PUBLISHED" = "SIN PUBLICAR";
+"Not selected" = "No seleccionado";
 "NOT UPLOADED" = "NO SE ENVÍA";
 "Notify me about new versions. Installation always needs my approval." = "Avisarme de nuevas versiones. La instalación siempre requiere mi aprobación.";
 "NOW" = "AHORA";
@@ -429,7 +433,9 @@
 "See your remaining weekly quota and its next reset." = "Consulta la cuota semanal restante y su próximo reinicio.";
 "Select a Codex executable or macOS app" = "Selecciona un ejecutable de Codex o una app de macOS";
 "SELECT EXECUTABLE" = "ELEGIR EJECUTABLE";
+"SELECT SERVICE" = "SELECCIONAR SERVICIO";
 "Select the Codex executable" = "Selecciona el ejecutable de Codex";
+"Selected" = "Seleccionado";
 "Services" = "Servicios";
 "SESSION STAYS ON MAC" = "SESIÓN SOLO EN EL MAC";
 "SESSION.STORAGE" = "ALMACÉN.SESIÓN";
@@ -493,6 +499,7 @@
 "SYSTEM KEYCHAIN" = "LLAVERO DEL SISTEMA";
 "System PATH" = "PATH del sistema";
 "SYSTEM PATH" = "PATH DEL SISTEMA";
+"Tap to focus" = "Toca para enfocar";
 "That QR is not from Statusline. Keep the companion’s QR open." = "Ese QR no pertenece a Statusline. Mantén abierto el QR del companion.";
 "The camera is unavailable here. Paste the private link shown by the companion below." = "La cámara no está disponible aquí. Pega abajo el vínculo privado que muestra el companion.";
 "The camera opened, but the QR reader could not start. You can paste the link manually." = "La cámara se abrió, pero el lector QR no pudo iniciarse. Puedes pegar el vínculo manualmente.";
@@ -573,6 +580,7 @@
 "Waiting for relay" = "Esperando al relay";
 "WAITING FOR RELAY" = "ESPERANDO AL RELAY";
 "Waiting for the QR scan. Expires {0}." = "Esperando el escaneo del QR. Caduca {0}.";
+"WATCHLIST" = "LISTA DE SEGUIMIENTO";
 "Weekly" = "Semanal";
 "WEEKLY LIMIT" = "LÍMITE SEMANAL";
 "Weekly quota" = "Cuota semanal";

@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.24` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.24`;
-- Android candidate: `versionCode 20` (Google Play submission is separate);
+- prepared product tag: `v0.1.25` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.25`;
+- Android candidate: `versionCode 21` (Google Play submission is separate);
 - recorded iOS source version: `1.1.0 (9)`, adding Antigravity to the app and
   widgets. This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
@@ -44,7 +44,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.24`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.25`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -119,8 +119,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.24 -m "Statusline 0.1.24 beta"
-git push origin v0.1.24
+git tag -s v0.1.25 -m "Statusline 0.1.25 beta"
+git push origin v0.1.25
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -128,7 +128,7 @@ targets the exact workflow commit and matches `release.json`. The signed tag is 
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
 draft is published automatically with GitHub's **Pre-release** flag.
 
-### 0.1.24 candidate gates
+### 0.1.25 candidate gates
 
 - Validate the [optional services extension](../../protocol/statusline-services-v1.md)
   with real SQLite migrations, old/new readers and publishers, atomic sequences,
@@ -151,15 +151,15 @@ draft is published automatically with GitHub's **Pre-release** flag.
   small/medium widgets, unavailable/offline state and independent widget refresh.
   Simulator tests do not prove device background scheduling or vendor collection.
 - Publish the complete signed-tag installer set only after all release gates pass.
-  Android `0.1.24 (20)` and older iOS clients retain the Codex v1 projection; this
-  release does not add Antigravity to Android or roll out Google Play/App Store
-  production. Keep remaining device checks explicit in the
-  [beta notes](notes/v0.1.24.md).
+  Android `0.1.25 (21)` and older iOS/Android clients retain the Codex v1
+  projection. This release adds Antigravity to Android through the negotiated
+  services-v1 response; it does not roll out Google Play/App Store production.
+  Keep remaining device checks explicit in the [beta notes](notes/v0.1.25.md).
 
 ### Historical 0.1.23 candidate gates
 
 The following records the previous Companion-only release. Its no-relay-change
-and no-iOS-rebuild instructions do not apply to the authorized 0.1.24 rollout.
+and no-iOS-rebuild instructions do not apply to the authorized 0.1.25 rollout.
 
 - Run the Antigravity runtime tests and full Companion typecheck on Windows,
   Linux and macOS. Verify Google-only filtering, automatic discovery only without

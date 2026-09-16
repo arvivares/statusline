@@ -59,8 +59,8 @@ android {
         applicationId = "inmerzion.statusline"
         minSdk = 23
         targetSdk = 36
-        versionCode = 20
-        versionName = "0.1.24"
+        versionCode = 21
+        versionName = "0.1.25"
 
         buildConfigField("String", "RELAY_BASE_URL", relayBaseURL.asBuildConfigLiteral())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -113,6 +113,10 @@ android {
                 "statusline.fixture",
                 rootProject.file("../../protocol/fixtures/aes-gcm-v1.json").absolutePath,
             )
+            it.systemProperty(
+                "statusline.services.fixture",
+                rootProject.file("../../protocol/fixtures/aes-gcm-services-v1.json").absolutePath,
+            )
         }
     }
 
@@ -144,6 +148,7 @@ dependencies {
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20250517")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 }

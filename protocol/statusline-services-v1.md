@@ -3,7 +3,8 @@
 This additive extension preserves [relay v1](statusline-relay-v1.md), including
 its QR, reader/publisher credentials, channel IDs and encrypted Codex projection.
 It does not require users to pair again. Implementation begins with Companion
-0.1.24 and iOS 1.1.0; publishing source is not proof of a deployed release.
+0.1.24, iOS 1.1.0 and Android 0.1.25; publishing source is not proof of a
+deployed release.
 
 ## Negotiation and storage
 

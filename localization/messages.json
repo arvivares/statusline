@@ -1,4 +1,11 @@
 {
+  "Antigravity · Gemini": "Antigravity · Gemini",
+  "Focused service: {0}": "Servicio enfocado: {0}",
+  "Not selected": "No seleccionado",
+  "SELECT SERVICE": "SELECCIONAR SERVICIO",
+  "Selected": "Seleccionado",
+  "Tap to focus": "Toca para enfocar",
+  "WATCHLIST": "LISTA DE SEGUIMIENTO",
   "Enable a supported service in your Companion to see its quota here.": "Activa un servicio compatible en tu Companion para ver su cuota aquí.",
   "The relay stores only AES-256-GCM encrypted quota snapshots. Your agents’ credentials and the encryption key never reach the relay.": "El relay solo almacena muestras de cuota cifradas con AES-256-GCM. Las credenciales de tus agentes y la clave de cifrado nunca llegan al relay.",
   "{0}% left": "{0}% libre",
@@ -582,5 +589,6 @@
   "Stale · {0}": "Sin actualizar · {0}",
   "Detected source: {0}": "Fuente detectada: {0}",
   "No Antigravity installation found. Discovery will check again automatically.": "No se encontró una instalación de Antigravity. Se volverá a buscar automáticamente.",
-  "Antigravity is disabled. Enable automatic detection to show it again.": "Antigravity está desactivado. Activa la detección automática para volver a mostrarlo."
+  "Antigravity is disabled. Enable automatic detection to show it again.": "Antigravity está desactivado. Activa la detección automática para volver a mostrarlo.",
+  "Chevron right": "›"
 }
