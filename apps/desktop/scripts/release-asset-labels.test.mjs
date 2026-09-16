@@ -63,7 +63,7 @@ function fakeGitHub(manifest) {
       label: null,
       size: 100 + index,
       digest: `sha256:${"a".repeat(64)}`,
-      browser_download_url: `https://github.com/arvivares/statusline/releases/download/${manifest.tag}/${name}`,
+      browser_download_url: `https://github.com/arvivares/statusline/releases/download/untagged-test-release/${name}`,
     })),
   };
   const patches = [];

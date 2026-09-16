@@ -110,6 +110,25 @@ function githubAPI(endpoint, body) {
   );
 }
 
+function isExpectedDownloadURL(value, assetName) {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      url.hostname === "github.com" &&
+      url.username === "" &&
+      url.password === "" &&
+      url.port === "" &&
+      url.search === "" &&
+      url.hash === "" &&
+      url.pathname.startsWith(`/${repository}/releases/download/`) &&
+      url.pathname.endsWith(`/${assetName}`)
+    );
+  } catch {
+    return false;
+  }
+}
+
 // Labels are presentation metadata only. Never send `name`, replace a payload,
 // regenerate signatures, or change updater.json while applying them.
 export function applyReleaseLabels(manifest, api = githubAPI) {
@@ -142,8 +161,7 @@ export function applyReleaseLabels(manifest, api = githubAPI) {
           Number.isSafeInteger(asset.id) &&
           asset.id > 0 &&
           !ids.has(asset.id) &&
-          asset.browser_download_url ===
-            `https://github.com/${repository}/releases/download/${manifest.tag}/${asset.name}`,
+          isExpectedDownloadURL(asset.browser_download_url, asset.name),
         "unexpected asset identity or download URL",
       );
       names.add(asset.name);
