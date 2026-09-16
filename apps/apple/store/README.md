@@ -1,15 +1,26 @@
 # Apple App Store release kit
 
-## Current candidate — 15 September 2026
+## Current submission — 15 September 2026
 
-The Antigravity integration prepares **iOS 1.1.0 (9)** for manual TestFlight
-delivery with Companion 0.1.24 and the compatible services-v1 relay extension.
-App Store Connect was checked on 15 September: the latest processed upload before
-this candidate was **1.0.3 (8)**, assigned to Internal QA. Source preparation and
-passing simulator tests do not establish upload, processing or physical-device QA.
-Build-specific instructions are in [English](testflight/1.1.0-9-en-US.txt) and
-[Spanish](testflight/1.1.0-9-es-ES.txt). No App Store production submission or public
-release is authorized by this TestFlight delivery. Existing pairings must survive.
+**iOS 1.1.0 (9)** is **Waiting for Review**, submitted on 15 September 2026 at
+17:51 Europe/Madrid after the developer confirmed it works on their physical
+iPhone through TestFlight. Submission ID:
+`8931776e-9fcd-44fd-ab86-d1c956671b2d`. It adds
+Google Gemini quota from Antigravity alongside Codex with Companion 0.1.24 and
+the compatible services-v1 relay; existing pairings are preserved.
+
+The current App Store kit contains [English](listing/en-US.md) and
+[Spanish](listing/es-ES.md) listings, [review notes](release-notes/1.1.0-review.txt)
+and [five Still Focus screenshots per language](assets/1.1.0/README.md), captured
+from the actual new UI. The existing distribution build is reused without another
+archive or upload. See [validation-1.1.0.md](validation-1.1.0.md) for the exact
+portal status, submission receipt and capture provenance. The public version
+observed before this submission is **1.0.3 (8)**, Ready for Distribution.
+The inherited release policy is automatic after Apple approval; 1.1.0 is not yet
+confirmed publicly available.
+
+Build-specific TestFlight instructions remain available in
+[English](testflight/1.1.0-9-en-US.txt) and [Spanish](testflight/1.1.0-9-es-ES.txt).
 
 The dated records below are historical; their older "latest upload" and review
 statuses are not a live status report. PR #47 separately consolidates those records
@@ -32,7 +43,7 @@ processing and internal-test availability still need verification in App Store C
 The local USB test is not a test of the distribution-signed TestFlight upgrade.
 Build 6 has **not** replaced the existing App Review submission.
 
-## App record
+## Historical app record — 10 September 2026
 
 - Platform: iOS
 - Name: Statusline
