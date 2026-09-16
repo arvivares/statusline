@@ -1,4 +1,5 @@
 import { googleIsVisible, type GoogleView } from "./antigravity";
+import { claudeIsVisible, type ClaudeView } from "./claude";
 import type { CodexDiagnostic } from "./codex";
 import type { UsageState } from "./usage";
 
@@ -19,12 +20,13 @@ export type ProviderReading = Readonly<{
   short: FocusWindow | null;
 }>;
 
-// Only implemented adapters enter the registry. Future providers use the same
-// focus/watchlist contract, never a placeholder slot in the production UI.
+// Only locally detected adapters enter the registry. Detection alone never
+// creates a ready quota reading. No static slots for absent services.
 export function companionProviders(
   codex: UsageState | null,
   diagnostic: CodexDiagnostic | null,
   google: GoogleView,
+  claude: ClaudeView | null = null,
 ): ProviderReading[] {
   const providers: ProviderReading[] = [];
   const codexMissing =
@@ -78,6 +80,18 @@ export function companionProviders(
         usage.status === "ready" && usage.quota.shortWindow
           ? { ...usage.quota.shortWindow, minutes: 300 }
           : null,
+    });
+  }
+  if (claudeIsVisible(claude)) {
+    providers.push({
+      id: "claude",
+      name: "Claude",
+      source: "Anthropic",
+      defaultPeriod: "short",
+      status: "unavailable",
+      checkedAt: null,
+      weekly: null,
+      short: null,
     });
   }
   return providers;

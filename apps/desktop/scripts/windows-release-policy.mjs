@@ -26,9 +26,9 @@ export function windowsReleasePolicy(metadata) {
       "Windows requires explicit signpath or unsigned-preview policy",
     );
   }
-  if (metadata.channel !== "beta" || distribution.publishPrerelease !== true) {
+  if (metadata.channel !== "beta") {
     throw new Error(
-      "Unsigned Windows installers are restricted to beta prereleases",
+      "Unsigned Windows installers are restricted to the beta channel",
     );
   }
   return mode;

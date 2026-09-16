@@ -1,4 +1,11 @@
 {
+  "CLI and desktop app": "CLI y aplicación de escritorio",
+  "Installation detected · session not checked": "Instalación detectada · sesión sin verificar",
+  "Claude detected · quota pending": "Claude detectado · cuota pendiente",
+  "Claude discovery could not finish. Your last detected installation is kept.": "No se pudo completar la búsqueda de Claude. Se conserva la última instalación detectada.",
+  "Automatic quota reading is not available yet. Statusline does not access your Claude credentials or conversations.": "La lectura automática de cuota aún no está disponible. Statusline no accede a tus credenciales ni conversaciones de Claude.",
+  "Installation checked: {0}": "Instalación comprobada: {0}",
+  "No quota sample available": "Sin muestra de cuota disponible",
   "Antigravity · Gemini": "Antigravity · Gemini",
   "Focused service: {0}": "Servicio enfocado: {0}",
   "Not selected": "No seleccionado",

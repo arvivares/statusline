@@ -1,7 +1,7 @@
 # Public release runbook
 
 This runbook describes the single-source release process for Statusline. It prepares one
-GitHub prerelease containing the enabled desktop and Android binaries built from the same
+GitHub release containing the enabled desktop and Android binaries built from the same
 signed tag and commit. iOS remains an App Store delivery and is recorded, but not compiled,
 by this workflow.
 
@@ -10,17 +10,21 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.25` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.25`;
-- Android candidate: `versionCode 21` (Google Play submission is separate);
+- prepared product tag: `v0.1.26` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.26`;
+- Android candidate: `versionCode 22` (Google Play submission is separate);
 - recorded iOS source version: `1.1.0 (9)`, adding Antigravity to the app and
   widgets. This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
   before taking any store action. Build 5 has an empty widget endpoint and
   must not be publicly released. Historical device and submission evidence is
   in [iOS validation](../../apps/apple/store/validation.md).
-- GitHub prerelease platforms: Windows, Linux, macOS and Android. Windows explicitly
+- GitHub release platforms: Windows, Linux, macOS and Android. Windows explicitly
   uses `windowsSigning: unsigned-preview`; no SignPath certificate has been approved.
+- `distribution.publishPrerelease: false`: publish as a normal GitHub release and
+  mark it Latest. This makes the download visible in the repository's Releases
+  sidebar. `channel: beta` still describes product maturity, independently of
+  GitHub visibility and Authenticode. v0.1.25 and earlier prereleases are unchanged.
 
 The release preflight rejects drift between this file, npm, Cargo, Tauri, Gradle and the
 Xcode project.
@@ -35,7 +39,14 @@ create a public release candidate. A signed annotated `v<version>` tag triggers:
 3. native desktop builds on the platform profile declared in `release.json`;
 4. a signed Android APK and AAB build;
 5. mandatory inventory, signature, checksum and provenance validation;
-6. upload of the complete verified set and automatic publication as a prerelease.
+6. upload and byte-for-byte verification of the complete candidate;
+7. application and verification of human-readable platform labels while the
+   release remains a draft. These labels never rename files or alter updater
+   URLs, signatures, checksums, digests or payload bytes;
+8. publication using `publishPrerelease`:
+   false means a visible Latest release; true retains the historical prerelease
+   behavior and does not become Latest. Both release and recovery workflows verify
+   the resulting state; normal publication also checks GitHub's latest endpoint.
 
 Manual runs of the workflow execute preflight only, including a fail-closed check of every
 production signing value. Run that manual preflight successfully before creating the tag.
@@ -44,7 +55,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.25`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.26`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -53,6 +64,15 @@ distributable:
 | Linux    | DEB, RPM, AppImage and one `.asc` signature per installer  |
 | macOS    | Universal DMG, universal PKG                               |
 | Android  | Signed APK, signed AAB                                     |
+
+GitHub's asset list is flat, so the pipeline adds display labels such as
+`WINDOWS · EXE installer · x64 · Unsigned`, `macOS · DMG installer · Apple
+Silicon + Intel`, `LINUX · AppImage · x64` and `ANDROID · APK installer`. The
+AAB remains available for Google Play publishing and is labelled as not directly
+installable. Labels are presentation metadata applied through the GitHub API only
+after remote bytes and inventory match the verified candidate. The pipeline sends
+only the `label` field and rechecks every asset ID, filename, download URL, size and
+digest before publication, preserving Companion update compatibility.
 
 Windows is included without Authenticode under an explicit beta-only policy. CI checks
 `NotSigned` status on the application and both installers and requires successful install,
@@ -252,7 +272,7 @@ to combine artifacts from different runs, attempts, commits or tags.
 
 ## Independent verification
 
-Download the prerelease assets and verify them independently:
+Download the release assets and verify them independently:
 
 ```shell
 gpg --import statusline-release-signing-key.asc

@@ -125,9 +125,10 @@ Permanent downloads are published on [GitHub Releases](https://github.com/arviva
 The current `windows-bootstrap-v0.1.6` entry is an explicitly unsigned Windows onboarding
 preview for SignPath Foundation, not the public beta intended for end users.
 
-The signed `v0.1.13` tag publishes the AppImage startup fix while preserving the unified
-English/Spanish interface. The prerelease includes Windows NSIS/MSI previews, Linux
-DEB/RPM/AppImage, universal macOS DMG/PKG and signed Android APK/AAB. Automated inventory,
+The prepared `v0.1.26` will appear as a normal GitHub release marked **Latest**, not
+a Pre-release. The product remains beta; earlier prereleases are unchanged. It includes
+Windows NSIS/MSI previews, Linux DEB/RPM/AppImage, universal macOS DMG/PKG and signed
+Android APK/AAB. Preparing source metadata does not publish the installers. Automated inventory,
 checksums, platform trust checks and GitHub build provenance must all pass before it
 becomes public. **Windows installers are unsigned previews without Authenticode** while
 SignPath Foundation onboarding is pending; their filenames contain `.unsigned` and

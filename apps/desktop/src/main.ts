@@ -20,6 +20,7 @@ import { UsageController } from "./controller";
 import { copyForState, type UsageState } from "./usage";
 import { bindUpdater, refreshUpdaterCopy } from "./updates";
 import { signatureMeter } from "./signature-meter";
+import { acceptClaudeView, claudeIsVisible, type ClaudeView } from "./claude";
 import {
   companionProviders,
   providerWatchlist,
@@ -140,6 +141,9 @@ let lastUsageState: UsageState | null = null;
 let lastDiagnostic: CodexDiagnostic | null = null;
 let lastRelayState: RelayStatus | null = null;
 let googleView: GoogleView = disabledGoogle;
+let claudeView: ClaudeView | null = null;
+let claudeInitialized = false;
+let claudeRefreshing = false;
 let selectedProvider = "codex";
 const selectedPeriods = new Map<string, QuotaPeriod>();
 let googleActionPending = false;
@@ -217,6 +221,10 @@ async function startTauriRuntime(): Promise<void> {
   await listen<unknown>("antigravity-updated", (event) =>
     acceptGoogle(event.payload),
   );
+  await listen<unknown>("claude-updated", (event) =>
+    acceptClaude(event.payload),
+  );
+  void refreshClaude();
   void invoke<unknown>("antigravity_status")
     .then(acceptGoogle)
     .catch(() => {
@@ -228,6 +236,7 @@ async function startTauriRuntime(): Promise<void> {
 
   refreshButton.addEventListener("click", () => {
     if (selectedProvider === "google") void refreshGoogle();
+    else if (selectedProvider === "claude") void refreshClaude();
     else void controller.refresh();
   });
 
@@ -313,6 +322,16 @@ function startPreview(initialState: UsageState): void {
     selectedProvider = "google";
     renderCurrentProvider();
   }
+  if (params.get("claude") === "detected") {
+    acceptClaude({
+      revision: 1,
+      checkedAt: Math.floor(Date.now() / 1000),
+      installations: { cli: true, desktop: false },
+      status: "quotaUnavailable",
+    });
+    selectedProvider = "claude";
+    renderCurrentProvider();
+  }
   const previewPanel = new URLSearchParams(window.location.search).get("panel");
   if (
     previewPanel === "source" ||
@@ -338,6 +357,7 @@ function renderCurrentProvider(): void {
     lastUsageState,
     lastDiagnostic,
     googleView,
+    claudeView,
   );
   if (!providers.some((provider) => provider.id === selectedProvider))
     selectedProvider = providers[0]?.id ?? "codex";
@@ -346,6 +366,7 @@ function renderCurrentProvider(): void {
   document.body.dataset.providerCount = String(providers.length);
   document.body.dataset.manyProviders = String(providers.length > 2);
   if (selectedProvider === "google") renderGoogleUsage();
+  else if (selectedProvider === "claude") renderClaudeUsage();
   else if (lastUsageState) renderCodexUsage(lastUsageState);
   const selected = providers.find(
     (provider) => provider.id === selectedProvider,
@@ -585,13 +606,81 @@ function renderCodexUsage(state: UsageState): void {
     state.code === "codexNotFound" &&
     sourceRuntime !== null &&
     googleInitialized &&
+    claudeInitialized &&
     !googleIsVisible(googleView) &&
+    !claudeIsVisible(claudeView) &&
     !sourceAutoOpened
   ) {
     sourceAutoOpened = true;
     selectSettingsView("source");
     openSourcePanel();
   }
+}
+
+function acceptClaude(payload: unknown): void {
+  try {
+    claudeView = acceptClaudeView(claudeView, payload);
+  } catch {
+    return;
+  }
+  claudeInitialized = true;
+  renderCurrentProvider();
+}
+
+async function refreshClaude(): Promise<void> {
+  if (claudeRefreshing || previewState !== null) return;
+  claudeRefreshing = true;
+  renderCurrentProvider();
+  try {
+    acceptClaude(await invoke<unknown>("claude_status"));
+  } catch {
+    /* Native periodic discovery can recover; keep any known installation. */
+  } finally {
+    claudeInitialized = true;
+    claudeRefreshing = false;
+    renderCurrentProvider();
+  }
+}
+
+function renderClaudeUsage(): void {
+  document.body.dataset.state = "unavailable";
+  document.body.dataset.multipleLimits = "false";
+  document.body.dataset.level = "normal";
+  shell.setAttribute("aria-busy", String(claudeRefreshing));
+  setMeter(null, claudeRefreshing);
+  liveLabel.textContent = claudeRefreshing ? t("READING") : t("UNAVAILABLE");
+  statusValue.textContent = liveLabel.textContent;
+  refreshButton.disabled = claudeRefreshing;
+  refreshLabel.textContent = claudeRefreshing ? t("Checking…") : t("Refresh");
+  resetValue.textContent = "—";
+  resetDetail.textContent = t("NOT PUBLISHED");
+  shortValue.closest(".metric-cell")?.setAttribute("hidden", "");
+  planValue
+    .closest(".metric-cell")
+    ?.querySelector("dt")
+    ?.replaceChildren(t("Local source"));
+  planValue.textContent = claudeView?.installations.cli
+    ? claudeView.installations.desktop
+      ? t("CLI and desktop app")
+      : "Claude Code CLI"
+    : t("Desktop app");
+  planDetail.textContent = t("Installation detected · session not checked");
+  // Passive presence must never be labelled as a successfully synced quota.
+  relayValue.closest(".metric-cell")?.setAttribute("hidden", "");
+  title.textContent = t("Claude detected · quota pending");
+  detail.textContent =
+    claudeView?.status === "discoveryUnavailable"
+      ? t(
+          "Claude discovery could not finish. Your last detected installation is kept.",
+        )
+      : t(
+          "Automatic quota reading is not available yet. Statusline does not access your Claude credentials or conversations.",
+        );
+  updatedValue.textContent = claudeView
+    ? t("Installation checked: {0}", formatTime(claudeView.checkedAt))
+    : "—";
+  sampleValue.textContent = "—";
+  recordValue.textContent = t("No quota sample available");
 }
 
 function acceptGoogle(payload: unknown): void {

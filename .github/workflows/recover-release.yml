@@ -29,7 +29,7 @@ env:
 
 jobs:
   recover:
-    name: Verify existing artifacts and publish prerelease
+    name: Verify existing artifacts and publish release
     if: github.repository == 'arvivares/statusline'
     runs-on: ubuntu-22.04
     timeout-minutes: 20
@@ -279,26 +279,41 @@ jobs:
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir remote-release
           node apps/desktop/scripts/verify-release-download.mjs public-release remote-release
 
-      - name: Publish recovered prerelease
+      - name: Apply and verify asset display labels
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          gh release edit "$RELEASE_TAG"
-          --repo "$GITHUB_REPOSITORY"
-          --draft=false
-          --prerelease
-          --latest=false
+        run: node apps/desktop/scripts/release-asset-labels.mjs public-release/RELEASE-MANIFEST.json
 
-      - name: Verify published prerelease state
+      - name: Publish recovered release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          policy=$(node apps/desktop/scripts/github-release-policy.mjs)
+          prerelease=$(jq -r '.prerelease' <<< "$policy")
+          latest=$(jq -r '.latest' <<< "$policy")
+          gh release edit "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft=false \
+            --prerelease="$prerelease" \
+            --latest="$latest"
+
+      - name: Verify published release state
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          policy=$(node apps/desktop/scripts/github-release-policy.mjs)
+          prerelease=$(jq -r '.prerelease' <<< "$policy")
           release_state=$(gh release view "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --json isDraft,isPrerelease \
             --jq '[.isDraft, .isPrerelease] | @tsv')
-          if [[ "$release_state" != $'false\ttrue' ]]; then
-            echo "Recovered assets were not published as a prerelease." >&2
+          if [[ "$release_state" != "$(printf 'false\t%s' "$prerelease")" ]]; then
+            echo "Published release visibility does not match release.json" >&2
             exit 1
+          fi
+          if [[ "$prerelease" == false ]]; then
+            latest_tag=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')
+            [[ "$latest_tag" == "$RELEASE_TAG" ]] || { echo "Latest does not point to the recovered release." >&2; exit 1; }
           fi

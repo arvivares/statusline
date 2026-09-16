@@ -10,8 +10,11 @@ Free code signing provided by [SignPath.io](https://signpath.io/), certificate b
 
 ## Temporary unsigned Windows beta policy
 
-- Only `channel: beta` and `publishPrerelease: true` permit `windowsSigning: unsigned-preview`.
-  Missing or unknown policies fail closed; there is no automatic signing fallback.
+- Only `channel: beta` permits `windowsSigning: unsigned-preview`. Starting with
+  the prepared v0.1.26, `publishPrerelease: false` lets GitHub show it as Latest;
+  that visibility flag is not a statement of stability or Authenticode trust.
+  Missing or unknown signing/visibility policies fail closed; there is no automatic
+  signing fallback. The existing v0.1.25 prerelease is not changed.
 - The source commit and annotated release tag are signed. Windows CI checks that the
   application, NSIS and MSI report `NotSigned`, then tests installation, frontend
   readiness, Codex discovery and uninstallation before uploading the candidate.
@@ -21,7 +24,7 @@ Free code signing provided by [SignPath.io](https://signpath.io/), certificate b
 - SmartScreen or organizational policy may warn or block these previews. Users should
   not disable security protections to install them. Signed publication remains preferred.
 - Linux OpenPGP signatures, Apple signing/notarization and Android signing remain
-  mandatory. The exception does not extend to those platforms or stable releases.
+  mandatory. The exception does not extend to those platforms or `channel: stable`.
 - Once SignPath is approved, change `windowsSigning` to `signpath` in a reviewed commit
   and publish a new version. Never silently replace a published preview with new bytes.
 
@@ -59,7 +62,7 @@ Once onboarding is complete, every signed Windows release must follow this proce
 6. The signed application executable is used to produce the NSIS and MSI installers without recompiling the application.
 7. Both installers are uploaded through the same trusted workflow and submitted for final Authenticode signing.
 8. CI verifies the signer, SHA-256 Authenticode signature and trusted timestamp on the application, NSIS installer and MSI before running installation smoke tests.
-9. The unified release finalizer verifies the complete platform profile, creates signed checksums and GitHub build-provenance attestations, then publishes only verified artifacts as a prerelease. In `signpath` mode every preceding SignPath gate must succeed.
+9. The unified release finalizer verifies the complete platform profile, creates signed checksums and GitHub build-provenance attestations, then publishes only verified artifacts with the explicit GitHub visibility from `release.json`. In `signpath` mode every preceding SignPath gate must succeed.
 
 A signing failure is fail-closed: the workflow must not publish or silently substitute an unsigned Windows artifact.
 

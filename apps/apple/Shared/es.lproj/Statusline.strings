@@ -44,6 +44,7 @@
 "AUTHORIZE" = "AUTORIZAR";
 "AUTO DETECT" = "DETECCIÓN AUTOMÁTICA";
 "Automatic detection" = "Detección automática";
+"Automatic quota reading is not available yet. Statusline does not access your Claude credentials or conversations." = "La lectura automática de cuota aún no está disponible. Statusline no accede a tus credenciales ni conversaciones de Claude.";
 "AVAILABLE" = "DISPONIBLE";
 "available · quota metadata only" = "disponible · solo metadatos de cuota";
 "AVAILABLE · QUOTA METADATA ONLY" = "DISPONIBLE · SOLO METADATOS DE CUOTA";
@@ -77,7 +78,10 @@
 "Choose executable" = "Elegir ejecutable";
 "CLAIMING" = "VINCULANDO";
 "CLAIMING…" = "VINCULANDO…";
+"Claude detected · quota pending" = "Claude detectado · cuota pendiente";
+"Claude discovery could not finish. Your last detected installation is kept." = "No se pudo completar la búsqueda de Claude. Se conserva la última instalación detectada.";
 "CLEAR DEMO" = "QUITAR DEMO";
+"CLI and desktop app" = "CLI y aplicación de escritorio";
 "Clipboard access failed. Select and copy the private link manually." = "No se pudo acceder al portapapeles. Selecciona y copia el vínculo privado manualmente.";
 "Close" = "Cerrar";
 "CLOSE" = "CERRAR";
@@ -233,7 +237,9 @@
 "Install Codex CLI, run codex and sign in with ChatGPT before refreshing." = "Instala Codex CLI, ejecuta codex e inicia sesión con ChatGPT antes de actualizar.";
 "Install Codex or select its executable manually." = "Instala Codex o selecciona su ejecutable manualmente.";
 "Install the DEB or RPM from the official release page using your package manager." = "Instala el DEB o RPM desde la página oficial de la versión con tu gestor de paquetes.";
+"Installation checked: {0}" = "Instalación comprobada: {0}";
 "Installation continues in the background. Statusline Companion will restart when ready." = "La instalación continúa en segundo plano. Statusline Companion se reiniciará cuando esté listo.";
+"Installation detected · session not checked" = "Instalación detectada · sesión sin verificar";
 "Installed version" = "Versión instalada";
 "INSTALLER CONFIG" = "CONFIGURACIÓN DEL INSTALADOR";
 "Installing update" = "Instalando actualización";
@@ -280,6 +286,7 @@
 "NO NETWORK" = "SIN RED";
 "No percentage followed by ‘% left’ was found." = "No se encontró un porcentaje seguido de ‘% left’.";
 "No quota sample" = "Sin muestra de cuota";
+"No quota sample available" = "Sin muestra de cuota disponible";
 "NO SAMPLE" = "SIN MUESTRA";
 "No sample published" = "Sin muestra publicada";
 "NO SAMPLE PUBLISHED" = "SIN MUESTRA PUBLICADA";

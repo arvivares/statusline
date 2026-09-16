@@ -1,0 +1,11 @@
+{
+  "rate_limits": {
+    "five_hour": { "used_percentage": 25.5, "resets_at": 1900018000 },
+    "seven_day": { "used_percentage": 47, "resets_at": 1900604800 }
+  },
+  "workspace": { "current_dir": "/fixture-private/project" },
+  "transcript_path": "/fixture-private/session.jsonl",
+  "session_id": "fixture-private-session",
+  "context_window": { "used_percentage": 96 },
+  "cost": { "total_cost_usd": 123 }
+}

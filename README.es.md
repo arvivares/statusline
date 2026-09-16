@@ -120,9 +120,10 @@ Las descargas permanentes se publican en [GitHub Releases](https://github.com/ar
 La entrada actual `windows-bootstrap-v0.1.6` es una preview de Windows explícitamente sin
 firma para el onboarding de SignPath Foundation; no es la beta pública para usuarios.
 
-El tag firmado `v0.1.13` publica la corrección de arranque de AppImage y conserva la
-interfaz unificada en inglés/español. La prerelease incluye previews NSIS/MSI de Windows,
-DEB/RPM/AppImage, DMG/PKG universal y APK/AAB firmados. El inventario, checksums, controles
+La `v0.1.26` preparada aparecerá como release normal de GitHub marcada **Latest**, no
+como Pre-release. El producto sigue en beta y las prereleases anteriores no cambian.
+Incluye previews NSIS/MSI de Windows, DEB/RPM/AppImage, DMG/PKG universal y APK/AAB firmados.
+Preparar los metadatos no publica los instaladores. El inventario, checksums, controles
 de confianza y attestations de procedencia deben aprobarse antes de hacerla pública.
 **Los instaladores Windows son previews sin firma Authenticode** mientras se completa
 SignPath Foundation; sus nombres incluyen `.unsigned` y SmartScreen puede advertir o
@@ -402,7 +403,7 @@ Free code signing provided by [SignPath.io](https://signpath.io/), certificate b
 Statusline ha seleccionado SignPath Foundation para firmar Windows. Mientras se completa
 la incorporación, la beta permite explícitamente previews públicas sin Authenticode;
 nunca se presentan como instaladores firmados. La política `unsigned-preview` sólo
-permite prereleases beta. Cambiar a `signpath` exige ambas etapas de firma y verificación,
+permite el canal beta, aunque GitHub muestre la release como Latest. Cambiar a `signpath` exige ambas etapas de firma y verificación,
 sin fallback si falla el proveedor. Linux, macOS y Android mantienen su firma obligatoria.
 
 El flujo de dos etapas del repositorio ya está preparado y espera únicamente los valores
