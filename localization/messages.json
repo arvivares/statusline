@@ -589,5 +589,6 @@
   "Stale · {0}": "Sin actualizar · {0}",
   "Detected source: {0}": "Fuente detectada: {0}",
   "No Antigravity installation found. Discovery will check again automatically.": "No se encontró una instalación de Antigravity. Se volverá a buscar automáticamente.",
-  "Antigravity is disabled. Enable automatic detection to show it again.": "Antigravity está desactivado. Activa la detección automática para volver a mostrarlo."
+  "Antigravity is disabled. Enable automatic detection to show it again.": "Antigravity está desactivado. Activa la detección automática para volver a mostrarlo.",
+  "Chevron right": "›"
 }

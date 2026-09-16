@@ -77,6 +77,7 @@ internal object MessageCatalog {
         "Checking the relay…" to "Comprobando el relay universal…",
         "Checking your Codex session…" to "Comprobando tu sesión de Codex…",
         "Checking…" to "Buscando…",
+        "Chevron right" to "›",
         "Choose executable" to "Elegir ejecutable",
         "CLAIMING" to "VINCULANDO",
         "CLAIMING…" to "VINCULANDO…",

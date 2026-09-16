@@ -409,7 +409,7 @@ private fun AgentWatchlist(
                     color = if (ready) DataPlaneColors.Ink else DataPlaneColors.Muted,
                 )
                 Text(
-                    "›",
+                    L10n.text("Chevron right"),
                     style = MaterialTheme.typography.titleLarge,
                     color = DataPlaneColors.Muted,
                     modifier = Modifier.padding(start = 12.dp),
