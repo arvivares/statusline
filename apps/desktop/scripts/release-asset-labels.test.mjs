@@ -79,10 +79,8 @@ function fakeGitHub(manifest) {
       Object.assign(asset, body);
       return structuredClone(asset);
     }
-    expect(endpoint).toBe(
-      `repos/arvivares/statusline/releases/tags/${manifest.tag}`,
-    );
-    return structuredClone(draft);
+    expect(endpoint).toBe("repos/arvivares/statusline/releases?per_page=100");
+    return [structuredClone(draft)];
   }
   return { draft, patches, api };
 }
@@ -175,6 +173,9 @@ describe("release asset display labels", () => {
 
   it.each([
     (r) => {
+      r.id = null;
+    },
+    (r) => {
       r.draft = false;
     },
     (r) => {
@@ -203,6 +204,18 @@ describe("release asset display labels", () => {
     },
   );
 
+  it("rejects ambiguous release lists without mutations", () => {
+    const manifest = fixture();
+    const remote = fakeGitHub(manifest);
+    expect(() =>
+      applyReleaseLabels(manifest, (endpoint, body) => {
+        const response = remote.api(endpoint, body);
+        return body ? response : [response[0], structuredClone(response[0])];
+      }),
+    ).toThrow("expected exactly one matching draft release");
+    expect(remote.patches).toHaveLength(0);
+  });
+
   it.each(["name", "browser_download_url", "size", "digest", "id"])(
     "fails if GitHub changes %s while saving labels",
     (field) => {
@@ -225,7 +238,7 @@ describe("release asset display labels", () => {
     expect(() =>
       applyReleaseLabels(manifest, (endpoint, body) => {
         const response = remote.api(endpoint, body);
-        if (!body && ++reads === 2) response.assets[0].label = null;
+        if (!body && ++reads === 2) response[0].assets[0].label = null;
         return response;
       }),
     ).toThrow("remote label verification failed");
