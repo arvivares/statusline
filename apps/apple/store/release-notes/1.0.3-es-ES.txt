@@ -1,0 +1,8 @@
+Presentamos Still Signature: una forma más sencilla de consultar tu cuota de Codex.
+
+• Panel del iPhone y widget renovados, con esquinas suaves y una tipografía más sencilla.
+• Barras segmentadas inspiradas en el icono de Statusline, con un marcador blanco al final de la cuota restante.
+• Más espacio entre el número y el símbolo de porcentaje.
+• Los controles de sincronización privada y actualización manual se despliegan cuando los necesitas.
+
+Se conserva tu emparejamiento y la corrección de sincronización del widget de la versión 1.0.2. Abre la app una vez después de actualizar y mantén Companion ejecutándose en un ordenador despierto. iOS decide cuándo actualiza el widget.

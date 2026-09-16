@@ -7,6 +7,8 @@ This directory is the versioned source of truth for the Statusline Google Play l
 - `listing/`: default English listing and Spanish localization.
 - `release-notes/`: localized notes for current and previous bundles.
 - [validation-0.1.15.md](validation-0.1.15.md): artifact verification, Play submission evidence and remaining test gates.
+- [Historical submission records](validation-0.1.17.md): dated evidence for the 0.1.17, 0.1.20 and 0.1.21 Alpha candidates.
+- [Listing audit](listing-validation-2026-09-11.md): the localized listing and screenshot draft audit.
 - `app-content.md`: answers used for Play Console policy forms.
 - `data-safety.md`: SDK and relay data inventory plus the declarations submitted to Google.
 - `review-access.md`: reviewer instructions for the account-free local demo.
@@ -62,6 +64,16 @@ An email-list entry alone does not confirm that a tester has opted in.
 The only bundle warning is the absence of native debug symbols for third-party native code. It does not block closed testing, but should be investigated before production so native crashes and ANRs have the best available diagnostics.
 
 Before submitting a new build, update the version references, release notes and screenshots, then recheck the live Data safety form against every bundled SDK and the deployed relay.
+
+## Historical evidence
+
+The repository also preserves the earlier Android delivery records and the
+localized Data Plane screenshots used during the September listing work. They
+are audit material, not a live Play Console status feed and not a claim that
+their older artwork is the current listing. The dated records are [0.1.17](validation-0.1.17.md),
+[0.1.20](validation-0.1.20.md) and [0.1.21](validation-0.1.21.md); the older
+English and Spanish capture provenance is documented in
+[assets/phone/README.md](assets/phone/README.md).
 
 ## Submission history
 

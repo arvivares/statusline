@@ -2,6 +2,76 @@
 
 This file records reproducible readiness evidence without storing credentials or personal account data. The 2–3 September evidence applies to `1.0 (2)`; the separate 6 September sections track the localized `1.0 (3)` and unified-brand `1.0 (4)` TestFlight candidates.
 
+## Latest verified delivery — 14 September 2026: 1.0.3 (8)
+
+App Store Connect showed **Ready for Distribution** for `1.0.3`, with build `8`
+attached. TestFlight had no later upload, and the public Spanish storefront
+displayed version `1.0.3`. See [the complete record](validation-1.0.3.md).
+The waiting-for-review statements below are historical observations. This
+verification did not change a store setting, rebuild an app or test a device.
+
+## Maintenance submission — 11 September 2026: 1.0.2 (7)
+
+- A fresh authenticated check found `1.0.1 (5)` **Ready for Distribution** in
+  App Store Connect. Build `1.0.1 (6)` had completed processing and was assigned
+  to `Internal QA`, but was not the distributed build and had no external group.
+  This supersedes the older waiting-for-review observations below.
+- The account holder confirmed testing the corrected build in TestFlight and
+  explicitly authorized publishing the latest fix. That is user-supplied QA
+  confirmation for build 6, not a new agent-run device test of build 7.
+- Apple's already-distributed version cannot be replaced with another build.
+  Created the `1.0.2` record and advanced the app/widget Debug and Release
+  identifiers together to `1.0.2 (7)`, also updating `release.json`. Desktop and
+  Android versions and the published GitHub tag were not changed.
+- Source starts from `974de512a5d5a8f7ad997b0ac4a772514df30001` with the local
+  version-only project change. Since the build-6 fix, the only additional Apple
+  runtime resources are generated shared localization entries for Companion;
+  the iPhone Swift implementation, widget logic and shown UI are unchanged.
+- Reused `/private/tmp/statusline-ios-derived` for one successful Release archive
+  with Xcode 26.3. Export and upload reused that same archive without rebuilding.
+  The app remains iPhone-only, requires iOS 17, and declares no non-exempt encryption.
+- The mandatory processed-bundle relay guard passed during archive and against
+  the exported IPA. App and widget contain the same production HTTPS relay and
+  both report `1.0.2 (7)`. Distribution signatures passed verification, retaining
+  the application identifiers, team and `group.inmerzion.statusline`, with
+  `get-task-allow=false` and `beta-reports-active=true` in both bundles.
+- The compiled localization check passed for app and widget: 457 messages across
+  English, Spanish and fallback, plus 16 language-resolution cases. All 23
+  relay-configuration/guard tests passed. Release preflight, formatting, 259
+  local Markdown links, TypeScript and desktop tests also passed (224 passed,
+  one skipped); these do not replace physical-device QA.
+- Local exported IPA SHA-256:
+  `9d06678bd01c13adf1bb981db70106a4bdeb981aae4c81189832f6d2d6f4d2b3`.
+  Upload may re-sign the archive and need not retain this local export checksum.
+- Xcode reported **Upload succeeded** at 15:53 Europe/Madrid. App Store Connect
+  initially listed upload UUID `7ecf9333-a96b-48a5-ad92-9c15412fbf78` as
+  **Processing**. Processing completed; the Add Build dialog offered `7` for
+  `1.0.2`, which was selected, saved and verified in the version's Build section.
+- Saved English/Spanish release notes and promotional text. Inherited localized
+  descriptions, keywords, official website URLs and one screenshot per locale
+  were retained. Notes identify the widget fix, the build-6 TestFlight confirmation
+  and the older recording/screenshot provenance without claiming new captures.
+- Configured **Automatically release this version**, immediate update rollout
+  and keeping existing ratings. No price, territory, policy, login requirement,
+  contact, Android release or external TestFlight group was changed.
+- A browser input timeout was recovered before saving. Final text entry used
+  normal DOM input/change events and was compared with the local source files;
+  do not treat an earlier partially typed form as the submitted copy.
+- Both localizations persisted after navigation and matched the local description,
+  promotional text, release notes and review notes. Media Manager confirmed the
+  English 6.9-inch overview and same-language scaling to 6.5 inches; the inherited
+  Spanish set remained separate. No new screenshots were generated or uploaded.
+- Completed **Add for Review**, verified the sole draft item `1.0.2 (7)`, then
+  completed **Submit for Review**. Apple confirmed **1 Item Submitted**. The
+  receipt records 11 September 2026 at 16:03 Europe/Madrid, submission ID
+  `7d3247e2-359e-4928-8b63-6ef202707575`, and **Waiting for Review** for both the
+  submission and its sole app-version item. This is not App Review approval.
+
+Remaining: Apple review and automatic publication after approval. An actual
+App Store update on an enrolled paired iPhone remains a post-approval check;
+confirm pairing survives, open the app once, then verify a newer widget sample
+without reopening the app. No exact WidgetKit refresh interval is guaranteed.
+
 ## TestFlight upload — 10 September 2026: 1.0.1 (6)
 
 - At the account holder's request, archived the local widget-endpoint correction

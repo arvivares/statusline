@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Statusline · Still Focus · 5 capturas</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 40px;
+        background: #0d0e0b;
+        color: #f2f0eb;
+        font:
+          16px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 32px;
+      }
+      h1 {
+        font-size: 28px;
+        font-weight: 500;
+        margin: 0;
+      }
+      p {
+        color: #a09e97;
+        margin: 8px 0;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        padding: 10px 18px;
+        border: 1px solid #57594e;
+        border-radius: 24px;
+        background: transparent;
+        color: #f2f0eb;
+      }
+      button[aria-pressed="true"] {
+        background: #efc65a;
+        color: #181813;
+        border-color: #efc65a;
+      }
+      button:focus-visible,
+      a:focus-visible {
+        outline: 3px solid #efc65a;
+        outline-offset: 5px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 20px;
+      }
+      .shot {
+        margin: 0;
+        min-width: 0;
+      }
+      iframe {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1320/2868;
+        border: 1px solid #35372d;
+        border-radius: 12px;
+      }
+      figcaption {
+        padding-top: 12px;
+        color: #a09e97;
+        font-size: 14px;
+      }
+      a {
+        color: #efc65a;
+        text-underline-offset: 3px;
+      }
+      @media (max-width: 1000px) {
+        .grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 600px) {
+        body {
+          padding: 24px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Still Focus · Serie de cinco</h1>
+        <p>iOS 1.0.3 (8) · Interfaz nativa · Datos locales de ejemplo</p>
+      </div>
+      <nav aria-label="Idioma de las imágenes">
+        <button data-lang="es" aria-pressed="true">Español</button>
+        <button data-lang="en" aria-pressed="false">English</button>
+      </nav>
+    </header>
+    <main class="grid"></main>
+    <p>
+      Android: pendiente de capturas nativas de la versión 0.1.20. No se
+      reutilizan imágenes de iPhone.
+    </p>
+    <script>
+      const titles = [
+        "Cuota restante",
+        "Reinicio y última muestra",
+        "Cómo vincular",
+        "Widget de inicio",
+        "Privacidad y control local",
+      ];
+      function show(lang) {
+        document
+          .querySelectorAll("button")
+          .forEach((b) =>
+            b.setAttribute("aria-pressed", String(b.dataset.lang === lang)),
+          );
+        document.querySelector("main").replaceChildren(
+          ...titles.map((title, i) => {
+            const figure = document.createElement("figure");
+            figure.className = "shot";
+            const frame = document.createElement("iframe");
+            frame.src = `still-focus.html?lang=${lang}&slide=${i + 1}`;
+            frame.title = title;
+            frame.scrolling = "no";
+            const caption = document.createElement("figcaption");
+            const link = document.createElement("a");
+            link.href = frame.src;
+            link.target = "_blank";
+            link.rel = "noopener";
+            link.textContent = `0${i + 1} · ${title}`;
+            caption.append(link);
+            figure.append(frame, caption);
+            return figure;
+          }),
+        );
+      }
+      document
+        .querySelectorAll("button")
+        .forEach((b) =>
+          b.addEventListener("click", () => show(b.dataset.lang)),
+        );
+      show(
+        new URLSearchParams(location.search).get("lang") === "en" ? "en" : "es",
+      );
+    </script>
+  </body>
+</html>

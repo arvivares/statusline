@@ -1,0 +1,1 @@
+Beta de Android alineada con Statusline 0.1.17. Se mantienen el emparejamiento por QR o vínculo y el comportamiento del widget. Instala Companion 0.1.17 por separado para recibir avisos de nuevas versiones en el ordenador. Prueba la actualización desde Google Play y comprueba que conserva tu emparejamiento, la cuota y el widget.

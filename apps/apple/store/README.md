@@ -23,8 +23,11 @@ Build-specific TestFlight instructions remain available in
 [English](testflight/1.1.0-9-en-US.txt) and [Spanish](testflight/1.1.0-9-es-ES.txt).
 
 The dated records below are historical; their older "latest upload" and review
-statuses are not a live status report. PR #47 separately consolidates those records
-and must not replace this candidate's version/build with 1.0.3 (8).
+statuses are not a live status report. The earlier 1.0.3 delivery evidence and
+its localized Still Focus artwork remain available for audit in
+[validation-1.0.3.md](validation-1.0.3.md) and
+[assets/README.md](assets/README.md); they must not replace this candidate's
+version/build with 1.0.3 (8).
 
 ## Historical release records
 

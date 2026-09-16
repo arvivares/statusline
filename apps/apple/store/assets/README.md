@@ -1,6 +1,6 @@
 # App Store screenshots
 
-Capture the real Release UI on the largest required iPhone class so App Store Connect can scale it down. Current, unmodified upload captures live in locale-specific `phone/` directories. The original root-level `source/` and `phone/` files are historical build-1 evidence, not the current listing set.
+Capture the real Release UI on the largest required iPhone class so App Store Connect can scale it down. The latest submitted compositions live in `still-focus/{en-US,es-ES}/`; their native source captures and provenance are documented in the artwork tooling. The locale-specific `phone/` files preserve the earlier 1.0.1 listing set. The original root-level `source/` and `phone/` files are historical build-1 evidence.
 
 ## App icon
 
@@ -9,12 +9,35 @@ Capture the real Release UI on the largest required iPhone class so App Store Co
 - Run `npm ci && npm run generate && npm run check` from `branding/` at the repository root to update the 1024 × 1024 RGB icon at `statusline/Assets.xcassets/AppIcon.appiconset/AppIcon.png` together with the other platforms. Keep the iOS canvas opaque and square; the system supplies the corner mask.
 - These source assets are for the next build. Existing App Store Connect/TestFlight builds and the dated capture/submission records below are not changed by regenerating them.
 
-## Current listing set — 1.0.1 (5)
+## Published Still Focus set — 1.0.3 (8)
+
+Five images per language, using current native app views and a real medium widget:
+
+- [English files](still-focus/en-US/)
+- [Spanish files](still-focus/es-ES/)
+- [Gallery, capture provenance and validation](../../../../scripts/store-artwork/README.md)
+
+The compositions are 1320 × 2868 opaque RGB PNGs. All ten were uploaded to
+App Store Connect's 6.9-inch class, replacing the old overview in each locale.
+Both localized sets and their order were verified before submitting **1.0.3 (8)**
+on 13 September 2026. On 14 September, the version was verified as **Ready for
+Distribution**, and 1.0.3 appeared on the public Spanish storefront. See the
+[submission and publication record](../validation-1.0.3.md).
+
+## Historical Still Focus set — 1.0.3 (8)
+
+The earlier five-image Still Focus package is retained in
+[English](still-focus/en-US/) and [Spanish](still-focus/es-ES/), with unretouched
+source captures under each locale's `source/` directory. It documents the
+previous iOS delivery and is intentionally separate from the current 1.1.0
+Antigravity gallery above. Do not mix the two sets when preparing a store upload.
+
+## Historical listing set — 1.0.1 (5)
 
 - [English overview](phone/en-US/01-weekly-quota.png)
 - [Spanish overview](phone/es-ES/01-weekly-quota.png)
 
-Each locale currently has one reviewed screenshot: the real quota overview with a 70% local example, reset details and private pairing controls. Replace the three old images rather than mixing generations or inheriting Spanish images into English. A clean physical-iPhone widget capture can be added later; none is fabricated here.
+That listing set had one reviewed screenshot per locale: the real quota overview with a 70% local example, reset details and private pairing controls. It replaced the three build-1 images. These files remain as historical evidence and must not be mixed with the new Still Focus compositions.
 
 Requirements:
 
