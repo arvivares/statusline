@@ -8,22 +8,23 @@
 - Sign-in required: No
 - Demo account: Not applicable
 
-## Current review notes — 1.0.3 (8)
+## Current review notes — 1.1.0 (9)
 
-The submitted text is preserved in [1.0.3-review.txt](release-notes/1.0.3-review.txt).
-It documents the Still Signature UI and five images per language without
-claiming the older physical recording demonstrates the new design. Version
-1.0.3 was verified as Ready for Distribution on 14 September 2026.
+The current submission text is maintained in
+[1.1.0-review.txt](release-notes/1.1.0-review.txt). It adds Antigravity / Google
+Gemini alongside Codex, preserves existing pairing and explains the distinction
+between the Codex-only local demo and Companion synchronization. See the
+[version validation record](validation-1.1.0.md) for actual portal status.
 
-## Historical review notes — 1.0.2 (7)
+## Historical review notes — 1.0.1 (5)
 
-App Review preparation - 11 September 2026 - version 1.0.2 (7)
-This maintenance update fixes the missing widget relay configuration in 1.0.1 (5). The account holder confirmed physical-iPhone TestFlight validation of the correction in 1.0.1 (6). This new App Store version packages the same fix, with matching app/widget configuration and a mandatory packaged-bundle check; it introduces no new functionality. Open the app once after upgrading for shared widget access. Existing pairing is preserved. WidgetKit controls refresh timing; updates are not real-time. The English listing is "Statusline: Agent Quota"; this release supports Codex only and does not offer chat or generate content.
+App Review preparation - 10 September 2026 - version 1.0.1 (5)
+This update adds independent widget refresh, existing-pairing migration, foreground refresh and website privacy/support links. Open the app once after upgrading to migrate the existing pairing for widget access. WidgetKit controls the refresh schedule; updates are not real-time. The English listing is named "Statusline: Agent Quota"; this release supports Codex only. Statusline does not offer chat or generate text, images or code.
 
 APP REVIEW INFORMATION
 
 Screen recording
-A 52-second physical-iPhone recording was provided with the original submission. It shows launch, QR pairing, refreshing a quota snapshot, and adding/viewing the widget. It predates the widget correction and is not new evidence of background refresh. The inherited screenshots show the actual build-5 UI separately in English and Spanish; this update does not change those screens.
+A 52-second physical-iPhone recording was provided with the original submission. It shows launch, QR pairing, receiving/refreshing a quota snapshot, and adding/viewing the widget. It predates builds 4 and 5 and does not demonstrate the new background widget behavior. The replacement screenshots show the actual build-5 UI separately in English and Spanish.
 
 Purpose and target audience
 Statusline is an independent, open-source utility for developers using Codex. It shows remaining weekly quota, reset time and sample age in an iPhone dashboard and widget, avoiding repeated trips to the computer to check usage.

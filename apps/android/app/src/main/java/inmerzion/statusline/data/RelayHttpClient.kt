@@ -13,8 +13,13 @@ import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.nio.charset.StandardCharsets
 
-class RelayHttpClient(private val configuration: RelayConfiguration) {
-    fun claim(channelId: String, pairingToken: String): String {
+interface RelayTransport {
+    fun claim(channelId: String, pairingToken: String): String
+    fun fetchSnapshot(channelId: String, readerToken: String): RelayEnvelope?
+}
+
+class RelayHttpClient(private val configuration: RelayConfiguration) : RelayTransport {
+    override fun claim(channelId: String, pairingToken: String): String {
         val response = perform(
             method = "POST",
             path = arrayOf("v1", "channels", channelId, "claim"),
@@ -35,11 +40,12 @@ class RelayHttpClient(private val configuration: RelayConfiguration) {
         }
     }
 
-    fun fetchSnapshot(channelId: String, readerToken: String): RelayEnvelope? {
+    override fun fetchSnapshot(channelId: String, readerToken: String): RelayEnvelope? {
         val response = perform(
             method = "GET",
             path = arrayOf("v1", "channels", channelId, "snapshot"),
             token = readerToken,
+            accept = RelayProtocol.SERVICES_ACCEPT,
         )
         if (response.statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
             val errorCode = response.apiErrorCode()
@@ -53,7 +59,14 @@ class RelayHttpClient(private val configuration: RelayConfiguration) {
                 sequence = body.getLong("sequence"),
                 nonce = body.getString("nonce"),
                 ciphertext = body.getString("ciphertext"),
+                payloadKind = if (body.has("payloadKind")) {
+                    (body.get("payloadKind") as? String)?.also {
+                        require(it == RelayProtocol.SERVICES_KIND)
+                    } ?: throw invalidResponse()
+                } else null,
             )
+        } catch (error: StatuslineException) {
+            throw error
         } catch (error: Exception) {
             throw invalidResponse(error)
         }
@@ -63,6 +76,7 @@ class RelayHttpClient(private val configuration: RelayConfiguration) {
         method: String,
         path: Array<String>,
         token: String,
+        accept: String = "application/json",
     ): HttpResponse {
         val connection = configuration.endpoint(*path).toURL().openConnection() as HttpURLConnection
         try {
@@ -71,7 +85,7 @@ class RelayHttpClient(private val configuration: RelayConfiguration) {
             connection.useCaches = false
             connection.connectTimeout = CONNECT_TIMEOUT_MILLIS
             connection.readTimeout = READ_TIMEOUT_MILLIS
-            connection.setRequestProperty("Accept", "application/json")
+            connection.setRequestProperty("Accept", accept)
             connection.setRequestProperty("Authorization", "Bearer $token")
             if (method == "POST") {
                 connection.doOutput = true

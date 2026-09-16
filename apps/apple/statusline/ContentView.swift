@@ -13,19 +13,18 @@ struct ContentView: View {
                 VStack(spacing: 16) {
                     DataPlaneAppHeader(syncState: viewModel.relaySyncState)
 
-                    if let status = viewModel.status {
-                        CodexDataPlanePanel(
-                            status: status,
-                            syncState: viewModel.relaySyncState
-                        )
+                    if let focused = viewModel.focusedProvider {
+                        AgentFocusPanel(provider: focused).id(focused.id)
+                        AgentWatchlist(providers: viewModel.watchlist, onSelect: viewModel.focus)
                     } else {
                         WaitingForDesktopPanel(
                             syncState: viewModel.relaySyncState,
+                            hasInventory: viewModel.services != nil,
                             onLoadDemo: loadLocalDemo
                         )
                     }
 
-                    if viewModel.status == nil {
+                    if viewModel.focusedProvider == nil {
                         relayControls
                     } else {
                         Button(L10n.text("Refresh"), systemImage: "arrow.clockwise", action: refreshFromRelay)
@@ -161,7 +160,7 @@ private struct StatuslineLegalFooter: View {
                 }
             }
 
-            Text(L10n.text("Statusline is an independent app and is not affiliated with or endorsed by OpenAI."))
+            Text(L10n.text("Statusline is independent and is not affiliated with or endorsed by OpenAI or Google."))
                 .font(.caption)
                 .foregroundStyle(DataPlaneTheme.muted)
         }
@@ -199,81 +198,17 @@ private struct DataPlaneAppHeader: View {
     }
 }
 
-private struct CodexDataPlanePanel: View {
-    let status: CodexUsageStatus
-    let syncState: CodexRelaySyncState
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Text(L10n.text("OpenAI · Codex"))
-                .font(.subheadline)
-                .foregroundStyle(DataPlaneTheme.muted)
-            Text(L10n.text("Weekly"))
-                .font(.title3.weight(.medium))
-                .foregroundStyle(DataPlaneTheme.ink)
-                .padding(.top, 8)
-
-            DataPlaneQuotaValue(status: status)
-                .padding(.top, 22)
-            Text(L10n.text("remaining"))
-                .font(.subheadline)
-                .foregroundStyle(DataPlaneTheme.muted)
-
-            DataPlaneMeter(remainingPercentage: status.remainingPercentage)
-                .padding(.top, 28)
-                .padding(.bottom, 14)
-
-            Text(L10n.text("Resets") + " " + status.resetDate.formatted(
-                .dateTime.day().month(.abbreviated).hour().minute().locale(L10n.locale)
-            ))
-            .font(.footnote)
-            .foregroundStyle(DataPlaneTheme.muted)
-            .multilineTextAlignment(.center)
-
-            Text(L10n.text("Last sample: {0}", L10n.relative(status.updatedAt)))
-                .font(.caption)
-                .foregroundStyle(DataPlaneTheme.muted)
-                .padding(.top, 28)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 28)
-    }
-}
-
-private struct DataPlaneQuotaValue: View {
-    let status: CodexUsageStatus
-    @ScaledMetric(relativeTo: .largeTitle) private var valueSize = 120.0
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(status.remainingPercentage, format: .number)
-                .font(.system(size: valueSize, weight: .medium))
-                .tracking(-5)
-                .monospacedDigit()
-                .foregroundStyle(DataPlaneTheme.ink)
-                .contentTransition(.numericText())
-            Text("%")
-                .font(.largeTitle)
-                .foregroundStyle(DataPlaneTheme.muted)
-        }
-        .lineLimit(1)
-        .minimumScaleFactor(0.45)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(L10n.text("Weekly quota"))
-        .accessibilityValue(L10n.text("{0} percent remaining", status.remainingPercentage))
-        .accessibilityIdentifier("weeklyQuotaValue")
-    }
-}
 
 private struct WaitingForDesktopPanel: View {
     let syncState: CodexRelaySyncState
+    let hasInventory: Bool
     let onLoadDemo: () -> Void
 
     var body: some View {
         DataPlaneSurface(cornerRadius: 20) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    DataPlaneLabel(text: L10n.text("CDX.WEEKLY.QUOTA"))
+                    DataPlaneLabel(text: L10n.text("Your services"))
                     Spacer()
                     DataPlaneLabel(text: L10n.text("NO SAMPLE"), tint: DataPlaneTheme.muted)
                 }
@@ -294,7 +229,9 @@ private struct WaitingForDesktopPanel: View {
                     DataPlaneMeter(remainingPercentage: 0)
                         .accessibilityHidden(true)
 
-                    Text(L10n.text("Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample."))
+                    Text(hasInventory
+                        ? L10n.text("Enable a supported service in your Companion to see its quota here.")
+                        : L10n.text("Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample."))
                         .font(.subheadline)
                         .foregroundStyle(DataPlaneTheme.muted)
 
@@ -347,7 +284,7 @@ private struct UniversalRelayPanel: View {
                     .font(.subheadline)
                     .foregroundStyle(state.isError ? DataPlaneTheme.critical : DataPlaneTheme.ink)
 
-                Text(L10n.text("The relay stores only an AES-256-GCM encrypted snapshot. Codex credentials and the encryption key never leave your devices."))
+                Text(L10n.text("The relay stores only AES-256-GCM encrypted quota snapshots. Your agents’ credentials and the encryption key never reach the relay."))
                     .font(.caption)
                     .foregroundStyle(DataPlaneTheme.muted)
 

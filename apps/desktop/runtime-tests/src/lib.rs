@@ -1,3 +1,5 @@
+#[path = "../../src-tauri/src/antigravity.rs"]
+pub mod antigravity;
 #[path = "../../src-tauri/src/app_server.rs"]
 pub mod app_server;
 #[path = "../../src-tauri/src/codex_installation.rs"]
@@ -9,6 +11,10 @@ pub mod localization;
 pub mod macos_update;
 #[path = "../../src-tauri/src/refresh.rs"]
 pub mod refresh;
+#[path = "../../src-tauri/src/relay_protocol.rs"]
+pub mod relay_protocol;
+#[path = "../../src-tauri/src/services_snapshot.rs"]
+pub mod services_snapshot;
 #[path = "../../src-tauri/src/update_policy.rs"]
 pub mod update_policy;
 #[path = "../../src-tauri/src/update_signature.rs"]

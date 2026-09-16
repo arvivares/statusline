@@ -1,21 +1,24 @@
 # Statusline Desktop
 
-Companion de bandeja para consultar la cuota de Codex en Windows, Linux y macOS. Está construido con Tauri 2, Rust y TypeScript, y comparte el lenguaje visual Data Plane de las apps SwiftUI.
+Companion de bandeja para consultar cuotas en Windows, Linux y macOS. Está construido con Tauri 2, Rust y TypeScript, y comparte el lenguaje visual Still Signature de las apps móviles. La candidata 0.1.23 detecta Antigravity (solo Google) automáticamente y recupera el foco con lista de otras cuotas; Codex sigue siendo el único origen sincronizado con los móviles actuales.
 
 ## Integración
 
 - Consulta la sesión local mediante Codex App Server y muestra límite semanal, reinicio, ventana corta y plan.
 - No copia ni persiste tokens de Codex, API keys o correo.
 - Source Settings detecta el Codex integrado en apps compatibles de ChatGPT/Codex en macOS y Windows o la CLI, valida codex --version y permite guardar una ruta local. La detección de escritorio en Windows está pendiente de QA en el dispositivo afectado.
-- Universal Relay publica sólo el snapshot mínimo cifrado de extremo a extremo para iOS y futuros clientes Android.
+- Universal Relay publica sólo el snapshot mínimo de Codex cifrado de extremo a extremo para iOS y Android, sin cambiar claves ni emparejamientos existentes.
+- La candidata 0.1.23 detecta Antigravity automáticamente, prioriza Desktop en la primera detección y recuerda la fuente. Respeta selecciones y desactivaciones previas; solo muestra servicios presentes. Las rutas manuales quedan como opción avanzada. Sus lecturas, errores y ajustes son independientes de Codex. Consulta el [contrato del adaptador](../../docs/architecture/antigravity-companion.md) y las limitaciones de Windows/Linux.
 - La credencial publisher y la clave AES permanecen en Keychain, Windows Credential Manager o Secret Service.
 - El frontend recibe estado operacional y el vínculo de emparejamiento mientras está vigente; nunca recibe la credencial publisher.
 
 Codex App Server continúa marcado como experimental. Una ruptura de su protocolo puede requerir actualizar el companion.
 
-## Data Plane
+## Still Signature
 
-La interfaz conserva canvas #0D0E0B, surface #14150F, texto #ECE9DC, señal #EFC65A, grilla de 24 px, medidor de 20 segmentos y estados explícitos LIVE, READING, OFFLINE y ERROR. Las animaciones respetan prefers-reduced-motion.
+La interfaz usa una superficie #181813, texto #F2F0EB y señal #EFC65A. La ventana de 340 × 500 mantiene el medidor segmentado 4:2 con el último segmento activo blanco, fuentes de sistema y estados explícitos. No hay tarjetas anidadas ni espacios reservados para servicios ausentes. Las animaciones respetan prefers-reduced-motion.
+
+La candidata 0.1.23 recupera el foco principal y las filas abiertas de **Otras cuotas** aprobadas en Still Signature, sustituyendo las pestañas de proveedores de 0.1.22. Se puede intercambiar la ventana semanal/corta sin cambiar lo que se publica al relay. Claude no aparece hasta que exista su adaptador real.
 
 ## Requisitos
 
@@ -74,6 +77,9 @@ npm run dev
 ```
 
 Abre http://127.0.0.1:1420/?preview=ready. También existen preview=loading, preview=empty y preview=error. Añade &panel=source o &panel=relay para abrir una superficie concreta.
+
+Para la candidata AGY, añade `&google=ready` o `&google=unavailable`;
+`&panel=google` abre sus ajustes. Estos datos son ficticios y no acceden a una cuenta.
 
 Añade `&lang=en`, `&lang=es` o `&lang=fr-FR` para verificar idiomas en previews locales.
 La app instalada siempre sigue el idioma del sistema: español o inglés, con inglés

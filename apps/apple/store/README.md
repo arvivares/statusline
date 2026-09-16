@@ -1,16 +1,52 @@
 # Apple App Store release kit
 
-This directory records the Statusline iPhone delivery. On **14 September 2026**, App Store Connect showed **1.0.3 (8), Ready for Distribution**, and the public Spanish App Store listing displayed **1.0.3**. Build 8 was also the latest TestFlight upload. It includes Still Signature and the earlier widget configuration fix. See [the 1.0.3 record](validation-1.0.3.md) for source, artwork and submission evidence; [validation.md](validation.md) preserves earlier releases. These are dated observations, not a live store-status feed.
+## Current submission — 15 September 2026
 
-**Known issue in distributed build 5:** its widget's relay endpoint is empty,
-so foreground app refresh works but independent widget synchronization does not.
-Build 6 corrected the shared configuration and added a mandatory packaged-bundle
-check. A local USB update confirmed an independent widget fetch with the same
-pairing; on 11 September the account holder also confirmed TestFlight validation.
-Because 1.0.1 was already distributed with build 5, the fix shipped as the new
-`1.0.2 (7)` App Store version and is retained in `1.0.3 (8)`.
+**iOS 1.1.0 (9)** is **Waiting for Review**, submitted on 15 September 2026 at
+17:51 Europe/Madrid after the developer confirmed it works on their physical
+iPhone through TestFlight. Submission ID:
+`8931776e-9fcd-44fd-ab86-d1c956671b2d`. It adds
+Google Gemini quota from Antigravity alongside Codex with Companion 0.1.24 and
+the compatible services-v1 relay; existing pairings are preserved.
 
-## App record
+The current App Store kit contains [English](listing/en-US.md) and
+[Spanish](listing/es-ES.md) listings, [review notes](release-notes/1.1.0-review.txt)
+and [five Still Focus screenshots per language](assets/1.1.0/README.md), captured
+from the actual new UI. The existing distribution build is reused without another
+archive or upload. See [validation-1.1.0.md](validation-1.1.0.md) for the exact
+portal status, submission receipt and capture provenance. The public version
+observed before this submission is **1.0.3 (8)**, Ready for Distribution.
+The inherited release policy is automatic after Apple approval; 1.1.0 is not yet
+confirmed publicly available.
+
+Build-specific TestFlight instructions remain available in
+[English](testflight/1.1.0-9-en-US.txt) and [Spanish](testflight/1.1.0-9-es-ES.txt).
+
+The dated records below are historical; their older "latest upload" and review
+statuses are not a live status report. The earlier 1.0.3 delivery evidence and
+its localized Still Focus artwork remain available for audit in
+[validation-1.0.3.md](validation-1.0.3.md) and
+[assets/README.md](assets/README.md); they must not replace this candidate's
+version/build with 1.0.3 (8).
+
+## Historical release records
+
+This directory is the versioned source of truth for Statusline iPhone releases. The latest upload is `inmerzion.statusline` version `1.0.1`, build `6`, accepted for processing on 10 September 2026 at 17:08 Europe/Madrid. TestFlight availability is not yet verified. The separate App Review submission still uses build `5`, last verified as **Waiting for Review**, and was not replaced by this upload. The published release remains `1.0 (4)`, manually released on 9 September 2026. See `validation.md` for dated evidence.
+
+**Do not publicly release build 5:** subsequent physical-device diagnosis and
+inspection of the exported IPA confirmed that its widget's relay endpoint is
+empty. Foreground app refresh works, but independent widget synchronization does
+not. The corrected `1.0.1 (6)` has been built locally in Release configuration,
+development-signed and installed over the existing app by USB. An independent
+widget fetch was verified with the same pairing and an unchanged app-owned cache.
+It also adds shared project configuration and a mandatory bundle-validation gate.
+Build 6 has now also been archived, distribution-signed, validated in the exported
+IPA and uploaded for TestFlight. Apple acknowledged processing; completed
+processing and internal-test availability still need verification in App Store Connect.
+The local USB test is not a test of the distribution-signed TestFlight upgrade.
+Build 6 has **not** replaced the existing App Review submission.
+
+## Historical app record — 10 September 2026
 
 - Platform: iOS
 - Name: Statusline
@@ -19,15 +55,12 @@ Because 1.0.1 was already distributed with build 5, the fix shipped as the new
 - Bundle ID: `inmerzion.statusline`
 - SKU: `statusline-ios`
 - Apple ID: `6807851320`
-- App Store release: `1.0.3` (`8`), **Ready for Distribution**, verified 14 September 2026
+- App Store release: `1.0` (`4`), **Ready for Distribution**, manually released 9 September 2026 (Europe/Madrid)
 - Published 1.0 submission ID: `9de1d3a4-27a7-403f-aa7f-12de04c9db4f`
 - Public link: https://apps.apple.com/app/statusline/id6807851320
-- Latest upload: `1.0.3` (`8`), processing complete; no later TestFlight build observed on 14 September
-- Validated TestFlight baseline: `1.0.1` (`6`), processed, assigned to `Internal QA` and confirmed tested by the account holder
-- App Store candidate: none pending in the latest verified version record
-- Latest submission ID: `eeb6164f-505c-4c07-aac3-20e84b4d9662`
-- Previous 1.0.2 submission ID: `7d3247e2-359e-4928-8b63-6ef202707575`
-- Previous 1.0.1 submission ID: `4d9e9b63-5ccd-474a-ad90-dbae5eda8a70`
+- Latest TestFlight upload: `1.0.1` (`6`), upload succeeded; processing completion and `Internal QA` assignment not yet verified
+- App Store candidate: `1.0.1` (`5`), last verified **Waiting for Review**, submitted 10 September 2026; known widget-endpoint defect, do not publicly release
+- Current submission ID: `4d9e9b63-5ccd-474a-ad90-dbae5eda8a70`
 - Price: Free
 - Availability: 174 App Store countries or regions; China mainland excluded (Hong Kong and Macau unchanged)
 - Distribution: Public, iPhone only
@@ -38,24 +71,11 @@ Because 1.0.1 was already distributed with build 5, the fix shipped as the new
 - Support URL: https://statusline.inmerzion.io/support
 - Candidate marketing URL: https://statusline.inmerzion.io/
 
-Version `1.0.3` retains Spanish (Spain) and English (U.S.) descriptions, localized names/subtitles and privacy/support links, with updated release notes and **five Still Focus images per language**. The 6.5-inch display class uses the corresponding 6.9-inch set. The earlier single-overview and build-1 screenshots remain historical files, not the current upload set. See [capture provenance](assets/README.md) and [current review notes](release-notes/1.0.3-review.txt). No new physical-device test of build 8 is implied by artwork capture or App Review approval.
+The published product page retains its original metadata until the new version is released. The `1.0.1` submission has Spanish (Spain) and English (U.S.) descriptions, promotional text, keywords, what's new and version URLs from `listing/`, plus localized names/subtitles and privacy links. Each locale has one reviewed, native-size build-5 overview screenshot; smaller iPhone sizes use the matching language's 6.9-inch image. The three old Spanish screenshots were removed from the draft, not from the historical files. The scrolled editor's status-bar overlap and simulator camera-unavailable screen were excluded during visual review. See [capture provenance](assets/README.md).
 
 The App Store Connect record, product-page metadata, screenshots, age rating and published privacy label were configured on 2 September 2026. Build `1` passed physical TestFlight QA and entered Beta App Review for `External Beta`. On 3 September, build `2` replaced the iOS icon with the shared Data Plane artwork, processed as valid, was attached to version `1.0` and was submitted to App Review. The same build was installed and confirmed operational on the physical iPhone. As verified on 6 September, both builds are **Testing** in `Internal QA` and `External Beta`; the App Store submission is **Waiting for Review** with manual release selected. Private review contacts and notes are saved in App Store Connect; tester identities and phone numbers remain outside the repository. Remaining follow-ups are recorded in `validation.md`.
 
-## Maintenance submission — 11 September 2026
-
-The iPhone app and widget target `1.0.2 (7)` together. The same widget correction
-was confirmed in TestFlight build 6 by the account holder, who authorized public
-distribution. One archive was exported, validated and uploaded without changing
-app behavior, pairing, relay protocol or the widget's request interval.
-The new version preserves existing localized descriptions/screenshots and has
-specific EN/ES bug-fix notes. Release is automatic after approval, not manual.
-Apple confirmed **1 Item Submitted** at 16:03 Europe/Madrid. The submission
-receipt lists `1.0.2 (7)` and **Waiting for Review** for both the submission and
-its sole item, ID `7d3247e2-359e-4928-8b63-6ef202707575`.
-This received submission does not prove approval or public availability.
-
-## Historical synchronization candidate — 10 September 2026
+## Synchronization candidate — 10 September 2026
 
 The iPhone app and widget target `1.0.1 (6)` together. The local USB update
 preserved pairing and confirmed a first independent widget fetch. The

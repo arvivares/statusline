@@ -20,6 +20,22 @@ import { UsageController } from "./controller";
 import { copyForState, type UsageState } from "./usage";
 import { bindUpdater, refreshUpdaterCopy } from "./updates";
 import { signatureMeter } from "./signature-meter";
+import {
+  companionProviders,
+  providerWatchlist,
+  quotaFocus,
+  type ProviderReading,
+  type QuotaPeriod,
+} from "./provider-focus";
+import {
+  disabledGoogle,
+  googleFailureCopy,
+  googleIsVisible,
+  newerGoogleView,
+  parseGoogleView,
+  type GoogleView,
+  type GoogleSource,
+} from "./antigravity";
 
 const FOCUS_REFRESH_AGE_MS = 60 * 1_000;
 
@@ -77,6 +93,23 @@ const relayPairing = requireElement("relay-pairing", HTMLElement);
 const relayQRCode = requireElement("relay-qr", HTMLImageElement);
 const relayPairingLink = requireElement("relay-pairing-link", HTMLElement);
 const relayCopy = requireElement("relay-copy", HTMLButtonElement);
+const googleTab = requireElement("google-tab", HTMLButtonElement);
+const googleSettingsView = requireElement("google-settings-view", HTMLElement);
+const googleSource = requireElement("google-source", HTMLSelectElement);
+const googlePath = requireElement("google-path", HTMLInputElement);
+const googleSave = requireElement("google-save", HTMLButtonElement);
+const googleRemove = requireElement("google-remove", HTMLButtonElement);
+const googleFeedback = requireElement("google-feedback", HTMLElement);
+const googleDetection = requireElement("google-detection", HTMLElement);
+const googleScan = requireElement("google-scan", HTMLButtonElement);
+const providerWatchlistSection = requireElement(
+  "provider-watchlist",
+  HTMLElement,
+);
+const providerRows = requireElement("provider-rows", HTMLElement);
+const focusHeading = requireElement("focus-heading", HTMLElement);
+const focusWindow = requireElement("focus-window", HTMLButtonElement);
+const providerIdentity = requireElement("provider-identity", HTMLElement);
 
 type SourceRuntime = Readonly<{
   inspect: () => Promise<unknown>;
@@ -106,6 +139,13 @@ let pairingPollExpiresAt: number | null = null;
 let lastUsageState: UsageState | null = null;
 let lastDiagnostic: CodexDiagnostic | null = null;
 let lastRelayState: RelayStatus | null = null;
+let googleView: GoogleView = disabledGoogle;
+let selectedProvider = "codex";
+const selectedPeriods = new Map<string, QuotaPeriod>();
+let googleActionPending = false;
+let googleRefreshing = false;
+let googleSettingsDirty = false;
+let googleInitialized = false;
 
 let displayedPercentage: number | null = null;
 const meterFill = document.createElement("span");
@@ -174,11 +214,21 @@ async function startTauriRuntime(): Promise<void> {
     },
   );
   bindSourcePanel();
+  await listen<unknown>("antigravity-updated", (event) =>
+    acceptGoogle(event.payload),
+  );
+  void invoke<unknown>("antigravity_status")
+    .then(acceptGoogle)
+    .catch(() => {
+      googleInitialized = true;
+      renderCurrentProvider();
+    });
   void refreshSourceDiagnostic();
   void refreshRelayStatus();
 
   refreshButton.addEventListener("click", () => {
-    void controller.refresh();
+    if (selectedProvider === "google") void refreshGoogle();
+    else void controller.refresh();
   });
 
   window.addEventListener("focus", () => {
@@ -228,8 +278,47 @@ function startPreview(initialState: UsageState): void {
     lastPublishedAt: Math.floor(Date.now() / 1_000),
   });
   renderUsage(initialState);
+  const params = new URLSearchParams(window.location.search);
+  if (
+    params.get("google") === "ready" ||
+    params.get("google") === "unavailable"
+  ) {
+    acceptGoogle({
+      revision: 1,
+      settings: { source: "desktop", path: null, automatic: true },
+      usage:
+        params.get("google") === "ready"
+          ? {
+              status: "ready",
+              source: "desktop",
+              checkedAt: Math.floor(Date.now() / 1000),
+              quota: {
+                weekly: {
+                  remainingPercent: 78,
+                  resetsAt: Math.floor(Date.now() / 1000) + 345600,
+                },
+                shortWindow: {
+                  remainingPercent: 24,
+                  resetsAt: Math.floor(Date.now() / 1000) + 6120,
+                },
+              },
+            }
+          : {
+              status: "unavailable",
+              source: "desktop",
+              checkedAt: Math.floor(Date.now() / 1000),
+              reason: "timeout",
+            },
+    });
+    selectedProvider = "google";
+    renderCurrentProvider();
+  }
   const previewPanel = new URLSearchParams(window.location.search).get("panel");
-  if (previewPanel === "source" || previewPanel === "relay") {
+  if (
+    previewPanel === "source" ||
+    previewPanel === "relay" ||
+    previewPanel === "google"
+  ) {
     selectSettingsView(previewPanel);
     openSourcePanel();
   }
@@ -241,6 +330,166 @@ function startPreview(initialState: UsageState): void {
 
 function renderUsage(state: UsageState): void {
   lastUsageState = state;
+  renderCurrentProvider();
+}
+
+function renderCurrentProvider(): void {
+  const providers = companionProviders(
+    lastUsageState,
+    lastDiagnostic,
+    googleView,
+  );
+  if (!providers.some((provider) => provider.id === selectedProvider))
+    selectedProvider = providers[0]?.id ?? "codex";
+  document.body.dataset.provider = selectedProvider;
+  document.body.dataset.multiProvider = String(providers.length > 1);
+  document.body.dataset.providerCount = String(providers.length);
+  document.body.dataset.manyProviders = String(providers.length > 2);
+  if (selectedProvider === "google") renderGoogleUsage();
+  else if (lastUsageState) renderCodexUsage(lastUsageState);
+  const selected = providers.find(
+    (provider) => provider.id === selectedProvider,
+  );
+  renderFocusWindow(selected);
+  renderWatchlist(providerWatchlist(providers, selectedProvider));
+}
+
+function windowLabel(period: QuotaPeriod, minutes?: number): string {
+  if (period === "weekly") return t("Weekly");
+  const duration = minutes ?? 300;
+  return new Intl.NumberFormat(language(), {
+    style: "unit",
+    unit: duration % 60 === 0 ? "hour" : "minute",
+    unitDisplay: "long",
+  }).format(duration % 60 === 0 ? duration / 60 : duration);
+}
+
+function renderFocusWindow(provider: ProviderReading | undefined): void {
+  focusHeading.removeAttribute("data-i18n");
+  focusWindow.hidden = true;
+  if (!provider) {
+    focusHeading.textContent = t("Weekly");
+    return;
+  }
+  const focus = quotaFocus(provider, selectedPeriods.get(provider.id));
+  providerIdentity.replaceChildren(
+    document.createTextNode(provider.source + " · "),
+  );
+  const name = document.createElement("strong");
+  name.textContent = provider.name;
+  providerIdentity.append(name);
+  focusHeading.textContent = windowLabel(focus.period, focus.window?.minutes);
+  meterTrack.removeAttribute("data-i18n-aria-label");
+  meterTrack.setAttribute(
+    "aria-label",
+    `${provider.source} · ${provider.name} · ${focusHeading.textContent} · ${t("remaining")}`,
+  );
+  if (!focus.window) return;
+  setMeter(focus.window.remainingPercent, false);
+  document.body.dataset.level =
+    focus.window.remainingPercent <= 20 ? "critical" : "normal";
+  resetValue.textContent = formatTime(focus.window.resetsAt);
+  resetDetail.textContent = formatResetDate(focus.window.resetsAt);
+  shortValue
+    .closest(".metric-cell")
+    ?.toggleAttribute("hidden", !focus.alternate);
+  if (focus.alternate) {
+    focusWindow.hidden = false;
+    focusWindow.dataset.period = focus.period === "weekly" ? "short" : "weekly";
+    shortDetail.textContent = windowLabel(
+      focus.period === "weekly" ? "short" : "weekly",
+      focus.alternate.minutes,
+    );
+    shortValue.textContent =
+      Math.round(focus.alternate.remainingPercent) + " %";
+    focusWindow.setAttribute(
+      "aria-label",
+      t(
+        "View {0}: {1}% remaining",
+        shortDetail.textContent,
+        Math.round(focus.alternate.remainingPercent),
+      ),
+    );
+  }
+}
+
+function renderWatchlist(providers: readonly ProviderReading[]): void {
+  // Preserve keyboard focus when a background sample replaces these rows.
+  const focusedId =
+    document.activeElement instanceof HTMLElement
+      ? document.activeElement.closest<HTMLButtonElement>(
+          "button[data-provider-id]",
+        )?.dataset.providerId
+      : undefined;
+  providerRows.replaceChildren();
+  providerWatchlistSection.hidden = providers.length === 0;
+  for (const provider of providers) {
+    const focus = quotaFocus(provider, selectedPeriods.get(provider.id));
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "quota-row";
+    row.dataset.providerId = provider.id;
+    row.dataset.status = provider.status;
+    row.dataset.stale = String(
+      provider.checkedAt !== null &&
+        Date.now() / 1000 - provider.checkedAt > 600,
+    );
+    const identity = document.createElement("span");
+    const name = document.createElement("span");
+    name.className = "row-name";
+    name.textContent = provider.name;
+    const source = document.createElement("span");
+    source.className = "row-source";
+    source.textContent = `${provider.source} · ${windowLabel(focus.period, focus.window?.minutes)}`;
+    identity.append(name, source);
+    const reading = document.createElement("span");
+    reading.className = "row-reading";
+    const number = document.createElement("span");
+    number.className = "row-number";
+    number.textContent = focus.window
+      ? String(Math.round(focus.window.remainingPercent))
+      : "—";
+    reading.append(number);
+    if (focus.window) {
+      const percent = document.createElement("span");
+      percent.className = "row-percent";
+      percent.textContent = "%";
+      reading.append(percent);
+    }
+    const age = document.createElement("span");
+    age.className = "row-age";
+    age.textContent =
+      provider.status === "loading"
+        ? t("Checking…")
+        : provider.status === "unavailable"
+          ? t("Unavailable")
+          : row.dataset.stale === "true"
+            ? t("Stale · {0}", formatTime(provider.checkedAt!))
+            : t("Last sample: {0}", formatTime(provider.checkedAt!));
+    reading.append(age);
+    row.append(identity, reading);
+    row.addEventListener("click", () => {
+      selectedProvider = provider.id;
+      renderCurrentProvider();
+      focusHeading.focus({ preventScroll: true });
+    });
+    providerRows.append(row);
+    if (focusedId === provider.id) row.focus({ preventScroll: true });
+  }
+}
+
+function renderCodexUsage(state: UsageState): void {
+  providerIdentity.textContent =
+    state.status === "error" && state.code === "codexNotFound"
+      ? t("Local source")
+      : "OpenAI · Codex";
+  meterTrack.setAttribute("aria-label", t("Codex weekly limit"));
+  meterTrack.dataset.i18nAriaLabel = "Codex weekly limit";
+  planValue
+    .closest(".metric-cell")
+    ?.querySelector("dt")
+    ?.replaceChildren(t("Account"));
+  relayValue.closest(".metric-cell")?.removeAttribute("hidden");
   const copy = copyForState(state);
   const liveState = labelForState(state);
 
@@ -335,6 +584,8 @@ function renderUsage(state: UsageState): void {
     state.status === "error" &&
     state.code === "codexNotFound" &&
     sourceRuntime !== null &&
+    googleInitialized &&
+    !googleIsVisible(googleView) &&
     !sourceAutoOpened
   ) {
     sourceAutoOpened = true;
@@ -343,7 +594,203 @@ function renderUsage(state: UsageState): void {
   }
 }
 
+function acceptGoogle(payload: unknown): void {
+  try {
+    googleView = newerGoogleView(googleView, parseGoogleView(payload));
+  } catch {
+    return;
+  } // Do not replace a known service with malformed IPC data.
+  googleInitialized = true;
+  if (!googleSettingsDirty) {
+    googleSource.value = googleView.settings.automatic
+      ? "automatic"
+      : (googleView.settings.source ?? "");
+    googlePath.value = googleView.settings.path ?? "";
+  }
+  googlePath.disabled = ["", "automatic"].includes(googleSource.value);
+  googleRemove.hidden =
+    googleView.settings.source === null && !googleView.settings.automatic;
+  googleDetection.textContent = googleView.settings.source
+    ? t(
+        "Detected source: {0}",
+        googleView.settings.source === "cli" ? "AGY CLI" : t("Desktop app"),
+      )
+    : t("Not detected");
+  googleTab.textContent = googleView.settings.source
+    ? "Antigravity"
+    : t("Services");
+  // This dynamic tab must not be overwritten by a later language refresh.
+  googleTab.removeAttribute("data-i18n");
+  if (!googleActionPending)
+    googleFeedback.textContent =
+      googleView.usage.status === "unavailable"
+        ? googleFailureCopy(googleView.usage.reason)
+        : googleView.usage.status === "ready"
+          ? t("Google quota is connected. Credentials stay with Antigravity.")
+          : googleView.settings.automatic
+            ? t(
+                "No Antigravity installation found. Discovery will check again automatically.",
+              )
+            : t(
+                "Antigravity is disabled. Enable automatic detection to show it again.",
+              );
+  renderCurrentProvider();
+}
+
+function renderGoogleUsage(): void {
+  const usage = googleView.usage;
+  const ready = usage.status === "ready";
+  const weekly = ready ? usage.quota.weekly : null;
+  document.body.dataset.state = ready ? "ready" : "unavailable";
+  document.body.dataset.multipleLimits = "false";
+  document.body.dataset.level =
+    weekly && weekly.remainingPercent <= 20 ? "critical" : "normal";
+  shell.setAttribute("aria-busy", String(googleRefreshing));
+  providerIdentity.textContent = "Google · Antigravity";
+  meterTrack.setAttribute("aria-label", t("Gemini weekly limit"));
+  meterTrack.dataset.i18nAriaLabel = "Gemini weekly limit";
+  setMeter(weekly?.remainingPercent ?? null, googleRefreshing && !ready);
+  liveLabel.textContent = googleRefreshing
+    ? t("READING")
+    : ready
+      ? t("LIVE")
+      : t("UNAVAILABLE");
+  refreshButton.disabled = googleRefreshing || googleActionPending;
+  refreshLabel.textContent = googleRefreshing
+    ? t("Reading Antigravity")
+    : t("Refresh");
+  resetValue.textContent = weekly
+    ? formatTime(weekly.resetsAt)
+    : t("NOT PUBLISHED");
+  resetDetail.textContent = weekly ? formatResetDate(weekly.resetsAt) : "";
+  shortValue
+    .closest(".metric-cell")
+    ?.toggleAttribute("hidden", !ready || !usage.quota.shortWindow);
+  if (ready && usage.quota.shortWindow) {
+    shortValue.textContent = t(
+      "{0}% LEFT",
+      Math.round(usage.quota.shortWindow.remainingPercent),
+    );
+    shortDetail.textContent = t("{0} WINDOW", formatWindow(300));
+  }
+  planValue
+    .closest(".metric-cell")
+    ?.querySelector("dt")
+    ?.replaceChildren(t("Local source"));
+  planValue.textContent =
+    googleView.settings.source === "cli" ? "AGY CLI" : t("Desktop app");
+  planDetail.textContent = "Google · Gemini";
+  // Only an acknowledged services publication can label Gemini as synced.
+  const googlePublished =
+    lastRelayState?.status === "connected"
+      ? lastRelayState.servicesPublishedAt
+      : null;
+  relayValue
+    .closest(".metric-cell")
+    ?.toggleAttribute("hidden", !googlePublished);
+  if (googlePublished) {
+    relayValue.textContent = t("Synced");
+    relayDetail.textContent = t(
+      "Last sample: {0}",
+      formatTime(googlePublished),
+    );
+  }
+  title.textContent = t("Google quota unavailable");
+  detail.textContent =
+    usage.status === "unavailable"
+      ? googleFailureCopy(usage.reason)
+      : t("No Antigravity service is enabled.");
+  updatedValue.textContent =
+    usage.status === "disabled"
+      ? "—"
+      : usage.status === "ready"
+        ? t("Last sample: {0}", formatTime(usage.checkedAt))
+        : t("Last attempt: {0}", formatTime(usage.checkedAt));
+}
+
+async function refreshGoogle(force = false): Promise<void> {
+  if (googleRefreshing || googleActionPending || previewState !== null) return;
+  googleRefreshing = true;
+  renderCurrentProvider();
+  try {
+    acceptGoogle(await invoke<unknown>("antigravity_status", { force }));
+  } catch {
+    googleFeedback.textContent = googleFailureCopy("sourceUnavailable");
+  } finally {
+    googleRefreshing = false;
+    renderCurrentProvider();
+  }
+}
+
+async function saveGoogle(remove = false): Promise<void> {
+  if (googleActionPending || previewState !== null) return;
+  googleActionPending = true;
+  for (const element of [
+    googleSource,
+    googlePath,
+    googleSave,
+    googleRemove,
+    googleScan,
+  ])
+    element.disabled = true;
+  googleFeedback.textContent = t("Reading Antigravity");
+  const settings = {
+    automatic: !remove && googleSource.value === "automatic",
+    source: remove
+      ? null
+      : googleSource.value === "automatic"
+        ? googleView.settings.automatic
+          ? googleView.settings.source
+          : null
+        : ((googleSource.value || null) as GoogleSource | null),
+    path:
+      remove || !googleSource.value || googleSource.value === "automatic"
+        ? null
+        : googlePath.value.trim() || null,
+  };
+  try {
+    const result = await invoke<unknown>("configure_antigravity", { settings });
+    googleSettingsDirty = false;
+    googleActionPending = false;
+    acceptGoogle(result);
+  } catch (reason) {
+    googleFeedback.textContent = googleFailureCopy(reason);
+  } finally {
+    googleActionPending = false;
+    for (const element of [
+      googleSource,
+      googlePath,
+      googleSave,
+      googleRemove,
+      googleScan,
+    ])
+      element.disabled = false;
+    googlePath.disabled = ["", "automatic"].includes(googleSource.value);
+    renderCurrentProvider();
+  }
+}
+
 function bindSourcePanel(): void {
+  focusWindow.addEventListener("click", () => {
+    selectedPeriods.set(
+      selectedProvider,
+      focusWindow.dataset.period === "short" ? "short" : "weekly",
+    );
+    renderCurrentProvider();
+  });
+  googleScan.addEventListener("click", () => void refreshGoogle(true));
+  googleTab.addEventListener("click", () => selectSettingsView("google", true));
+  googleTab.addEventListener("keydown", navigateSettingsTabs);
+  googleSave.addEventListener("click", () => void saveGoogle());
+  googleRemove.addEventListener("click", () => void saveGoogle(true));
+  googleSource.addEventListener("change", () => {
+    googleSettingsDirty = true;
+    googlePath.value = "";
+    googlePath.disabled = ["", "automatic"].includes(googleSource.value);
+  });
+  googlePath.addEventListener("input", () => {
+    googleSettingsDirty = true;
+  });
   installCommand.textContent = officialInstallCommand();
 
   settingsButton.addEventListener("click", () => {
@@ -426,24 +873,32 @@ function closeSourcePanel(): void {
   focusBeforeSourcePanel = null;
 }
 
-function selectSettingsView(view: "source" | "relay", moveFocus = false): void {
+function selectSettingsView(
+  view: "source" | "relay" | "google",
+  moveFocus = false,
+): void {
   const showSource = view === "source";
   sourceSettingsView.hidden = !showSource;
-  relaySettingsView.hidden = showSource;
-  sourceTab.setAttribute("aria-selected", showSource ? "true" : "false");
-  relayTab.setAttribute("aria-selected", showSource ? "false" : "true");
-  sourceTab.tabIndex = showSource ? 0 : -1;
-  relayTab.tabIndex = showSource ? -1 : 0;
-  const selectedTab = showSource ? sourceTab : relayTab;
+  relaySettingsView.hidden = view !== "relay";
+  googleSettingsView.hidden = view !== "google";
+  const selectedTab = showSource
+    ? sourceTab
+    : view === "relay"
+      ? relayTab
+      : googleTab;
+  for (const tab of [sourceTab, googleTab, relayTab]) {
+    tab.setAttribute("aria-selected", String(tab === selectedTab));
+    tab.tabIndex = tab === selectedTab ? 0 : -1;
+  }
   if (moveFocus) {
     selectedTab.focus();
   }
   if (showSource) {
     pausePairingPoll();
     void refreshSourceDiagnostic();
-  } else {
+  } else if (view === "relay") {
     void refreshRelayStatus();
-  }
+  } else pausePairingPoll();
 }
 
 function navigateSettingsTabs(event: KeyboardEvent): void {
@@ -451,15 +906,16 @@ function navigateSettingsTabs(event: KeyboardEvent): void {
     return;
   }
   event.preventDefault();
-  const view =
+  const tabs = [sourceTab, googleTab, relayTab];
+  const index = tabs.indexOf(event.currentTarget as HTMLButtonElement);
+  const next =
     event.key === "Home"
-      ? "source"
+      ? 0
       : event.key === "End"
-        ? "relay"
-        : event.currentTarget === sourceTab
-          ? "relay"
-          : "source";
-  selectSettingsView(view, true);
+        ? 2
+        : (index + (event.key === "ArrowLeft" ? 2 : 1)) % 3;
+  const view = (["source", "google", "relay"] as const)[next];
+  if (view) selectSettingsView(view, true);
 }
 
 function matchesSettingsTabNavigation(key: string): boolean {
@@ -524,6 +980,7 @@ async function useAutomaticDetection(): Promise<void> {
 function renderCodexDiagnostic(diagnostic: CodexDiagnostic): void {
   const previousStatus = lastDiagnostic?.status;
   lastDiagnostic = diagnostic;
+  renderCurrentProvider();
   if (previousStatus !== diagnostic.status) {
     sourceSetup.open = diagnostic.status !== "ready";
   }
@@ -916,7 +1373,7 @@ function trapSourcePanelFocus(event: KeyboardEvent): void {
   }
   const focusable = [
     ...sourcePanel.querySelectorAll<HTMLElement>(
-      "button:not(:disabled), summary, [tabindex]",
+      "button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, [tabindex]",
     ),
   ].filter(
     (element) => element.tabIndex >= 0 && element.getClientRects().length > 0,
@@ -952,6 +1409,7 @@ async function refreshLanguage(): Promise<void> {
     return;
   localizeDocument();
   if (lastUsageState) renderUsage(lastUsageState);
+  if (googleInitialized) acceptGoogle(googleView);
   if (lastDiagnostic && !sourceActionPending)
     renderCodexDiagnostic(lastDiagnostic);
   if (lastRelayState && !relayActionPending) renderRelayStatus(lastRelayState);

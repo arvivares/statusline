@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             StatuslineApp(
                 viewModel = viewModel,
+                onSelectProvider = viewModel::selectProvider,
                 onScanPairing = ::scanPairingCode,
                 onOpenPrivacy = { openPublicPage("privacy") },
                 onOpenSupport = { openPublicPage("support") },

@@ -1,4 +1,4 @@
-import type { SnapshotEnvelope } from "../src/protocol";
+import type { SnapshotEnvelope, ServicesPublication } from "../src/protocol";
 import type { RelayChannel, RelayStore, StoreResult } from "../src/store";
 
 export class MemoryRelayStore implements RelayStore {
@@ -51,8 +51,8 @@ export class MemoryRelayStore implements RelayStore {
     );
     if (result.kind !== "ok") return result;
     if (
-      result.value.sequence !== null &&
-      envelope.sequence <= result.value.sequence
+      envelope.sequence <=
+      Math.max(result.value.sequence ?? 0, result.value.services?.sequence ?? 0)
     ) {
       return { kind: "stale" };
     }
@@ -62,8 +62,49 @@ export class MemoryRelayStore implements RelayStore {
       sequence: envelope.sequence,
       nonce: envelope.nonce,
       ciphertext: envelope.ciphertext,
+      services: null,
+      servicesUpdatedAt: null,
       updatedAt: now,
       expiresAt,
+    };
+    this.channels.set(channelID, updated);
+    return { kind: "ok", value: updated };
+  }
+
+  async writeServices(
+    channelID: string,
+    publisherTokenHash: string,
+    publication: ServicesPublication,
+    now: number,
+    expiresAt: number,
+  ): Promise<StoreResult<RelayChannel>> {
+    const result = this.authorized(
+      channelID,
+      publisherTokenHash,
+      "publisher",
+      now,
+    );
+    if (result.kind !== "ok") return result;
+    const { services, codex } = publication;
+    if (
+      services.sequence <=
+      Math.max(result.value.sequence ?? 0, result.value.services?.sequence ?? 0)
+    ) {
+      return { kind: "stale" };
+    }
+    const updated: RelayChannel = {
+      ...result.value,
+      services,
+      servicesUpdatedAt: now,
+      expiresAt,
+      ...(codex
+        ? {
+            sequence: codex.sequence,
+            nonce: codex.nonce,
+            ciphertext: codex.ciphertext,
+            updatedAt: now,
+          }
+        : {}),
     };
     this.channels.set(channelID, updated);
     return { kind: "ok", value: updated };

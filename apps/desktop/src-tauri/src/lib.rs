@@ -1,3 +1,4 @@
+pub mod antigravity;
 pub mod app_server;
 pub mod codex_installation;
 pub mod localization;
@@ -5,6 +6,7 @@ pub mod localization;
 mod macos_update;
 pub mod refresh;
 pub mod relay_protocol;
+pub mod services_snapshot;
 pub mod universal_relay;
 pub mod update_policy;
 mod update_signature;
@@ -41,6 +43,64 @@ use universal_relay::{RelayStatus, UniversalRelayState};
 use usage::UsageResponse;
 
 const TRAY_ID: &str = "statusline-companion-tray";
+
+#[derive(Default)]
+struct ProviderTrayState(Mutex<ProviderTray>);
+
+#[derive(Default)]
+struct ProviderTray {
+    codex: Option<String>,
+    google: Option<String>,
+    google_revision: u64,
+}
+
+fn update_provider_tooltip(
+    app: &AppHandle,
+    codex: Option<&UsageResponse>,
+    google: Option<&antigravity::View>,
+) {
+    let state = app.state::<ProviderTrayState>();
+    let mut labels = state.0.lock().unwrap_or_else(|error| error.into_inner());
+    if let Some(usage) = codex {
+        labels.codex = matches!(usage, UsageResponse::Ready { .. }).then(|| usage.tray_tooltip());
+    }
+    if let Some(view) = google
+        && view.revision >= labels.google_revision
+    {
+        labels.google_revision = view.revision;
+        labels.google = match &view.usage {
+            antigravity::Usage::Ready { quota, .. } => Some(match &quota.weekly {
+                Some(weekly) => localization::text("Antigravity · {0}% left")
+                    .replace("{0}", &format!("{:.0}", weekly.remaining_percent)),
+                None => localization::text("Antigravity · no weekly data").to_owned(),
+            }),
+            antigravity::Usage::Unavailable {
+                source: Some(_),
+                reason,
+                ..
+            } if !matches!(
+                reason,
+                antigravity::Failure::NotFound | antigravity::Failure::InvalidPath
+            ) =>
+            {
+                Some(localization::text("Antigravity · unavailable").to_owned())
+            }
+            _ => None,
+        };
+    }
+    let available = [labels.codex.as_deref(), labels.google.as_deref()]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>();
+    let text = if available.is_empty() {
+        localization::text("Statusline Companion · no data").to_owned()
+    } else {
+        available.join("\n")
+    };
+    if let Some(tray) = app.tray_by_id(TRAY_ID) {
+        let _ = tray.set_tooltip(Some(text));
+    }
+}
 
 // The menu bar uses a transparent template; app, Dock and installer icons stay gold.
 #[cfg(target_os = "macos")]
@@ -146,12 +206,72 @@ type RefreshState = RefreshCoordinator<UsageResponse>;
 
 #[tauri::command]
 async fn refresh_usage(app: AppHandle) -> Result<UsageResponse, String> {
+    let google_app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        refresh_antigravity_native(&google_app).await;
+    });
     Ok(refresh_native(&app, Duration::ZERO).await)
 }
 
 #[tauri::command]
 async fn current_usage(app: AppHandle) -> Result<UsageResponse, String> {
+    let google_app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        refresh_antigravity_native(&google_app).await;
+    });
     Ok(refresh_native(&app, FOCUS_REFRESH_AGE).await)
+}
+
+async fn refresh_antigravity_native(app: &AppHandle) -> antigravity::View {
+    refresh_antigravity_with_age(app, FOCUS_REFRESH_AGE).await
+}
+
+async fn refresh_antigravity_with_age(app: &AppHandle, age: Duration) -> antigravity::View {
+    let directory = app.path().app_config_dir().ok();
+    let view = app
+        .state::<antigravity::State>()
+        .refresh(directory.as_deref(), age)
+        .await;
+    let _ = app.emit("antigravity-updated", &view);
+    update_provider_tooltip(app, None, Some(&view));
+    app.state::<UniversalRelayState>()
+        .record_google(&view)
+        .await;
+    view
+}
+
+#[tauri::command]
+async fn antigravity_status(app: AppHandle, force: Option<bool>) -> antigravity::View {
+    refresh_antigravity_with_age(
+        &app,
+        if force == Some(true) {
+            Duration::ZERO
+        } else {
+            FOCUS_REFRESH_AGE
+        },
+    )
+    .await
+}
+
+#[tauri::command]
+async fn configure_antigravity(
+    app: AppHandle,
+    settings: antigravity::Settings,
+) -> Result<antigravity::View, antigravity::Failure> {
+    let directory = app
+        .path()
+        .app_config_dir()
+        .map_err(|_| antigravity::Failure::SettingsUnavailable)?;
+    let view = app
+        .state::<antigravity::State>()
+        .configure(&directory, settings)
+        .await?;
+    let _ = app.emit("antigravity-updated", &view);
+    update_provider_tooltip(&app, None, Some(&view));
+    app.state::<UniversalRelayState>()
+        .record_google(&view)
+        .await;
+    Ok(view)
 }
 
 async fn refresh_native(app: &AppHandle, minimum_age: Duration) -> UsageResponse {
@@ -161,14 +281,10 @@ async fn refresh_native(app: &AppHandle, minimum_age: Duration) -> UsageResponse
             let response =
                 app_server::fetch_usage(env!("CARGO_PKG_VERSION"), settings_directory.as_deref())
                     .await;
-            if let Some(tray) = app.tray_by_id(TRAY_ID) {
-                let _ = tray.set_tooltip(Some(response.tray_tooltip()));
-            }
-            let relay_status = app
-                .state::<UniversalRelayState>()
-                .publish_usage(&response)
+            update_provider_tooltip(app, Some(&response), None);
+            app.state::<UniversalRelayState>()
+                .record_codex(&response)
                 .await;
-            let _ = app.emit("relay-status-changed", relay_status);
             let _ = app.emit("usage-updated", &response);
             response
         })
@@ -265,6 +381,8 @@ pub fn run() {
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(RefreshState::default())
+        .manage(antigravity::State::default())
+        .manage(ProviderTrayState::default())
         .manage(WindowBehaviorState::default())
         .manage(UniversalRelayState::default())
         .setup(|app| {
@@ -315,7 +433,10 @@ pub fn run() {
                     "refresh" => {
                         let app = app.clone();
                         tauri::async_runtime::spawn(async move {
-                            refresh_native(&app, Duration::ZERO).await;
+                            tokio::join!(
+                                refresh_native(&app, Duration::ZERO),
+                                refresh_antigravity_native(&app)
+                            );
                         });
                     }
                     "quit" => app.exit(0),
@@ -381,11 +502,24 @@ pub fn run() {
             tray_builder.build(app)?;
             updates::start(app.handle());
             let refresh_app = app.handle().clone();
+            let publisher_app = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let relay = publisher_app.state::<UniversalRelayState>();
+                loop {
+                    relay.wait_for_publication().await;
+                    tokio::time::sleep(Duration::from_millis(400)).await;
+                    let status = relay.publish_inventory().await;
+                    let _ = publisher_app.emit("relay-status-changed", status);
+                }
+            });
             tauri::async_runtime::spawn(async move {
                 let mut interval = refresh_interval();
                 loop {
                     interval.tick().await;
-                    refresh_native(&refresh_app, Duration::ZERO).await;
+                    tokio::join!(
+                        refresh_native(&refresh_app, Duration::ZERO),
+                        refresh_antigravity_native(&refresh_app)
+                    );
                 }
             });
             Ok(())
@@ -411,6 +545,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             refresh_usage,
             current_usage,
+            antigravity_status,
+            configure_antigravity,
             relay_status,
             create_relay_pairing,
             disconnect_relay,

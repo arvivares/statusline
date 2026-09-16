@@ -2,11 +2,14 @@ import {
   CHANNEL_TTL_SECONDS,
   PAIRING_TTL_SECONDS,
   PROTOCOL_VERSION,
+  SERVICES_CAPABILITY,
+  SERVICES_MEDIA_TYPE,
   ProtocolError,
   hashToken,
   parseBearerToken,
   parseChannelID,
   parseSnapshotEnvelope,
+  parseServicesPublication,
   randomToken,
   type SnapshotEnvelope,
 } from "./protocol";
@@ -40,7 +43,11 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
       }
 
       if (request.method === "GET" && url.pathname === "/health") {
-        return json({ status: "ok", protocolVersion: PROTOCOL_VERSION });
+        return json({
+          status: "ok",
+          protocolVersion: PROTOCOL_VERSION,
+          capabilities: [SERVICES_CAPABILITY],
+        });
       }
 
       const segments = url.pathname.split("/").filter(Boolean);
@@ -84,7 +91,9 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
       const channelID = parseChannelID(rawChannelID);
       const token = parseBearerToken(request.headers.get("authorization"));
       const tokenHash = await hashToken(token);
-      const route = segments[3] ?? "metadata";
+      // Legacy and multi-service publication share the same rate-limit budget.
+      const route =
+        segments[3] === "services" ? "snapshot" : (segments[3] ?? "metadata");
       if (
         !(
           await dependencies.channelRateLimiter.limit({
@@ -120,6 +129,26 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
       }
       if (
         segments.length === 4 &&
+        segments[3] === "services" &&
+        request.method === "PUT"
+      ) {
+        const publication = parseServicesPublication(
+          await readJSON(request, 16_384),
+        );
+        const timestamp = now();
+        return emptyResult(
+          await dependencies.store.writeServices(
+            channelID,
+            tokenHash,
+            publication,
+            timestamp,
+            timestamp + CHANNEL_TTL_SECONDS,
+          ),
+          true,
+        );
+      }
+      if (
+        segments.length === 4 &&
         segments[3] === "snapshot" &&
         request.method === "PUT"
       ) {
@@ -143,6 +172,7 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
       ) {
         return snapshot(
           await dependencies.store.readSnapshot(channelID, tokenHash, now()),
+          request.headers.get("Accept") === SERVICES_MEDIA_TYPE,
         );
       }
       return apiError(404, "notFound", "Endpoint not found.");
@@ -183,6 +213,8 @@ async function createChannel(
     sequence: null,
     nonce: null,
     ciphertext: null,
+    services: null,
+    servicesUpdatedAt: null,
     createdAt: now,
     updatedAt: now,
     expiresAt: now + CHANNEL_TTL_SECONDS,
@@ -239,14 +271,28 @@ function metadata(result: StoreResult<RelayChannel>): Response {
     lastPublishedAt:
       result.value.sequence === null ? null : result.value.updatedAt,
     expiresAt: result.value.expiresAt,
+    capabilities: [SERVICES_CAPABILITY],
+    servicesLastPublishedAt: result.value.servicesUpdatedAt,
   });
 }
 
-function snapshot(result: StoreResult<RelayChannel>): Response {
+function snapshot(
+  result: StoreResult<RelayChannel>,
+  acceptsServices = false,
+): Response {
   if (result.kind !== "ok") {
     return storeError(result);
   }
   const channel = result.value;
+  if (
+    acceptsServices &&
+    channel.services !== null &&
+    channel.services.sequence >= (channel.sequence ?? 0)
+  ) {
+    const response = json(channel.services);
+    response.headers.set("Vary", "Accept");
+    return response;
+  }
   if (
     channel.sequence === null ||
     channel.nonce === null ||
@@ -264,7 +310,9 @@ function snapshot(result: StoreResult<RelayChannel>): Response {
     nonce: channel.nonce,
     ciphertext: channel.ciphertext,
   };
-  return json(envelope);
+  const response = json(envelope);
+  response.headers.set("Vary", "Accept");
+  return response;
 }
 
 function emptyResult(result: StoreResult<unknown>, created = false): Response {
@@ -292,21 +340,44 @@ function storeError(
   }
 }
 
-async function readJSON(request: Request): Promise<unknown> {
+async function readJSON(
+  request: Request,
+  maximumBytes = MAX_REQUEST_BYTES,
+): Promise<unknown> {
   if (
     request.headers.get("content-type")?.split(";", 1)[0] !== "application/json"
   ) {
     throw new ProtocolError("Content-Type must be application/json.");
   }
   const declaredLength = Number(request.headers.get("content-length") ?? 0);
-  if (declaredLength > MAX_REQUEST_BYTES) {
+  if (declaredLength > maximumBytes) {
     throw new ProtocolError("Request body is too large.");
   }
-  const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > MAX_REQUEST_BYTES) {
-    throw new ProtocolError("Request body is too large.");
+  const reader = request.body?.getReader();
+  if (!reader) throw new ProtocolError("Request body is required.");
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      size += chunk.value.byteLength;
+      if (size > maximumBytes) {
+        await reader.cancel();
+        throw new ProtocolError("Request body is too large.");
+      }
+      chunks.push(chunk.value);
+    }
+  } finally {
+    reader.releaseLock();
   }
-  return JSON.parse(text) as unknown;
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
 }
 
 function secureRandomBytes(length: number): Uint8Array {

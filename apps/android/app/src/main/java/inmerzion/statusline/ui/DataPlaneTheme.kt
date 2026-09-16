@@ -18,6 +18,7 @@ object DataPlaneColors {
     val Line = Color(0xFF3E3E37)
     val Track = Color(0xFF2F2F29)
     val Signal = Color(0xFFEFC65A)
+    val Terminal = Color.White
     val Critical = Color(0xFFF26856)
 
     fun emphasis(remainingPercentage: Int): Color =

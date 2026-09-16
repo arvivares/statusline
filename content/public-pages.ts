@@ -26,12 +26,14 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
   "/privacy": {
     title: "Privacy Policy",
     eyebrow: "STL / PRIVACY",
-    summary: "Effective 11 September 2026",
+    summary: "Effective 15 September 2026",
     content: `
       <section>
         <h2>Data processed locally</h2>
         <p>The desktop companion starts the locally installed Codex App Server and reads only the fields needed to show usage windows, reset times, account type and plan. It does not read, copy or store Codex access tokens, API keys, prompts, source code or conversation content.</p>
         <p>A manually selected Codex executable path stays in the computer's local application configuration and can be cleared from Source Settings.</p>
+        <p>Companion 0.1.22 requires manual opt-in for Antigravity. Companion 0.1.23 automatically discovers installed Desktop/AGY CLI sources, preferring Desktop on first discovery and remembering the source. Existing explicit selections and disabled services are preserved; you can disable discovery or select another source in Settings. There is no automatic account failover. Only Google weekly/five-hour quota reaches the interface. Desktop account-status fields are checked in memory to confirm a signed-in subscription and discarded; Claude/GPT buckets are also discarded. The vendor runtime manages its own authentication and requests to Google. Statusline does not extract or copy Google tokens or API keys.</p>
+        <p>Only the selected source/path and discovery preference are persisted; quota stays in memory and transient runtime data is removed after collection. Remove service saves a disabled preference and stops collection without signing out of Google or changing Codex/mobile pairing. Antigravity quota is not relayed to mobile in this Companion-only release.</p>
       </section>
       <section>
         <h2>Universal encrypted relay</h2>
@@ -159,12 +161,14 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
   privacy: {
     title: "Política de privacidad",
     eyebrow: "STL / PRIVACIDAD",
-    summary: "En vigor desde el 11 de septiembre de 2026",
+    summary: "En vigor desde el 15 de septiembre de 2026",
     content: `
       <section>
         <h2>Datos procesados localmente</h2>
         <p>El companion de escritorio inicia el Codex App Server instalado localmente y lee únicamente los campos necesarios para mostrar los periodos de uso, sus reinicios, el tipo de cuenta y el plan. No lee, copia ni almacena tokens de acceso de Codex, claves API, instrucciones, código fuente ni conversaciones.</p>
         <p>Si seleccionas manualmente un ejecutable de Codex, su ruta permanece en la configuración local del ordenador y se puede borrar desde los ajustes del origen.</p>
+        <p>Companion 0.1.22 requiere activar Antigravity manualmente. Companion 0.1.23 detecta automáticamente las instalaciones de Desktop y AGY CLI, prioriza Desktop en la primera detección y recuerda la fuente. Se conservan las selecciones explícitas y los servicios desactivados; puedes desactivar la detección o elegir otra fuente en Configuración. No se cambia de cuenta automáticamente. Solo la cuota semanal y de cinco horas de Google llega a la interfaz. Los campos de estado de la cuenta de Desktop se comprueban en memoria para confirmar una suscripción con sesión iniciada y se descartan, al igual que las cuotas de Claude/GPT. El ejecutable del proveedor gestiona su autenticación y las peticiones a Google. Statusline no extrae ni copia tokens de Google ni claves API.</p>
+        <p>Solo se guardan el origen, su ruta y la preferencia de detección; la cuota permanece en memoria y los datos temporales se eliminan tras la lectura. Quitar servicio guarda la desactivación y detiene la lectura sin cerrar sesión en Google ni modificar el vínculo de Codex con el móvil. Esta entrega exclusiva de Companion no envía la cuota de Antigravity al relay ni a los móviles.</p>
       </section>
       <section>
         <h2>Relay universal cifrado</h2>

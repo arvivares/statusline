@@ -24,6 +24,14 @@ on 13 September 2026. On 14 September, the version was verified as **Ready for
 Distribution**, and 1.0.3 appeared on the public Spanish storefront. See the
 [submission and publication record](../validation-1.0.3.md).
 
+## Historical Still Focus set — 1.0.3 (8)
+
+The earlier five-image Still Focus package is retained in
+[English](still-focus/en-US/) and [Spanish](still-focus/es-ES/), with unretouched
+source captures under each locale's `source/` directory. It documents the
+previous iOS delivery and is intentionally separate from the current 1.1.0
+Antigravity gallery above. Do not mix the two sets when preparing a store upload.
+
 ## Historical listing set — 1.0.1 (5)
 
 - [English overview](phone/en-US/01-weekly-quota.png)

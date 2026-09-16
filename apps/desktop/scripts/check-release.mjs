@@ -118,6 +118,11 @@ for (const dependency of [
   "libc",
   "tar",
   "tempfile",
+  "time",
+  "ring",
+  "reqwest",
+  "uuid",
+  "windows-sys",
 ]) {
   assert(
     exactCargoDependencyVersion(runtimeTestCargo, dependency) ===

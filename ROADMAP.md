@@ -38,19 +38,21 @@ percentage when one cannot be calculated honestly.
 
 ## Provider feasibility
 
-| Provider                     | Supported source                                                                                                                                                                                  | Useful signals                                              | Direction                                                                                  |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| **Codex**                    | Local Codex App Server                                                                                                                                                                            | Short and weekly windows, remaining percentage, reset, plan | **Available in v1.** Extract the current implementation into the first provider adapter.   |
-| **AGY / Google Antigravity** | Documented [`/usage`](https://www.agy.dev/docs/cli/commands/usage/) and [status line JSON](https://www.agy.dev/docs/cli/statusline/)                                                              | Per-model quota, remaining fraction, resets, context usage  | **Best next proof of concept.** Validate discovery and fixtures on every desktop platform. |
-| **Claude Code**              | Structured [CLI output](https://docs.anthropic.com/en/docs/claude-code/cli-usage) and organization [Admin API](https://docs.anthropic.com/en/api/admin-api/usage-cost/get-messages-usage-report)  | Session usage; organization usage and cost                  | **Research.** Do not promise personal subscription remainder without a supported source.   |
-| **GitHub Copilot**           | Official [Copilot usage metrics](https://docs.github.com/en/copilot/concepts/copilot-usage-metrics/copilot-metrics) and [REST API](https://docs.github.com/en/rest/copilot?apiVersion=2026-03-10) | Organization activity, adoption and premium-request usage   | **Research for team mode.** Current metrics are not a direct personal quota equivalent.    |
+| Provider                     | Supported source                                                                                                                                                                                  | Useful signals                                              | Direction                                                                                                                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Codex**                    | Local Codex App Server                                                                                                                                                                            | Short and weekly windows, remaining percentage, reset, plan | **Available in v1.** Extract the current implementation into the first provider adapter.                                                                                       |
+| **AGY / Google Antigravity** | Documented [`/usage`](https://antigravity.google/docs/cli/commands/usage/); Desktop local quota service is internal, not a public API                                                             | Google quota groups, remaining fraction and reset windows   | **macOS CLI, running Desktop and managed bundled-runtime proofs validated.** [Research and pending platform gates](docs/architecture/antigravity-sources.md); not yet shipped. |
+| **Claude Code**              | Structured [CLI output](https://docs.anthropic.com/en/docs/claude-code/cli-usage) and organization [Admin API](https://docs.anthropic.com/en/api/admin-api/usage-cost/get-messages-usage-report)  | Session usage; organization usage and cost                  | **Research.** Do not promise personal subscription remainder without a supported source.                                                                                       |
+| **GitHub Copilot**           | Official [Copilot usage metrics](https://docs.github.com/en/copilot/concepts/copilot-usage-metrics/copilot-metrics) and [REST API](https://docs.github.com/en/rest/copilot?apiVersion=2026-03-10) | Organization activity, adoption and premium-request usage   | **Research for team mode.** Current metrics are not a direct personal quota equivalent.                                                                                        |
 
 Gemini CLI, Cursor, Windsurf, OpenCode and Aider are candidates for later discovery.
 They remain exploratory until a stable, permitted usage source is verified.
 
 ## Architecture required for multiple agents
 
-Before adding a second production provider, Statusline will introduce a shared model:
+The 0.1.22 Companion candidate introduces an independent, opt-in Google adapter
+without migrating the relay. [Candidate contract](docs/architecture/antigravity-companion.md).
+The next step, before multi-provider mobile delivery, is a shared model:
 
 - `AgentProvider`: identity, discovery, authorization and collection lifecycle.
 - `AgentUsageSnapshot`: provider, account scope, sample time, health and metrics.
@@ -63,6 +65,11 @@ The desktop registry will run adapters independently and normalize only their st
 not their meaning. Relay protocol v2 will carry an encrypted array of provider snapshots
 while retaining a migration path for existing v1 Codex pairings. Mobile apps, caches and
 widgets will consume the same shared contract.
+
+Companion is authoritative for **each user's** enabled services. Do not display
+global AGY/Claude placeholders on phones or widgets. A missing service, a removed
+service and a temporarily unavailable configured service are different states.
+Preserve the Codex v1 projection and existing pairings during the transition.
 
 ## Delivery sequence
 
@@ -83,7 +90,9 @@ widgets will consume the same shared contract.
 
 ### Then — add providers deliberately
 
-1. Build an AGY discovery spike and validate its documented status-line payload.
+1. Build the AGY collector from the verified read-only CLI usage report; include
+   only Google quotas. Validate executable discovery and report parsing without
+   collecting third-party model data or treating group quota as per-model capacity.
 2. Promote AGY only after Windows, Linux and macOS fixtures pass.
 3. Validate what Claude Code can expose for personal and organization accounts without
    scraping private credentials or undocumented account endpoints.

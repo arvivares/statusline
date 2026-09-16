@@ -2,14 +2,19 @@ use std::{env, time::Duration};
 
 use reqwest::{Client, StatusCode, Url, redirect::Policy};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
-use tokio::{sync::Mutex, task};
+use tokio::{
+    sync::{Mutex, Notify},
+    task,
+};
 
 use crate::{
+    antigravity,
     relay_protocol::{
         ChannelMetadata, CreateChannelResponse, PROTOCOL_VERSION, ProtocolError,
-        PublisherCredentials, SnapshotEnvelope, UsageSnapshot, encrypt_snapshot,
-        validate_channel_metadata,
+        PublisherCredentials, SERVICES_CAPABILITY, ServicesPublication, SnapshotEnvelope,
+        encrypt_services, encrypt_snapshot, validate_channel_metadata,
     },
+    services_snapshot::{ServicesInventory, ServicesSnapshot},
     usage::UsageResponse,
 };
 
@@ -37,10 +42,12 @@ pub enum RelayStatus {
         pairing_uri: String,
         pairing_expires_at: i64,
         last_published_at: Option<i64>,
+        services_published_at: Option<i64>,
     },
     Connected {
         endpoint: String,
         last_published_at: Option<i64>,
+        services_published_at: Option<i64>,
     },
     Error {
         endpoint: Option<String>,
@@ -186,6 +193,26 @@ impl StatusPublisher for RelayClient {
 }
 
 impl RelayClient {
+    async fn publish_services(
+        &self,
+        configuration: &RelayConfiguration,
+        credentials: &PublisherCredentials,
+        publication: &ServicesPublication,
+    ) -> Result<(), RelayError> {
+        let response = self
+            .http
+            .put(
+                configuration
+                    .endpoint(&format!("v1/channels/{}/services", credentials.channel_id))?,
+            )
+            .bearer_auth(&credentials.publisher_token)
+            .json(publication)
+            .send()
+            .await
+            .map_err(|_| RelayError::Transport)?;
+        ensure_empty_success(response, &[StatusCode::CREATED, StatusCode::NO_CONTENT]).await
+    }
+
     async fn create_channel(
         &self,
         configuration: &RelayConfiguration,
@@ -234,9 +261,105 @@ impl RelayClient {
 pub struct UniversalRelayState {
     client: RelayClient,
     operation_lock: Mutex<()>,
+    inventory: Mutex<ServicesInventory>,
+    publication_requested: Notify,
+    last_publication: Mutex<Option<(String, ServicesSnapshot)>>,
 }
 
 impl UniversalRelayState {
+    pub async fn record_codex(&self, usage: &UsageResponse) {
+        if self.inventory.lock().await.record_codex(usage) {
+            self.publication_requested.notify_one();
+        }
+    }
+
+    pub async fn record_google(&self, view: &antigravity::View) {
+        if self.inventory.lock().await.record_google(view) {
+            self.publication_requested.notify_one();
+        }
+    }
+
+    pub async fn wait_for_publication(&self) {
+        self.publication_requested.notified().await;
+    }
+
+    /// A short native coalescing window combines independently collected quotas.
+    /// A slow Google collector never holds Codex's collection or UI lock.
+    pub async fn publish_inventory(&self) -> RelayStatus {
+        let configuration = match configured_relay() {
+            Ok(Some(value)) => value,
+            Ok(None) => return RelayStatus::NotConfigured,
+            Err(error) => return error_status(None, &error, false),
+        };
+        let _guard = self.operation_lock.lock().await;
+        let result = self.publish_inventory_locked(&configuration).await;
+        result.unwrap_or_else(|error| error_status(Some(&configuration), &error, true))
+    }
+
+    async fn publish_inventory_locked(
+        &self,
+        configuration: &RelayConfiguration,
+    ) -> Result<RelayStatus, RelayError> {
+        let Some(mut credentials) = load_credentials().await? else {
+            return Ok(RelayStatus::Unpaired {
+                endpoint: configuration.origin.clone(),
+            });
+        };
+        ensure_matching_endpoint(configuration, &credentials)?;
+        let (snapshot, codex) = {
+            let inventory = self.inventory.lock().await;
+            (inventory.snapshot(), inventory.codex_projection().cloned())
+        };
+        let Some(snapshot) = snapshot else {
+            // No authoritative inventory until both collectors have returned.
+            return status_for_credentials(configuration, &credentials);
+        };
+        if let Some((channel, previous)) = self.last_publication.lock().await.as_ref()
+            && *channel == credentials.channel_id
+            && *previous == snapshot
+        {
+            return status_for_credentials(configuration, &credentials);
+        }
+        // Uses the existing authenticated metadata request, not a health poll.
+        let metadata = refresh_claim_state(&self.client, configuration, &mut credentials).await?;
+        let sequence = credentials.next_sequence()?;
+        if metadata
+            .capabilities
+            .iter()
+            .any(|value| value == SERVICES_CAPABILITY)
+        {
+            let services = encrypt_services(&snapshot, &credentials, sequence)?;
+            let codex = codex
+                .as_ref()
+                .map(|value| encrypt_snapshot(value, &credentials, sequence))
+                .transpose()?;
+            self.client
+                .publish_services(
+                    configuration,
+                    &credentials,
+                    &ServicesPublication { services, codex },
+                )
+                .await?;
+            credentials.last_services_published_at = Some(snapshot.updated_at);
+        } else if let Some(codex) = &codex {
+            // Self-hosted/older relays keep working with their original payload.
+            let envelope = encrypt_snapshot(codex, &credentials, sequence)?;
+            self.client
+                .publish_snapshot(configuration, &credentials, &envelope)
+                .await?;
+            credentials.last_services_published_at = None;
+        } else {
+            save_credentials(credentials.clone()).await?;
+            return status_for_credentials(configuration, &credentials);
+        }
+        credentials.last_sequence = Some(sequence);
+        credentials.last_published_at = Some(snapshot.updated_at);
+        let status = status_for_credentials(configuration, &credentials)?;
+        save_credentials(credentials.clone()).await?;
+        *self.last_publication.lock().await = Some((credentials.channel_id, snapshot));
+        Ok(status)
+    }
+
     pub async fn current_status(&self) -> RelayStatus {
         let configuration = match configured_relay() {
             Ok(Some(configuration)) => configuration,
@@ -272,6 +395,7 @@ impl UniversalRelayState {
                 PublisherCredentials::from_created(configuration.origin.clone(), response)?;
             let status = pairing_status(&configuration, &credentials)?;
             save_credentials(credentials).await?;
+            self.publication_requested.notify_one();
             Ok::<_, RelayError>(status)
         }
         .await;
@@ -297,44 +421,6 @@ impl UniversalRelayState {
         }
     }
 
-    pub async fn publish_usage(&self, usage: &UsageResponse) -> RelayStatus {
-        let Some(snapshot) = UsageSnapshot::from_usage(usage) else {
-            return self.current_status().await;
-        };
-        let configuration = match configured_relay() {
-            Ok(Some(configuration)) => configuration,
-            Ok(None) => return RelayStatus::NotConfigured,
-            Err(error) => return error_status(None, &error, false),
-        };
-        let _guard = self.operation_lock.lock().await;
-        let result = self.publish_snapshot(&configuration, &snapshot).await;
-        result.unwrap_or_else(|error| error_status(Some(&configuration), &error, true))
-    }
-
-    async fn publish_snapshot(
-        &self,
-        configuration: &RelayConfiguration,
-        snapshot: &UsageSnapshot,
-    ) -> Result<RelayStatus, RelayError> {
-        let Some(mut credentials) = load_credentials().await? else {
-            return Ok(RelayStatus::Unpaired {
-                endpoint: configuration.origin.clone(),
-            });
-        };
-        ensure_matching_endpoint(configuration, &credentials)?;
-        let sequence = credentials.next_sequence()?;
-        let envelope = encrypt_snapshot(snapshot, &credentials, sequence)?;
-        self.client
-            .publish_snapshot(configuration, &credentials, &envelope)
-            .await?;
-        credentials.last_sequence = Some(sequence);
-        credentials.last_published_at = Some(snapshot.updated_at);
-        refresh_claim_state(&self.client, configuration, &mut credentials).await?;
-        let status = status_for_credentials(configuration, &credentials)?;
-        save_credentials(credentials).await?;
-        Ok(status)
-    }
-
     async fn status_with_configuration(
         &self,
         configuration: &RelayConfiguration,
@@ -356,18 +442,19 @@ async fn refresh_claim_state(
     client: &RelayClient,
     configuration: &RelayConfiguration,
     credentials: &mut PublisherCredentials,
-) -> Result<(), RelayError> {
+) -> Result<ChannelMetadata, RelayError> {
     let metadata = client.metadata(configuration, credentials).await?;
     validate_channel_metadata(&metadata)?;
     credentials.expires_at = metadata.expires_at;
     credentials.pairing_expires_at = metadata.pairing_expires_at;
+    credentials.last_services_published_at = metadata.services_last_published_at;
     if metadata.reader_claimed_at.is_some() {
         credentials.pending_pairing_token = None;
     }
     if metadata.last_published_at.is_some() && credentials.last_published_at.is_none() {
         credentials.last_published_at = metadata.last_published_at;
     }
-    Ok(())
+    Ok(metadata)
 }
 
 fn status_for_credentials(
@@ -380,6 +467,7 @@ fn status_for_credentials(
         Ok(RelayStatus::Connected {
             endpoint: configuration.origin.clone(),
             last_published_at: credentials.last_published_at,
+            services_published_at: credentials.last_services_published_at,
         })
     }
 }
@@ -393,6 +481,7 @@ fn pairing_status(
         pairing_uri: credentials.pairing_uri()?,
         pairing_expires_at: credentials.pairing_expires_at,
         last_published_at: credentials.last_published_at,
+        services_published_at: credentials.last_services_published_at,
     })
 }
 

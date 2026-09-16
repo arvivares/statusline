@@ -6,45 +6,49 @@ Statusline: Agent Quota
 
 ## Subtitle
 
-Codex limits, at a glance
+Codex & Gemini, at a glance
 
 ## Promotional text
 
-Check your remaining Codex quota and reset time from your iPhone or Home Screen. Pair with your computer for encrypted sync, or use manual updates.
+Codex and Gemini quotas, together on your iPhone and Home Screen. Pair with Companion for encrypted sync. Only your enabled services appear.
 
 ## Description
 
-Know how much Codex quota you have left without returning to your computer. Statusline brings your remaining weekly limit, reset time and latest sample to a focused iPhone dashboard and Home Screen widget.
+Know how much agent quota you have left without returning to your computer. Statusline brings Codex and Google Gemini quotas from Antigravity to a focused iPhone dashboard and Home Screen widgets.
 
 AT A GLANCE
 
-• See your remaining weekly quota as a percentage and segmented meter.
-• Check the next reset date and time.
+• See remaining quota as a percentage and segmented meter.
+• Focus on one service while keeping the others visible below it.
+• Check weekly and short-window limits when provided by the service, including reset dates and times.
+• Show only services enabled in your paired Companion. No empty placeholders for agents you do not use.
 • See how old your sample is, so you can tell when data needs refreshing.
-• Keep your quota visible in a Home Screen widget.
+• Use a small widget for your focused service or a medium widget to see your other services too.
 • Use the app and widget in English or Spanish, following your system language. Other languages fall back to English.
 
 WORKS ON ITS OWN
 
-Try the built-in demo without an account or network connection. You can also paste the weekly quota line from Codex /status and save it locally to update the app and widget. Manual samples change only when you update them.
+Try the built-in Codex demo without an account or network connection. You can also paste the weekly quota line from Codex /status and save it locally to update the app and widget. Manual samples change only when you update them; Antigravity requires Companion sync.
 
 OPTIONAL PRIVATE SYNC
 
-For synchronized samples, install the free, open-source Statusline Companion on Windows, Linux or macOS. You need a compatible local Codex installation signed in to your own account. Pair your iPhone using a one-time QR code or a private link.
+For synchronized samples, install the free, open-source Statusline Companion 0.1.24 or later on Windows, Linux or macOS. Use your own signed-in, compatible Codex or Antigravity installation on that computer. Companion discovers supported local installations. Pair your iPhone using a one-time QR code or a private link.
+
+Antigravity support shows quotas for Google's Gemini models, not the third-party models offered within Antigravity. Availability and quota windows depend on the connected service and account.
 
 Companion reads quota metadata locally and encrypts it before sending it to the relay. The relay cannot read your quota or receive the encryption key. Your computer must be awake and Companion running to publish new samples. The widget can request updates without opening the iPhone app; iOS controls when it refreshes, so updates are not real-time.
 
 BUILT FOR CONTROL
 
-Statusline does not ask for your Codex password or API key, and does not upload your prompts, code or conversations. There are no ads, no Statusline account and no in-app purchases. You can disconnect your iPhone at any time. The project and relay protocol are open source.
+The iPhone app does not ask for your service password or API key. Service credentials remain on your computer; Statusline does not send them, your prompts, code or conversations to the phone or relay. There are no ads, no Statusline account and no in-app purchases. You can disconnect your iPhone at any time. The project and relay protocol are open source.
 
-Statusline displays quota information; it does not run coding tasks, increase your limits or replace a Codex subscription.
+Statusline displays quota information; it does not run coding tasks, increase your limits or replace any service subscription.
 
-Statusline is an independent project and is not affiliated with, endorsed by or sponsored by OpenAI. Codex is a trademark of its respective owner.
+Statusline is an independent project and is not affiliated with, endorsed by or sponsored by OpenAI or Google. Product names and trademarks belong to their respective owners.
 
 ## Keywords
 
-quota,usage,weekly,widget,developer,remaining,reset,terminal,privacy,companion
+quota,usage,antigravity,weekly,widget,developer,remaining,reset,privacy,companion
 
 ## Support URL
 
@@ -54,13 +58,11 @@ https://statusline.inmerzion.io/support
 
 https://statusline.inmerzion.io/
 
-## What's new — 1.0.3
+## What's new — 1.1.0
 
-Meet Still Signature: a cleaner way to check your Codex quota.
+• Gemini quotas from Antigravity now join Codex in the app and widgets.
+• Focus on one service and keep the others visible. Only services enabled in your Companion appear.
+• Check supported weekly and short-window quotas, reset times and sample age.
+• Existing pairings and Codex sync are preserved.
 
-• Refreshed iPhone dashboard and Home Screen widget with softer corners and simpler typography.
-• Segmented progress bars inspired by the Statusline icon, with a white marker at the end of the remaining quota.
-• More space between the quota number and percent symbol.
-• Private sync and manual-update controls expand only when you need them.
-
-Your existing pairing is preserved. The widget synchronization fix from 1.0.2 is included. Open the app once after updating; keep Companion running on an awake computer. iOS determines widget refresh timing.
+Update Companion to 0.1.24 or later for Antigravity sync, then open Statusline once. iOS manages widget refresh timing.
