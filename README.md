@@ -146,8 +146,9 @@ adapter architecture that can show Codex, AGY, Claude Code, GitHub Copilot and f
 coding agents in one honest capacity view—even when providers expose different units.
 
 The current order is: ship the Codex foundation, extract the shared provider contract,
-validate AGY as the first additional adapter, then research supported Claude Code and
-GitHub Copilot integrations. Planned product work includes multi-provider widgets, a
+validate AGY as the first additional adapter, read Claude Code quota through its
+documented status-line hook on explicit opt-in, then research supported GitHub Copilot
+integrations. Planned product work includes multi-provider widgets, a
 cross-provider reset timeline, local history, low-capacity alerts, forecasts with clear
 confidence and an independently hosted relay.
 

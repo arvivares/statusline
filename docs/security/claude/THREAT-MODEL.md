@@ -74,3 +74,24 @@ authentication. Windows/Linux tests use fixtures; native macOS checking and unit
 tests do not establish real Claude account compatibility. Complete publisher
 verification, source/account isolation and freshness testing before enabling
 execution, consuming local session output or advertising live quota support.
+
+## 7. Addendum: live transport (2026-09-18)
+
+The live transport described in [claude-sources.md](../../architecture/claude-sources.md)
+adds three surfaces that this assessment did not cover and that need their own
+review before a release claims certification:
+
+- **Vendor settings write.** `claude::connect` edits only the `statusLine` key of
+  the user's Claude Code `settings.json`, refuses non-object files, keeps a
+  one-time verbatim backup and a chain file, and writes atomically. Paths with
+  shell-significant characters are refused rather than escaped. Discovery never
+  triggers it.
+- **Bridge execution.** Claude Code, not Companion, spawns the bridge inside the
+  user's session. The bridge caps stdin at 64 KiB, rejects invalid JSON without
+  writing, persists only the documented windows with `0600` permissions, and runs
+  a chained custom status line through `sh -c` / `cmd /C` with the same stdin only
+  when the user had one before connecting.
+- **Capture ingestion.** `read_capture` validates schema, size, timestamps and
+  ranges, drops reset windows at read time and never treats the read time as the
+  sample time. A forged capture by the same OS user can only misreport that
+  user's own quota row; it cannot reach credentials or other services.

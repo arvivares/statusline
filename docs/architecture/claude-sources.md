@@ -1,105 +1,129 @@
-# Claude integration foundation
+# Claude Code source
 
-Status: experimental, not a live quota integration. Research checked against
-Anthropic documentation on 2026-09-16. No Claude installation or account was used
-for this implementation; fixtures do not prove compatibility with real sessions.
+Status: opt-in live quota through Claude Code's documented `statusLine` hook.
+Research checked against Anthropic documentation on 2026-09-16 and verified on a
+real Claude Code 2.1.276 session on macOS on 2026-09-18 (Enterprise seat). Windows
+and Linux execution of the bridge is covered by unit tests and fixtures only.
 
-## What works in this branch
+## How it works
 
-- Companion automatically checks conventional local CLI/Desktop locations at
-  startup, on focus (60-second cache), and on the native five-minute schedule.
-  No user command, path entry or manual configuration is required for those locations.
-- Only a detected installation creates a Claude row in Still Signature's existing
-  focus/watchlist. The row explicitly says quota reading is not available yet.
-- CLI and Desktop presence are separate facts. Neither proves login, subscription,
-  account identity or quota access; no automatic account selection takes place.
-- The pure parser normalizes the documented five-hour and seven-day `rate_limits`
-  fields from supplied JSON. It is **not wired to a live transport**.
-- A detected Claude projects to `services-v1` as `unavailable`, with no quota.
-  The existing mobile clients ignore that unknown ID. They continue displaying
-  Codex/Gemini from the same pairing. There is no mobile Claude UI in this branch.
+Claude Code documents one supported way to expose subscription quota to an
+external program: the user's `statusLine` command receives the session JSON on
+stdin, and that JSON carries `rate_limits.five_hour`, `rate_limits.seven_day` and,
+behind a Claude apps gateway, `rate_limits.spend_limit`, each with `used_percentage`
+and `resets_at`. See [Statusline › rate limit usage](https://code.claude.com/docs/en/statusline#rate-limit-usage).
 
-## Official evidence and boundaries
+Companion uses that hook as its transport:
 
-| Source                                                                    | Documented capability                                                                  | Integration decision                                                                                                                                    |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Setup](https://code.claude.com/docs/en/setup)                            | Native CLI launcher under the user's `.local/bin`; Homebrew, WinGet and Linux packages | Probe launchers without running them. No inherited project PATH.                                                                                        |
-| [CLI reference](https://code.claude.com/docs/en/cli-reference)            | `claude auth status`, version information and interactive usage commands               | Do not invoke prompts or treat installation as successful authentication. No documented standalone quota JSON command was identified in this reference. |
-| [Statusline](https://code.claude.com/docs/en/statusline#rate-limit-usage) | Optional five-hour/seven-day consumed percentages and reset epochs                     | Normalize these fields only. Context, token counts, dollar cost and gateway spend are different quantities.                                             |
-| [Desktop](https://code.claude.com/docs/en/desktop-quickstart)             | Code is included; terminal CLI installation is separate                                | Do not assume Desktop exposes its runtime/session as an external quota API.                                                                             |
-| [Linux Desktop beta](https://code.claude.com/docs/en/desktop-linux)       | Official Ubuntu/Debian package and `claude-desktop` launcher                           | Probe conventional system launcher locations; other distributions and repackaged apps are not certified by these tests.                                 |
+1. **Discovery** (unchanged) checks conventional CLI/Desktop locations by file
+   metadata only. A detected installation creates the Claude row; nothing is run.
+2. **Connect** is an explicit button in Settings › Services. It writes a
+   `statusLine` object into the user's Claude Code `settings.json` whose command
+   runs the Companion executable in bridge mode:
+   `"<companion>" --statusline-claude-bridge "<config dir>/claude-statusline-capture-v1.json"`,
+   with `refreshInterval: 60` so idle sessions keep reporting. Every other key in
+   `settings.json` is preserved and a verbatim backup is stored once in
+   Companion's config folder. An existing custom status line is saved to a chain
+   file, keeps running with the same stdin, and is restored by **Disconnect**.
+3. **Bridge** (`claude::run_bridge`) reads at most 64 KiB from stdin, keeps only
+   the three documented windows plus a capture time, writes them atomically with
+   `0600` permissions and prints either the chained status line or a one-line
+   summary (`Claude · 5h 48% left · 7d 53% left`). Session, transcript, workspace,
+   cost, context and model fields never reach disk. A payload without
+   `rate_limits` (session start, API-key session) records the activity time but
+   keeps the last limits Claude Code reported; a payload with limits replaces the
+   whole object, so windows Claude Code dropped after their reset disappear too.
+4. **Reader** (`claude::read_capture`) runs with the existing 60-second focus and
+   five-minute native schedule. The sample time is Claude Code's report time,
+   never the read time. Windows whose `resets_at` already passed are dropped at
+   read time, so a five-hour value is shown for at most five hours after the last
+   report. Captures dated more than five minutes in the future are ignored.
+5. **Projection** to `services-v1` reuses `claude_quota_projection`: `ready` with
+   the reported windows, `unavailable` while installed without a current window.
+   A spend limit is never projected as a quota window. Unchanged captures do not
+   republish or refresh a sample's age.
 
-The documented statusline data appears after a session has received an API
-response and depends on account eligibility. Each window may be absent. The
-statusline refresh timer reruns a local command; it is not proof of a fresh quota
-request. Transparent, autonomous quota collection is still an unresolved gate.
+## One code path for every plan
 
-## Discovery coverage
+The transport, payload and parser are identical for every account. The only
+difference between users is which windows are present, so every decision is made
+on window presence, never on plan type.
 
-All paths are relative to the **current user's** home/application directories,
-not a developer's username. Probes check filesystem metadata only; paths and
-filenames are presence hints, not publisher verification. Sources are not started,
-so a closed app can be detected but its quota cannot yet be read.
+| Account                                         | `rate_limits` observed or documented | Companion state                                                  |
+| ----------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
+| Pro / Max                                       | `five_hour` and `seven_day`          | `ready`, both windows                                            |
+| Team / Enterprise seat (verified on Enterprise) | `five_hour`; `seven_day` absent      | `ready`, five-hour window only; weekly stays empty, not inferred |
+| Behind a Claude apps gateway with a spend limit | `spend_limit`, may exceed 100 %      | `noPlanQuota` with the spend percentage in the detail text       |
+| Console API key, Bedrock, Vertex, Foundry       | none                                 | `noPlanQuota` ("session without plan quota")                     |
+| Any plan before the first API response          | none yet                             | last limits kept; `quotaUnavailable` if none were ever reported  |
+| Installed, bridge not connected                 | not captured                         | `quotaUnavailable` with a pointer to Settings › Services         |
 
-| OS      | CLI candidates                                                             | Desktop presence hints                                                                                |
-| ------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| macOS   | `~/.local/bin/claude`, `/opt/homebrew/bin/claude`, `/usr/local/bin/claude` | `Claude.app/Contents/MacOS/Claude` in system/user Applications                                        |
-| Windows | `%USERPROFILE%\.local\bin\claude.exe`, current-user WinGet Links           | Conventional `AnthropicClaude` / `Programs\Claude` under LocalAppData and `Claude` under ProgramFiles |
-| Linux   | `~/.local/bin/claude`, `/usr/local/bin/claude`, `/usr/bin/claude`          | `/usr/local/bin/claude-desktop`, `/usr/bin/claude-desktop`                                            |
+The Enterprise row is an observation, not a guarantee: Anthropic's statusline
+documentation lists `rate_limits` for Pro and Max subscribers and gateway users
+only. The real payload from an Enterprise seat carried `five_hour` and no
+`seven_day`; the parser already treats a missing window as unknown, never as
+100 % remaining, so a later appearance of `seven_day` needs no code change.
 
-Desktop hints are not an officially guaranteed installation layout. Custom
-prefixes, portable apps, npm shims outside these roots, Windows Store/MSIX-only
-installs, and a CLI inside WSL from a Windows Companion need additional discovery
-evidence. Do not advertise complete Desktop discovery coverage yet. These gaps do
-not affect Codex or Antigravity discovery.
+## Privacy and boundaries
 
-## Data, visibility and compatibility
+- Only `settings.json` inside `CLAUDE_CONFIG_DIR` (default `~/.claude`) is read
+  or written, and only its `statusLine` key is interpreted. Credentials,
+  `history.jsonl`, sessions, transcripts and project folders are never opened.
+- Connecting is a user action. Discovery and refresh never edit vendor settings.
+  Disconnect restores the previous `statusLine` or removes ours, and deletes the
+  capture and chain files. `disconnect` leaves a `statusLine` that is not ours
+  untouched.
+- The bridge never runs a prompt and cannot spend quota. It is invoked by Claude
+  Code inside the user's own session, so no authentication, account selection or
+  vendor endpoint is handled by Companion. The capture identifies no account.
+- Paths written into the command are double-quoted; paths containing quote,
+  `$`, backtick, backslash, `%` or control characters are refused rather than
+  escaped. A moved or updated Companion keeps working while its executable path
+  is stable; reinstalling to another folder requires reconnecting.
+- The tray tooltip, focus row, watchlist and `services-v1` show only windows
+  Claude Code reported. `acceptClaudeView` rejects a `ready` view without a window
+  and drops unknown fields before they reach UI state.
 
-`claude.rs` returns only presence flags, revision, attempt time and availability
-status to the WebView. Failed scans do not remove previously detected services;
-a successful negative scan removes Claude. No Claude credentials, settings,
-transcripts, conversation caches or vendor HTTP endpoints are accessed.
+## Freshness
 
-The parser accepts at most 64 KiB. It rejects malformed or out-of-range windows;
-missing/expired windows become unknown, not 100% remaining. It keeps only the
-remaining percentage, reset and caller-supplied capture time. It never infers a
-weekly quota from the short window. Unknown/private JSON fields are discarded.
-The checked-in [fixture](../../protocol/fixtures/claude-statusline.json) is synthetic.
+Quota changes only when the account is used, and Claude Code reports only while a
+session is open. The Companion shows the report time of the sample it holds
+("Last sample") and the last time any session ran the bridge ("Last Claude Code
+session"). Usage from claude.ai chat or another machine changes the real quota
+without a new report until the next Claude Code response; the five-hour window
+therefore cannot be more than five hours stale, the weekly window up to a week.
 
-The inventory waits for the initial Claude scan (bounded to three seconds from
-the caller's perspective), alongside Codex and Gemini. Unchanged presence does
-not trigger a new relay publication or refresh a quota's sample age. Collector
-revisions reject late results. A future live adapter must pin the selected source
-and account context **before reading**; discovery cannot silently merge or switch
-Desktop/CLI accounts.
+## Platform coverage
 
-The existing channel, tokens, AES-GCM key, nonce rules, legacy Codex projection,
-endpoints, payload limits and database schema remain unchanged. No relay deployment
-or re-pairing is needed for this foundation. No installer/store release is implied.
+| OS      | Bridge invocation by Claude Code                      | Verification                                                  |
+| ------- | ----------------------------------------------------- | ------------------------------------------------------------- |
+| macOS   | `sh -c` quoting; chained command through `sh -c`      | Real session verified: capture, summary, chaining, exit codes |
+| Linux   | Same as macOS                                         | Unit tests and fixtures; real session pending                 |
+| Windows | Double-quoted paths; chained command through `cmd /C` | Unit tests and fixtures; shell used by Claude Code unverified |
 
-## Gates before enabling live quota
+Custom installation layouts still need no extra discovery once connected: a
+capture written by the bridge makes Claude visible even when no conventional
+launcher was found.
 
-1. Establish a supported read-only transport that works without manual user setup.
-   Do not scrape private credentials or silently overwrite `statusLine`/hooks.
-2. Validate capture freshness, idle/closed-app behavior and expiration. Re-reading
-   cached JSON must never update its original sample time.
-3. Verify authentication and source isolation for Desktop vs CLI, custom config
-   directories, multiple installations and account switching.
-4. If execution becomes necessary: verify publisher/runtime, bound output and
-   process lifetime, isolate environment and disable agent customization side
-   effects. Never use a prompt as a quota query.
-5. Run real macOS/Windows/Linux cases for logged-in/out sessions, unsupported plans,
-   missing windows, update/uninstall, timeout and conflicting sources. No requirement
-   for the maintainer to install Claude; volunteers may provide reviewed diagnostics.
-6. Add Claude to mobile decoders, focus/watchlist and widgets with EN/ES native QA,
-   then publish a coordinated release. Older mobile builds must keep ignoring it.
+## Remaining gates
+
+1. Verify the Windows shell Claude Code uses for `statusLine` and the Linux
+   Desktop package with a real session; adjust quoting if PowerShell is involved.
+2. Add Claude to the mobile decoders, focus/watchlist and widgets with EN/ES QA.
+   Current mobile clients ignore the `claude` entry and keep showing Codex/Gemini.
+3. Decide whether to surface a gateway spend limit on mobile; today it stays on
+   the Companion only.
+4. Re-run the scoped [security assessment](../security/claude/THREAT-MODEL.md)
+   for the live transport: settings write, bridge execution and capture file.
 
 ## Verification
 
-The runtime test crate compiles production discovery/parser/inventory code without
-installers or Claude. Desktop tests cover IPC validation, visibility and the
-three-provider focus/watchlist. Repository checks validate EN/ES generated catalogs.
-macOS native `cargo check` covers the Tauri command and background scheduling glue.
-CI's existing Linux/Windows matrix remains the platform compilation gate.
-
-See the scoped [security assessment](../security/claude/THREAT-MODEL.md).
+The runtime test crate compiles the production bridge, reader, connect/disconnect
+and inventory code without Tauri. Desktop tests cover IPC validation for the five
+states, the Enterprise five-hour-only case, gateway and API-key sessions, and the
+three-provider focus/watchlist. Repository checks validate the EN/ES catalogs. On
+macOS the debug binary was exercised directly: fixture and real payloads produce
+the reduced capture with `0600` permissions, a payload without `rate_limits`
+keeps the last limits, a chained command receives the same stdin, garbage stdin
+exits with code 3 without touching the capture, and a missing argument exits 2.
+The checked-in [fixture](../../protocol/fixtures/claude-statusline.json) is synthetic.

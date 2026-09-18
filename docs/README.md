@@ -30,8 +30,8 @@ requests are welcome.
   cross-platform integration gates; not yet a shipped provider.
 - [Antigravity Companion candidate](architecture/antigravity-companion.md): per-user
   visibility, source setup, independent polling and unchanged v1/mobile pairings.
-- [Claude foundation](architecture/claude-sources.md): passive discovery, documented
-  quota normalization, privacy boundaries and gates before enabling live reads.
+- [Claude Code source](architecture/claude-sources.md): passive discovery, the opt-in
+  `statusLine` bridge, per-plan window coverage, privacy boundaries and remaining gates.
 - [Synchronization and freshness](architecture/synchronization.md): native desktop
   scheduling, independent iOS widgets, cache safety and verification limits.
 - [Companion window behavior](architecture/companion-window.md): cross-platform

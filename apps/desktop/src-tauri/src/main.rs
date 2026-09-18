@@ -15,6 +15,20 @@ fn main() {
             }
             return;
         }
+        // Claude Code runs this as the user's statusLine command. Nothing else
+        // in the app starts: no window, tray, relay or update check.
+        Some(value)
+            if value == std::ffi::OsStr::new(statusline_desktop_lib::claude::BRIDGE_FLAG) =>
+        {
+            let Some(capture_path) = arguments.next() else {
+                std::process::exit(2);
+            };
+            match statusline_desktop_lib::claude::run_bridge(std::path::Path::new(&capture_path)) {
+                Ok(()) => return,
+                Err(statusline_desktop_lib::claude::BridgeFailure::Input) => std::process::exit(3),
+                Err(statusline_desktop_lib::claude::BridgeFailure::Output) => std::process::exit(1),
+            }
+        }
         Some(value) if value == std::ffi::OsStr::new("--statusline-window-smoke") => {
             let Some(output_path) = arguments.next() else {
                 std::process::exit(2);

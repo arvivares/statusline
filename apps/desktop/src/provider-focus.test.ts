@@ -44,6 +44,9 @@ describe("Still Signature focus and watchlist", () => {
       checkedAt: 1900000000,
       installations: { cli: false, desktop: true },
       status: "quotaUnavailable",
+      connection: "none",
+      quota: null,
+      capturedAt: null,
     });
     expect(providers.map((p) => p.id)).toEqual(["codex", "google", "claude"]);
     expect(providerWatchlist(providers, "google").map((p) => p.name)).toEqual([

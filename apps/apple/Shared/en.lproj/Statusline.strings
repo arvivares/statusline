@@ -20,6 +20,8 @@
 "{0}h" = "{0}h";
 "/ COMPANION / DATA PLANE" = "/ COMPANION / DATA PLANE";
 "% LEFT" = "% LEFT";
+"5h {0}% left" = "5h {0}% left";
+"7d {0}% left" = "7d {0}% left";
 "A new version of Statusline Companion is ready." = "A new version of Statusline Companion is ready.";
 "Account" = "Account";
 "ACCOUNT CHANNEL" = "ACCOUNT CHANNEL";
@@ -44,11 +46,12 @@
 "AUTHORIZE" = "AUTHORIZE";
 "AUTO DETECT" = "AUTO DETECT";
 "Automatic detection" = "Automatic detection";
-"Automatic quota reading is not available yet. Statusline does not access your Claude credentials or conversations." = "Automatic quota reading is not available yet. Statusline does not access your Claude credentials or conversations.";
 "AVAILABLE" = "AVAILABLE";
 "available · quota metadata only" = "available · quota metadata only";
 "AVAILABLE · QUOTA METADATA ONLY" = "AVAILABLE · QUOTA METADATA ONLY";
 "AVAILABLE · STRICTEST OF {0} LIMITS" = "AVAILABLE · STRICTEST OF {0} LIMITS";
+"Bridge connected. Quota appears after a Claude Code session receives its first response." = "Bridge connected. Quota appears after a Claude Code session receives its first response.";
+"Bridge not connected" = "Bridge not connected";
 "BUILD NOT CONFIGURED" = "BUILD NOT CONFIGURED";
 "Camera permission is no longer available. Enable it in Settings or paste the link manually." = "Camera permission is no longer available. Enable it in Settings or paste the link manually.";
 "Camera preview for scanning the QR" = "Camera preview for scanning the QR";
@@ -78,8 +81,19 @@
 "Choose executable" = "Choose executable";
 "CLAIMING" = "CLAIMING";
 "CLAIMING…" = "CLAIMING…";
+"Claude · 5h {0}% left" = "Claude · 5h {0}% left";
+"Claude · 7d {0}% left" = "Claude · 7d {0}% left";
+"Claude Code reported a session without plan quota. API-key and cloud-provider sessions have no subscription windows." = "Claude Code reported a session without plan quota. API-key and cloud-provider sessions have no subscription windows.";
+"Claude Code reports a gateway spend limit: {0}% used. This account exposes no plan quota windows." = "Claude Code reports a gateway spend limit: {0}% used. This account exposes no plan quota windows.";
+"Claude Code settings are not a JSON object. Fix ~/.claude/settings.json and try again." = "Claude Code settings are not a JSON object. Fix ~/.claude/settings.json and try again.";
+"Claude Code settings could not be read or written. Check that ~/.claude is accessible." = "Claude Code settings could not be read or written. Check that ~/.claude is accessible.";
+"Claude Code settings not readable" = "Claude Code settings not readable";
 "Claude detected · quota pending" = "Claude detected · quota pending";
 "Claude discovery could not finish. Your last detected installation is kept." = "Claude discovery could not finish. Your last detected installation is kept.";
+"Claude five-hour limit" = "Claude five-hour limit";
+"Claude quota is connected. Credentials stay with Claude Code." = "Claude quota is connected. Credentials stay with Claude Code.";
+"Claude session without plan quota" = "Claude session without plan quota";
+"Claude weekly limit" = "Claude weekly limit";
 "CLEAR DEMO" = "CLEAR DEMO";
 "CLI and desktop app" = "CLI and desktop app";
 "Clipboard access failed. Select and copy the private link manually." = "Clipboard access failed. Select and copy the private link manually.";
@@ -123,14 +137,18 @@
 "CODEX.ACCOUNT" = "CODEX.ACCOUNT";
 "CODEX.RUNTIME" = "CODEX.RUNTIME";
 "CODEX.SESSION" = "CODEX.SESSION";
+"Companion could not write to its own configuration folder." = "Companion could not write to its own configuration folder.";
 "Companion only for now. Mobile devices and widgets continue syncing Codex with the existing pairing." = "Companion only for now. Mobile devices and widgets continue syncing Codex with the existing pairing.";
 "Companion updates" = "Companion updates";
+"Companion's installation path cannot be quoted in a status line command. Move the app to a standard folder." = "Companion's installation path cannot be quoted in a status line command. Move the app to a standard folder.";
 "Complete sign-in in your browser." = "Complete sign-in in your browser.";
 "CONFIG" = "CONFIG";
 "Configure connections" = "Configure connections";
 "CONNECT" = "CONNECT";
 "Connect a device" = "Connect a device";
 "Connect another device" = "Connect another device";
+"Connect Claude Code" = "Connect Claude Code";
+"Connect Claude Code in Settings › Services to read your plan quota. Statusline never accesses your Claude credentials or conversations." = "Connect Claude Code in Settings › Services to read your plan quota. Statusline never accesses your Claude credentials or conversations.";
 "Connect Codex" = "Connect Codex";
 "CONNECT COMPANION" = "CONNECT COMPANION";
 "Connect device" = "Connect device";
@@ -139,6 +157,8 @@
 "Connect your Codex account to get started." = "Connect your Codex account to get started.";
 "Connected" = "Connected";
 "CONNECTED" = "CONNECTED";
+"Connected. Open or continue a Claude Code session; quota appears after its first response." = "Connected. Open or continue a Claude Code session; quota appears after its first response.";
+"Connecting adds a statusLine command to Claude Code's settings.json that runs Companion in bridge mode. Claude Code sends only its documented rate-limit windows; session, transcript and cost fields are discarded. An existing custom status line keeps running and is restored on disconnect." = "Connecting adds a statusLine command to Claude Code's settings.json that runs Companion in bridge mode. Claude Code sends only its documented rate-limit windows; session, transcript and cost fields are discarded. An existing custom status line keeps running and is restored on disconnect.";
 "Connections" = "Connections";
 "CONTRACT / CHANGED" = "CONTRACT / CHANGED";
 "Copied" = "Copied";
@@ -179,6 +199,7 @@
 "Credentials" = "Credentials";
 "CURRENT" = "CURRENT";
 "Custom installation" = "Custom installation";
+"Custom status line · connect to chain it" = "Custom status line · connect to chain it";
 "Data plane setup" = "Data plane setup";
 "DEMO" = "DEMO";
 "demo · local sample only" = "demo · local sample only";
@@ -200,6 +221,7 @@
 "Disconnect" = "Disconnect";
 "DISCONNECT" = "DISCONNECT";
 "DISCONNECT.READER" = "DISCONNECT.READER";
+"Disconnected. Your previous status line is restored." = "Disconnected. Your previous status line is restored.";
 "Download & install" = "Download & install";
 "Downloading update" = "Downloading update";
 "Downloading…" = "Downloading…";
@@ -218,6 +240,7 @@
 "Environment override" = "Environment override";
 "ERROR" = "ERROR";
 "ERROR · NO CREDENTIALS EXPOSED" = "ERROR · NO CREDENTIALS EXPOSED";
+"Every captured window has reset. Quota appears again on the next Claude Code response." = "Every captured window has reset. Quota appears again on the next Claude Code response.";
 "Executable path" = "Executable path";
 "Executable path (optional)" = "Executable path (optional)";
 "EXECUTABLE.PATH" = "EXECUTABLE.PATH";
@@ -239,7 +262,6 @@
 "Install the DEB or RPM from the official release page using your package manager." = "Install the DEB or RPM from the official release page using your package manager.";
 "Installation checked: {0}" = "Installation checked: {0}";
 "Installation continues in the background. Statusline Companion will restart when ready." = "Installation continues in the background. Statusline Companion will restart when ready.";
-"Installation detected · session not checked" = "Installation detected · session not checked";
 "Installed version" = "Installed version";
 "INSTALLER CONFIG" = "INSTALLER CONFIG";
 "Installing update" = "Installing update";
@@ -250,6 +272,7 @@
 "INVALID SOURCE" = "INVALID SOURCE";
 "LAST ATTEMPT {0} · CODEX LOCAL" = "LAST ATTEMPT {0} · CODEX LOCAL";
 "Last attempt: {0}" = "Last attempt: {0}";
+"Last Claude Code session: {0}" = "Last Claude Code session: {0}";
 "LAST CODEX READ" = "LAST CODEX READ";
 "Last sample: {0}" = "Last sample: {0}";
 "Last sync" = "Last sync";
@@ -334,6 +357,7 @@
 "Paste the Codex status line first." = "Paste the Codex status line first.";
 "Paste the complete line returned by /status in Codex." = "Paste the complete line returned by /status in Codex.";
 "Paste the link shown by Statusline Companion first." = "Paste the link shown by Statusline Companion first.";
+"plan quota not reported" = "plan quota not reported";
 "PLANE / 010" = "PLANE / 010";
 "Privacy" = "Privacy";
 "PRIVACY" = "PRIVACY";
@@ -358,6 +382,7 @@
 "QR EXPIRES {0}" = "QR EXPIRES {0}";
 "Quit" = "Quit";
 "Quota period" = "Quota period";
+"Quota updates while a Claude Code session is open and after it receives a response. Pro and Max report five-hour and weekly windows; Enterprise seats may report only the five-hour window; API-key sessions report none." = "Quota updates while a Claude Code session is open and after it receives a response. Pro and Max report five-hour and weekly windows; Enterprise seats may report only the five-hour window; API-key sessions report none.";
 "Quotas from your Companion. The small widget follows the service selected in Statusline." = "Quotas from your Companion. The small widget follows the service selected in Statusline.";
 "READER.STATE / LIVE" = "READER.STATE / LIVE";
 "READING" = "READING";
@@ -402,6 +427,7 @@
 "Replace pairing" = "Replace pairing";
 "REPLACE PAIRING" = "REPLACE PAIRING";
 "Replace QR" = "Replace QR";
+"Reported by Claude Code · {0}" = "Reported by Claude Code · {0}";
 "RESET" = "RESET";
 "RESET.DATE" = "RESET.DATE";
 "RESET.TIME" = "RESET.TIME";
@@ -409,6 +435,7 @@
 "RESETS" = "RESETS";
 "Resetting source" = "Resetting source";
 "RESETTING SOURCE" = "RESETTING SOURCE";
+"Restoring Claude Code status line…" = "Restoring Claude Code status line…";
 "Retry check" = "Retry check";
 "Retry pairing" = "Retry pairing";
 "RETRY PAIRING" = "RETRY PAIRING";
@@ -461,6 +488,7 @@
 "SOURCE / OFFLINE" = "SOURCE / OFFLINE";
 "SOURCE / TIMEOUT" = "SOURCE / TIMEOUT";
 "SOURCE.HOST" = "SOURCE.HOST";
+"spend limit {0}% used" = "spend limit {0}% used";
 "Stale · {0}" = "Stale · {0}";
 "STANDALONE" = "STANDALONE";
 "Standalone install" = "Standalone install";
@@ -472,6 +500,7 @@
 "STATUS UNAVAILABLE" = "STATUS UNAVAILABLE";
 "STATUS.RECORD" = "STATUS.RECORD";
 "Statusline" = "Statusline";
+"Statusline bridge connected" = "Statusline bridge connected";
 "Statusline Companion · loading…" = "Statusline Companion · loading…";
 "Statusline Companion · no data" = "Statusline Companion · no data";
 "Statusline Companion will restart after installation. Windows may ask for permission to install the update." = "Statusline Companion will restart after installation. Windows may ask for permission to install the update.";
@@ -596,5 +625,6 @@
 "Weekly window unavailable" = "Weekly window unavailable";
 "Working" = "Working";
 "WORKING" = "WORKING";
+"Writing Claude Code status line…" = "Writing Claude Code status line…";
 "You're up to date" = "You're up to date";
 "Your services" = "Your services";
