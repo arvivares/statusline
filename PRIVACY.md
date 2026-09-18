@@ -1,6 +1,6 @@
 # Statusline — Privacy Policy
 
-Effective date: 15 September 2026
+Effective date: 18 September 2026
 
 Public policy: https://statusline.inmerzion.io/privacy
 

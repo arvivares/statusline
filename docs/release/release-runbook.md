@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.26` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.26`;
-- Android candidate: `versionCode 22` (Google Play submission is separate);
+- prepared product tag: `v0.1.27` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.27`;
+- Android candidate: `versionCode 23` (Google Play submission is separate);
 - recorded iOS source version: `1.1.0 (9)`, adding Antigravity to the app and
   widgets. This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
@@ -24,7 +24,7 @@ component versions and curated release-notes path. For the current public beta:
 - `distribution.publishPrerelease: false`: publish as a normal GitHub release and
   mark it Latest. This makes the download visible in the repository's Releases
   sidebar. `channel: beta` still describes product maturity, independently of
-  GitHub visibility and Authenticode. v0.1.25 and earlier prereleases are unchanged.
+  GitHub visibility and Authenticode. v0.1.26 and earlier releases are unchanged.
 
 The release preflight rejects drift between this file, npm, Cargo, Tauri, Gradle and the
 Xcode project.
@@ -55,7 +55,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.26`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.27`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
