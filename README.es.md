@@ -138,7 +138,7 @@ inventario exacto, la configuración SignPath y los comandos de verificación.
 
 Codex es la experiencia completa de v1. La siguiente etapa será una arquitectura de adaptadores por capacidades para mostrar Codex, AGY, Claude Code, GitHub Copilot y futuros agentes en una sola vista, manteniendo las unidades reales de cada proveedor.
 
-El orden propuesto es: publicar una base sólida de Codex, extraer el contrato común, validar AGY como primer adaptador adicional y después investigar integraciones soportadas para Claude Code y GitHub Copilot. El backlog incluye widgets multiproveedor, timeline de resets, historial local, alertas de capacidad, pronósticos con confianza explícita y relay autohospedado.
+El orden propuesto es: publicar una base sólida de Codex, extraer el contrato común, validar AGY como primer adaptador adicional, leer la cuota de Claude Code mediante su hook documentado de status line con activación explícita y después investigar integraciones soportadas para GitHub Copilot. El backlog incluye widgets multiproveedor, timeline de resets, historial local, alertas de capacidad, pronósticos con confianza explícita y relay autohospedado.
 
 Consulta el [roadmap completo de producto e ingeniería](ROADMAP.md) para ver factibilidad, principios de privacidad, hitos de arquitectura y definición de terminado.
 

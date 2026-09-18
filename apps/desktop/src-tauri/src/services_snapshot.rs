@@ -64,20 +64,32 @@ impl ServicesInventory {
         if view.status == claude::Status::DiscoveryUnavailable && self.claude.is_some() {
             return false;
         }
-        let next = if view.installations.detected() {
-            Some(unavailable("claude", view.checked_at))
-        } else {
-            None
+        // Only windows Claude Code itself reported become quota. A gateway
+        // spend limit or a session without rate_limits stays "unavailable".
+        let (checked_at, next) = match (&view.status, &view.quota) {
+            (claude::Status::Ready, Some(sample)) => {
+                (sample.checked_at, Some(claude_quota_projection(sample)))
+            }
+            _ if view.visible() => (
+                view.checked_at,
+                Some(unavailable("claude", view.checked_at)),
+            ),
+            _ => (view.checked_at, None),
         };
-        // Scanning an unchanged installation is not a new quota sample and
-        // must not create extra relay publications or keep stale quota fresh.
-        if self.claude.as_ref().is_some_and(|old| {
-            old.as_ref().map(|p| (&p.id, &p.status)) == next.as_ref().map(|p| (&p.id, &p.status))
+        // Re-reading an unchanged capture or rescanning an unchanged installation
+        // is not a new quota sample and must not create extra relay publications
+        // or keep stale quota fresh.
+        if self.claude.as_ref().is_some_and(|old| match (old, &next) {
+            (Some(old), Some(new)) if new.status == "ready" => old == new,
+            _ => {
+                old.as_ref().map(|p| (&p.id, &p.status))
+                    == next.as_ref().map(|p| (&p.id, &p.status))
+            }
         }) {
             return false;
         }
         self.claude = Some(next);
-        self.updated_at = self.updated_at.max(view.checked_at);
+        self.updated_at = self.updated_at.max(checked_at);
         true
     }
 
@@ -190,8 +202,9 @@ impl ServicesInventory {
     }
 }
 
-/// Normalized future Claude transport boundary. Not called by passive discovery.
-/// Do not publish this projection until a real, fresh source has been validated.
+/// Claude Code statusline capture projected to the shared contract. The sample
+/// time is Claude Code's report time; an Enterprise seat may carry only the
+/// short window and a gateway spend limit is deliberately not a window here.
 pub fn claude_quota_projection(sample: &claude::QuotaSample) -> ProviderSnapshot {
     ProviderSnapshot {
         id: "claude".into(),
@@ -264,7 +277,24 @@ mod tests {
             } else {
                 claude::Status::NotFound
             },
+            connection: claude::Connection::None,
+            quota: None,
+            captured_at: None,
         }
+    }
+
+    fn claude_ready(revision: u64, raw: &[u8], captured_at: i64) -> claude::View {
+        let sample = claude::parse_statusline(raw, captured_at).unwrap().unwrap();
+        let mut view = claude_view(revision, true);
+        view.status = if sample.weekly.is_some() || sample.short_window.is_some() {
+            claude::Status::Ready
+        } else {
+            claude::Status::NoPlanQuota
+        };
+        view.connection = claude::Connection::Connected;
+        view.quota = Some(sample);
+        view.captured_at = Some(captured_at);
+        view
     }
 
     #[test]
@@ -414,5 +444,61 @@ mod tests {
             serde_json::to_string(&inventory.codex_projection()).unwrap(),
             legacy_before
         );
+    }
+
+    #[test]
+    fn captured_claude_quota_publishes_once_per_sample_and_falls_back_when_it_expires() {
+        const FIXTURE: &[u8] =
+            include_bytes!("../../../../protocol/fixtures/claude-statusline.json");
+        let mut inventory = ServicesInventory::default();
+        inventory.record_codex(&missing_codex());
+        inventory.record_google(&google(1));
+        assert!(inventory.record_claude(&claude_ready(1, FIXTURE, 1_900_000_000)));
+        let snapshot = inventory.snapshot().unwrap();
+        let claude = &snapshot.providers[1];
+        assert_eq!(
+            (claude.id.as_str(), claude.status.as_str()),
+            ("claude", "ready")
+        );
+        assert_eq!(claude.updated_at, 1_900_000_000); // Claude Code's report time
+        assert_eq!(claude.weekly.as_ref().unwrap().remaining_percentage, 53);
+        assert_eq!(
+            claude.short_window.as_ref().unwrap().remaining_percentage,
+            75
+        );
+        assert_eq!(snapshot.updated_at, 1_900_000_000);
+        // Re-reading the same capture on the next scan is not a new publication.
+        assert!(!inventory.record_claude(&claude_ready(2, FIXTURE, 1_900_000_000)));
+        // A newer report with a different value is.
+        let short_only =
+            br#"{"rate_limits":{"five_hour":{"used_percentage":52,"resets_at":1900018000}}}"#;
+        assert!(inventory.record_claude(&claude_ready(3, short_only, 1_900_000_500)));
+        let enterprise = inventory.snapshot().unwrap().providers[1].clone();
+        assert!(enterprise.weekly.is_none());
+        assert_eq!(
+            enterprise
+                .short_window
+                .as_ref()
+                .unwrap()
+                .remaining_percentage,
+            48
+        );
+        // A gateway spend limit alone is not subscription quota.
+        let spend =
+            br#"{"rate_limits":{"spend_limit":{"used_percentage":130,"resets_at":1900018000}}}"#;
+        assert!(inventory.record_claude(&claude_ready(4, spend, 1_900_000_600)));
+        let gateway = inventory.snapshot().unwrap().providers[1].clone();
+        assert_eq!(gateway.status, "unavailable");
+        assert!(gateway.weekly.is_none() && gateway.short_window.is_none());
+        // Every window reset: back to unavailable, still listed while installed.
+        assert!(!inventory.record_claude(&claude_view(5, true)));
+        assert_eq!(
+            inventory.snapshot().unwrap().providers[1].status,
+            "unavailable"
+        );
+        let encoded = serde_json::to_string(&inventory.snapshot().unwrap()).unwrap();
+        for private in ["spend", "captured", "connection", "cli", "desktop", "path"] {
+            assert!(!encoded.contains(private), "{encoded}");
+        }
     }
 }

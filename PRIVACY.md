@@ -28,6 +28,26 @@ The vendor runtime manages its own authentication and contacts Google to retriev
 quota. Statusline does not extract or copy Google access/refresh tokens or API
 keys. Polling uses temporary local runtime data; only the chosen source/path and discovery preference are
 persisted in Statusline's configuration, while quota readings remain in memory.
+
+### Claude Code source in Companion
+
+Companion detects a Claude installation by file metadata only. Reading quota is a
+separate, explicit choice: **Connect Claude Code** in Settings › Services adds a
+`statusLine` command to Claude Code's own `settings.json` (in `~/.claude` or
+`CLAUDE_CONFIG_DIR`) that runs Companion in bridge mode. Claude Code then hands
+the bridge its documented session JSON inside your own session; the bridge keeps
+only the rate-limit windows (`five_hour`, `seven_day`, `spend_limit`) and the time
+they were reported, stored with owner-only permissions in Companion's
+configuration folder. Session identifiers, transcript paths, workspace, cost,
+context and model fields are discarded and never written to disk.
+
+Statusline reads and writes nothing else in the Claude folder: no credentials,
+history, sessions or transcripts. Other keys in `settings.json` are preserved, a
+one-time backup is kept in Companion's folder, and an existing custom status line
+keeps running and is restored on **Disconnect**, which also deletes the capture.
+The bridge never sends a prompt, never contacts Anthropic and cannot spend quota.
+Only the remaining percentage and reset time of reported windows reach the
+interface, the encrypted relay and paired devices; the spend limit stays local.
 Remove service persists a disabled preference and stops its collection without
 signing out of Google or changing an existing Codex/mobile pairing. Antigravity
 quota is not sent through the relay in this Companion-only release.

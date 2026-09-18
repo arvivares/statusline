@@ -1,5 +1,5 @@
 import { googleIsVisible, type GoogleView } from "./antigravity";
-import { claudeIsVisible, type ClaudeView } from "./claude";
+import { claudeHasQuota, claudeIsVisible, type ClaudeView } from "./claude";
 import type { CodexDiagnostic } from "./codex";
 import type { UsageState } from "./usage";
 
@@ -83,15 +83,20 @@ export function companionProviders(
     });
   }
   if (claudeIsVisible(claude)) {
+    // Windows come only from Claude Code's own statusline report. An Enterprise
+    // seat may report the five-hour window alone; the weekly slot stays empty
+    // rather than being inferred. A gateway spend limit is not a window.
+    const ready = claudeHasQuota(claude);
+    const quota = ready ? claude!.quota : null;
     providers.push({
       id: "claude",
       name: "Claude",
       source: "Anthropic",
       defaultPeriod: "short",
-      status: "unavailable",
-      checkedAt: null,
-      weekly: null,
-      short: null,
+      status: ready ? "ready" : "unavailable",
+      checkedAt: quota?.checkedAt ?? null,
+      weekly: quota?.weekly ? { ...quota.weekly, minutes: 10080 } : null,
+      short: quota?.shortWindow ? { ...quota.shortWindow, minutes: 300 } : null,
     });
   }
   return providers;

@@ -458,6 +458,60 @@
             id="google-feedback"
             aria-live="polite"
           ></p>
+          <div id="claude-settings" hidden>
+            <div class="source-summary">
+              <div>
+                <span>Anthropic · Claude</span><strong>Claude Code</strong>
+              </div>
+            </div>
+            <p
+              class="google-note"
+              id="claude-connection"
+              aria-live="polite"
+            ></p>
+            <p
+              class="google-note"
+              data-i18n="Connecting adds a statusLine command to Claude Code's settings.json that runs Companion in bridge mode. Claude Code sends only its documented rate-limit windows; session, transcript and cost fields are discarded. An existing custom status line keeps running and is restored on disconnect."
+            >
+              Connecting adds a statusLine command to Claude Code's
+              settings.json that runs Companion in bridge mode. Claude Code
+              sends only its documented rate-limit windows; session, transcript
+              and cost fields are discarded. An existing custom status line
+              keeps running and is restored on disconnect.
+            </p>
+            <div class="source-actions">
+              <button
+                class="source-primary"
+                id="claude-connect"
+                type="button"
+                data-i18n="Connect Claude Code"
+              >
+                Connect Claude Code</button
+              ><button
+                class="source-secondary"
+                id="claude-disconnect"
+                type="button"
+                data-i18n="Disconnect"
+                hidden
+              >
+                Disconnect
+              </button>
+            </div>
+            <p
+              class="google-note"
+              data-i18n="Quota updates while a Claude Code session is open and after it receives a response. Pro and Max report five-hour and weekly windows; Enterprise seats may report only the five-hour window; API-key sessions report none."
+            >
+              Quota updates while a Claude Code session is open and after it
+              receives a response. Pro and Max report five-hour and weekly
+              windows; Enterprise seats may report only the five-hour window;
+              API-key sessions report none.
+            </p>
+            <p
+              class="source-feedback"
+              id="claude-feedback"
+              aria-live="polite"
+            ></p>
+          </div>
         </div>
 
         <div

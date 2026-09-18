@@ -20,7 +20,13 @@ import { UsageController } from "./controller";
 import { copyForState, type UsageState } from "./usage";
 import { bindUpdater, refreshUpdaterCopy } from "./updates";
 import { signatureMeter } from "./signature-meter";
-import { acceptClaudeView, claudeIsVisible, type ClaudeView } from "./claude";
+import {
+  acceptClaudeView,
+  claudeConnectFailureCopy,
+  claudeHasQuota,
+  claudeIsVisible,
+  type ClaudeView,
+} from "./claude";
 import {
   companionProviders,
   providerWatchlist,
@@ -103,6 +109,11 @@ const googleRemove = requireElement("google-remove", HTMLButtonElement);
 const googleFeedback = requireElement("google-feedback", HTMLElement);
 const googleDetection = requireElement("google-detection", HTMLElement);
 const googleScan = requireElement("google-scan", HTMLButtonElement);
+const claudeSettings = requireElement("claude-settings", HTMLElement);
+const claudeConnection = requireElement("claude-connection", HTMLElement);
+const claudeConnect = requireElement("claude-connect", HTMLButtonElement);
+const claudeDisconnect = requireElement("claude-disconnect", HTMLButtonElement);
+const claudeFeedback = requireElement("claude-feedback", HTMLElement);
 const providerWatchlistSection = requireElement(
   "provider-watchlist",
   HTMLElement,
@@ -144,6 +155,7 @@ let googleView: GoogleView = disabledGoogle;
 let claudeView: ClaudeView | null = null;
 let claudeInitialized = false;
 let claudeRefreshing = false;
+let claudeActionPending = false;
 let selectedProvider = "codex";
 const selectedPeriods = new Map<string, QuotaPeriod>();
 let googleActionPending = false;
@@ -236,7 +248,7 @@ async function startTauriRuntime(): Promise<void> {
 
   refreshButton.addEventListener("click", () => {
     if (selectedProvider === "google") void refreshGoogle();
-    else if (selectedProvider === "claude") void refreshClaude();
+    else if (selectedProvider === "claude") void refreshClaude(true);
     else void controller.refresh();
   });
 
@@ -322,12 +334,24 @@ function startPreview(initialState: UsageState): void {
     selectedProvider = "google";
     renderCurrentProvider();
   }
-  if (params.get("claude") === "detected") {
+  if (params.get("claude") === "detected" || params.get("claude") === "ready") {
+    const now = Math.floor(Date.now() / 1000);
+    const ready = params.get("claude") === "ready";
     acceptClaude({
       revision: 1,
-      checkedAt: Math.floor(Date.now() / 1000),
+      checkedAt: now,
       installations: { cli: true, desktop: false },
-      status: "quotaUnavailable",
+      status: ready ? "ready" : "quotaUnavailable",
+      connection: ready ? "connected" : "none",
+      quota: ready
+        ? {
+            checkedAt: now - 120,
+            weekly: null, // Enterprise seats report the five-hour window only.
+            shortWindow: { remainingPercent: 48, resetsAt: now + 3000 },
+            spendLimit: null,
+          }
+        : null,
+      capturedAt: ready ? now - 120 : null,
     });
     selectedProvider = "claude";
     renderCurrentProvider();
@@ -624,63 +648,202 @@ function acceptClaude(payload: unknown): void {
     return;
   }
   claudeInitialized = true;
+  renderClaudeSettings();
   renderCurrentProvider();
 }
 
-async function refreshClaude(): Promise<void> {
+async function refreshClaude(force = false): Promise<void> {
   if (claudeRefreshing || previewState !== null) return;
   claudeRefreshing = true;
   renderCurrentProvider();
   try {
-    acceptClaude(await invoke<unknown>("claude_status"));
+    acceptClaude(await invoke<unknown>("claude_status", { force }));
   } catch {
     /* Native periodic discovery can recover; keep any known installation. */
   } finally {
     claudeInitialized = true;
     claudeRefreshing = false;
+    renderClaudeSettings();
     renderCurrentProvider();
   }
 }
 
+function claudeSourceLabel(view: ClaudeView | null): string {
+  if (view?.installations.cli)
+    return view.installations.desktop
+      ? t("CLI and desktop app")
+      : "Claude Code CLI";
+  if (view?.installations.desktop) return t("Desktop app");
+  // Only the bridge proved this installation; its launcher is somewhere custom.
+  return "Claude Code";
+}
+
+function claudeConnectionLabel(view: ClaudeView | null): string {
+  switch (view?.connection) {
+    case "connected":
+      return t("Statusline bridge connected");
+    case "custom":
+      return t("Custom status line · connect to chain it");
+    case "unknown":
+      return t("Claude Code settings not readable");
+    default:
+      return t("Bridge not connected");
+  }
+}
+
+function claudeDetailCopy(view: ClaudeView | null): string {
+  if (view?.status === "discoveryUnavailable")
+    return t(
+      "Claude discovery could not finish. Your last detected installation is kept.",
+    );
+  if (view?.status === "noPlanQuota") {
+    const spend = view.quota?.spendLimit;
+    return spend
+      ? t(
+          "Claude Code reports a gateway spend limit: {0}% used. This account exposes no plan quota windows.",
+          Math.round(spend.usedPercent),
+        )
+      : t(
+          "Claude Code reported a session without plan quota. API-key and cloud-provider sessions have no subscription windows.",
+        );
+  }
+  if (view?.connection !== "connected")
+    return t(
+      "Connect Claude Code in Settings › Services to read your plan quota. Statusline never accesses your Claude credentials or conversations.",
+    );
+  if (view.capturedAt)
+    return t(
+      "Every captured window has reset. Quota appears again on the next Claude Code response.",
+    );
+  return t(
+    "Bridge connected. Quota appears after a Claude Code session receives its first response.",
+  );
+}
+
 function renderClaudeUsage(): void {
-  document.body.dataset.state = "unavailable";
-  document.body.dataset.multipleLimits = "false";
-  document.body.dataset.level = "normal";
+  const view = claudeView;
+  const ready = claudeHasQuota(view);
+  const quota = ready ? view!.quota : null;
+  // Focus on the window every plan reports; Enterprise seats may lack weekly.
+  const focus = quota?.shortWindow ?? quota?.weekly ?? null;
+  const focusWeekly = !quota?.shortWindow && !!quota?.weekly;
+  document.body.dataset.state = ready ? "ready" : "unavailable";
+  document.body.dataset.multipleLimits = String(
+    !!quota?.shortWindow && !!quota?.weekly,
+  );
+  document.body.dataset.level =
+    focus && focus.remainingPercent <= 20 ? "critical" : "normal";
   shell.setAttribute("aria-busy", String(claudeRefreshing));
-  setMeter(null, claudeRefreshing);
-  liveLabel.textContent = claudeRefreshing ? t("READING") : t("UNAVAILABLE");
+  meterTrack.setAttribute(
+    "aria-label",
+    focusWeekly ? t("Claude weekly limit") : t("Claude five-hour limit"),
+  );
+  meterTrack.dataset.i18nAriaLabel = focusWeekly
+    ? "Claude weekly limit"
+    : "Claude five-hour limit";
+  setMeter(focus?.remainingPercent ?? null, claudeRefreshing && !ready);
+  liveLabel.textContent = claudeRefreshing
+    ? t("READING")
+    : ready
+      ? t("LIVE")
+      : t("UNAVAILABLE");
   statusValue.textContent = liveLabel.textContent;
   refreshButton.disabled = claudeRefreshing;
   refreshLabel.textContent = claudeRefreshing ? t("Checking…") : t("Refresh");
-  resetValue.textContent = "—";
-  resetDetail.textContent = t("NOT PUBLISHED");
-  shortValue.closest(".metric-cell")?.setAttribute("hidden", "");
+  resetValue.textContent = focus ? formatTime(focus.resetsAt) : "—";
+  resetDetail.textContent = focus
+    ? formatResetDate(focus.resetsAt)
+    : t("NOT PUBLISHED");
+  // The secondary cell shows whichever window is not in focus.
+  const secondary = focusWeekly ? null : (quota?.weekly ?? null);
+  shortValue.closest(".metric-cell")?.toggleAttribute("hidden", !secondary);
+  if (secondary) {
+    shortValue.textContent = t(
+      "{0}% LEFT",
+      Math.round(secondary.remainingPercent),
+    );
+    shortDetail.textContent = t("{0} WINDOW", formatWindow(10080));
+  }
   planValue
     .closest(".metric-cell")
     ?.querySelector("dt")
     ?.replaceChildren(t("Local source"));
-  planValue.textContent = claudeView?.installations.cli
-    ? claudeView.installations.desktop
-      ? t("CLI and desktop app")
-      : "Claude Code CLI"
-    : t("Desktop app");
-  planDetail.textContent = t("Installation detected · session not checked");
-  // Passive presence must never be labelled as a successfully synced quota.
-  relayValue.closest(".metric-cell")?.setAttribute("hidden", "");
-  title.textContent = t("Claude detected · quota pending");
-  detail.textContent =
-    claudeView?.status === "discoveryUnavailable"
+  planValue.textContent = claudeSourceLabel(view);
+  planDetail.textContent = claudeConnectionLabel(view);
+  // Only an acknowledged services publication can label Claude as synced.
+  const published =
+    ready && lastRelayState?.status === "connected"
+      ? lastRelayState.servicesPublishedAt
+      : null;
+  relayValue.closest(".metric-cell")?.toggleAttribute("hidden", !published);
+  if (published) {
+    relayValue.textContent = t("Synced");
+    relayDetail.textContent = t("Last sample: {0}", formatTime(published));
+  }
+  title.textContent =
+    view?.status === "noPlanQuota"
+      ? t("Claude session without plan quota")
+      : t("Claude detected · quota pending");
+  detail.textContent = claudeDetailCopy(view);
+  updatedValue.textContent = quota
+    ? t("Last sample: {0}", formatTime(quota.checkedAt))
+    : view?.capturedAt
+      ? t("Last Claude Code session: {0}", formatTime(view.capturedAt))
+      : view
+        ? t("Installation checked: {0}", formatTime(view.checkedAt))
+        : "—";
+  sampleValue.textContent = quota ? formatTime(quota.checkedAt) : "—";
+  recordValue.textContent = quota
+    ? t("Reported by Claude Code · {0}", formatTime(quota.checkedAt))
+    : t("No quota sample available");
+}
+
+function renderClaudeSettings(): void {
+  const view = claudeView;
+  const visible = claudeIsVisible(view) || view?.connection === "connected";
+  claudeSettings.hidden = !visible;
+  if (!visible) return;
+  const connected = view?.connection === "connected";
+  claudeConnection.textContent = claudeConnectionLabel(view);
+  claudeConnect.hidden = connected;
+  claudeDisconnect.hidden = !connected;
+  claudeConnect.disabled =
+    claudeActionPending || view?.connection === "unknown";
+  claudeDisconnect.disabled = claudeActionPending;
+  if (!claudeActionPending)
+    claudeFeedback.textContent = connected
+      ? claudeHasQuota(view)
+        ? t("Claude quota is connected. Credentials stay with Claude Code.")
+        : claudeDetailCopy(view)
+      : "";
+}
+
+async function saveClaude(connect: boolean): Promise<void> {
+  if (claudeActionPending || previewState !== null) return;
+  claudeActionPending = true;
+  claudeConnect.disabled = true;
+  claudeDisconnect.disabled = true;
+  claudeFeedback.textContent = connect
+    ? t("Writing Claude Code status line…")
+    : t("Restoring Claude Code status line…");
+  try {
+    acceptClaude(
+      await invoke<unknown>(connect ? "connect_claude" : "disconnect_claude"),
+    );
+    claudeActionPending = false;
+    claudeFeedback.textContent = connect
       ? t(
-          "Claude discovery could not finish. Your last detected installation is kept.",
+          "Connected. Open or continue a Claude Code session; quota appears after its first response.",
         )
-      : t(
-          "Automatic quota reading is not available yet. Statusline does not access your Claude credentials or conversations.",
-        );
-  updatedValue.textContent = claudeView
-    ? t("Installation checked: {0}", formatTime(claudeView.checkedAt))
-    : "—";
-  sampleValue.textContent = "—";
-  recordValue.textContent = t("No quota sample available");
+      : t("Disconnected. Your previous status line is restored.");
+  } catch (error) {
+    claudeActionPending = false;
+    claudeFeedback.textContent = claudeConnectFailureCopy(error);
+  } finally {
+    claudeActionPending = false;
+    renderClaudeSettings();
+    renderCurrentProvider();
+  }
 }
 
 function acceptGoogle(payload: unknown): void {
@@ -872,6 +1035,8 @@ function bindSourcePanel(): void {
   googleTab.addEventListener("keydown", navigateSettingsTabs);
   googleSave.addEventListener("click", () => void saveGoogle());
   googleRemove.addEventListener("click", () => void saveGoogle(true));
+  claudeConnect.addEventListener("click", () => void saveClaude(true));
+  claudeDisconnect.addEventListener("click", () => void saveClaude(false));
   googleSource.addEventListener("change", () => {
     googleSettingsDirty = true;
     googlePath.value = "";
@@ -1499,6 +1664,7 @@ async function refreshLanguage(): Promise<void> {
   localizeDocument();
   if (lastUsageState) renderUsage(lastUsageState);
   if (googleInitialized) acceptGoogle(googleView);
+  if (claudeInitialized) renderClaudeSettings();
   if (lastDiagnostic && !sourceActionPending)
     renderCodexDiagnostic(lastDiagnostic);
   if (lastRelayState && !relayActionPending) renderRelayStatus(lastRelayState);

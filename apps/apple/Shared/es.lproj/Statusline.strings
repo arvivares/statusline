@@ -20,6 +20,8 @@
 "{0}h" = "{0}h";
 "/ COMPANION / DATA PLANE" = "/ COMPANION / DATOS";
 "% LEFT" = "% LIBRE";
+"5h {0}% left" = "5h {0}% libre";
+"7d {0}% left" = "7d {0}% libre";
 "A new version of Statusline Companion is ready." = "Hay una nueva versión de Statusline Companion disponible.";
 "Account" = "Cuenta";
 "ACCOUNT CHANNEL" = "CANAL DE LA CUENTA";
@@ -44,11 +46,12 @@
 "AUTHORIZE" = "AUTORIZAR";
 "AUTO DETECT" = "DETECCIÓN AUTOMÁTICA";
 "Automatic detection" = "Detección automática";
-"Automatic quota reading is not available yet. Statusline does not access your Claude credentials or conversations." = "La lectura automática de cuota aún no está disponible. Statusline no accede a tus credenciales ni conversaciones de Claude.";
 "AVAILABLE" = "DISPONIBLE";
 "available · quota metadata only" = "disponible · solo metadatos de cuota";
 "AVAILABLE · QUOTA METADATA ONLY" = "DISPONIBLE · SOLO METADATOS DE CUOTA";
 "AVAILABLE · STRICTEST OF {0} LIMITS" = "DISPONIBLE · EL MÁS RESTRICTIVO DE {0} LÍMITES";
+"Bridge connected. Quota appears after a Claude Code session receives its first response." = "Puente conectado. La cuota aparece cuando una sesión de Claude Code recibe su primera respuesta.";
+"Bridge not connected" = "Puente sin conectar";
 "BUILD NOT CONFIGURED" = "VERSIÓN SIN CONFIGURAR";
 "Camera permission is no longer available. Enable it in Settings or paste the link manually." = "El permiso de cámara ya no está disponible. Puedes concederlo en Ajustes o pegar el vínculo manualmente.";
 "Camera preview for scanning the QR" = "Vista previa de la cámara para escanear el QR";
@@ -78,8 +81,19 @@
 "Choose executable" = "Elegir ejecutable";
 "CLAIMING" = "VINCULANDO";
 "CLAIMING…" = "VINCULANDO…";
+"Claude · 5h {0}% left" = "Claude · 5h {0}% libre";
+"Claude · 7d {0}% left" = "Claude · 7d {0}% libre";
+"Claude Code reported a session without plan quota. API-key and cloud-provider sessions have no subscription windows." = "Claude Code informó de una sesión sin cuota de plan. Las sesiones con clave API o proveedor en la nube no tienen ventanas de suscripción.";
+"Claude Code reports a gateway spend limit: {0}% used. This account exposes no plan quota windows." = "Claude Code informa de un límite de gasto del gateway: {0}% usado. Esta cuenta no expone ventanas de cuota del plan.";
+"Claude Code settings are not a JSON object. Fix ~/.claude/settings.json and try again." = "La configuración de Claude Code no es un objeto JSON. Corrige ~/.claude/settings.json e inténtalo de nuevo.";
+"Claude Code settings could not be read or written. Check that ~/.claude is accessible." = "No se pudo leer ni escribir la configuración de Claude Code. Comprueba que ~/.claude sea accesible.";
+"Claude Code settings not readable" = "Configuración de Claude Code ilegible";
 "Claude detected · quota pending" = "Claude detectado · cuota pendiente";
 "Claude discovery could not finish. Your last detected installation is kept." = "No se pudo completar la búsqueda de Claude. Se conserva la última instalación detectada.";
+"Claude five-hour limit" = "Límite de cinco horas de Claude";
+"Claude quota is connected. Credentials stay with Claude Code." = "La cuota de Claude está conectada. Las credenciales se quedan en Claude Code.";
+"Claude session without plan quota" = "Sesión de Claude sin cuota de plan";
+"Claude weekly limit" = "Límite semanal de Claude";
 "CLEAR DEMO" = "QUITAR DEMO";
 "CLI and desktop app" = "CLI y aplicación de escritorio";
 "Clipboard access failed. Select and copy the private link manually." = "No se pudo acceder al portapapeles. Selecciona y copia el vínculo privado manualmente.";
@@ -123,14 +137,18 @@
 "CODEX.ACCOUNT" = "CUENTA.CODEX";
 "CODEX.RUNTIME" = "EJECUTABLE.CODEX";
 "CODEX.SESSION" = "SESIÓN.CODEX";
+"Companion could not write to its own configuration folder." = "Companion no pudo escribir en su propia carpeta de configuración.";
 "Companion only for now. Mobile devices and widgets continue syncing Codex with the existing pairing." = "Por ahora, solo en Companion. Los móviles y widgets siguen sincronizando Codex con el vínculo existente.";
 "Companion updates" = "Actualizaciones de Companion";
+"Companion's installation path cannot be quoted in a status line command. Move the app to a standard folder." = "La ruta de instalación de Companion no se puede entrecomillar en un comando de status line. Mueve la aplicación a una carpeta estándar.";
 "Complete sign-in in your browser." = "Completa el inicio de sesión en tu navegador.";
 "CONFIG" = "CONFIGURACIÓN";
 "Configure connections" = "Configurar conexiones";
 "CONNECT" = "CONECTAR";
 "Connect a device" = "Conecta un dispositivo";
 "Connect another device" = "Conectar otro dispositivo";
+"Connect Claude Code" = "Conectar Claude Code";
+"Connect Claude Code in Settings › Services to read your plan quota. Statusline never accesses your Claude credentials or conversations." = "Conecta Claude Code en Configuración › Servicios para leer la cuota de tu plan. Statusline nunca accede a tus credenciales ni conversaciones de Claude.";
 "Connect Codex" = "Conectar Codex";
 "CONNECT COMPANION" = "CONECTA COMPANION";
 "Connect device" = "Conectar dispositivo";
@@ -139,6 +157,8 @@
 "Connect your Codex account to get started." = "Conecta tu cuenta de Codex para comenzar.";
 "Connected" = "Conectado";
 "CONNECTED" = "CONECTADO";
+"Connected. Open or continue a Claude Code session; quota appears after its first response." = "Conectado. Abre o continúa una sesión de Claude Code; la cuota aparece tras su primera respuesta.";
+"Connecting adds a statusLine command to Claude Code's settings.json that runs Companion in bridge mode. Claude Code sends only its documented rate-limit windows; session, transcript and cost fields are discarded. An existing custom status line keeps running and is restored on disconnect." = "Al conectar se añade un comando statusLine al settings.json de Claude Code que ejecuta Companion en modo puente. Claude Code envía solo sus ventanas de límite documentadas; los campos de sesión, transcripción y coste se descartan. Una status line personalizada existente sigue funcionando y se restaura al desconectar.";
 "Connections" = "Conexiones";
 "CONTRACT / CHANGED" = "FORMATO / MODIFICADO";
 "Copied" = "Copiado";
@@ -179,6 +199,7 @@
 "Credentials" = "Credenciales";
 "CURRENT" = "AL DÍA";
 "Custom installation" = "Instalación personalizada";
+"Custom status line · connect to chain it" = "Status line personalizada · conecta para encadenarla";
 "Data plane setup" = "Configuración";
 "DEMO" = "DEMO";
 "demo · local sample only" = "demo · solo muestra local";
@@ -200,6 +221,7 @@
 "Disconnect" = "Desconectar";
 "DISCONNECT" = "DESCONECTAR";
 "DISCONNECT.READER" = "DESCONECTAR.LECTOR";
+"Disconnected. Your previous status line is restored." = "Desconectado. Se ha restaurado tu status line anterior.";
 "Download & install" = "Descargar e instalar";
 "Downloading update" = "Descargando actualización";
 "Downloading…" = "Descargando…";
@@ -218,6 +240,7 @@
 "Environment override" = "Variable de entorno";
 "ERROR" = "ERROR";
 "ERROR · NO CREDENTIALS EXPOSED" = "ERROR · CREDENCIALES PROTEGIDAS";
+"Every captured window has reset. Quota appears again on the next Claude Code response." = "Todas las ventanas capturadas se han reiniciado. La cuota volverá a aparecer con la próxima respuesta de Claude Code.";
 "Executable path" = "Ruta del ejecutable";
 "Executable path (optional)" = "Ruta del ejecutable (opcional)";
 "EXECUTABLE.PATH" = "RUTA.EJECUTABLE";
@@ -239,7 +262,6 @@
 "Install the DEB or RPM from the official release page using your package manager." = "Instala el DEB o RPM desde la página oficial de la versión con tu gestor de paquetes.";
 "Installation checked: {0}" = "Instalación comprobada: {0}";
 "Installation continues in the background. Statusline Companion will restart when ready." = "La instalación continúa en segundo plano. Statusline Companion se reiniciará cuando esté listo.";
-"Installation detected · session not checked" = "Instalación detectada · sesión sin verificar";
 "Installed version" = "Versión instalada";
 "INSTALLER CONFIG" = "CONFIGURACIÓN DEL INSTALADOR";
 "Installing update" = "Instalando actualización";
@@ -250,6 +272,7 @@
 "INVALID SOURCE" = "ORIGEN NO VÁLIDO";
 "LAST ATTEMPT {0} · CODEX LOCAL" = "ÚLTIMO INTENTO {0} · CODEX LOCAL";
 "Last attempt: {0}" = "Último intento: {0}";
+"Last Claude Code session: {0}" = "Última sesión de Claude Code: {0}";
 "LAST CODEX READ" = "ÚLTIMA LECTURA DE CODEX";
 "Last sample: {0}" = "Última muestra: {0}";
 "Last sync" = "Última sincronización";
@@ -334,6 +357,7 @@
 "Paste the Codex status line first." = "Pega primero la línea de estado de Codex.";
 "Paste the complete line returned by /status in Codex." = "Pega la línea completa que devuelve /status en Codex.";
 "Paste the link shown by Statusline Companion first." = "Pega primero el vínculo que muestra Statusline Companion.";
+"plan quota not reported" = "cuota del plan no informada";
 "PLANE / 010" = "DATOS / 010";
 "Privacy" = "Privacidad";
 "PRIVACY" = "PRIVACIDAD";
@@ -358,6 +382,7 @@
 "QR EXPIRES {0}" = "EL QR CADUCA A LAS {0}";
 "Quit" = "Salir";
 "Quota period" = "Período de cuota";
+"Quota updates while a Claude Code session is open and after it receives a response. Pro and Max report five-hour and weekly windows; Enterprise seats may report only the five-hour window; API-key sessions report none." = "La cuota se actualiza mientras hay una sesión de Claude Code abierta y tras recibir una respuesta. Pro y Max informan de las ventanas de cinco horas y semanal; los asientos Enterprise pueden informar solo de la de cinco horas; las sesiones con clave API no informan de ninguna.";
 "Quotas from your Companion. The small widget follows the service selected in Statusline." = "Cuotas de tu Companion. El widget pequeño muestra el servicio seleccionado en Statusline.";
 "READER.STATE / LIVE" = "ESTADO.LECTOR / ACTIVO";
 "READING" = "LEYENDO";
@@ -402,6 +427,7 @@
 "Replace pairing" = "Reemplazar vínculo";
 "REPLACE PAIRING" = "REEMPLAZAR VÍNCULO";
 "Replace QR" = "Reemplazar QR";
+"Reported by Claude Code · {0}" = "Informado por Claude Code · {0}";
 "RESET" = "REINICIO";
 "RESET.DATE" = "FECHA.REINICIO";
 "RESET.TIME" = "HORA.REINICIO";
@@ -409,6 +435,7 @@
 "RESETS" = "REINICIA";
 "Resetting source" = "Restableciendo origen";
 "RESETTING SOURCE" = "RESTABLECIENDO ORIGEN";
+"Restoring Claude Code status line…" = "Restaurando la status line de Claude Code…";
 "Retry check" = "Volver a buscar";
 "Retry pairing" = "Reintentar vínculo";
 "RETRY PAIRING" = "REINTENTAR VÍNCULO";
@@ -461,6 +488,7 @@
 "SOURCE / OFFLINE" = "ORIGEN / SIN CONEXIÓN";
 "SOURCE / TIMEOUT" = "ORIGEN / TIEMPO AGOTADO";
 "SOURCE.HOST" = "EQUIPO.ORIGEN";
+"spend limit {0}% used" = "límite de gasto {0}% usado";
 "Stale · {0}" = "Sin actualizar · {0}";
 "STANDALONE" = "INSTALACIÓN DIRECTA";
 "Standalone install" = "Instalación independiente";
@@ -472,6 +500,7 @@
 "STATUS UNAVAILABLE" = "ESTADO NO DISPONIBLE";
 "STATUS.RECORD" = "REGISTRO.ESTADO";
 "Statusline" = "Statusline";
+"Statusline bridge connected" = "Puente de Statusline conectado";
 "Statusline Companion · loading…" = "Statusline Companion · cargando…";
 "Statusline Companion · no data" = "Statusline Companion · sin datos";
 "Statusline Companion will restart after installation. Windows may ask for permission to install the update." = "Statusline Companion se reiniciará tras la instalación. Windows puede pedir permiso para instalar la actualización.";
@@ -596,5 +625,6 @@
 "Weekly window unavailable" = "Periodo semanal no disponible";
 "Working" = "Procesando";
 "WORKING" = "PROCESANDO";
+"Writing Claude Code status line…" = "Escribiendo la status line de Claude Code…";
 "You're up to date" = "Estás al día";
 "Your services" = "Tus servicios";

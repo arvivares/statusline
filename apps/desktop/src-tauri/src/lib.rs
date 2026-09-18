@@ -53,17 +53,41 @@ struct ProviderTray {
     codex: Option<String>,
     google: Option<String>,
     google_revision: u64,
+    claude: Option<String>,
+    claude_revision: u64,
 }
 
 fn update_provider_tooltip(
     app: &AppHandle,
     codex: Option<&UsageResponse>,
     google: Option<&antigravity::View>,
+    claude: Option<&claude::View>,
 ) {
     let state = app.state::<ProviderTrayState>();
     let mut labels = state.0.lock().unwrap_or_else(|error| error.into_inner());
     if let Some(usage) = codex {
         labels.codex = matches!(usage, UsageResponse::Ready { .. }).then(|| usage.tray_tooltip());
+    }
+    if let Some(view) = claude
+        && view.revision >= labels.claude_revision
+    {
+        labels.claude_revision = view.revision;
+        // Only a window Claude Code reported is a number; presence is not.
+        labels.claude = view.quota.as_ref().and_then(|quota| {
+            quota
+                .short_window
+                .as_ref()
+                .map(|w| ("Claude · 5h {0}% left", w.remaining_percent))
+                .or_else(|| {
+                    quota
+                        .weekly
+                        .as_ref()
+                        .map(|w| ("Claude · 7d {0}% left", w.remaining_percent))
+                })
+                .map(|(key, percent)| {
+                    localization::text(key).replace("{0}", &format!("{percent:.0}"))
+                })
+        });
     }
     if let Some(view) = google
         && view.revision >= labels.google_revision
@@ -89,10 +113,14 @@ fn update_provider_tooltip(
             _ => None,
         };
     }
-    let available = [labels.codex.as_deref(), labels.google.as_deref()]
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>();
+    let available = [
+        labels.codex.as_deref(),
+        labels.google.as_deref(),
+        labels.claude.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    .collect::<Vec<_>>();
     let text = if available.is_empty() {
         localization::text("Statusline Companion · no data").to_owned()
     } else {
@@ -230,7 +258,13 @@ async fn current_usage(app: AppHandle) -> Result<UsageResponse, String> {
 }
 
 async fn refresh_claude_native(app: &AppHandle) -> claude::View {
-    let view = claude::refresh(&app.state::<claude::State>(), FOCUS_REFRESH_AGE).await;
+    refresh_claude_with_age(app, FOCUS_REFRESH_AGE).await
+}
+
+async fn refresh_claude_with_age(app: &AppHandle, age: Duration) -> claude::View {
+    let directory = app.path().app_config_dir().ok();
+    let view = claude::refresh(&app.state::<claude::State>(), directory.as_deref(), age).await;
+    update_provider_tooltip(app, None, None, Some(&view));
     app.state::<UniversalRelayState>()
         .record_claude(&view)
         .await;
@@ -239,8 +273,48 @@ async fn refresh_claude_native(app: &AppHandle) -> claude::View {
 }
 
 #[tauri::command]
-async fn claude_status(app: AppHandle) -> claude::View {
-    refresh_claude_native(&app).await
+async fn claude_status(app: AppHandle, force: Option<bool>) -> claude::View {
+    refresh_claude_with_age(
+        &app,
+        if force == Some(true) {
+            Duration::ZERO
+        } else {
+            FOCUS_REFRESH_AGE
+        },
+    )
+    .await
+}
+
+/// Explicit user action: write the bridge into Claude Code's `statusLine`.
+/// Never runs automatically; discovery alone must not edit vendor settings.
+#[tauri::command]
+async fn connect_claude(app: AppHandle) -> Result<claude::View, claude::ConnectFailure> {
+    let directory = app
+        .path()
+        .app_config_dir()
+        .map_err(|_| claude::ConnectFailure::StorageUnavailable)?;
+    let claude_dir =
+        claude::claude_config_dir().ok_or(claude::ConnectFailure::SettingsUnavailable)?;
+    let executable =
+        std::env::current_exe().map_err(|_| claude::ConnectFailure::UnsupportedPath)?;
+    tokio::task::spawn_blocking(move || claude::connect(&directory, &claude_dir, &executable))
+        .await
+        .map_err(|_| claude::ConnectFailure::SettingsUnavailable)??;
+    Ok(refresh_claude_with_age(&app, Duration::ZERO).await)
+}
+
+#[tauri::command]
+async fn disconnect_claude(app: AppHandle) -> Result<claude::View, claude::ConnectFailure> {
+    let directory = app
+        .path()
+        .app_config_dir()
+        .map_err(|_| claude::ConnectFailure::StorageUnavailable)?;
+    let claude_dir =
+        claude::claude_config_dir().ok_or(claude::ConnectFailure::SettingsUnavailable)?;
+    tokio::task::spawn_blocking(move || claude::disconnect(&directory, &claude_dir))
+        .await
+        .map_err(|_| claude::ConnectFailure::SettingsUnavailable)??;
+    Ok(refresh_claude_with_age(&app, Duration::ZERO).await)
 }
 
 async fn refresh_antigravity_native(app: &AppHandle) -> antigravity::View {
@@ -254,7 +328,7 @@ async fn refresh_antigravity_with_age(app: &AppHandle, age: Duration) -> antigra
         .refresh(directory.as_deref(), age)
         .await;
     let _ = app.emit("antigravity-updated", &view);
-    update_provider_tooltip(app, None, Some(&view));
+    update_provider_tooltip(app, None, Some(&view), None);
     app.state::<UniversalRelayState>()
         .record_google(&view)
         .await;
@@ -288,7 +362,7 @@ async fn configure_antigravity(
         .configure(&directory, settings)
         .await?;
     let _ = app.emit("antigravity-updated", &view);
-    update_provider_tooltip(&app, None, Some(&view));
+    update_provider_tooltip(&app, None, Some(&view), None);
     app.state::<UniversalRelayState>()
         .record_google(&view)
         .await;
@@ -302,7 +376,7 @@ async fn refresh_native(app: &AppHandle, minimum_age: Duration) -> UsageResponse
             let response =
                 app_server::fetch_usage(env!("CARGO_PKG_VERSION"), settings_directory.as_deref())
                     .await;
-            update_provider_tooltip(app, Some(&response), None);
+            update_provider_tooltip(app, Some(&response), None, None);
             app.state::<UniversalRelayState>()
                 .record_codex(&response)
                 .await;
@@ -571,6 +645,8 @@ pub fn run() {
             current_usage,
             antigravity_status,
             claude_status,
+            connect_claude,
+            disconnect_claude,
             configure_antigravity,
             relay_status,
             create_relay_pairing,
