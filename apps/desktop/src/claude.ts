@@ -58,6 +58,17 @@ export function claudeHasQuota(view: ClaudeView | null): boolean {
   );
 }
 
+// Discovering the chat desktop app alone does not prove a usable Claude Code
+// statusLine transport. A previous capture can prove a custom CLI installation.
+export function claudeCanConnect(view: ClaudeView | null): boolean {
+  return (
+    !!view &&
+    view.status !== "discoveryUnavailable" &&
+    (view.connection === "none" || view.connection === "custom") &&
+    (view.installations.cli || view.capturedAt !== null)
+  );
+}
+
 function record(value: unknown, message: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new Error(message);

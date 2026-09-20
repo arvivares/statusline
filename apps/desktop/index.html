@@ -119,6 +119,32 @@
           </p>
         </div>
 
+        <div class="claude-activation" id="claude-activation" hidden>
+          <p
+            id="claude-activation-consent"
+            class="state-detail"
+            data-i18n="This updates Claude Code’s status line configuration. Your current status line is preserved."
+          >
+            This updates Claude Code’s status line configuration. Your current
+            status line is preserved.
+          </p>
+          <button
+            class="source-primary"
+            id="claude-activate"
+            type="button"
+            aria-describedby="claude-activation-consent"
+            data-i18n="Enable quota"
+          >
+            Enable quota
+          </button>
+          <p
+            class="source-feedback"
+            id="claude-activation-feedback"
+            role="status"
+            aria-live="polite"
+          ></p>
+        </div>
+
         <dl class="metric-grid">
           <div class="metric-cell metric-cell--accent">
             <dt data-i18n="Resets">Resets</dt>

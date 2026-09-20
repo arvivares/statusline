@@ -2,7 +2,7 @@ package inmerzion.statusline.protocol
 
 enum class AgentProviderId(val wireId: String, val displayName: String) {
     CODEX("codex", "Codex"),
-    ANTIGRAVITY("antigravity", "Gemini");
+    ANTIGRAVITY("antigravity", "Antigravity");
 
     companion object {
         fun fromWire(value: String): AgentProviderId? = values().firstOrNull { it.wireId == value }

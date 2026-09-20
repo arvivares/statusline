@@ -4,8 +4,8 @@ enum AgentProviderID: String, Codable, Sendable {
     case codex
     case antigravity
 
-    var name: String { self == .codex ? "Codex" : "Gemini" }
-    var source: String { self == .codex ? "OpenAI" : "Antigravity" }
+    var name: String { self == .codex ? "Codex" : "Antigravity" }
+    var source: String { self == .codex ? "OpenAI" : "Google" }
 }
 
 enum AgentQuotaPeriod: String, Codable, Sendable {

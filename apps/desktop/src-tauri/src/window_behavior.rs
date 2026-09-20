@@ -120,6 +120,32 @@ mod tests {
     }
 
     #[test]
+    fn click_cancels_earlier_blur_even_without_a_mouse_enter_event() {
+        let mut behavior = WindowBehavior::default();
+        // macOS may transfer focus to the status item before dispatching Down.
+        let token = behavior.request_blur().unwrap();
+        behavior.set_tray_pressed(true);
+        assert!(!behavior.should_hide(token, true, false));
+        assert!(behavior.request_blur().is_none());
+        behavior.set_tray_pressed(false);
+        assert_eq!(behavior.toggle_visibility(true), Some(false));
+    }
+
+    #[test]
+    fn repeated_tray_toggles_and_outside_clicks_do_not_stop_future_opens() {
+        let mut behavior = WindowBehavior::default();
+        for _ in 0..4 {
+            behavior.set_tray_pressed(true);
+            behavior.set_tray_pressed(false);
+            assert_eq!(behavior.toggle_visibility(false), Some(true));
+            behavior.set_tray_hovered(false);
+            let token = behavior.request_blur().unwrap();
+            assert!(behavior.should_hide(token, true, false));
+            behavior.cancel_pending();
+        }
+    }
+
+    #[test]
     fn leaving_tray_resumes_auto_hide_only_when_focus_is_elsewhere() {
         let mut behavior = WindowBehavior::default();
         behavior.set_tray_hovered(true);

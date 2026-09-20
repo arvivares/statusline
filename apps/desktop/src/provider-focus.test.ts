@@ -51,10 +51,15 @@ describe("Still Signature focus and watchlist", () => {
     expect(providers.map((p) => p.id)).toEqual(["codex", "google", "claude"]);
     expect(providerWatchlist(providers, "google").map((p) => p.name)).toEqual([
       "Codex",
-      "Claude",
+      "Claude-Code",
     ]);
     expect(providers[2]?.weekly).toBeNull();
     expect(providers[2]?.short).toBeNull();
+    expect(providers.map(({ source, name }) => `${source} · ${name}`)).toEqual([
+      "OpenAI · Codex",
+      "Google · Antigravity",
+      "Anthropic · Claude-Code",
+    ]);
     expect(providers.slice(0, 2)).toEqual(
       companionProviders(codex, null, google),
     );
@@ -85,7 +90,7 @@ describe("Still Signature focus and watchlist", () => {
       "Codex",
     ]);
     expect(providerWatchlist(providers, "codex").map((p) => p.name)).toEqual([
-      "Gemini",
+      "Antigravity",
     ]);
     expect(quotaFocus(providers[0]!).period).toBe("weekly");
     expect(quotaFocus(providers[1]!).period).toBe("short");

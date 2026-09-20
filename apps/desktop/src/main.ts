@@ -29,6 +29,7 @@ import {
   acceptClaudeView,
   claudeConnectFailureCopy,
   claudeHasQuota,
+  claudeCanConnect,
   claudeIsVisible,
   type ClaudeView,
 } from "./claude";
@@ -140,6 +141,12 @@ const claudeConnection = requireElement("claude-connection", HTMLElement);
 const claudeConnect = requireElement("claude-connect", HTMLButtonElement);
 const claudeDisconnect = requireElement("claude-disconnect", HTMLButtonElement);
 const claudeFeedback = requireElement("claude-feedback", HTMLElement);
+const claudeActivation = requireElement("claude-activation", HTMLElement);
+const claudeActivate = requireElement("claude-activate", HTMLButtonElement);
+const claudeActivationFeedback = requireElement(
+  "claude-activation-feedback",
+  HTMLElement,
+);
 const providerWatchlistSection = requireElement(
   "provider-watchlist",
   HTMLElement,
@@ -439,6 +446,7 @@ function renderCurrentProvider(): void {
     (provider) => provider.id === selectedProvider,
   );
   renderFocusWindow(selected);
+  renderClaudeActivation();
   renderWatchlist(providerWatchlist(providers, selectedProvider));
 }
 
@@ -518,6 +526,9 @@ function renderWatchlist(providers: readonly ProviderReading[]): void {
     row.className = "quota-row";
     row.dataset.providerId = provider.id;
     row.dataset.status = provider.status;
+    row.dataset.connectable = String(
+      provider.id === "claude" && claudeCanConnect(claudeView),
+    );
     row.dataset.stale = String(
       provider.checkedAt !== null &&
         Date.now() / 1000 - provider.checkedAt > 600,
@@ -526,6 +537,10 @@ function renderWatchlist(providers: readonly ProviderReading[]): void {
     const name = document.createElement("span");
     name.className = "row-name";
     name.textContent = provider.name;
+    const chevron = document.createElement("span");
+    chevron.className = "row-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    name.append(chevron);
     const source = document.createElement("span");
     source.className = "row-source";
     source.textContent = `${provider.source} · ${windowLabel(focus.period, focus.window?.minutes)}`;
@@ -550,7 +565,9 @@ function renderWatchlist(providers: readonly ProviderReading[]): void {
       provider.status === "loading"
         ? t("Checking…")
         : provider.status === "unavailable"
-          ? t("Unavailable")
+          ? provider.id === "claude" && claudeCanConnect(claudeView)
+            ? t("Enable quota")
+            : t("Unavailable")
           : row.dataset.stale === "true"
             ? t("Stale · {0}", formatTime(provider.checkedAt!))
             : t("Last sample: {0}", formatTime(provider.checkedAt!));
@@ -730,6 +747,18 @@ function claudeDetailCopy(view: ClaudeView | null): string {
     return t(
       "Claude discovery could not finish. Your last detected installation is kept.",
     );
+  if (claudeCanConnect(view))
+    return t("Credentials and conversations stay with Claude.");
+  if (
+    view?.connection !== "connected" &&
+    view?.installations.desktop &&
+    !view.installations.cli
+  )
+    return t(
+      "Claude desktop detected. Install Claude Code to share quota through its status line; detection will run automatically.",
+    );
+  if (view?.connection === "unknown")
+    return t("Claude Code settings not readable");
   if (view?.status === "noPlanQuota") {
     const spend = view.quota?.spendLimit;
     return spend
@@ -742,9 +771,9 @@ function claudeDetailCopy(view: ClaudeView | null): string {
         );
   }
   if (view?.connection !== "connected")
-    return t(
-      "Connect Claude Code in Settings › Services to read your plan quota. Statusline never accesses your Claude credentials or conversations.",
-    );
+    return t("Install Claude Code, then scan again.");
+  if (claudeHasQuota(view))
+    return t("Claude quota is connected. Credentials stay with Claude Code.");
   if (view.capturedAt)
     return t(
       "Every captured window has reset. Quota appears again on the next Claude Code response.",
@@ -837,12 +866,18 @@ function renderClaudeSettings(): void {
   const visible = claudeIsVisible(view) || view?.connection === "connected";
   const connected = view?.connection === "connected";
   claudeConnection.textContent = visible
-    ? claudeConnectionLabel(view)
+    ? view?.connection === "none" &&
+      view.installations.desktop &&
+      !view.installations.cli &&
+      !view.capturedAt
+      ? t(
+          "Claude desktop detected. Install Claude Code to share quota through its status line; detection will run automatically.",
+        )
+      : claudeConnectionLabel(view)
     : t("Install Claude Code, then scan again.");
   claudeConnect.hidden = connected;
   claudeDisconnect.hidden = !connected;
-  claudeConnect.disabled =
-    claudeActionPending || !visible || view?.connection === "unknown";
+  claudeConnect.disabled = claudeActionPending || !claudeCanConnect(view);
   claudeDisconnect.disabled = claudeActionPending;
   if (!claudeActionPending)
     claudeFeedback.textContent =
@@ -853,11 +888,27 @@ function renderClaudeSettings(): void {
             ? t("Claude quota is connected. Credentials stay with Claude Code.")
             : claudeDetailCopy(view)
           : "";
+  renderClaudeActivation();
   renderServices();
+}
+
+function renderClaudeActivation(): void {
+  claudeActivation.hidden =
+    selectedProvider !== "claude" || !claudeCanConnect(claudeView);
+  claudeActivate.disabled =
+    claudeActionPending || !claudeCanConnect(claudeView);
+  claudeActivation.setAttribute("aria-busy", String(claudeActionPending));
+  claudeActivationFeedback.textContent = claudeActionPending
+    ? t("Writing Claude Code status line…")
+    : claudeOperationError !== null
+      ? claudeConnectFailureCopy(claudeOperationError)
+      : "";
 }
 
 async function saveClaude(connect: boolean): Promise<void> {
   if (claudeActionPending || previewState !== null) return;
+  if (connect && !claudeCanConnect(claudeView)) return;
+  const activatedInline = document.activeElement === claudeActivate;
   claudeActionPending = true;
   claudeOperationError = null;
   claudeConnect.disabled = true;
@@ -865,10 +916,23 @@ async function saveClaude(connect: boolean): Promise<void> {
   claudeFeedback.textContent = connect
     ? t("Writing Claude Code status line…")
     : t("Restoring Claude Code status line…");
+  renderClaudeActivation();
   try {
-    acceptClaude(
-      await invoke<unknown>(connect ? "connect_claude" : "disconnect_claude"),
+    const payload = await invoke<unknown>(
+      connect ? "connect_claude" : "disconnect_claude",
     );
+    // Move focus before hiding the inline control, without stealing it if the
+    // user navigated elsewhere while waiting for the native operation.
+    if (
+      connect &&
+      activatedInline &&
+      selectedProvider === "claude" &&
+      sourcePanel.hidden &&
+      (document.activeElement === claudeActivate ||
+        document.activeElement === document.body)
+    )
+      focusHeading.focus();
+    acceptClaude(payload);
     claudeActionPending = false;
     claudeFeedback.textContent = connect
       ? t(
@@ -1164,6 +1228,7 @@ function bindSourcePanel(): void {
   googleSave.addEventListener("click", () => void saveGoogle());
   googleRemove.addEventListener("click", () => void saveGoogle(true));
   claudeConnect.addEventListener("click", () => void saveClaude(true));
+  claudeActivate.addEventListener("click", () => void saveClaude(true));
   claudeDisconnect.addEventListener("click", () => void saveClaude(false));
   googleSource.addEventListener("change", () => {
     googleSettingsDirty = true;

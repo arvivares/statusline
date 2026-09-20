@@ -95,3 +95,23 @@ review before a release claims certification:
   ranges, drops reset windows at read time and never treats the read time as the
   sample time. A forged capture by the same OS user can only misreport that
   user's own quota row; it cannot reach credentials or other services.
+
+## 8. Implementation delta: broader discovery and inline consent (2026-09-20)
+
+This records the changed boundaries; it is not a new certification of the live
+transport above. `extended_candidates` now includes absolute PATH entries,
+global npm shims and conventional version-manager directories. It caps candidates
+at 256, PATH entries at 64 and immediate manager entries at 32. Fixed paths are
+prioritized; relative/current-project paths, `node_modules/.bin`, parent traversal
+and control characters are excluded. Metadata may follow symlinks, but no found
+launcher is executed or read. The existing single blocking worker/deadline stays
+in place, including for slow network-backed filesystem paths.
+
+The inline **Enable quota** action and Settings button both use the same opt-in
+connect operation. The UI discloses the settings write before the click, disables
+duplicate submissions and preserves errors across background refreshes. Desktop
+chat presence alone does not enable the action. A forged same-user launcher may
+make the action visible but cannot grant consent or trigger a write automatically.
+Regression fixtures check that discovery leaves vendor settings untouched and
+never executes a candidate. The bridge, relay schema, authentication and pairing
+are unchanged by this extension.

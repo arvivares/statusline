@@ -74,6 +74,9 @@ jobs:
         run: rustup toolchain install 1.98.0 --profile minimal
       - name: Check native companion without producing installers or signing
         run: cargo +1.98.0 check --locked --manifest-path apps/desktop/src-tauri/Cargo.toml
+      - name: Check isolated macOS tray diagnostic
+        if: runner.os == 'macOS'
+        run: cargo +1.98.0 check --locked --manifest-path apps/desktop/src-tauri/Cargo.toml --example macos-tray-smoke
 
   codex-runtime:
     name: Codex runtime (${{ matrix.os }})
