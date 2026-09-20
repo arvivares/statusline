@@ -20,7 +20,7 @@ Validated against the iPhone source, Apple frameworks and the production relay o
 
 - The iPhone app contains no advertising, analytics, attribution, crash-reporting or third-party scanner SDK.
 - Camera frames and decoded QR contents are processed on-device by Apple's VisionKit APIs and are not stored or transmitted as camera data.
-- Manual quota samples remain in the App Group container shared with the widget.
+- Fixed demo samples and previously saved local samples remain in the App Group container shared with the widget. The current app no longer accepts pasted quota/status text.
 - Pairing sends random, single-purpose channel credentials to the selected relay. They are not tied to an email address, Apple ID, Codex account, advertising identifier or device identifier.
 - The iPhone downloads an end-to-end encrypted quota snapshot. The relay cannot decrypt it because the AES key moves directly from the desktop QR to the phone.
 - The maintained relay stores credential hashes, an opaque ciphertext and protocol timestamps. Inactive channels expire after 30 days.

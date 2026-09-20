@@ -28,7 +28,7 @@ AT A GLANCE
 
 WORKS ON ITS OWN
 
-Try the built-in Codex demo without an account or network connection. You can also paste the weekly quota line from Codex /status and save it locally to update the app and widget. Manual samples change only when you update them; Antigravity requires Companion sync.
+Try the built-in Codex demo without an account or network connection. Pair with Statusline Companion to receive your usage in the app and widget. The demo is a fixed local example, not live account data.
 
 OPTIONAL PRIVATE SYNC
 

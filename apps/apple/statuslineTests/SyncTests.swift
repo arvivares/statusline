@@ -143,7 +143,7 @@ struct SyncTests {
         let reader = SyncReader()
         reader.error = URLError(.notConnectedToInternet)
         reader.result = sample(channel: reader.channel)
-        let vm = CodexStatusViewModel(parser: CodexStatusParser(), store: store, relayRepository: reader)
+        let vm = CodexStatusViewModel(store: store, relayRepository: reader)
         var waits = 0
         await vm.runForegroundRefresh { duration in
             #expect(duration == .seconds(60))
@@ -164,7 +164,7 @@ struct SyncTests {
         let reader = SyncReader()
         reader.result = sample(channel: reader.channel)
         reader.suspended = true
-        let vm = CodexStatusViewModel(parser: CodexStatusParser(), store: store, relayRepository: reader)
+        let vm = CodexStatusViewModel(store: store, relayRepository: reader)
         let task = Task { await vm.refreshFromRelay() }
         await reader.started.wait()
         await vm.refreshFromRelay()
@@ -184,10 +184,46 @@ struct SyncTests {
         let original = sample(channel: reader.channel)
         try store.save(original)
         reader.error = CancellationError()
-        let vm = CodexStatusViewModel(parser: CodexStatusParser(), store: store, relayRepository: reader)
+        let vm = CodexStatusViewModel(store: store, relayRepository: reader)
         await vm.refreshFromRelay()
         #expect(vm.status == original)
         #expect(!vm.relaySyncState.isError)
+    }
+
+    @Test("Local demo updates app and widget caches without pairing or fetching")
+    func loadsLocalDemo() throws {
+        let (store, clear) = try store(); defer { clear() }
+        let reader = SyncReader()
+        reader.channel = nil
+        reader.endpoint = nil
+        let vm = CodexStatusViewModel(store: store, relayRepository: reader)
+        vm.loadLocalDemo()
+
+        #expect(vm.status?.remainingPercentage == 70)
+        #expect(store.loadSaved()?.remainingPercentage == 70)
+        #expect(vm.services?.codexStatus?.remainingPercentage == 70)
+        #expect(store.servicesStore.load()?.codexStatus?.remainingPercentage == 70)
+        #expect(vm.services?.channelID == nil)
+        #expect(vm.feedback?.isError == false)
+        #expect(reader.calls == 0)
+        #expect(reader.channel == nil)
+
+        let reopened = CodexStatusViewModel(store: store, relayRepository: reader)
+        #expect(reopened.status == vm.status)
+        #expect(reopened.services == vm.services)
+    }
+
+    @Test("Local demo cannot overwrite a paired account sample")
+    func demoPreservesPairedSample() throws {
+        let (store, clear) = try store(); defer { clear() }
+        let reader = SyncReader()
+        let original = sample(channel: reader.channel)
+        try store.save(original)
+        let vm = CodexStatusViewModel(store: store, relayRepository: reader)
+        vm.loadLocalDemo()
+        #expect(vm.status == original)
+        #expect(store.loadSaved() == original)
+        #expect(reader.calls == 0)
     }
 
     @Test("Widget refresh policy is 30 minutes and never invents a reset")

@@ -215,7 +215,7 @@ struct AgentServicesTests {
         let (store, clear) = try cache(); defer { clear() }
         let reader = ServicesReader()
         reader.result = try sample()
-        let vm = CodexStatusViewModel(parser: CodexStatusParser(), store: store, relayRepository: reader)
+        let vm = CodexStatusViewModel(store: store, relayRepository: reader)
         await vm.refreshFromRelay()
         #expect(vm.focusedProvider?.id == .codex)
         vm.focus(.antigravity)

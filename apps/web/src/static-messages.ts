@@ -183,7 +183,7 @@ export const staticMessages = {
     "availability.iosFormats":
       "Free download on the App Store. Native app and home screen widgets.",
     "availability.iosRequirements":
-      "iPhone with iOS 17+. Companion sync or manual /status entry; local demo available.",
+      "iPhone with iOS 17+. Companion and relay for sync; offline demo available.",
     "availability.iosLink": "Download on the App Store",
     "availability.note":
       "Availability follows each release and store review. Check the project links for the latest status.",
@@ -202,7 +202,7 @@ export const staticMessages = {
     "faq.accountQuestion":
       'Do I need an API key or a new account?<span aria-hidden="true">+</span>',
     "faq.accountAnswer":
-      "You don't need an API key or a Statusline account. For automatic sync, sign in to Codex on your computer and pair the companion with your phone. Mac and Windows support the CLI or a compatible Codex desktop installation; Linux requires the CLI. On iPhone, you can also paste a /status quota line manually. The local demo works without a companion or an account.",
+      "You don't need an API key or a Statusline account. For automatic sync, sign in to Codex on your computer and pair the companion with your phone. Mac and Windows support the CLI or a compatible Codex desktop installation; Linux requires the CLI. The local demo works without a companion or an account.",
     "faq.widgetQuestion":
       'Does the widget update in real time?<span aria-hidden="true">+</span>',
     "faq.widgetAnswer":
@@ -404,7 +404,7 @@ export const staticMessages = {
     "availability.iosFormats":
       "Descarga gratuita en el App Store. App nativa y widgets de pantalla de inicio.",
     "availability.iosRequirements":
-      "iPhone con iOS 17+. Sincronización con companion o entrada manual de /status; demo local disponible.",
+      "iPhone con iOS 17+. Companion y relay para sincronizar; demo disponible sin conexión.",
     "availability.iosLink": "Descargar en el App Store",
     "availability.note":
       "La disponibilidad depende de cada release y revisión de tienda. Consulta el estado actualizado en los enlaces del proyecto.",
@@ -424,7 +424,7 @@ export const staticMessages = {
     "faq.accountQuestion":
       '¿Necesito una API key o una cuenta nueva?<span aria-hidden="true">+</span>',
     "faq.accountAnswer":
-      "No necesitas una API key ni una cuenta de Statusline. Para sincronizar automáticamente, inicia sesión en Codex en tu ordenador y empareja el companion con tu móvil. Mac y Windows admiten la CLI o una instalación compatible de Codex de escritorio; Linux requiere la CLI. En iPhone también puedes pegar manualmente una línea de cuota de /status. La demo local funciona sin companion ni cuenta.",
+      "No necesitas una API key ni una cuenta de Statusline. Para sincronizar automáticamente, inicia sesión en Codex en tu ordenador y empareja el companion con tu móvil. Mac y Windows admiten la CLI o una instalación compatible de Codex de escritorio; Linux requiere la CLI. La demo local funciona sin companion ni cuenta.",
     "faq.widgetQuestion":
       '¿El widget se actualiza en tiempo real?<span aria-hidden="true">+</span>',
     "faq.widgetAnswer":

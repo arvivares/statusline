@@ -21,6 +21,11 @@ import { copyForState, type UsageState } from "./usage";
 import { bindUpdater, refreshUpdaterCopy } from "./updates";
 import { signatureMeter } from "./signature-meter";
 import {
+  serviceIds,
+  serviceSettings,
+  type ServiceId,
+} from "./service-settings";
+import {
   acceptClaudeView,
   claudeConnectFailureCopy,
   claudeHasQuota,
@@ -82,9 +87,32 @@ const sourceReset = requireElement("source-reset", HTMLButtonElement);
 const sourceFeedback = requireElement("source-feedback", HTMLElement);
 const installCommand = requireElement("install-command", HTMLElement);
 const sourceSetup = requireElement("source-setup", HTMLDetailsElement);
-const sourceTab = requireElement("source-tab", HTMLButtonElement);
+const servicesTab = requireElement("services-tab", HTMLButtonElement);
 const relayTab = requireElement("relay-tab", HTMLButtonElement);
-const sourceSettingsView = requireElement("source-settings-view", HTMLElement);
+const servicesSettingsView = requireElement(
+  "services-settings-view",
+  HTMLElement,
+);
+const servicesScan = requireElement("services-scan", HTMLButtonElement);
+const servicesEmpty = requireElement("services-empty", HTMLElement);
+const servicesFeedback = requireElement("services-feedback", HTMLElement);
+const servicesMore = requireElement("services-more", HTMLDetailsElement);
+const servicesMoreLabel = requireElement("services-more-label", HTMLElement);
+const serviceRows = serviceIds.map((id) => ({
+  id,
+  section: requireElement(`service-${id}`, HTMLElement),
+  toggle: requireElement(`service-${id}-toggle`, HTMLButtonElement),
+  status: requireElement(`service-${id}-status`, HTMLElement),
+  content: requireElement(
+    id === "codex"
+      ? "source-settings-view"
+      : id === "google"
+        ? "google-settings-view"
+        : "claude-settings",
+    HTMLElement,
+  ),
+  setup: requireElement(`setup-${id}`, HTMLButtonElement),
+}));
 const relaySettingsView = requireElement("relay-settings-view", HTMLElement);
 const relaySummary = requireElement("relay-summary", HTMLElement);
 const relayStatus = requireElement("relay-status", HTMLElement);
@@ -100,16 +128,14 @@ const relayPairing = requireElement("relay-pairing", HTMLElement);
 const relayQRCode = requireElement("relay-qr", HTMLImageElement);
 const relayPairingLink = requireElement("relay-pairing-link", HTMLElement);
 const relayCopy = requireElement("relay-copy", HTMLButtonElement);
-const googleTab = requireElement("google-tab", HTMLButtonElement);
-const googleSettingsView = requireElement("google-settings-view", HTMLElement);
 const googleSource = requireElement("google-source", HTMLSelectElement);
 const googlePath = requireElement("google-path", HTMLInputElement);
 const googleSave = requireElement("google-save", HTMLButtonElement);
 const googleRemove = requireElement("google-remove", HTMLButtonElement);
 const googleFeedback = requireElement("google-feedback", HTMLElement);
+const googleDraft = requireElement("google-draft", HTMLElement);
 const googleDetection = requireElement("google-detection", HTMLElement);
 const googleScan = requireElement("google-scan", HTMLButtonElement);
-const claudeSettings = requireElement("claude-settings", HTMLElement);
 const claudeConnection = requireElement("claude-connection", HTMLElement);
 const claudeConnect = requireElement("claude-connect", HTMLButtonElement);
 const claudeDisconnect = requireElement("claude-disconnect", HTMLButtonElement);
@@ -162,6 +188,10 @@ let googleActionPending = false;
 let googleRefreshing = false;
 let googleSettingsDirty = false;
 let googleInitialized = false;
+let servicesScanning = false;
+let expandedService: ServiceId | null = null;
+const manuallyOpenedServices = new Set<ServiceId>();
+let claudeOperationError: unknown = null;
 
 let displayedPercentage: number | null = null;
 const meterFill = document.createElement("span");
@@ -356,13 +386,25 @@ function startPreview(initialState: UsageState): void {
     selectedProvider = "claude";
     renderCurrentProvider();
   }
+  googleInitialized = true;
+  claudeInitialized = true;
+  renderClaudeSettings();
+  renderServices();
   const previewPanel = new URLSearchParams(window.location.search).get("panel");
   if (
     previewPanel === "source" ||
     previewPanel === "relay" ||
-    previewPanel === "google"
+    previewPanel === "google" ||
+    previewPanel === "services" ||
+    previewPanel === "claude"
   ) {
-    selectSettingsView(previewPanel);
+    selectSettingsView(previewPanel === "relay" ? "relay" : "services");
+    if (
+      previewPanel === "source" ||
+      previewPanel === "google" ||
+      previewPanel === "claude"
+    )
+      expandService(previewPanel === "source" ? "codex" : previewPanel, false);
     openSourcePanel();
   }
   refreshButton.addEventListener("click", () => {
@@ -377,6 +419,7 @@ function renderUsage(state: UsageState): void {
 }
 
 function renderCurrentProvider(): void {
+  renderServices();
   const providers = companionProviders(
     lastUsageState,
     lastDiagnostic,
@@ -636,7 +679,7 @@ function renderCodexUsage(state: UsageState): void {
     !sourceAutoOpened
   ) {
     sourceAutoOpened = true;
-    selectSettingsView("source");
+    selectSettingsView("services");
     openSourcePanel();
   }
 }
@@ -801,26 +844,31 @@ function renderClaudeUsage(): void {
 function renderClaudeSettings(): void {
   const view = claudeView;
   const visible = claudeIsVisible(view) || view?.connection === "connected";
-  claudeSettings.hidden = !visible;
-  if (!visible) return;
   const connected = view?.connection === "connected";
-  claudeConnection.textContent = claudeConnectionLabel(view);
+  claudeConnection.textContent = visible
+    ? claudeConnectionLabel(view)
+    : t("Install Claude Code, then scan again.");
   claudeConnect.hidden = connected;
   claudeDisconnect.hidden = !connected;
   claudeConnect.disabled =
-    claudeActionPending || view?.connection === "unknown";
+    claudeActionPending || !visible || view?.connection === "unknown";
   claudeDisconnect.disabled = claudeActionPending;
   if (!claudeActionPending)
-    claudeFeedback.textContent = connected
-      ? claudeHasQuota(view)
-        ? t("Claude quota is connected. Credentials stay with Claude Code.")
-        : claudeDetailCopy(view)
-      : "";
+    claudeFeedback.textContent =
+      claudeOperationError !== null
+        ? claudeConnectFailureCopy(claudeOperationError)
+        : connected
+          ? claudeHasQuota(view)
+            ? t("Claude quota is connected. Credentials stay with Claude Code.")
+            : claudeDetailCopy(view)
+          : "";
+  renderServices();
 }
 
 async function saveClaude(connect: boolean): Promise<void> {
   if (claudeActionPending || previewState !== null) return;
   claudeActionPending = true;
+  claudeOperationError = null;
   claudeConnect.disabled = true;
   claudeDisconnect.disabled = true;
   claudeFeedback.textContent = connect
@@ -838,7 +886,8 @@ async function saveClaude(connect: boolean): Promise<void> {
       : t("Disconnected. Your previous status line is restored.");
   } catch (error) {
     claudeActionPending = false;
-    claudeFeedback.textContent = claudeConnectFailureCopy(error);
+    claudeOperationError = error ?? "settingsUnavailable";
+    claudeFeedback.textContent = claudeConnectFailureCopy(claudeOperationError);
   } finally {
     claudeActionPending = false;
     renderClaudeSettings();
@@ -859,7 +908,8 @@ function acceptGoogle(payload: unknown): void {
       : (googleView.settings.source ?? "");
     googlePath.value = googleView.settings.path ?? "";
   }
-  googlePath.disabled = ["", "automatic"].includes(googleSource.value);
+  googlePath.disabled =
+    googleActionPending || ["", "automatic"].includes(googleSource.value);
   googleRemove.hidden =
     googleView.settings.source === null && !googleView.settings.automatic;
   googleDetection.textContent = googleView.settings.source
@@ -868,11 +918,6 @@ function acceptGoogle(payload: unknown): void {
         googleView.settings.source === "cli" ? "AGY CLI" : t("Desktop app"),
       )
     : t("Not detected");
-  googleTab.textContent = googleView.settings.source
-    ? "Antigravity"
-    : t("Services");
-  // This dynamic tab must not be overwritten by a later language refresh.
-  googleTab.removeAttribute("data-i18n");
   if (!googleActionPending)
     googleFeedback.textContent =
       googleView.usage.status === "unavailable"
@@ -1022,7 +1067,101 @@ async function saveGoogle(remove = false): Promise<void> {
   }
 }
 
+function renderServices(): void {
+  googleSave.disabled = googleActionPending || !googleSettingsDirty;
+  googleDraft.hidden = !googleSettingsDirty;
+  const settings = serviceSettings(
+    lastDiagnostic,
+    lastUsageState,
+    googleInitialized ? googleView : null,
+    claudeView,
+  );
+  let visible = 0;
+  for (const state of settings) {
+    const row = serviceRows.find((item) => item.id === state.id)!;
+    const show = state.present || manuallyOpenedServices.has(state.id);
+    if (!show && row.section.contains(document.activeElement))
+      servicesScan.focus();
+    row.section.hidden = !show;
+    row.setup.hidden = show;
+    if (show) visible++;
+    const reading =
+      state.id === "codex"
+        ? sourceActionPending
+        : state.id === "google"
+          ? googleRefreshing || googleActionPending
+          : claudeRefreshing || claudeActionPending;
+    row.status.textContent = t(reading ? "Checking…" : state.label);
+    row.status.dataset.tone = reading ? "reading" : state.tone;
+  }
+  servicesEmpty.hidden = visible > 0;
+  servicesEmpty.textContent =
+    servicesScanning || !googleInitialized || !claudeInitialized
+      ? t("Looking for installed agents…")
+      : t(
+          "No services detected. Open an installed agent and sign in, then scan again.",
+        );
+  servicesMore.hidden = visible === serviceRows.length;
+  servicesMoreLabel.textContent =
+    visible === 0 ? t("Set up a service") : t("Set up another service");
+  servicesScan.disabled =
+    servicesScanning ||
+    sourceActionPending ||
+    googleRefreshing ||
+    googleActionPending ||
+    claudeRefreshing ||
+    claudeActionPending ||
+    previewState !== null;
+  servicesScan.classList.toggle("is-scanning", servicesScanning);
+}
+
+function expandService(id: ServiceId | null, moveFocus = true): void {
+  if (id) manuallyOpenedServices.add(id);
+  expandedService = id;
+  for (const row of serviceRows) {
+    const open = row.id === id;
+    row.toggle.setAttribute("aria-expanded", String(open));
+    row.content.hidden = !open;
+  }
+  renderServices();
+  if (id && moveFocus) {
+    const row = serviceRows.find((item) => item.id === id)!;
+    row.toggle.focus({ preventScroll: true });
+    row.section.scrollIntoView({ block: "nearest" });
+  }
+}
+
+async function scanServices(): Promise<void> {
+  if (servicesScan.disabled) return;
+  servicesScanning = true;
+  servicesFeedback.textContent = t("Looking for installed agents…");
+  renderServices();
+  try {
+    await Promise.all([
+      refreshSourceDiagnostic(),
+      refreshGoogle(true),
+      refreshClaude(true),
+    ]);
+  } finally {
+    servicesScanning = false;
+    servicesFeedback.textContent = t(
+      "Scan finished. Each service shows its current status.",
+    );
+    renderServices();
+  }
+}
+
 function bindSourcePanel(): void {
+  for (const row of serviceRows) {
+    row.toggle.addEventListener("click", () =>
+      expandService(expandedService === row.id ? null : row.id),
+    );
+    row.setup.addEventListener("click", () => {
+      servicesMore.open = false;
+      expandService(row.id);
+    });
+  }
+  servicesScan.addEventListener("click", () => void scanServices());
   focusWindow.addEventListener("click", () => {
     selectedPeriods.set(
       selectedProvider,
@@ -1031,8 +1170,6 @@ function bindSourcePanel(): void {
     renderCurrentProvider();
   });
   googleScan.addEventListener("click", () => void refreshGoogle(true));
-  googleTab.addEventListener("click", () => selectSettingsView("google", true));
-  googleTab.addEventListener("keydown", navigateSettingsTabs);
   googleSave.addEventListener("click", () => void saveGoogle());
   googleRemove.addEventListener("click", () => void saveGoogle(true));
   claudeConnect.addEventListener("click", () => void saveClaude(true));
@@ -1041,9 +1178,11 @@ function bindSourcePanel(): void {
     googleSettingsDirty = true;
     googlePath.value = "";
     googlePath.disabled = ["", "automatic"].includes(googleSource.value);
+    renderServices();
   });
   googlePath.addEventListener("input", () => {
     googleSettingsDirty = true;
+    renderServices();
   });
   installCommand.textContent = officialInstallCommand();
 
@@ -1064,13 +1203,13 @@ function bindSourcePanel(): void {
   sourceReset.addEventListener("click", () => {
     void useAutomaticDetection();
   });
-  sourceTab.addEventListener("click", () => {
-    selectSettingsView("source", true);
+  servicesTab.addEventListener("click", () => {
+    selectSettingsView("services", true);
   });
   relayTab.addEventListener("click", () => {
     selectSettingsView("relay", true);
   });
-  sourceTab.addEventListener("keydown", navigateSettingsTabs);
+  servicesTab.addEventListener("keydown", navigateSettingsTabs);
   relayTab.addEventListener("keydown", navigateSettingsTabs);
   relayConnect.addEventListener("click", () => {
     void createRelayPairing();
@@ -1104,7 +1243,7 @@ function openSourcePanel(): void {
     surface.inert = true;
   settingsButton.setAttribute("aria-expanded", "true");
   sourceClose.focus();
-  if (!sourceSettingsView.hidden && sourceRuntime !== null) {
+  if (!servicesSettingsView.hidden && sourceRuntime !== null) {
     void refreshSourceDiagnostic();
   }
   if (!relaySettingsView.hidden && relayRuntime !== null) {
@@ -1128,26 +1267,21 @@ function closeSourcePanel(): void {
 }
 
 function selectSettingsView(
-  view: "source" | "relay" | "google",
+  view: "services" | "relay",
   moveFocus = false,
 ): void {
-  const showSource = view === "source";
-  sourceSettingsView.hidden = !showSource;
+  const showServices = view === "services";
+  servicesSettingsView.hidden = !showServices;
   relaySettingsView.hidden = view !== "relay";
-  googleSettingsView.hidden = view !== "google";
-  const selectedTab = showSource
-    ? sourceTab
-    : view === "relay"
-      ? relayTab
-      : googleTab;
-  for (const tab of [sourceTab, googleTab, relayTab]) {
+  const selectedTab = showServices ? servicesTab : relayTab;
+  for (const tab of [servicesTab, relayTab]) {
     tab.setAttribute("aria-selected", String(tab === selectedTab));
     tab.tabIndex = tab === selectedTab ? 0 : -1;
   }
   if (moveFocus) {
     selectedTab.focus();
   }
-  if (showSource) {
+  if (showServices) {
     pausePairingPoll();
     void refreshSourceDiagnostic();
   } else if (view === "relay") {
@@ -1160,15 +1294,16 @@ function navigateSettingsTabs(event: KeyboardEvent): void {
     return;
   }
   event.preventDefault();
-  const tabs = [sourceTab, googleTab, relayTab];
+  const tabs = [servicesTab, relayTab];
   const index = tabs.indexOf(event.currentTarget as HTMLButtonElement);
   const next =
     event.key === "Home"
       ? 0
       : event.key === "End"
-        ? 2
-        : (index + (event.key === "ArrowLeft" ? 2 : 1)) % 3;
-  const view = (["source", "google", "relay"] as const)[next];
+        ? tabs.length - 1
+        : (index + (event.key === "ArrowLeft" ? tabs.length - 1 : 1)) %
+          tabs.length;
+  const view = (["services", "relay"] as const)[next];
   if (view) selectSettingsView(view, true);
 }
 
@@ -1283,6 +1418,7 @@ function setSourceControlsDisabled(disabled: boolean): void {
   sourceChoose.disabled = disabled;
   sourceScan.disabled = disabled;
   sourceReset.disabled = disabled;
+  renderServices();
 }
 
 function refreshRelayStatus(): Promise<void> {

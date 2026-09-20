@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.27` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.27`;
-- Android candidate: `versionCode 23` (Google Play submission is separate);
+- prepared product tag: `v0.1.28` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.28`;
+- Android candidate: `versionCode 24` (Google Play submission is separate);
 - recorded iOS source version: `1.1.0 (9)`, adding Antigravity to the app and
   widgets. This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
@@ -55,7 +55,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.27`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.28`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -139,16 +139,36 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.25 -m "Statusline 0.1.25 beta"
-git push origin v0.1.25
+git tag -s v0.1.28 -m "Statusline 0.1.28 beta"
+git push origin v0.1.28
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
 targets the exact workflow commit and matches `release.json`. The signed tag is the release
 approval: after every build, trust, inventory, checksum and provenance gate passes, the
-draft is published automatically with GitHub's **Pre-release** flag.
+draft is published automatically according to `distribution.publishPrerelease`.
+The current profile publishes a normal GitHub release marked **Latest**.
 
-### 0.1.25 candidate gates
+### 0.1.28 candidate gates
+
+- Verify the unified Services tab in EN/ES and English fallback, with zero,
+  one and multiple installed agents. Preserve discovery, saved paths, disabled
+  services, pending edits and Claude bridge connect/disconnect errors. Mobile
+  sync remains a separate tab; no relay or updater protocol changes are required.
+- Publish Windows, Linux, macOS and Android from the same signed tag only after
+  CI and the manual Release preflight pass. Preserve the unsigned Windows
+  disclosure and all other signature, notarization and provenance gates.
+- iOS source removes manual quota input while preserving pairing links, local
+  demo and existing caches. Its app, widget and test sources were typechecked;
+  native build/UI execution is pending because the local Xcode installation
+  lacks the required iOS platform component. This GitHub release does not
+  distribute that iOS change: restore the build environment, validate on device,
+  refresh screenshots and increment iOS metadata before a separate TestFlight
+  submission. The recorded `1.1.0 (9)` is unchanged, not a new upload.
+- Website copy and store drafts no longer advertise manual quota input. No
+  website, relay, Google Play or App Store deployment is performed by this release.
+
+### Historical 0.1.25 candidate gates
 
 - Validate the [optional services extension](../../protocol/statusline-services-v1.md)
   with real SQLite migrations, old/new readers and publishers, atomic sequences,

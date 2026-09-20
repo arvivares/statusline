@@ -28,7 +28,7 @@ DE UN VISTAZO
 
 FUNCIONA DE FORMA INDEPENDIENTE
 
-Prueba la demo integrada de Codex sin cuenta ni conexión. También puedes pegar la línea de cuota semanal de /status en Codex y guardarla localmente para actualizar la app y el widget. Las muestras manuales solo cambian cuando las actualizas; Antigravity requiere sincronizar con Companion.
+Prueba la demo integrada de Codex sin cuenta ni conexión. Empareja con Statusline Companion para recibir tu consumo en la app y el widget. La demo es un ejemplo local fijo, no datos reales de tu cuenta.
 
 SINCRONIZACIÓN PRIVADA OPCIONAL
 

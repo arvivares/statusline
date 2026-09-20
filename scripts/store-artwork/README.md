@@ -14,11 +14,12 @@ Open [the gallery](index.html) to review both languages. Open [the artwork](stil
 
 ## Source integrity
 
-- Current iOS sources: `apps/apple/store/assets/still-focus/source/{locale}/`.
+- Archived iOS sources: `apps/apple/store/assets/still-focus/source/{locale}/`.
 - Production UI source: `09e9814b560e8b12934085a12a18f0ddaf21efe8` (v0.1.20), with iOS version metadata 1.0.3 (8). Only the UI-test harness was added for capture.
 - Device: dedicated, unpaired **Statusline README QA**, iPhone 17 Pro simulator, iOS 26.3.1 (`23D8133`). Never run the harness against a physical or paired device.
-- `StillFocusScreenshotTests` uses the public demo/manual controls and XCTest attachments. Native sources are 1206 × 2622, including Home Screen evidence cropped by the artwork to show the actual widget. The source PNGs are unretouched.
-- Artwork uses proportional framing and explicit view-detail crops; no app controls, figures, connection status or OS chrome are fabricated. The manual `/status` example is the original English protocol string, including in Spanish UI.
+- These archived captures used the public demo/manual controls and XCTest attachments. Native sources are 1206 × 2622, including Home Screen evidence cropped by the artwork to show the actual widget. The source PNGs are unretouched.
+- The current `StillFocusScreenshotTests` harness uses only the fixed local demo and private-sync controls. The manual quota editor has been removed from iOS: recapture before presenting this historical artwork as a current build. The archived manual `/status` example is the original English protocol string, including in Spanish UI.
+- Artwork uses proportional framing and explicit view-detail crops; no app controls, figures, connection status or OS chrome are fabricated.
 - The artwork is not evidence of physical-device background-sync QA. Widget refresh is OS-managed, not guaranteed real-time.
 - Privacy copy distinguishes encrypted quota snapshots from credentials. No encryption key, Codex password, API key or live pairing QR appears in any image.
 

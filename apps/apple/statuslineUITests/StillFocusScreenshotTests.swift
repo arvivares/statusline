@@ -44,25 +44,13 @@ final class StillFocusScreenshotTests: XCTestCase {
             "Refusing to alter a paired or incorrectly signed simulator.")
 
         let demo = app.buttons[es ? "Ver demo local" : "View local demo"]
-        if demo.exists { demo.tap() }
-        let manual = app.buttons.matching(NSPredicate(format: "label CONTAINS %@",
-            es ? "Actualización manual" : "Manual update")).firstMatch
-        reveal(manual, app: app)
-        manual.tap()
-        let example = app.buttons[es ? "Usar ejemplo" : "Use example"]
-        reveal(example, app: app)
-        example.tap()
-        let save = app.buttons[es ? "Guardar en este dispositivo" : "Save on this device"]
-        reveal(save, app: app)
-        save.tap()
-        XCTAssertTrue(app.staticTexts[es ? "Widget local actualizado. El relay no fue modificado."
-            : "Local widget updated. The relay was not changed."].waitForExistence(timeout: 5))
-        retain(app, "\(language)-04-local-update")
-
-        reveal(manual, app: app, upwards: true)
-        manual.tap()
+        if demo.exists {
+            reveal(demo, app: app)
+            demo.tap()
+        }
         top(app)
         let quota = app.descendants(matching: .any)["weeklyQuotaValue"]
+        XCTAssertTrue(quota.waitForExistence(timeout: 5))
         XCTAssertEqual(quota.value as? String, es ? "70 por ciento restante" : "70 percent remaining")
         retain(app, "\(language)-01-quota")
 

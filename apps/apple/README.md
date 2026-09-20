@@ -9,6 +9,11 @@ Proyecto Xcode con la app reader de iPhone, su widget WidgetKit y un publisher S
 - `StatuslineCompanion`: companion nativo de barra de menú para macOS.
 - `statuslineTests` y `statuslineUITests`: pruebas de la app móvil.
 
+La app móvil recibe el consumo desde Companion; no permite pegar un `/status`
+manualmente. Conserva la demo local sin cuenta y el vínculo privado como alternativa
+al QR de emparejamiento. Retirar el editor no borra las muestras guardadas ni cambia
+el protocolo del relay o el emparejamiento existente.
+
 ## Desarrollo
 
 Abre `statusline.xcodeproj` con una versión actual de Xcode. En **Project → Build Settings** (no en un target individual), asigna `STATUSLINE_RELAY_BASE_URL` al mismo origen usado por desktop y Android. App, widget y companion SwiftUI heredan ese valor para Debug y Release; Debug admite loopback y Release requiere HTTPS. Para una compilación puntual también puedes pasar `STATUSLINE_RELAY_BASE_URL=https://tu-relay.example` a `xcodebuild`.
