@@ -26,7 +26,7 @@ final class AgentStoreScreenshotTests: XCTestCase {
         springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.65))
             .press(forDuration: 0.05, thenDragTo: springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.65)))
         let widget = springboard.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", "Gemini")).firstMatch
+            .matching(NSPredicate(format: "label CONTAINS %@", "Antigravity")).firstMatch
         XCTAssertTrue(widget.waitForExistence(timeout: 10), "A medium Statusline widget must be on Home Screen page 2.")
         retain(springboard, "\(language)-04-widget")
     }
