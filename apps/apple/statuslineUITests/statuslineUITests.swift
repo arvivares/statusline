@@ -16,6 +16,7 @@ final class statuslineUITests: XCTestCase {
     @MainActor
     func testLocalDemoIsAvailableWithoutPairing() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-AppleLanguages", "(es)", "-AppleLocale", "es_ES"]
         app.launch()
 
         let demoButton = app.buttons["Ver demo local"]
@@ -40,7 +41,16 @@ final class statuslineUITests: XCTestCase {
     @MainActor
     func testPairingSheetOffersManualFallback() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-AppleLanguages", "(es)", "-AppleLocale", "es_ES"]
         app.launch()
+        try XCTSkipUnless(app.staticTexts["SIN VÍNCULO"].waitForExistence(timeout: 5),
+            "Pairing UI checks require an unpaired installation.")
+
+        let sync = app.buttons["Sincronización privada"]
+        if sync.exists {
+            scrollToHittable(sync, in: app)
+            sync.tap()
+        }
 
         let scanButton = app.buttons["Escanear QR"]
         XCTAssertTrue(scanButton.waitForExistence(timeout: 5))
@@ -49,6 +59,7 @@ final class statuslineUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Conecta este dispositivo"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Cancelar"].exists)
+        XCTAssertTrue(app.textFields["statusline://pair?…"].exists)
 
         let screenshot = XCTAttachment(screenshot: app.screenshot())
         screenshot.name = "Statusline private pairing"
@@ -57,21 +68,35 @@ final class statuslineUITests: XCTestCase {
     }
 
     @MainActor
-    func testManualInputIsReviewable() throws {
+    func testEnglishStatusInputIsAbsent() {
+        verifyStatusInputIsAbsent(language: "en", locale: "en_US")
+    }
+
+    @MainActor
+    func testSpanishStatusInputIsAbsent() {
+        verifyStatusInputIsAbsent(language: "es", locale: "es_ES")
+    }
+
+    @MainActor
+    private func verifyStatusInputIsAbsent(language: String, locale: String) {
+        let spanish = language == "es"
         let app = XCUIApplication()
+        app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", locale]
         app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.staticTexts["Statusline"].waitForExistence(timeout: 5))
 
-        let manualInput = app.buttons["FALLBACK.INPUT, Actualización manual"]
-        XCTAssertTrue(manualInput.waitForExistence(timeout: 5))
-        scrollToHittable(manualInput, in: app)
-        manualInput.tap()
-
-        XCTAssertTrue(app.buttons["Usar ejemplo"].waitForExistence(timeout: 5))
-
-        let screenshot = XCTAttachment(screenshot: app.screenshot())
-        screenshot.name = "Statusline local control"
-        screenshot.lifetime = .keepAlways
-        add(screenshot)
+        // Check both the overview and the bottom of the scroll view, where the
+        // retired editor lived. Pairing links remain in their separate sheet.
+        for _ in 0..<5 {
+            XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS %@",
+                spanish ? "Actualización manual" : "Manual update")).firstMatch.exists)
+            XCTAssertFalse(app.textFields[spanish ? "Línea de estado de Codex" : "Codex status line"].exists)
+            XCTAssertFalse(app.buttons[spanish ? "Guardar en este dispositivo" : "Save on this device"].exists)
+            app.swipeUp()
+        }
+        XCTAssertTrue(app.buttons[spanish ? "Privacidad" : "Privacy"].isHittable)
+        XCTAssertTrue(app.buttons[spanish ? "Soporte" : "Support"].isHittable)
     }
 
     @MainActor

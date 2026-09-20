@@ -45,10 +45,29 @@ Existing store screenshots are not evidence that the design has shipped there.
 ### Companion settings
 
 Settings extends the same 340 × 500 surface as the quota view. It uses a simple
-header, unboxed **Codex / Services / Mobile sync** tabs (Services becomes
-Antigravity when detected), sentence-case labels, aligned rows
+header, two stable, unboxed **Services / Mobile sync** tabs, sentence-case labels, aligned rows
 and 36 px rounded actions. The active tab has a restrained gold underline.
 No legacy telemetry labels or nested grid panels are shown.
+
+Services groups Codex, Antigravity (Google/Gemini) and Claude Code in independent,
+unboxed accordion rows. Each row shows the agent, its vendor and an explicit
+state: detected, quota available, sign-in required, waiting for a response or
+needs attention. A detected executable or connected Claude bridge alone is not
+evidence of an available quota. Only one row is expanded at a time; the overview
+starts collapsed so all detected services fit the compact window.
+
+Only detected or explicitly configured sources appear initially. Broken saved
+paths remain manageable. **Set up another service** reveals custom installation
+and disabled-service entry points on request; it never enables an agent by
+itself. The scan action refreshes all adapters using their existing commands.
+Background reports retain the open section and any unsaved Antigravity fields.
+An unsaved-changes hint appears until the source is saved; Save is inactive
+while there is no edit to apply. Claude connection errors survive background
+reports and are translated again if the system language changes.
+Executable overrides are under **Advanced settings**. Claude's configuration
+change is explained before Connect, with protocol details under **How it works**.
+Mobile sync retains its independent QR and pairing controls. No account,
+discovery, refresh scheduling or relay protocol changes are made by this layout.
 
 Executable paths wrap in a small monospace face. Setup guidance is a native
 disclosure, collapsed for a verified runtime and opened when the source is
@@ -59,7 +78,7 @@ QR credentials, expiry and polling
 behavior are unchanged.
 
 Tab/Shift-Tab stays within the visible controls, including disclosures; arrow
-keys switch tabs and Escape restores the previous focus. The underlying quota
+keys switch tabs, Enter/Space toggle service sections and Escape restores the previous focus. The underlying quota
 view is inert while Settings is open. EN/ES labels use the shared catalog.
 
 ### Shared quota behavior
@@ -93,9 +112,11 @@ and manually selected sources from 0.1.22 survive the upgrade. Temporary failure
 stay explicit. Antigravity never inherits Codex's mobile-sync indicator.
 The [delivery contract](antigravity-companion.md) defers mobile/provider manifests.
 
-Refresh, pairing, manual fallback on iOS, local demos, legal links and updater
-controls remain available. Advanced mobile sync controls are disclosed below the
-main reading. The Android widget stays 4 × 1 by default and retains resize support.
+Refresh, QR pairing, private pairing links, local demos, legal links and updater
+controls remain available. Neither mobile app accepts pasted quota/status text;
+live usage comes from Companion sync. The local demo is a fixed example and does
+not overwrite a paired account. Advanced mobile sync controls are disclosed below
+the main reading. The Android widget stays 4 × 1 by default and retains resize support.
 Sample age is displayed rather than labeling a cached Android snapshot “LIVE”.
 System language remains English/Spanish, with English fallback.
 
@@ -126,6 +147,14 @@ Use `npm run check` and `npm test` in `apps/desktop`; meter tests cover 0,
 fractional, exact-boundary, 100 and out-of-range values. Browser preview routes
 (`?preview=ready&lang=es`, `?preview=error&lang=en`, and `&panel=relay`) use
 isolated sample data, never a real account.
+
+For the Services overview use
+`?preview=ready&google=ready&claude=detected&panel=services&lang=es`;
+`panel=source`, `panel=google` and `panel=claude` expand the corresponding section.
+Remove the provider parameters to review the single-service layout. Repeat in
+English at 340 × 500. UI interaction checks should also cover a background
+report while editing, a failed Claude connection, disabled-service recovery,
+tab arrow navigation, accordion Enter/Space, focus trapping and Escape.
 
 Android `:app:testDebugUnitTest` compiles the Kotlin and resources and tests
 terminal-stripe/layout policies. Swift app and widget type-checking use the

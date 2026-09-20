@@ -1,6 +1,6 @@
 import XCTest
 
-/// Real app captures, using only the public demo/manual controls on an unpaired simulator.
+/// Real app captures, using only the public demo/sync controls on an unpaired simulator.
 /// Run this class explicitly; it never pairs, signs in, or modifies a physical phone.
 @MainActor
 final class StoreScreenshotTests: XCTestCase {
@@ -28,7 +28,8 @@ final class StoreScreenshotTests: XCTestCase {
 
         let scan = app.buttons[spanish ? "Escanear QR" : "Scan QR"]
         // A paired simulator must not be disconnected or overwritten for a screenshot.
-        try XCTSkipUnless(scan.waitForExistence(timeout: 10), "Use a clean, unpaired simulator.")
+        try XCTSkipUnless(app.staticTexts[spanish ? "SIN VÍNCULO" : "UNPAIRED"]
+            .waitForExistence(timeout: 10), "Use a clean, unpaired simulator.")
 
         let demo = app.buttons[spanish ? "Ver demo local" : "View local demo"]
         if demo.exists {
@@ -36,27 +37,6 @@ final class StoreScreenshotTests: XCTestCase {
             demo.tap()
         }
 
-        let manual = app.buttons.matching(NSPredicate(
-            format: "label CONTAINS %@", spanish ? "Actualización manual" : "Manual update"
-        )).firstMatch
-        XCTAssertTrue(manual.waitForExistence(timeout: 5))
-        reveal(manual, in: app)
-        manual.tap()
-
-        let example = app.buttons[spanish ? "Usar ejemplo" : "Use example"]
-        XCTAssertTrue(example.waitForExistence(timeout: 5))
-        reveal(example, in: app)
-        example.tap()
-        let save = app.buttons[spanish ? "Guardar en este dispositivo" : "Save on this device"]
-        reveal(save, in: app)
-        save.tap()
-        XCTAssertTrue(app.staticTexts[spanish
-            ? "Widget local actualizado. El relay no fue modificado."
-            : "Local widget updated. The relay was not changed."].waitForExistence(timeout: 5))
-
-        // Collapse the editor and return to the quota overview.
-        reveal(manual, in: app, upwards: true)
-        manual.tap()
         for _ in 0..<4 { app.swipeDown() }
         let quota = app.descendants(matching: .any)["weeklyQuotaValue"]
         XCTAssertTrue(quota.waitForExistence(timeout: 5))
@@ -64,16 +44,11 @@ final class StoreScreenshotTests: XCTestCase {
             spanish ? "70 por ciento restante" : "70 percent remaining")
         retain(app, "\(language)-01-weekly-quota")
 
-        reveal(manual, in: app)
-        manual.tap()
-        reveal(save, in: app)
-        // Retain the scrolled editor for visual QA. A successful UI test alone
-        // does not qualify an attachment for the store: inspect safe-area overlap.
-        app.swipeUp()
-        retain(app, "\(language)-02-manual-update")
-
-        for _ in 0..<4 { app.swipeDown() }
+        let sync = app.buttons[spanish ? "Sincronización privada" : "Private sync"]
+        reveal(sync, in: app)
+        sync.tap()
         reveal(scan, in: app)
+        retain(app, "\(language)-02-private-sync")
         scan.tap()
         XCTAssertTrue(app.staticTexts[spanish ? "Conecta este dispositivo" : "Connect this device"]
             .waitForExistence(timeout: 5))

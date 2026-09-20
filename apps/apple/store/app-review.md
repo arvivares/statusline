@@ -38,13 +38,14 @@ To review without external setup:
 2. Tap "View local demo" / "Ver demo local" in the first quota panel.
 3. The app stores a 70% example locally and updates the widget.
 4. Add the Statusline widget from the iPhone Home Screen.
-   The manual editor under "Manual update" / "Actualización manual" also accepts a complete weekly-limit line.
+
+The demo is a fixed local example. Live usage comes from Companion sync; the app does not accept pasted quota/status text. Pasting a private pairing link remains available as an alternative to scanning the QR.
 
 Optional live sync:
 
 1. Have a compatible local Codex installation signed in to your own account. Companion can discover a supported desktop app's bundled runtime; a separate CLI install is not always required.
 2. Run the free Statusline Companion on Windows, Linux or macOS.
-3. Select Connections > Codex Source, then Universal Relay > Create pairing.
+3. Open Companion Settings > Services to check the detected source, then Mobile sync > Create pairing.
 4. On iPhone tap "Scan QR" / "Escanear QR" and scan the temporary QR code, or paste its private link.
 5. Keep the computer awake and Companion running to publish samples. The iPhone and widget read the latest encrypted sample independently; iOS chooses widget update times.
 

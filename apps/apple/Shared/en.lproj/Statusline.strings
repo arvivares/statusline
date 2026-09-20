@@ -29,6 +29,7 @@
 "ACCOUNT.CONTROL" = "ACCOUNT.CONTROL";
 "ACCOUNT.PLAN" = "ACCOUNT.PLAN";
 "Add service" = "Add service";
+"Advanced settings" = "Advanced settings";
 "AES-256-GCM · 30 DAY TTL" = "AES-256-GCM · 30 DAY TTL";
 "AES-256-GCM · UNIVERSAL" = "AES-256-GCM · UNIVERSAL";
 "Agent usage" = "Agent usage";
@@ -129,7 +130,6 @@
 "CODEX SESSION LOCAL" = "CODEX SESSION LOCAL";
 "CODEX SOURCE" = "CODEX SOURCE";
 "Codex Status" = "Codex Status";
-"Codex status line" = "Codex status line";
 "Codex usage" = "Codex usage";
 "Codex was detected automatically. Check the saved path in settings." = "Codex was detected automatically. Check the saved path in settings.";
 "Codex was found but could not be verified. Check its permissions or select another executable." = "Codex was found but could not be verified. Check its permissions or select another executable.";
@@ -152,7 +152,9 @@
 "Connect Codex" = "Connect Codex";
 "CONNECT COMPANION" = "CONNECT COMPANION";
 "Connect device" = "Connect device";
+"Connect once, then use Claude Code as usual. Quota updates after a response." = "Connect once, then use Claude Code as usual. Quota updates after a response.";
 "Connect this device" = "Connect this device";
+"Connect to read quota" = "Connect to read quota";
 "Connect with Codex" = "Connect with Codex";
 "Connect your Codex account to get started." = "Connect your Codex account to get started.";
 "Connected" = "Connected";
@@ -211,12 +213,14 @@
 "DESKTOP APP" = "DESKTOP APP";
 "Desktop companion" = "Desktop companion";
 "Details" = "Details";
+"Detected" = "Detected";
 "Detected source: {0}" = "Detected source: {0}";
 "Detected via" = "Detected via";
 "Device connected with encryption." = "Device connected with encryption.";
 "Device connected. Waiting for the companion’s first sample." = "Device connected. Waiting for the companion’s first sample.";
 "Device connected. Waiting for the first publication." = "Device connected. Waiting for the first publication.";
 "DEVICE.PAIRING" = "DEVICE.PAIRING";
+"Disable service" = "Disable service";
 "Disabled" = "Disabled";
 "Disconnect" = "Disconnect";
 "DISCONNECT" = "DISCONNECT";
@@ -244,9 +248,9 @@
 "Executable path" = "Executable path";
 "Executable path (optional)" = "Executable path (optional)";
 "EXECUTABLE.PATH" = "EXECUTABLE.PATH";
-"FALLBACK.INPUT" = "FALLBACK.INPUT";
 "FAULT" = "FAULT";
 "Focused service: {0}" = "Focused service: {0}";
+"For custom installations or services you disabled." = "For custom installations or services you disabled.";
 "Gemini sync requires an updated relay and iOS app. Android continues showing Codex." = "Gemini sync requires an updated relay and iOS app. Android continues showing Codex.";
 "Gemini weekly limit" = "Gemini weekly limit";
 "Generating independent read/write credentials." = "Generating independent read/write credentials.";
@@ -254,9 +258,11 @@
 "Google quota is connected. Credentials stay with Antigravity." = "Google quota is connected. Credentials stay with Antigravity.";
 "Google quota is unavailable. No remaining limit has been assumed." = "Google quota is unavailable. No remaining limit has been assumed.";
 "Google quota unavailable" = "Google quota unavailable";
+"How it works" = "How it works";
 "How private sync works" = "How private sync works";
 "INDEPENDENT" = "INDEPENDENT";
 "Install Antigravity or choose the path to its native runtime." = "Install Antigravity or choose the path to its native runtime.";
+"Install Claude Code, then scan again." = "Install Claude Code, then scan again.";
 "Install Codex CLI, run codex and sign in with ChatGPT before refreshing." = "Install Codex CLI, run codex and sign in with ChatGPT before refreshing.";
 "Install Codex or select its executable manually." = "Install Codex or select its executable manually.";
 "Install the DEB or RPM from the official release page using your package manager." = "Install the DEB or RPM from the official release page using your package manager.";
@@ -290,11 +296,11 @@
 "Local sample to explore the app and widget. No network or Codex account is used." = "Local sample to explore the app and widget. No network or Codex account is used.";
 "Local source" = "Local source";
 "LOCAL TIME" = "LOCAL TIME";
-"Local widget updated. The relay was not changed." = "Local widget updated. The relay was not changed.";
 "Looking for a new official release." = "Looking for a new official release.";
+"Looking for installed agents…" = "Looking for installed agents…";
 "Looking for the latest encrypted snapshot…" = "Looking for the latest encrypted snapshot…";
-"Manual update" = "Manual update";
 "Mobile sync" = "Mobile sync";
+"Needs attention" = "Needs attention";
 "New version" = "New version";
 "NEXT WEEKLY WINDOW" = "NEXT WEEKLY WINDOW";
 "No active QR" = "No active QR";
@@ -308,11 +314,13 @@
 "NO ENDPOINT" = "NO ENDPOINT";
 "NO NETWORK" = "NO NETWORK";
 "No percentage followed by ‘% left’ was found." = "No percentage followed by ‘% left’ was found.";
+"No plan quota" = "No plan quota";
 "No quota sample" = "No quota sample";
 "No quota sample available" = "No quota sample available";
 "NO SAMPLE" = "NO SAMPLE";
 "No sample published" = "No sample published";
 "NO SAMPLE PUBLISHED" = "NO SAMPLE PUBLISHED";
+"No services detected. Open an installed agent and sign in, then scan again." = "No services detected. Open an installed agent and sign in, then scan again.";
 "No services to show. Open Statusline Companion on your computer." = "No services to show. Open Statusline Companion on your computer.";
 "NO SHORT WINDOW" = "NO SHORT WINDOW";
 "No Statusline data. Tap to open the app and connect a companion." = "No Statusline data. Tap to open the app and connect a companion.";
@@ -354,8 +362,6 @@
 "Pairing…" = "Pairing…";
 "PAIRING…" = "PAIRING…";
 "PAIRING.LINK" = "PAIRING.LINK";
-"Paste the Codex status line first." = "Paste the Codex status line first.";
-"Paste the complete line returned by /status in Codex." = "Paste the complete line returned by /status in Codex.";
 "Paste the link shown by Statusline Companion first." = "Paste the link shown by Statusline Companion first.";
 "plan quota not reported" = "plan quota not reported";
 "PLANE / 010" = "PLANE / 010";
@@ -381,6 +387,7 @@
 "QR expires {0}" = "QR expires {0}";
 "QR EXPIRES {0}" = "QR EXPIRES {0}";
 "Quit" = "Quit";
+"Quota available" = "Quota available";
 "Quota period" = "Quota period";
 "Quota updates while a Claude Code session is open and after it receives a response. Pro and Max report five-hour and weekly windows; Enterprise seats may report only the five-hour window; API-key sessions report none." = "Quota updates while a Claude Code session is open and after it receives a response. Pro and Max report five-hour and weekly windows; Enterprise seats may report only the five-hour window; API-key sessions report none.";
 "Quotas from your Companion. The small widget follows the service selected in Statusline." = "Quotas from your Companion. The small widget follows the service selected in Statusline.";
@@ -394,6 +401,7 @@
 "Reading local session" = "Reading local session";
 "Reading usage windows through Codex App Server." = "Reading usage windows through Codex App Server.";
 "Reading your Codex weekly limit…" = "Reading your Codex weekly limit…";
+"Reads your Google model quotas from Antigravity." = "Reads your Google model quotas from Antigravity.";
 "READY" = "READY";
 "Ready to pair" = "Ready to pair";
 "READY TO PAIR" = "READY TO PAIR";
@@ -443,12 +451,13 @@
 "Run codex login and refresh the meter." = "Run codex login and refresh the meter.";
 "SAMPLE" = "SAMPLE";
 "SAMPLED {0} · CODEX LOCAL" = "SAMPLED {0} · CODEX LOCAL";
-"Save on this device" = "Save on this device";
 "Save source" = "Save source";
 "Saved path" = "Saved path";
 "SAVED PATH" = "SAVED PATH";
 "Scan again" = "Scan again";
 "SCAN AGAIN" = "SCAN AGAIN";
+"Scan finished. Each service shows its current status." = "Scan finished. Each service shows its current status.";
+"Scan for services" = "Scan for services";
 "Scan on mobile" = "Scan on mobile";
 "SCAN ON MOBILE" = "SCAN ON MOBILE";
 "Scan QR" = "Scan QR";
@@ -473,12 +482,15 @@
 "Services" = "Services";
 "SESSION STAYS ON MAC" = "SESSION STAYS ON MAC";
 "SESSION.STORAGE" = "SESSION.STORAGE";
+"Set up a service" = "Set up a service";
+"Set up another service" = "Set up another service";
 "Set up Codex" = "Set up Codex";
 "Settings" = "Settings";
 "Short window" = "Short window";
 "SHORT.WINDOW" = "SHORT.WINDOW";
 "Show" = "Show";
 "Show this service in the main view and small widget" = "Show this service in the main view and small widget";
+"Sign in required" = "Sign in required";
 "Sign in to Codex in your desktop app or CLI, then refresh." = "Sign in to Codex in your desktop app or CLI, then refresh.";
 "Sign in to the selected Antigravity source, then refresh." = "Sign in to the selected Antigravity source, then refresh.";
 "SOURCE" = "SOURCE";
@@ -567,6 +579,7 @@
 "This device was disconnected from the relay." = "This device was disconnected from the relay.";
 "This is the latest version of Statusline Companion." = "This is the latest version of Statusline Companion.";
 "This private QR has expired. Create a new pairing when the mobile device is ready." = "This private QR has expired. Create a new pairing when the mobile device is ready.";
+"This updates Claude Code’s status line configuration. Your current status line is preserved." = "This updates Claude Code’s status line configuration. Your current status line is preserved.";
 "Too many requests. Wait a moment before trying again." = "Too many requests. Wait a moment before trying again.";
 "Unavailable" = "Unavailable";
 "UNAVAILABLE" = "UNAVAILABLE";
@@ -575,6 +588,7 @@
 "UNIVERSAL RELAY" = "UNIVERSAL RELAY";
 "UNIVERSAL.RELAY" = "UNIVERSAL.RELAY";
 "UNPAIRED" = "UNPAIRED";
+"Unsaved changes" = "Unsaved changes";
 "Unsupported Codex state" = "Unsupported Codex state";
 "Up to date" = "Up to date";
 "Update AGY CLI to version 1.1.11 or newer in the 1.x series." = "Update AGY CLI to version 1.1.11 or newer in the 1.x series.";
@@ -590,7 +604,6 @@
 "Use automatic detection" = "Use automatic detection";
 "USE AUTOMATIC DETECTION" = "USE AUTOMATIC DETECTION";
 "Use device code" = "Use device code";
-"Use example" = "Use example";
 "Use the absolute path to agy, agy.exe, or the desktop language_server executable." = "Use the absolute path to agy, agy.exe, or the desktop language_server executable.";
 "Validating the encrypted pairing with the relay…" = "Validating the encrypted pairing with the relay…";
 "Verified" = "Verified";
@@ -610,6 +623,7 @@
 "VOLTA" = "VOLTA";
 "WAITING" = "WAITING";
 "Waiting for a fresh sample" = "Waiting for a fresh sample";
+"Waiting for a response" = "Waiting for a response";
 "Waiting for authorization" = "Waiting for authorization";
 "Waiting for local sample" = "Waiting for local sample";
 "WAITING FOR LOCAL SAMPLE" = "WAITING FOR LOCAL SAMPLE";
@@ -627,4 +641,5 @@
 "WORKING" = "WORKING";
 "Writing Claude Code status line…" = "Writing Claude Code status line…";
 "You're up to date" = "You're up to date";
+"Your agents, detected automatically." = "Your agents, detected automatically.";
 "Your services" = "Your services";

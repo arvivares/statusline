@@ -3,7 +3,6 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var viewModel = CodexStatusViewModel()
-    @State private var isManualUpdateExpanded = false
     @State private var isPairingPresented = false
     @State private var isSyncExpanded = false
 
@@ -40,15 +39,13 @@ struct ContentView: View {
                         .padding(.vertical, 8)
                     }
 
-                    ManualUpdatePanel(
-                        isExpanded: $isManualUpdateExpanded,
-                        sourceText: $viewModel.sourceText,
-                        feedback: viewModel.feedback,
-                        isUpdating: viewModel.isManualUpdateInProgress,
-                        onPaste: viewModel.acceptPastedText,
-                        onRestoreExample: viewModel.restoreExample,
-                        onUpdate: updateStatus
-                    )
+                    if let feedback = viewModel.feedback {
+                        Label(feedback.message, systemImage: feedback.systemImage)
+                            .font(.caption)
+                            .foregroundStyle(feedback.isError ? DataPlaneTheme.critical : DataPlaneTheme.signal)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityIdentifier("statusFeedback")
+                    }
 
                     StatuslineLegalFooter(
                         privacyURL: StatuslinePublicPage.url(path: "privacy"),
@@ -99,14 +96,9 @@ struct ContentView: View {
         }
     }
 
-    private func updateStatus() {
-        viewModel.updateStatus()
-    }
-
     private func loadLocalDemo() {
         viewModel.loadLocalDemo()
     }
-
 }
 
 private enum StatuslinePublicPage {
@@ -341,110 +333,6 @@ private struct UniversalRelayPanel: View {
                 .buttonStyle(DataPlaneSecondaryButtonStyle())
                 .disabled(state == .syncing)
         }
-    }
-}
-
-private struct ManualUpdatePanel: View {
-    @Binding var isExpanded: Bool
-    @Binding var sourceText: String
-    let feedback: CodexStatusFeedback?
-    let isUpdating: Bool
-    let onPaste: ([String]) -> Void
-    let onRestoreExample: () -> Void
-    let onUpdate: () -> Void
-
-    var body: some View {
-        DataPlaneSurface {
-            DisclosureGroup(isExpanded: $isExpanded) {
-                CodexStatusEditor(
-                    sourceText: $sourceText,
-                    feedback: feedback,
-                    isUpdating: isUpdating,
-                    onPaste: onPaste,
-                    onRestoreExample: onRestoreExample,
-                    onUpdate: onUpdate
-                )
-                .padding(.top, 17)
-            } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 5) {
-
-                        Text(L10n.text("Manual update"))
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(DataPlaneTheme.ink)
-                    }
-                    Spacer()
-                }
-                .contentShape(.rect)
-            }
-            .tint(DataPlaneTheme.signal)
-            .padding(17)
-        }
-    }
-}
-
-private struct CodexStatusEditor: View {
-    @Binding var sourceText: String
-    let feedback: CodexStatusFeedback?
-    let isUpdating: Bool
-    let onPaste: ([String]) -> Void
-    let onRestoreExample: () -> Void
-    let onUpdate: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(L10n.text("Paste the complete line returned by /status in Codex."))
-                .font(.caption)
-                .foregroundStyle(DataPlaneTheme.muted)
-
-            TextField(
-                "Weekly limit: … 70% left (resets 09:02 on 2 Sep)",
-                text: $sourceText,
-                axis: .vertical
-            )
-            .lineLimit(4...8)
-            .font(.body.monospaced())
-            .foregroundStyle(DataPlaneTheme.ink)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .padding(14)
-            .background(DataPlaneTheme.canvas.opacity(0.76))
-            .overlay {
-                Rectangle()
-                    .strokeBorder(DataPlaneTheme.line)
-            }
-            .accessibilityLabel(L10n.text("Codex status line"))
-
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 10) {
-                    editorSecondaryActions
-                }
-
-                VStack(spacing: 10) {
-                    editorSecondaryActions
-                }
-            }
-
-            Button(L10n.text("Save on this device"), systemImage: "square.and.arrow.down", action: onUpdate)
-                .buttonStyle(DataPlanePrimaryButtonStyle())
-                .disabled(isUpdating)
-
-            if let feedback {
-                Label(feedback.message, systemImage: feedback.systemImage)
-                    .font(.caption)
-                    .foregroundStyle(feedback.isError ? DataPlaneTheme.critical : DataPlaneTheme.signal)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    @ViewBuilder
-    private var editorSecondaryActions: some View {
-        PasteButton(payloadType: String.self, onPaste: onPaste)
-            .buttonStyle(DataPlaneSecondaryButtonStyle())
-
-        Button(L10n.text("Use example"), systemImage: "text.badge.checkmark", action: onRestoreExample)
-            .buttonStyle(DataPlaneSecondaryButtonStyle())
     }
 }
 

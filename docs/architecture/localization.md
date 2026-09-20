@@ -40,9 +40,10 @@ pass, so user or server data cannot become a second template.
 
 Names such as Statusline, Codex, ChatGPT, Keychain and technical identifiers such
 as AES-256-GCM, HTTPS and CLI commands are not translated. Protocol keys, QR links,
-credentials, timestamps and cached samples never depend on the UI language. The
-manual `/status` parser still accepts Codex's original English `Weekly limit`,
-`% left` and `resets` syntax in either UI language.
+credentials, timestamps and cached samples never depend on the UI language. Mobile
+apps do not accept pasted `/status` text. The shared parser remains for fixed demo
+fixtures and legacy compatibility, using Codex's original English `Weekly limit`,
+`% left` and `resets` syntax independently of the UI language.
 
 Errors are translated from structured error codes at the presentation boundary;
 raw relay/OS messages are not shown as translated application copy. Persistent

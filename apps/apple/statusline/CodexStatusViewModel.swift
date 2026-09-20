@@ -91,15 +91,11 @@ enum CodexRelaySyncState: Equatable {
 @Observable
 @MainActor
 final class CodexStatusViewModel {
-    var sourceText: String
     private(set) var status: CodexUsageStatus?
     private(set) var services: AgentServicesSnapshot?
     private(set) var preferredProvider: AgentProviderID?
     private(set) var feedback: CodexStatusFeedback?
     private(set) var relaySyncState: CodexRelaySyncState = .unpaired
-    private(set) var isManualUpdateInProgress = false
-
-    private let parser: CodexStatusParser
     private let store: CodexStatusStore
     private let relayRepository: any CodexRelayReading
     private var isRefreshing = false
@@ -107,27 +103,19 @@ final class CodexStatusViewModel {
 
     convenience init() {
         self.init(
-            parser: CodexStatusParser(),
             store: CodexStatusStore(),
             relayRepository: CodexRelayReaderRepository()
         )
     }
 
     init(
-        parser: CodexStatusParser,
         store: CodexStatusStore,
         relayRepository: any CodexRelayReading
     ) {
-        self.parser = parser
         self.store = store
         self.relayRepository = relayRepository
         preferredProvider = store.servicesStore.focusedProvider
 
-        let savedStatus = store.loadSaved()
-        status = savedStatus
-        sourceText = savedStatus?.sourceText.contains("% left") == true
-            ? savedStatus?.sourceText ?? CodexStatusConstants.exampleLine
-            : CodexStatusConstants.exampleLine
         reloadLocalStatus()
     }
 
@@ -277,47 +265,21 @@ final class CodexStatusViewModel {
         }
     }
 
-    func updateStatus() {
-        guard !sourceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            feedback = .error(L10n.text("Paste the Codex status line first."))
-            return
-        }
-
-        isManualUpdateInProgress = true
-        defer { isManualUpdateInProgress = false }
-
+    func loadLocalDemo() {
         do {
-            let parsedStatus = try parser.parse(sourceText)
-            try store.save(parsedStatus)
-            status = parsedStatus
-            services = .legacy(parsedStatus)
-            if let services { try store.servicesStore.save(services) }
+            // Demo data is fixed and local; arbitrary status text is no longer accepted.
+            guard try !relayRepository.isPaired(), !isRefreshing,
+                  relaySyncState != .pairing else { return }
+            let demo = CodexUsageStatus.example
+            let snapshot = AgentServicesSnapshot.legacy(demo)
+            try store.save(demo)
+            try store.servicesStore.save(snapshot)
+            status = demo
+            services = snapshot
             WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
-            feedback = .success(L10n.text("Local widget updated. The relay was not changed."))
+            feedback = .success(L10n.text("Local demo enabled. The app and widget show an example sample."))
         } catch {
             feedback = .error(L10n.error(error))
-        }
-    }
-
-    func acceptPastedText(_ values: [String]) {
-        guard let firstValue = values.first else {
-            return
-        }
-        sourceText = firstValue
-        feedback = nil
-    }
-
-    func restoreExample() {
-        sourceText = CodexStatusConstants.exampleLine
-        feedback = nil
-    }
-
-    func loadLocalDemo() {
-        sourceText = CodexStatusConstants.exampleLine
-        updateStatus()
-
-        if status != nil {
-            feedback = .success(L10n.text("Local demo enabled. The app and widget show an example sample."))
         }
     }
 }
