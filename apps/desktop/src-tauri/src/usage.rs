@@ -5,6 +5,7 @@ use serde_json::Value;
 
 const WEEKLY_WINDOW_MIN_MINS: u64 = 6 * 24 * 60;
 const WEEKLY_WINDOW_MAX_MINS: u64 = 8 * 24 * 60;
+const CODEX_LIMIT_ID: &str = "codex";
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -86,8 +87,10 @@ struct Account {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RateLimitsReadResult {
-    rate_limits: Option<RateLimitSnapshot>,
-    rate_limits_by_limit_id: Option<BTreeMap<String, RateLimitSnapshot>>,
+    // Parse only the selected bucket. Unrelated metered services may use a
+    // different schema and must not invalidate an otherwise valid Codex quota.
+    rate_limits: Option<Value>,
+    rate_limits_by_limit_id: Option<BTreeMap<String, Value>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -136,14 +139,8 @@ pub fn normalize_usage(
         Err(error) => return invalid_data(error, checked_at),
     };
 
-    let snapshots = snapshots_from(rate_limits);
-    let limit_count = snapshots.len();
-    let candidates = match snapshots
-        .iter()
-        .map(|(fallback_label, snapshot)| candidate_from(fallback_label, snapshot))
-        .collect::<Result<Vec<_>, _>>()
-    {
-        Ok(candidates) => candidates,
+    let (selected, limit_count) = match codex_candidate_from(rate_limits) {
+        Ok(result) => result,
         Err(message) => {
             return UsageResponse::Error {
                 code: "invalidData".to_owned(),
@@ -152,11 +149,6 @@ pub fn normalize_usage(
             };
         }
     };
-    let selected = candidates.into_iter().flatten().max_by(|left, right| {
-        left.weekly
-            .used_percent
-            .total_cmp(&right.weekly.used_percent)
-    });
     let Some(selected) = selected else {
         return UsageResponse::Unavailable {
             reason: UsageUnavailableReason::NoWeeklyWindow,
@@ -174,23 +166,37 @@ pub fn normalize_usage(
     }
 }
 
-fn snapshots_from(rate_limits: RateLimitsReadResult) -> Vec<(String, RateLimitSnapshot)> {
-    if let Some(by_id) = rate_limits.rate_limits_by_limit_id
-        && !by_id.is_empty()
-    {
-        return by_id.into_iter().collect();
-    }
-
-    rate_limits
-        .rate_limits
-        .map(|snapshot| {
-            let label = snapshot
-                .limit_id
-                .clone()
-                .unwrap_or_else(|| "Codex".to_owned());
-            vec![(label, snapshot)]
+fn codex_candidate_from(
+    rate_limits: RateLimitsReadResult,
+) -> Result<(Option<LimitCandidate>, usize), String> {
+    let mut by_id = rate_limits.rate_limits_by_limit_id.unwrap_or_default();
+    let limit_count = by_id.len();
+    // App Server keys this map by metered limit ID. Model-specific or reserve
+    // buckets are not the general Codex quota, regardless of their usage/name.
+    let selected = by_id.remove(CODEX_LIMIT_ID).or_else(|| {
+        rate_limits.rate_limits.filter(|snapshot| {
+            // Older servers omit limitId in the compatibility snapshot. An
+            // explicit non-Codex ID, however, must never be relabeled as Codex.
+            !snapshot["limitId"]
+                .as_str()
+                .is_some_and(|id| id != CODEX_LIMIT_ID)
         })
-        .unwrap_or_default()
+    });
+    let Some(selected) = selected else {
+        return Ok((None, limit_count));
+    };
+    let snapshot: RateLimitSnapshot = serde_json::from_value(selected)
+        .map_err(|error| format!("Could not parse Codex rate-limit data: {error}"))?;
+    if snapshot
+        .limit_id
+        .as_deref()
+        .is_some_and(|id| id != CODEX_LIMIT_ID)
+    {
+        return Err("Codex rate-limit map key and limitId disagree".to_owned());
+    }
+    // Once selected, malformed/missing Codex windows must surface as such;
+    // never silently fall back to another bucket or an older compatibility view.
+    Ok((candidate_from("Codex", &snapshot)?, limit_count.max(1)))
 }
 
 fn candidate_from(

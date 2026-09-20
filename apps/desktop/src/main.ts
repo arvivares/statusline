@@ -582,9 +582,8 @@ function renderCodexUsage(state: UsageState): void {
   const liveState = labelForState(state);
 
   document.body.dataset.state = state.status;
-  document.body.dataset.multipleLimits = String(
-    state.status === "ready" && state.limitCount > 1,
-  );
+  // Other App Server buckets are not additional Codex quota windows.
+  document.body.dataset.multipleLimits = "false";
   document.body.dataset.level =
     state.status === "ready" && state.weekly.remainingPercent <= 20
       ? "critical"
@@ -626,20 +625,12 @@ function renderCodexUsage(state: UsageState): void {
 
     planValue.textContent = formatPlan(state.plan).toUpperCase();
     planDetail.textContent = state.accountType.toUpperCase();
-    recordValue.textContent =
-      state.limitCount > 1
-        ? t("AVAILABLE · STRICTEST OF {0} LIMITS", state.limitCount)
-        : t("AVAILABLE · QUOTA METADATA ONLY");
+    recordValue.textContent = t("AVAILABLE · QUOTA METADATA ONLY");
     updatedValue.textContent = t(
       "Last sample: {0}",
       formatTime(state.checkedAt),
     );
 
-    if (state.limitCount > 1) {
-      detail.textContent =
-        copy.detail +
-        t(" Showing the most restrictive of {0} limits.", state.limitCount);
-    }
     return;
   }
 

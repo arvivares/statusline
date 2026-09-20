@@ -298,6 +298,56 @@ mod tests {
     }
 
     #[test]
+    fn codex_bucket_selection_reaches_both_mobile_contracts_without_reserve_quota() {
+        let usage = crate::usage::normalize_usage(
+            serde_json::json!({"account": {"type": "chatgpt", "planType": "plus"}}),
+            serde_json::json!({"rateLimitsByLimitId": {
+                "codex": {
+                    "limitId": "codex",
+                    "primary": {"usedPercent": 12, "windowDurationMins": 300, "resetsAt": 1900003600},
+                    "secondary": {"usedPercent": 34, "windowDurationMins": 10080, "resetsAt": 1900604800}
+                },
+                "base_model_inference": {
+                    "limitId": "base_model_inference", "limitName": "gpt-reserve",
+                    "secondary": {"usedPercent": 100, "windowDurationMins": 10080, "resetsAt": 1900302400}
+                }
+            }}),
+            1_900_000_000,
+        );
+        let mut inventory = ServicesInventory::default();
+        inventory.record_google(&google(1));
+        inventory.record_claude(&claude_view(1, false));
+        inventory.record_codex(&usage);
+        let services = inventory.snapshot().unwrap();
+        assert_eq!(services.schema_version, 1);
+        let codex = services
+            .providers
+            .iter()
+            .find(|provider| provider.id == "codex")
+            .unwrap();
+        assert_eq!(
+            serde_json::to_value(codex).unwrap(),
+            serde_json::json!({
+                "id": "codex", "status": "ready", "updatedAt": 1900000000,
+                "weekly": {"remainingPercentage": 66, "resetAt": 1900604800, "windowMinutes": 10080},
+                "shortWindow": {"remainingPercentage": 88, "resetAt": 1900003600, "windowMinutes": 300}
+            })
+        );
+        assert_eq!(
+            serde_json::to_value(inventory.codex_projection().unwrap()).unwrap(),
+            serde_json::json!({
+                "schemaVersion": 1, "remainingPercentage": 66,
+                "resetAt": 1900604800, "updatedAt": 1900000000
+            })
+        );
+        assert!(
+            !serde_json::to_string(&services)
+                .unwrap()
+                .contains("gpt-reserve")
+        );
+    }
+
+    #[test]
     fn startup_waits_for_all_collectors_and_google_only_does_not_invent_codex() {
         let mut inventory = ServicesInventory::default();
         inventory.record_google(&google(1));
