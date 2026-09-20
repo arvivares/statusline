@@ -67,8 +67,8 @@ export function companionProviders(
     const usage = google.usage;
     providers.push({
       id: "google",
-      name: "Gemini",
-      source: "Antigravity",
+      name: "Antigravity",
+      source: "Google",
       defaultPeriod: "short",
       status: usage.status === "ready" ? "ready" : "unavailable",
       checkedAt: usage.status === "disabled" ? null : usage.checkedAt,
@@ -90,7 +90,7 @@ export function companionProviders(
     const quota = ready ? claude!.quota : null;
     providers.push({
       id: "claude",
-      name: "Claude",
+      name: "Claude-Code",
       source: "Anthropic",
       defaultPeriod: "short",
       status: ready ? "ready" : "unavailable",

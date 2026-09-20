@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.29` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.29`;
-- Android candidate: `versionCode 25` (Google Play submission is separate);
+- prepared product tag: `v0.1.30` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.30`;
+- Android candidate: `versionCode 26` (Google Play submission is separate);
 - recorded iOS source version: `1.1.1 (10)`, with the current automatic-sync
   experience. This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
@@ -55,7 +55,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.29`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.30`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -139,8 +139,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.29 -m "Statusline 0.1.29 beta"
-git push origin v0.1.29
+git tag -s v0.1.30 -m "Statusline 0.1.30 beta"
+git push origin v0.1.30
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -149,7 +149,29 @@ approval: after every build, trust, inventory, checksum and provenance gate pass
 draft is published automatically according to `distribution.publishPrerelease`.
 The current profile publishes a normal GitHub release marked **Latest**.
 
-### 0.1.29 candidate gates
+### 0.1.30 candidate gates
+
+- Verify passive Claude CLI discovery, bounded platform-specific installation
+  paths and explicit activation consent. Discovery must not execute found
+  launchers or change Claude settings; desktop-only Claude does not imply a
+  usable Claude Code quota source. Preserve existing status-line configuration.
+- Validate provider identities, watchlist chevrons and inline activation in
+  EN/ES and English fallback, including keyboard focus, pending/error/retry
+  states and zero automatic connection requests on startup.
+- Verify the narrowly scoped upstream macOS 27 tray patch's recorded hashes,
+  licenses and unchanged Windows/Linux source and dependency versions. Run
+  native checks on all three platforms. The isolated macOS 27 probe passed
+  left-click toggle, right-click menu, menu replacement and outside-click hide;
+  installed-package upgrades and macOS 26 interaction remain device QA.
+- Publish the complete Windows/Linux/macOS/Android inventory after PR CI and
+  manual Release preflight pass. Retain unsigned Windows disclosure and all
+  existing signing, notarization and updater gates.
+- No relay deployment, protocol migration or mobile-store submission is part
+  of this release. Android `0.1.30 (26)` includes the corrected Google /
+  Antigravity labels. The matching iOS source change awaits a separate build;
+  recorded iOS `1.1.1 (10)` is unchanged. See the [release notes](notes/v0.1.30.md).
+
+### Historical 0.1.29 candidate gates
 
 - Verify automatic selection of the general `codex` bucket, including an
   exhausted reserve, genuine Codex exhaustion, older compatibility snapshots,

@@ -34,7 +34,6 @@
 "Agent usage" = "Uso de agentes";
 "An encrypted snapshot is available on this device." = "Hay una muestra cifrada disponible en este dispositivo.";
 "Antigravity · {0}% left" = "Antigravity · {0}% libre";
-"Antigravity · Gemini" = "Antigravity · Gemini";
 "Antigravity · no weekly data" = "Antigravity · sin datos semanales";
 "Antigravity · unavailable" = "Antigravity · no disponible";
 "Antigravity did not respond. Codex and its mobile sync are unaffected." = "Antigravity no respondió. Codex y su sincronización móvil no se ven afectados.";
@@ -87,6 +86,7 @@
 "Claude Code settings are not a JSON object. Fix ~/.claude/settings.json and try again." = "La configuración de Claude Code no es un objeto JSON. Corrige ~/.claude/settings.json e inténtalo de nuevo.";
 "Claude Code settings could not be read or written. Check that ~/.claude is accessible." = "No se pudo leer ni escribir la configuración de Claude Code. Comprueba que ~/.claude sea accesible.";
 "Claude Code settings not readable" = "Configuración de Claude Code ilegible";
+"Claude desktop detected. Install Claude Code to share quota through its status line; detection will run automatically." = "Claude de escritorio detectado. Instala Claude Code para compartir la cuota mediante su línea de estado; se detectará automáticamente.";
 "Claude detected · quota pending" = "Claude detectado · cuota pendiente";
 "Claude discovery could not finish. Your last detected installation is kept." = "No se pudo completar la búsqueda de Claude. Se conserva la última instalación detectada.";
 "Claude five-hour limit" = "Límite de cinco horas de Claude";
@@ -197,6 +197,7 @@
 "Credential Manager" = "Administrador de credenciales";
 "CREDENTIAL MANAGER" = "ADMINISTRADOR DE CREDENCIALES";
 "Credentials" = "Credenciales";
+"Credentials and conversations stay with Claude." = "Las credenciales y conversaciones se quedan en Claude.";
 "CURRENT" = "AL DÍA";
 "Custom installation" = "Instalación personalizada";
 "Custom status line · connect to chain it" = "Status line personalizada · conecta para encadenarla";
@@ -231,6 +232,7 @@
 "E2E / AES-256-GCM" = "E2E / AES-256-GCM";
 "E2E ENCRYPTED" = "CIFRADO E2E";
 "Enable a supported service in your Companion to see its quota here." = "Activa un servicio compatible en tu Companion para ver su cuota aquí.";
+"Enable quota" = "Activar cuota";
 "Encrypted relay active" = "Relay cifrado activo";
 "Encrypted snapshot" = "Muestra cifrada";
 "Encrypted snapshot published {0}." = "Muestra cifrada publicada {0}.";
@@ -253,6 +255,7 @@
 "Gemini weekly limit" = "Límite semanal de Gemini";
 "Generating independent read/write credentials." = "Generando credenciales independientes de lectura y escritura.";
 "Global npm" = "npm global";
+"Google · Antigravity" = "Google · Antigravity";
 "Google quota is connected. Credentials stay with Antigravity." = "Cuota de Google conectada. Las credenciales permanecen en Antigravity.";
 "Google quota is unavailable. No remaining limit has been assumed." = "La cuota de Google no está disponible. No se ha supuesto ningún límite restante.";
 "Google quota unavailable" = "Cuota de Google no disponible";

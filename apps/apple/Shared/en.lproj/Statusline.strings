@@ -34,7 +34,6 @@
 "Agent usage" = "Agent usage";
 "An encrypted snapshot is available on this device." = "An encrypted snapshot is available on this device.";
 "Antigravity · {0}% left" = "Antigravity · {0}% left";
-"Antigravity · Gemini" = "Antigravity · Gemini";
 "Antigravity · no weekly data" = "Antigravity · no weekly data";
 "Antigravity · unavailable" = "Antigravity · unavailable";
 "Antigravity did not respond. Codex and its mobile sync are unaffected." = "Antigravity did not respond. Codex and its mobile sync are unaffected.";
@@ -87,6 +86,7 @@
 "Claude Code settings are not a JSON object. Fix ~/.claude/settings.json and try again." = "Claude Code settings are not a JSON object. Fix ~/.claude/settings.json and try again.";
 "Claude Code settings could not be read or written. Check that ~/.claude is accessible." = "Claude Code settings could not be read or written. Check that ~/.claude is accessible.";
 "Claude Code settings not readable" = "Claude Code settings not readable";
+"Claude desktop detected. Install Claude Code to share quota through its status line; detection will run automatically." = "Claude desktop detected. Install Claude Code to share quota through its status line; detection will run automatically.";
 "Claude detected · quota pending" = "Claude detected · quota pending";
 "Claude discovery could not finish. Your last detected installation is kept." = "Claude discovery could not finish. Your last detected installation is kept.";
 "Claude five-hour limit" = "Claude five-hour limit";
@@ -197,6 +197,7 @@
 "Credential Manager" = "Credential Manager";
 "CREDENTIAL MANAGER" = "CREDENTIAL MANAGER";
 "Credentials" = "Credentials";
+"Credentials and conversations stay with Claude." = "Credentials and conversations stay with Claude.";
 "CURRENT" = "CURRENT";
 "Custom installation" = "Custom installation";
 "Custom status line · connect to chain it" = "Custom status line · connect to chain it";
@@ -231,6 +232,7 @@
 "E2E / AES-256-GCM" = "E2E / AES-256-GCM";
 "E2E ENCRYPTED" = "E2E ENCRYPTED";
 "Enable a supported service in your Companion to see its quota here." = "Enable a supported service in your Companion to see its quota here.";
+"Enable quota" = "Enable quota";
 "Encrypted relay active" = "Encrypted relay active";
 "Encrypted snapshot" = "Encrypted snapshot";
 "Encrypted snapshot published {0}." = "Encrypted snapshot published {0}.";
@@ -253,6 +255,7 @@
 "Gemini weekly limit" = "Gemini weekly limit";
 "Generating independent read/write credentials." = "Generating independent read/write credentials.";
 "Global npm" = "Global npm";
+"Google · Antigravity" = "Google · Antigravity";
 "Google quota is connected. Credentials stay with Antigravity." = "Google quota is connected. Credentials stay with Antigravity.";
 "Google quota is unavailable. No remaining limit has been assumed." = "Google quota is unavailable. No remaining limit has been assumed.";
 "Google quota unavailable" = "Google quota unavailable";

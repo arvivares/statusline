@@ -176,14 +176,24 @@ summary:focus-visible {
   color: var(--ink);
   text-align: left;
 }
-.quota-row:hover .row-name {
+.quota-row:is(:hover, :focus-visible) .row-name {
   color: var(--signal);
 }
 .row-name {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-size: 14px;
   font-weight: 550;
   letter-spacing: -0.02em;
+}
+.row-chevron {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(-45deg);
 }
 .row-source,
 .row-age {
@@ -213,6 +223,9 @@ summary:focus-visible {
 .quota-row[data-stale="true"] .row-age,
 .quota-row[data-status="unavailable"] .row-age {
   color: var(--critical);
+}
+.quota-row[data-connectable="true"] .row-age {
+  color: var(--signal);
 }
 /* Keep the approved three-provider hierarchy compact without shrinking type.
    More rows can scroll naturally; absent adapters never allocate a row. */
@@ -1110,6 +1123,19 @@ body:not([data-state="ready"]) .metric-cell:last-child {
 .source-primary:hover:not(:disabled),
 .source-secondary:hover:not(:disabled) {
   filter: brightness(1.12);
+}
+.claude-activation {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding-block: 0 12px;
+  text-align: center;
+}
+.claude-activation .source-feedback {
+  margin: 0;
+}
+.claude-activation .source-feedback:empty {
+  display: none;
 }
 .source-reset:hover:not(:disabled) {
   color: var(--ink);

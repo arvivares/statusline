@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   acceptClaudeView,
+  claudeCanConnect,
   claudeConnectFailureCopy,
   claudeHasQuota,
   claudeIsVisible,
@@ -66,6 +67,26 @@ const gateway: ClaudeView = {
 };
 
 describe("passive Claude discovery", () => {
+  it("offers explicit activation only for a usable CLI or previous bridge capture", () => {
+    expect(claudeCanConnect(detected)).toBe(true);
+    expect(claudeCanConnect({ ...detected, connection: "custom" })).toBe(true);
+    expect(
+      claudeCanConnect({
+        ...apiKey,
+        connection: "none",
+        installations: missing.installations,
+      }),
+    ).toBe(true);
+    for (const view of [
+      null,
+      missing,
+      enterprise,
+      { ...detected, installations: { cli: false, desktop: true } },
+      { ...detected, connection: "unknown" as const },
+      { ...detected, status: "discoveryUnavailable" as const },
+    ])
+      expect(claudeCanConnect(view)).toBe(false);
+  });
   it("adds no placeholder when absent, and no made-up quota when detected", () => {
     expect(claudeIsVisible(null)).toBe(false);
     expect(companionProviders(null, null, disabledGoogle, missing)).toEqual([]);

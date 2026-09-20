@@ -429,13 +429,13 @@ private val AgentQuotaPeriod.label: String
 private val AgentProviderReading.sourceLabel: String
     get() = when (id) {
         AgentProviderId.CODEX -> "OpenAI"
-        AgentProviderId.ANTIGRAVITY -> "Antigravity · Google"
+        AgentProviderId.ANTIGRAVITY -> "Google"
     }
 
 private val AgentProviderReading.displayLabel: String
     get() = when (id) {
         AgentProviderId.CODEX -> L10n.text("OpenAI · Codex")
-        AgentProviderId.ANTIGRAVITY -> L10n.text("Antigravity · Gemini")
+        AgentProviderId.ANTIGRAVITY -> L10n.text("Google · Antigravity")
     }
 
 private val AgentProviderReading.hasBothWindows: Boolean

@@ -55,7 +55,7 @@ class WidgetLayoutPolicyTest {
     }
 
     @Test
-    fun `renders only companion services and keeps gemini on its five hour window`() {
+    fun `renders tool names for companion services and keeps antigravity on its five hour window`() {
         val snapshot = AgentServicesSnapshot(
             providers = listOf(
                 AgentProviderReading(
@@ -78,12 +78,15 @@ class WidgetLayoutPolicyTest {
 
         val medium = WidgetPresentationPolicy.present(snapshot, AgentProviderId.CODEX, WidgetLayoutSize.MEDIUM)
         val small = WidgetPresentationPolicy.present(snapshot, AgentProviderId.CODEX, WidgetLayoutSize.SMALL)
+        val antigravity = WidgetPresentationPolicy.present(snapshot, AgentProviderId.ANTIGRAVITY, WidgetLayoutSize.MEDIUM)
 
         assertEquals("Codex · Weekly", medium.focused?.heading)
         assertEquals(listOf(AgentProviderId.ANTIGRAVITY), medium.watchlist.map { it.id })
-        assertEquals("Gemini · 5h", medium.watchlist.single().heading)
+        assertEquals("Antigravity · 5h", medium.watchlist.single().heading)
         assertEquals(73, medium.watchlist.single().remainingPercentage)
         assertEquals(0, small.watchlist.size)
+        assertEquals("Antigravity · 5h", antigravity.focused?.heading)
+        assertEquals("Codex · Weekly", antigravity.watchlist.single().heading)
     }
 
     @Test

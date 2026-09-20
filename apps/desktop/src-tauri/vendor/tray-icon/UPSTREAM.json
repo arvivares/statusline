@@ -1,0 +1,87 @@
+{
+  "package": "tray-icon",
+  "version": "0.24.2",
+  "archive": "https://static.crates.io/crates/tray-icon/tray-icon-0.24.2.crate",
+  "archiveSha256": "045979e3f037cd18ad1cb2a419dfda133c5c29c9f3453370079f2255d46c257e",
+  "upstreamPullRequest": "https://github.com/tauri-apps/tray-icon/pull/365",
+  "upstreamCommit": "42eb44ea1507d51b68a8b2fbb0d96a9c85f5b4cd",
+  "files": {
+    "Cargo.toml": {
+      "upstreamSha256": "dae30d1f3f4524edd2bb8e6bae75388ea097c8f5793e74df837a30338093a77d",
+      "sha256": "dae30d1f3f4524edd2bb8e6bae75388ea097c8f5793e74df837a30338093a77d"
+    },
+    "Cargo.toml.orig": {
+      "upstreamSha256": "b90e094a838dd41ab2f57e3db3122bf7d48609057d5694c0e30f66657b5ca1c6",
+      "sha256": "b90e094a838dd41ab2f57e3db3122bf7d48609057d5694c0e30f66657b5ca1c6"
+    },
+    "LICENSE-APACHE": {
+      "upstreamSha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "LICENSE-MIT": {
+      "upstreamSha256": "2ab5537b8c0cb1d475e2145b6a7994b04e7c71e6e5bd836f7f9c47c221a5ad9a",
+      "sha256": "2ab5537b8c0cb1d475e2145b6a7994b04e7c71e6e5bd836f7f9c47c221a5ad9a"
+    },
+    "LICENSE.spdx": {
+      "upstreamSha256": "6c1e5d0ccf5e8951401cb964036ae664d52fc8d1148173b53bc54fc534f5d404",
+      "sha256": "44181d1db740d9841dbe6d7fa1963a23067f335567127fc15a9d050476af71a6",
+      "normalization": "Final LF added; license text unchanged"
+    },
+    "README.md": {
+      "upstreamSha256": "14f190156bccd80e43ab2c7454ec206887c62ec7266297de6a3aff82cee2a8e8",
+      "sha256": "14f190156bccd80e43ab2c7454ec206887c62ec7266297de6a3aff82cee2a8e8"
+    },
+    "src/counter.rs": {
+      "upstreamSha256": "a3fa26343655a89b23484abd7a7869a35a19eedd4518bbf7cb706533bdc6bbce",
+      "sha256": "a3fa26343655a89b23484abd7a7869a35a19eedd4518bbf7cb706533bdc6bbce"
+    },
+    "src/error.rs": {
+      "upstreamSha256": "35df8945f544da1152eaf34a980bbe12be7054f5a8cbec292644d744324c599d",
+      "sha256": "35df8945f544da1152eaf34a980bbe12be7054f5a8cbec292644d744324c599d"
+    },
+    "src/icon.rs": {
+      "upstreamSha256": "94428fc654028bcd4b5ccc3ae340eb75067e9828e2b7a757672de6ac210c1228",
+      "sha256": "94428fc654028bcd4b5ccc3ae340eb75067e9828e2b7a757672de6ac210c1228"
+    },
+    "src/lib.rs": {
+      "upstreamSha256": "6b759c31459a7a9071384ac47ee69d88210390ee33723b6646086166e4f435ea",
+      "sha256": "6b759c31459a7a9071384ac47ee69d88210390ee33723b6646086166e4f435ea"
+    },
+    "src/platform_impl/gtk/icon.rs": {
+      "upstreamSha256": "8a9e78fae0931991e9054db8ee2b76c3082b59d72347b5272c11d2c44670762a",
+      "sha256": "8a9e78fae0931991e9054db8ee2b76c3082b59d72347b5272c11d2c44670762a"
+    },
+    "src/platform_impl/gtk/mod.rs": {
+      "upstreamSha256": "c10dd7176baddacab186a946214ef35b18659ea5c259854247c065839f340afd",
+      "sha256": "c10dd7176baddacab186a946214ef35b18659ea5c259854247c065839f340afd"
+    },
+    "src/platform_impl/macos/icon.rs": {
+      "upstreamSha256": "637f773d436d225966908487511f12a673a0a2f132d2d8318fd9966f0b15f563",
+      "sha256": "637f773d436d225966908487511f12a673a0a2f132d2d8318fd9966f0b15f563"
+    },
+    "src/platform_impl/macos/mod.rs": {
+      "upstreamSha256": "2dade70b60c7ecc56f8d1fdf5e387d23a771a527325bb81edb89c42cd4d4be50",
+      "sha256": "5dc3cb3353cfcf6da382c49e1d76a521186940b8247f445ebb5ce8204cfe14df"
+    },
+    "src/platform_impl/mod.rs": {
+      "upstreamSha256": "4ceb267ef87327a5d728459fb4f1346045ce16fcc1749afa039252f34eccc1cd",
+      "sha256": "4ceb267ef87327a5d728459fb4f1346045ce16fcc1749afa039252f34eccc1cd"
+    },
+    "src/platform_impl/windows/icon.rs": {
+      "upstreamSha256": "efa0d0799b58b20c0e28c6434fc11714e94657f82e1f8cdee822cbdd2f5830c5",
+      "sha256": "efa0d0799b58b20c0e28c6434fc11714e94657f82e1f8cdee822cbdd2f5830c5"
+    },
+    "src/platform_impl/windows/mod.rs": {
+      "upstreamSha256": "23aab5c0d2df8d43b7dfe54ae81bf04428f5df0fcf0779a58ae7a643ddf258d4",
+      "sha256": "23aab5c0d2df8d43b7dfe54ae81bf04428f5df0fcf0779a58ae7a643ddf258d4"
+    },
+    "src/platform_impl/windows/util.rs": {
+      "upstreamSha256": "4fd93c937f79ae077cf1e0521fac78a68221397fee42cba947092d100c036311",
+      "sha256": "4fd93c937f79ae077cf1e0521fac78a68221397fee42cba947092d100c036311"
+    },
+    "src/tray_icon_id.rs": {
+      "upstreamSha256": "4bdb12d2fd9e8c72c75ab467551d1822188de7e36347e1d853c537f08c6bde71",
+      "sha256": "4bdb12d2fd9e8c72c75ab467551d1822188de7e36347e1d853c537f08c6bde71"
+    }
+  }
+}

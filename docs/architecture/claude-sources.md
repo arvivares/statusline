@@ -15,9 +15,17 @@ and `resets_at`. See [Statusline › rate limit usage](https://code.claude.com/d
 
 Companion uses that hook as its transport:
 
-1. **Discovery** (unchanged) checks conventional CLI/Desktop locations by file
-   metadata only. A detected installation creates the Claude row; nothing is run.
-2. **Connect** is an explicit button in Settings › Services. It writes a
+1. **Discovery** checks native CLI/Desktop locations, global npm shims, absolute
+   inherited PATH entries and bounded version-manager locations by metadata only.
+   A detected installation creates the Claude row; nothing is run. No shell init
+   file, credential or conversation is read. Discovery runs at startup, on focus
+   when its cache is older than 60 seconds, and on the native five-minute schedule.
+2. **Enable quota** appears directly in the Claude focus view when a CLI or a
+   previous bridge capture is detected. Before the user clicks, the view explains
+   that Claude Code's status line will be updated and the existing one preserved.
+   **Connect Claude Code** in Settings › Services remains an alternative. Neither
+   discovery nor viewing the row grants consent: only clicking a connect button
+   writes a
    `statusLine` object into the user's Claude Code `settings.json` whose command
    runs the Companion executable in bridge mode:
    `"<companion>" --statusline-claude-bridge "<config dir>/claude-statusline-capture-v1.json"`,
@@ -56,7 +64,7 @@ on window presence, never on plan type.
 | Behind a Claude apps gateway with a spend limit | `spend_limit`, may exceed 100 %      | `noPlanQuota` with the spend percentage in the detail text       |
 | Console API key, Bedrock, Vertex, Foundry       | none                                 | `noPlanQuota` ("session without plan quota")                     |
 | Any plan before the first API response          | none yet                             | last limits kept; `quotaUnavailable` if none were ever reported  |
-| Installed, bridge not connected                 | not captured                         | `quotaUnavailable` with a pointer to Settings › Services         |
+| CLI installed, bridge not connected             | not captured                         | `quotaUnavailable` with an explicit **Enable quota** action       |
 
 The Enterprise row is an observation, not a guarantee: Anthropic's statusline
 documentation lists `rate_limits` for Pro and Max subscribers and gateway users
@@ -95,6 +103,27 @@ therefore cannot be more than five hours stale, the weekly window up to a week.
 
 ## Platform coverage
 
+Passive discovery also covers these common layouts without requiring a GUI
+process to inherit the interactive shell's PATH:
+
+- macOS/Linux: native launchers, Homebrew/system paths, npm global prefixes,
+  NVM, fnm, Volta, asdf and mise shims/version directories.
+- Windows: native launcher, WinGet links, user npm (`APPDATA/npm`) including
+  `.cmd`/`.ps1` shims, Scoop, Volta, NVM and fnm layouts. All user paths are
+  derived dynamically; no username is hardcoded.
+
+The scan is limited to 256 candidates, 64 PATH entries and 32 entries per
+version-manager directory. Fixed common paths take priority. Relative, current
+project, `node_modules/.bin`, parent-traversal and control-character PATH entries
+are excluded. Directory enumeration is one level only, not a disk-wide search.
+These are installation hints, not publisher or authentication verification.
+Nonstandard layouts may still require their launcher directory in Companion's
+PATH. See Anthropic's [installation reference](https://code.claude.com/docs/en/setup).
+
+Detecting the Claude chat desktop app alone does not prove a Claude Code CLI
+installation. In that case the UI explains the requirement instead of offering
+an activation that cannot report quota. It never installs or launches Claude.
+
 | OS      | Bridge invocation by Claude Code                      | Verification                                                  |
 | ------- | ----------------------------------------------------- | ------------------------------------------------------------- |
 | macOS   | `sh -c` quoting; chained command through `sh -c`      | Real session verified: capture, summary, chaining, exit codes |
@@ -127,3 +156,17 @@ the reduced capture with `0600` permissions, a payload without `rate_limits`
 keeps the last limits, a chained command receives the same stdin, garbage stdin
 exits with code 3 without touching the capture, and a missing argument exits 2.
 The checked-in [fixture](../../protocol/fixtures/claude-statusline.json) is synthetic.
+
+The discovery/activation extension adds fixtures for all three platforms,
+GUI-safe version managers, deduplication and scan bounds, unsafe PATH exclusion,
+and preservation of settings during passive scans. Frontend checks cover
+activation eligibility (including desktop-only, unreadable settings and failed
+discovery), unchanged provider IDs, and company/tool display identities. These
+fixtures do not replace real Windows/Linux account validation.
+
+Local Browser Use checks at 340 × 500 verified the inline consent, error/retry,
+duplicate-click suppression, disconnect, keyboard focus, desktop-only/missing
+states, and EN/ES with English fallback, using synthetic IPC only. The watchlist
+uses tool names with decorative chevrons (`Antigravity ›`, `Claude-Code ›`);
+the entire row remains a native button operable by keyboard. No real Claude
+settings or pairing were changed during these checks.

@@ -202,9 +202,9 @@ struct Candidate {
     desktop: bool,
 }
 
-/// Documented native CLI launchers and conventional system installation roots.
-/// The inherited PATH, shell init files, project folders and credential stores
-/// are deliberately not searched. Desktop paths are presence heuristics only.
+/// Base native CLI launchers and conventional system installation roots.
+/// `extended_candidates` also checks bounded PATH/version-manager locations.
+/// Desktop paths are presence heuristics only, never authentication evidence.
 fn candidates(
     platform: Platform,
     home: Option<&Path>,
@@ -310,6 +310,176 @@ fn home_dir() -> Option<PathBuf> {
     }
 }
 
+const MAX_DISCOVERY_CANDIDATES: usize = 256;
+const MAX_PATH_DIRECTORIES: usize = 64;
+const MAX_MANAGER_ENTRIES: usize = 32;
+
+struct DiscoveryEnvironment {
+    home: Option<PathBuf>,
+    local: Option<PathBuf>,
+    roaming: Option<PathBuf>,
+    program_files: Option<PathBuf>,
+    working_dir: Option<PathBuf>,
+    path_dirs: Vec<PathBuf>,
+}
+
+fn safe_discovery_path(path: &Path) -> bool {
+    path.is_absolute()
+        && path.as_os_str().len() <= 4096
+        && !path
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+        && !path.to_string_lossy().chars().any(char::is_control)
+}
+
+fn add_launcher(result: &mut Vec<Candidate>, platform: Platform, directory: &Path) {
+    if !safe_discovery_path(directory) {
+        return;
+    }
+    let names: &[&str] = if platform == Platform::Windows {
+        &["claude.exe", "claude.cmd", "claude.ps1"]
+    } else {
+        &["claude"]
+    };
+    for name in names {
+        let path = directory.join(name);
+        if result.len() >= MAX_DISCOVERY_CANDIDATES {
+            return;
+        }
+        if !result.iter().any(|candidate| candidate.path == path) {
+            result.push(Candidate {
+                path,
+                desktop: false,
+            });
+        }
+    }
+}
+
+fn add_manager_versions(
+    result: &mut Vec<Candidate>,
+    platform: Platform,
+    root: &Path,
+    suffix: &str,
+) {
+    if result.len() >= MAX_DISCOVERY_CANDIDATES || !safe_discovery_path(root) {
+        return;
+    }
+    let Ok(entries) = fs::read_dir(root) else {
+        return;
+    };
+    // Bounded, one-level metadata scan. Never invoke npm/node/a shell or scan
+    // packages, projects, session directories or version-manager init files.
+    for entry in entries.take(MAX_MANAGER_ENTRIES).flatten() {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let version = name.strip_prefix('v').unwrap_or(&name);
+        if !version.bytes().next().is_some_and(|c| c.is_ascii_digit())
+            || !version.chars().all(|c| c.is_ascii_digit() || c == '.')
+        {
+            continue;
+        }
+        add_launcher(result, platform, &entry.path().join(suffix));
+    }
+}
+
+fn extended_candidates(platform: Platform, environment: &DiscoveryEnvironment) -> Vec<Candidate> {
+    let mut result = candidates(
+        platform,
+        environment.home.as_deref(),
+        environment.local.as_deref(),
+        environment.program_files.as_deref(),
+    );
+    result.retain(|candidate| safe_discovery_path(&candidate.path));
+    // Prioritize common fixed install paths: a large inherited PATH must not
+    // exhaust the budget before Windows npm or GUI-launched manager shims.
+    if let Some(home) = &environment.home {
+        for suffix in [
+            ".npm-global/bin",
+            ".npm/bin",
+            ".volta/bin",
+            ".asdf/shims",
+            ".local/share/mise/shims",
+        ] {
+            add_launcher(&mut result, platform, &home.join(suffix));
+        }
+        if platform == Platform::Windows {
+            for suffix in [
+                ".npm-global",
+                "scoop/shims",
+                "scoop/apps/nodejs/current",
+                "scoop/apps/nodejs-lts/current",
+            ] {
+                add_launcher(&mut result, platform, &home.join(suffix));
+            }
+        }
+    }
+    if platform == Platform::Windows {
+        if let Some(roaming) = &environment.roaming {
+            add_launcher(&mut result, platform, &roaming.join("npm"));
+        }
+        if let Some(local) = &environment.local {
+            add_launcher(&mut result, platform, &local.join("Volta/bin"));
+        }
+        if let Some(root) = &environment.program_files {
+            add_launcher(&mut result, platform, &root.join("nodejs"));
+        }
+    }
+    for directory in environment.path_dirs.iter().take(MAX_PATH_DIRECTORIES) {
+        let in_project = environment.working_dir.as_ref().is_some_and(|cwd| {
+            directory == cwd
+                || (cwd.parent().is_some()
+                    && Some(cwd) != environment.home.as_ref()
+                    && directory.starts_with(cwd))
+        });
+        if in_project || directory.ends_with("node_modules/.bin") || directory.parent().is_none() {
+            continue;
+        }
+        add_launcher(&mut result, platform, directory);
+    }
+    if let Some(home) = &environment.home {
+        let bin = if platform == Platform::Windows {
+            ""
+        } else {
+            "bin"
+        };
+        let installation = if platform == Platform::Windows {
+            "installation"
+        } else {
+            "installation/bin"
+        };
+        for (root, suffix) in [
+            (".nvm/versions/node", bin),
+            (".fnm/node-versions", installation),
+            (".local/share/fnm/node-versions", installation),
+            (
+                "Library/Application Support/fnm/node-versions",
+                installation,
+            ),
+            (".volta/tools/image/node", bin),
+            (".asdf/installs/nodejs", bin),
+            (".local/share/mise/installs/node", bin),
+        ] {
+            if result.len() >= MAX_DISCOVERY_CANDIDATES {
+                break;
+            }
+            add_manager_versions(&mut result, platform, &home.join(root), suffix);
+        }
+    }
+    if platform == Platform::Windows {
+        if let Some(roaming) = &environment.roaming {
+            add_manager_versions(&mut result, platform, &roaming.join("nvm"), "");
+        }
+        if let Some(local) = &environment.local {
+            add_manager_versions(
+                &mut result,
+                platform,
+                &local.join("fnm/node-versions"),
+                "installation",
+            );
+        }
+    }
+    result
+}
+
 pub fn discover() -> Installations {
     let platform = if cfg!(target_os = "macos") {
         Platform::Mac
@@ -318,15 +488,21 @@ pub fn discover() -> Installations {
     } else {
         Platform::Linux
     };
-    let home = home_dir();
-    let local = env::var_os("LOCALAPPDATA").map(PathBuf::from);
-    let program_files = env::var_os("ProgramFiles").map(PathBuf::from);
-    discover_candidates(&candidates(
-        platform,
-        home.as_deref(),
-        local.as_deref(),
-        program_files.as_deref(),
-    ))
+    let environment = DiscoveryEnvironment {
+        home: home_dir(),
+        local: env::var_os("LOCALAPPDATA").map(PathBuf::from),
+        roaming: env::var_os("APPDATA").map(PathBuf::from),
+        program_files: env::var_os("ProgramFiles").map(PathBuf::from),
+        working_dir: env::current_dir().ok(),
+        path_dirs: env::var_os("PATH")
+            .map(|paths| {
+                env::split_paths(&paths)
+                    .take(MAX_PATH_DIRECTORIES)
+                    .collect()
+            })
+            .unwrap_or_default(),
+    };
+    discover_candidates(&extended_candidates(platform, &environment))
 }
 
 /// Claude Code's user settings folder: `CLAUDE_CONFIG_DIR` or `~/.claude`.
@@ -968,6 +1144,172 @@ mod tests {
             .status,
             Status::NotFound
         );
+    }
+
+    fn discovery_environment(root: &Path) -> DiscoveryEnvironment {
+        DiscoveryEnvironment {
+            home: Some(root.join("User Name")),
+            local: Some(root.join("Local")),
+            roaming: Some(root.join("Roaming")),
+            program_files: Some(root.join("Program Files")),
+            working_dir: Some(root.join("project")),
+            path_dirs: vec![],
+        }
+    }
+
+    #[test]
+    fn gui_discovery_finds_npm_and_managers_without_an_inherited_path() {
+        let root = tempfile::tempdir().unwrap();
+        let environment = discovery_environment(root.path());
+        let home = environment.home.as_ref().unwrap();
+        for platform in [Platform::Mac, Platform::Linux] {
+            for suffix in [
+                ".npm-global/bin/claude",
+                ".npm/bin/claude",
+                ".volta/bin/claude",
+                ".asdf/shims/claude",
+                ".local/share/mise/shims/claude",
+                ".nvm/versions/node/v24.11.1/bin/claude",
+                ".fnm/node-versions/v24.11.1/installation/bin/claude",
+                ".local/share/fnm/node-versions/v24.11.1/installation/bin/claude",
+                "Library/Application Support/fnm/node-versions/v24.11.1/installation/bin/claude",
+                ".volta/tools/image/node/24.11.1/bin/claude",
+                ".asdf/installs/nodejs/24.11.1/bin/claude",
+                ".local/share/mise/installs/node/24.11.1/bin/claude",
+            ] {
+                let launcher = home.join(suffix);
+                file(&launcher);
+                let list: Vec<_> = extended_candidates(platform, &environment)
+                    .into_iter()
+                    .filter(|candidate| candidate.path == launcher)
+                    .collect();
+                assert_eq!(list.len(), 1, "{suffix}");
+                assert_eq!(
+                    discover_candidates(&list),
+                    Installations {
+                        cli: true,
+                        desktop: false
+                    }
+                );
+                fs::remove_file(launcher).unwrap();
+                assert!(!discover_candidates(&list).detected());
+            }
+        }
+    }
+
+    #[test]
+    fn windows_discovery_covers_user_npm_native_and_version_manager_shims() {
+        let root = tempfile::tempdir().unwrap();
+        let environment = discovery_environment(root.path());
+        for relative in [
+            "User Name/.local/bin/claude.exe",
+            "Local/Microsoft/WinGet/Links/claude.exe",
+            "Roaming/npm/claude.cmd",
+            "Roaming/npm/claude.ps1",
+            "User Name/.npm-global/claude.cmd",
+            "User Name/scoop/shims/claude.exe",
+            "User Name/scoop/apps/nodejs/current/claude.cmd",
+            "Program Files/nodejs/claude.cmd",
+            "Roaming/nvm/v24.11.1/claude.cmd",
+            "Local/Volta/bin/claude.exe",
+            "Local/fnm/node-versions/v24.11.1/installation/claude.cmd",
+        ] {
+            let launcher = root.path().join(relative);
+            file(&launcher);
+            let list: Vec<_> = extended_candidates(Platform::Windows, &environment)
+                .into_iter()
+                .filter(|candidate| candidate.path == launcher)
+                .collect();
+            assert_eq!(list.len(), 1, "{relative}");
+            assert_eq!(
+                discover_candidates(&list),
+                Installations {
+                    cli: true,
+                    desktop: false
+                }
+            );
+            fs::remove_file(launcher).unwrap();
+        }
+    }
+
+    #[test]
+    fn inherited_path_is_metadata_only_and_excludes_project_and_unsafe_entries() {
+        let root = tempfile::tempdir().unwrap();
+        let mut environment = discovery_environment(root.path());
+        let custom = root.path().join("custom bin");
+        let launcher = custom.join("claude");
+        file(&launcher);
+        fs::write(&launcher, b"#!/bin/sh\ntouch \"$0.ran\"\n").unwrap();
+        let settings = environment
+            .home
+            .as_ref()
+            .unwrap()
+            .join(".claude/settings.json");
+        file(&settings);
+        let before = fs::read(&settings).unwrap();
+        let invalid = vec![
+            PathBuf::from(""),
+            PathBuf::from("relative"),
+            root.path().join("project"),
+            root.path().join("project/bin"),
+            root.path().join("elsewhere/node_modules/.bin"),
+            root.path().join("bad\npath"),
+            root.path().join("child/../escape"),
+        ];
+        environment.path_dirs = invalid.clone();
+        environment.path_dirs.extend([custom.clone(), custom]);
+        let list = extended_candidates(Platform::Linux, &environment);
+        assert_eq!(list.iter().filter(|c| c.path == launcher).count(), 1);
+        for directory in invalid {
+            assert!(!list.iter().any(|c| c.path == directory.join("claude")));
+        }
+        let list: Vec<_> = list
+            .into_iter()
+            .filter(|c| c.path.starts_with(root.path()))
+            .collect();
+        assert!(discover_candidates(&list).cli);
+        assert!(!launcher.with_file_name("claude.ran").exists());
+        assert_eq!(fs::read(settings).unwrap(), before);
+        assert!(!root.path().join(CAPTURE_FILE).exists());
+    }
+
+    #[test]
+    fn discovery_budgets_prioritize_fixed_roots_and_bound_version_scans() {
+        let root = tempfile::tempdir().unwrap();
+        let mut environment = discovery_environment(root.path());
+        environment.path_dirs = (0..100)
+            .map(|n| root.path().join(format!("path-{n}")))
+            .collect();
+        let manager = environment.roaming.as_ref().unwrap().join("nvm");
+        for n in 0..50 {
+            fs::create_dir_all(manager.join(format!("v24.0.{n}"))).unwrap();
+        }
+        let list = extended_candidates(Platform::Windows, &environment);
+        assert!(list.len() <= MAX_DISCOVERY_CANDIDATES);
+        assert!(
+            list.iter()
+                .any(|c| c.path == root.path().join("Roaming/npm/claude.cmd"))
+        );
+        assert!(
+            !list
+                .iter()
+                .any(|c| c.path.starts_with(root.path().join("path-64")))
+        );
+        assert!(
+            list.iter()
+                .enumerate()
+                .all(|(i, c)| !list[..i].iter().any(|p| p.path == c.path))
+        );
+        let mut versions = vec![];
+        add_manager_versions(&mut versions, Platform::Linux, &manager, "bin");
+        assert_eq!(versions.len(), MAX_MANAGER_ENTRIES);
+        let invalid = root.path().join("invalid-manager");
+        for name in ["packages", "current", ".hidden", "..."] {
+            fs::create_dir_all(invalid.join(name)).unwrap();
+        }
+        let mut empty = vec![];
+        add_manager_versions(&mut empty, Platform::Linux, &invalid, "bin");
+        assert!(empty.is_empty());
     }
 
     #[test]
