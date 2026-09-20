@@ -58,6 +58,10 @@ https://statusline.inmerzion.io/support
 
 https://statusline.inmerzion.io/
 
+## What's new — 1.1.1
+
+A simpler mobile experience: usage comes from your paired Companion, without copying and pasting status text. The fixed local demo is still available without an account, and you can still paste a private pairing link instead of scanning the QR. Existing pairings and saved readings are preserved.
+
 ## What's new — 1.1.0
 
 • Gemini quotas from Antigravity now join Codex in the app and widgets.

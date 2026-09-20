@@ -58,6 +58,10 @@ https://statusline.inmerzion.io/es/support
 
 https://statusline.inmerzion.io/es/
 
+## Novedades — 1.1.1
+
+Una experiencia móvil más simple: el consumo llega desde tu Companion emparejado, sin copiar y pegar líneas de estado. La demo local sigue disponible sin cuenta y puedes pegar el vínculo privado de emparejamiento como alternativa al QR. Se conservan los vínculos y las lecturas guardadas.
+
 ## Novedades — 1.1.0
 
 • Las cuotas de Gemini desde Antigravity se suman a Codex en la app y los widgets.

@@ -1,0 +1,40 @@
+App Review information — iOS 1.1.1 (10)
+
+This update removes the manual quota/status-text editor. Live readings continue to come from the user's paired Statusline Companion. Existing pairing credentials and cached readings are preserved. The fixed, account-free Codex demo remains available when unpaired and cannot overwrite a paired account. Pasting a private pairing link is still supported as an alternative to scanning the QR.
+
+Statusline displays Codex and Google Gemini quota from Antigravity; it is not a chatbot or content-generation app. Only services published by the paired Companion appear. Claude Code is currently Companion-only and is not presented as an iPhone feature. The English listing remains "Statusline: Agent Quota".
+
+1. Recording
+Please retain the physical-iPhone recording from the original submission. It shows launch, QR pairing, refresh and adding the widget. It predates this build and the current multi-service design; it does not demonstrate the removed editor or the new version. No active pairing codes or reviewer credentials are required.
+
+2. Purpose and audience
+A free, open-source utility for developers to check remaining coding-agent quota, reset times and sample age away from the computer, in an iPhone dashboard and Home Screen widgets.
+
+3. Setup and access
+There is no Statusline registration, login, paid content, advertising, subscription or in-app purchase. No sample files or reviewer credentials are needed for the local demo.
+
+Without external setup:
+1. Launch Statusline and tap "View local demo" / "Ver demo local".
+2. A fixed 70% Codex example is saved locally. Add the Statusline widget from the Home Screen. The demo is not live account data and does not simulate Antigravity.
+
+Optional live sync:
+1. Install Statusline Companion from https://github.com/arvivares/statusline/releases/tag/v0.1.28 on macOS, Windows or Linux.
+2. Use your own compatible signed-in Codex and/or Antigravity installation. In Companion Settings > Services, check the detected services. Antigravity reports Google Gemini quotas only.
+3. In Settings > Mobile sync, create a pairing. On iPhone, choose "Scan QR" / "Escanear QR", or paste the private pairing link.
+4. Tap a service below the main quota to focus it. The small widget follows that selection; the medium widget also shows the other service.
+5. Keep the computer awake and Companion running. The app and widget read encrypted samples independently. iOS chooses widget refresh timing; this is not guaranteed real-time. Open the app once after updating.
+
+4. External services
+- OpenAI Codex and Google Antigravity: quota metadata from the user's local authenticated installations. Service credentials, prompts, code and conversations are not sent to the phone or relay.
+- Cloudflare Workers/D1, or a self-hosted relay: AES-256-GCM encrypted snapshots, credential hashes and operational timestamps. The relay has no decryption key or plaintext quota.
+- Apple's camera APIs: user-initiated QR scanning on-device; camera frames are not stored.
+- WidgetKit, App Groups and Keychain: widgets, local caches and pairing-secret storage.
+
+5. Regions
+China mainland remains excluded. Features and free pricing are consistent in enabled storefronts, subject to third-party service availability.
+
+6. Regulated industry / third-party material
+Statusline is not a regulated-industry service and does not distribute protected third-party content. It is independent and not affiliated with or endorsed by OpenAI or Google. Product names identify compatibility.
+
+Privacy: https://statusline.inmerzion.io/privacy
+Support: https://statusline.inmerzion.io/support

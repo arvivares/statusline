@@ -1,0 +1,1 @@
+Actualización de compatibilidad con Statusline Companion 0.1.28. Se conservan tu emparejamiento, las lecturas de Codex y Gemini, el servicio elegido y el widget. Mantén Companion abierto en tu ordenador para recibir nuevas muestras. Android gestiona cuándo se actualizan los widgets.

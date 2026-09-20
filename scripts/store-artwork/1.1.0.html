@@ -121,6 +121,16 @@
       .privacy .raw {
         transform: translateY(-865px);
       }
+      body[data-version="1.1.1"] .pairing .raw,
+      body[data-version="1.1.1"] .privacy .raw {
+        transform: translateY(-1030px);
+      }
+      body[data-version="1.1.1"] .pairing .visual {
+        height: 940px;
+      }
+      body[data-version="1.1.1"] .privacy .visual {
+        height: 1280px;
+      }
       .widget .visual {
         top: 1000px;
         height: 630px;
@@ -217,6 +227,9 @@
       const lang = params.get("lang") === "es" ? "es" : "en";
       const locale = lang === "es" ? "es-ES" : "en-US";
       const platform = params.get("platform") || "ios";
+      const version = params.get("version") || "1.1.0";
+      if (!["1.1.0", "1.1.1"].includes(version))
+        throw new Error("Unsupported verified artwork version.");
       const slide = Number(params.get("slide") || 1);
       const copy = {
         en: [
@@ -316,6 +329,7 @@
           "Current native iOS assets only. Android artwork requires verified Android captures.",
         );
       document.documentElement.lang = lang;
+      document.body.dataset.version = version;
       document.title = `Statusline · Still Focus · ${locale} · ${slide}`;
       const stage = document.querySelector("#stage");
       stage.className = selected.kind;
@@ -327,7 +341,7 @@
         .classList.add(slide === 1 ? "phone" : "detail");
       const img = document.querySelector(".raw");
       img.alt = selected.alt;
-      img.src = `../../apps/apple/store/assets/1.1.0/source/${locale}/${selected.image}.png`;
+      img.src = `../../apps/apple/store/assets/${version}/source/${locale}/${selected.image}.png`;
       img.onerror = () => {
         document.body.dataset.ready = "error";
         stage.innerHTML =

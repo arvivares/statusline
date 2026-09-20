@@ -3,7 +3,12 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const root = new URL("../../apps/apple/store/assets/1.1.0/", import.meta.url);
+const version = process.argv[2] || "1.1.0";
+assert.ok(["1.1.0", "1.1.1"].includes(version), "Unsupported artwork version");
+const root = new URL(
+  `../../apps/apple/store/assets/${version}/`,
+  import.meta.url,
+);
 const expected = [
   "01-quota.png",
   "02-gemini.png",
@@ -63,7 +68,7 @@ for (const [locale, labels] of [
       "Promotional text",
       "Description",
       "Keywords",
-      "What's new — 1.1.0",
+      `What's new — ${version}`,
     ],
   ],
   [
@@ -74,7 +79,7 @@ for (const [locale, labels] of [
       "Texto promocional",
       "Descripción",
       "Palabras clave",
-      "Novedades — 1.1.0",
+      `Novedades — ${version}`,
     ],
   ],
 ]) {
@@ -106,7 +111,7 @@ for (const [locale, labels] of [
 }
 const notes = readFileSync(
   new URL(
-    "../../apps/apple/store/release-notes/1.1.0-review.txt",
+    `../../apps/apple/store/release-notes/${version}-review.txt`,
     import.meta.url,
   ),
   "utf8",

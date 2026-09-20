@@ -95,8 +95,14 @@ final class statuslineUITests: XCTestCase {
             XCTAssertFalse(app.buttons[spanish ? "Guardar en este dispositivo" : "Save on this device"].exists)
             app.swipeUp()
         }
-        XCTAssertTrue(app.buttons[spanish ? "Privacidad" : "Privacy"].isHittable)
-        XCTAssertTrue(app.buttons[spanish ? "Soporte" : "Support"].isHittable)
+        // SwiftUI Link is exposed as a link by newer accessibility runtimes.
+        // Query the visible label independently of the former button trait.
+        let privacy = app.descendants(matching: .any)
+            .matching(identifier: spanish ? "Privacidad" : "Privacy").firstMatch
+        let support = app.descendants(matching: .any)
+            .matching(identifier: spanish ? "Ayuda" : "Support").firstMatch
+        XCTAssertTrue(privacy.isHittable)
+        XCTAssertTrue(support.isHittable)
     }
 
     @MainActor
