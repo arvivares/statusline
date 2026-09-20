@@ -1,0 +1,1 @@
+Compatibility update for Statusline Companion 0.1.28. Your existing pairing, Codex and Gemini readings, selected service and home-screen widget are preserved. Keep Companion running on your computer to receive updated samples. Widget refresh timing is managed by Android.

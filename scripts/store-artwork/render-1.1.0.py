@@ -7,12 +7,15 @@ Source PNGs must already have been captured and visually reviewed.
 from pathlib import Path
 
 root = Path(repo_root).resolve()
+version = globals().get("artwork_version", "1.1.0")
+if version not in ("1.1.0", "1.1.1"):
+    raise ValueError("Unsupported verified artwork version")
 base_url = "http://127.0.0.1:8766/scripts/store-artwork/1.1.0.html"
 names = ["01-quota", "02-gemini", "03-pairing", "04-widget", "05-privacy"]
 
 for lang, locale in [("en", "en-US"), ("es", "es-ES")]:
     for slide, name in enumerate(names, 1):
-        browser.goto(f"{base_url}?lang={lang}&slide={slide}")
+        browser.goto(f"{base_url}?lang={lang}&slide={slide}&version={version}")
         page = browser._run(browser._session.get_current_page())
         browser._run(page.set_viewport_size(width=1320, height=2868))
         ready = browser._run(page.evaluate("""() => (async () => {
@@ -27,7 +30,7 @@ for lang, locale in [("en", "en-US"), ("es", "es-ES")]:
         })()"""))
         if not ready:
             raise RuntimeError(f"Artwork not ready: {locale}/{name}")
-        destination = root / "apps/apple/store/assets/1.1.0" / locale / f"{name}.png"
+        destination = root / "apps/apple/store/assets" / version / locale / f"{name}.png"
         browser._run(browser._session.take_screenshot(
             path=str(destination), full_page=True, format="png",
             clip={"x": 0, "y": 0, "width": 1320, "height": 2868},

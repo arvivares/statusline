@@ -1,5 +1,15 @@
 # Still Focus store artwork
 
+## Current iOS artwork
+
+The [1.1.1 capture set](../../apps/apple/store/assets/1.1.1/README.md) removes the
+retired manual quota editor and retains five EN/ES images. Use
+`1.1.0.html?version=1.1.1&lang=en&slide=1`, set `artwork_version = "1.1.1"` when
+running `render-1.1.0.py` through Browser Use, and validate with
+`node scripts/store-artwork/validate-1.1.0.mjs 1.1.1`.
+
+## Historical single-provider artwork
+
 Approved scope: **five screenshots per store, per locale** (`en-US`, `es-ES`). Still Focus applies the existing Still Signature palette and segmented logo to a calm, minimal store presentation.
 
 Open [the gallery](index.html) to review both languages. Open [the artwork](still-focus.html?lang=en&slide=1) with `lang=en|es` and `slide=1..5` for an individual export. No network dependencies or external fonts are used.

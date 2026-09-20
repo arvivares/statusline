@@ -55,7 +55,8 @@ final class AgentStoreScreenshotTests: XCTestCase {
         let scan = app.buttons[es ? "Escanear QR" : "Scan QR"]
         reveal(scan, app: app)
         retain(app, "\(language)-03-private-sync")
-        let privacy = app.buttons[es ? "Privacidad" : "Privacy"]
+        let privacy = app.descendants(matching: .any)
+            .matching(identifier: es ? "Privacidad" : "Privacy").firstMatch
         reveal(privacy, app: app)
         retain(app, "\(language)-05-privacy")
     }

@@ -1,6 +1,29 @@
 # Apple App Store release kit
 
-## Current submission — 15 September 2026
+## Current status — 20 September 2026
+
+App Store Connect now shows **iOS 1.1.0 (9), Ready for Distribution**.
+**1.1.1 (10)** removes manual `/status` quota entry
+while preserving pairing-link paste, local demo, service selection and widgets.
+Uploaded on 20 September at **12:48 Europe/Madrid**, it is **Testing** in
+TestFlight's Internal QA and **Waiting for Review** in App Store Connect after
+submission at **13:13 Europe/Madrid**. Submission ID:
+`3d22359f-693c-478e-b0ed-e4535cd7db2a`.
+The USB-installed Release build preserves the physical iPhone's pairing and
+readings; the existing widget renders correctly. Six UI checks and the unit
+suite passed after correcting stale test selectors. See
+[validation-1.1.1.md](validation-1.1.1.md) for precise QA limits and delivery gates.
+
+Submitted notes are recorded in [English](release-notes/1.1.1-en-US.txt),
+[Spanish](release-notes/1.1.1-es-ES.txt) and
+[App Review instructions](release-notes/1.1.1-review.txt).
+[Updated Still Focus artwork](assets/1.1.1/README.md) contains five images per
+language with native capture provenance; both localized sets are uploaded and
+verified in Media Manager. Submission is not App Review approval or public
+availability; 1.1.0 remains the published version. TestFlight's EN/ES description,
+What to Test and official privacy links were also brought up to date.
+
+## Historical submission — 15 September 2026
 
 **iOS 1.1.0 (9)** is **Waiting for Review**, submitted on 15 September 2026 at
 17:51 Europe/Madrid after the developer confirmed it works on their physical
