@@ -63,6 +63,27 @@ its credentials. Linux retains its existing CLI discovery.
 
 ## Session and privacy boundary
 
+### Automatic quota selection
+
+Statusline selects the `codex` entry in App Server's `rateLimitsByLimitId` map,
+not the most exhausted bucket. Separate limits such as `codex_spark` or
+`base_model_inference` (which may be named `gpt-reserve`) are not presented as
+the general Codex quota. Display names never determine bucket identity.
+
+If the map has no `codex` entry, Statusline accepts the backward-compatible
+`rateLimits` snapshot only when its ID is `codex` or omitted by an older server.
+The weekly and short windows always come from the same selected snapshot.
+An unavailable weekly window stays unavailable; invalid Codex data stays an
+error. Neither state is replaced with another service's quota, and a genuinely
+exhausted Codex window still shows 0% remaining.
+
+Selection is automatic on macOS, Windows and Linux, with no account/bucket
+selector or new user configuration. The selected quota feeds both the existing
+Codex-only and multi-service encrypted mobile snapshots without changing their
+schemas, credentials or pairing.
+
+### Local account queries
+
 The transport remains local JSONL over stdio using the documented
 [Codex App Server](https://learn.chatgpt.com/docs/app-server) protocol:
 `initialize`, `initialized`, `account/read` (`refreshToken: false`) and

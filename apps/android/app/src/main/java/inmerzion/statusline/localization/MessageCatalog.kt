@@ -3,7 +3,6 @@ package inmerzion.statusline.localization
 
 internal object MessageCatalog {
     val spanish: Map<String, String> = mapOf(
-        " Showing the most restrictive of {0} limits." to " Se muestra el más restrictivo de {0} límites.",
         "— / LEFT" to "— / LIBRE",
         "{0} · Encrypted snapshot" to "{0} · Muestra cifrada",
         "{0} · ENCRYPTED SNAPSHOT" to "{0} · MUESTRA CIFRADA",
@@ -54,7 +53,6 @@ internal object MessageCatalog {
         "AVAILABLE" to "DISPONIBLE",
         "available · quota metadata only" to "disponible · solo metadatos de cuota",
         "AVAILABLE · QUOTA METADATA ONLY" to "DISPONIBLE · SOLO METADATOS DE CUOTA",
-        "AVAILABLE · STRICTEST OF {0} LIMITS" to "DISPONIBLE · EL MÁS RESTRICTIVO DE {0} LÍMITES",
         "Bridge connected. Quota appears after a Claude Code session receives its first response." to "Puente conectado. La cuota aparece cuando una sesión de Claude Code recibe su primera respuesta.",
         "Bridge not connected" to "Puente sin conectar",
         "BUILD NOT CONFIGURED" to "VERSIÓN SIN CONFIGURAR",

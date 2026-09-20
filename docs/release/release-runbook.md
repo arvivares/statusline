@@ -10,11 +10,11 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.28` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.28`;
-- Android candidate: `versionCode 24` (Google Play submission is separate);
-- recorded iOS source version: `1.1.0 (9)`, adding Antigravity to the app and
-  widgets. This metadata is not a live App Store/TestFlight status report.
+- prepared product tag: `v0.1.29` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.29`;
+- Android candidate: `versionCode 25` (Google Play submission is separate);
+- recorded iOS source version: `1.1.1 (10)`, with the current automatic-sync
+  experience. This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
   before taking any store action. Build 5 has an empty widget endpoint and
   must not be publicly released. Historical device and submission evidence is
@@ -55,7 +55,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.28`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.29`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -139,8 +139,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.28 -m "Statusline 0.1.28 beta"
-git push origin v0.1.28
+git tag -s v0.1.29 -m "Statusline 0.1.29 beta"
+git push origin v0.1.29
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -149,7 +149,26 @@ approval: after every build, trust, inventory, checksum and provenance gate pass
 draft is published automatically according to `distribution.publishPrerelease`.
 The current profile publishes a normal GitHub release marked **Latest**.
 
-### 0.1.28 candidate gates
+### 0.1.29 candidate gates
+
+- Verify automatic selection of the general `codex` bucket, including an
+  exhausted reserve, genuine Codex exhaustion, older compatibility snapshots,
+  malformed unrelated buckets and unavailable/invalid selected Codex windows.
+  Keep weekly and short windows paired and preserve both mobile wire formats.
+- Run the production Rust contracts and native type checks on all desktop
+  platforms, frontend tests, localization and release-policy validation. Preserve
+  the existing encrypted relay contract and all account/source/pairing settings.
+- Publish the complete Windows/Linux/macOS/Android installer inventory from one
+  verified signed tag after CI and manual Release preflight pass. Retain the
+  unsigned Windows disclosure and every existing signature/notarization gate.
+- Do not redeploy the relay or upload a new iOS build for this Companion fix.
+  Android `0.1.29 (25)` only updates release metadata and removes unused shared
+  strings; no Google Play/App Store rollout is part of this GitHub release.
+- Live read-only Codex validation passed on macOS before packaging. Keep final
+  installed-upgrade and real Windows/Linux account checks explicit in the
+  [release notes](notes/v0.1.29.md); CI is not a substitute for device QA.
+
+### Historical 0.1.28 candidate gates
 
 - Verify the unified Services tab in EN/ES and English fallback, with zero,
   one and multiple installed agents. Preserve discovery, saved paths, disabled
