@@ -57,7 +57,7 @@ jobs:
 
       - name: Install pinned Rust formatter
         run: |
-          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt
+          rustup toolchain install "$RUST_VERSION" --profile minimal --component rustfmt --component clippy
           rustup default "$RUST_VERSION"
 
       - name: Validate release metadata, tests and documentation

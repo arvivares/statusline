@@ -101,3 +101,26 @@ test("CI runs the toolchain guard and cross-platform relay smoke checks", () => 
     assert.ok(workflow.split("  codex-runtime:")[0].includes(command), command);
   }
 });
+
+test("the platform matrix prepares declared Rust components before parallel tests", () => {
+  const toolchain = read("rust-toolchain.toml");
+  const version = toolchain.match(/^channel = "([^"]+)"$/mu)?.[1];
+  const components = JSON.parse(
+    toolchain.match(/^components = (\[[^\n]+\])$/mu)?.[1],
+  );
+  const workflow = read(".github/workflows/repository-quality.yml");
+  const matrix = workflow
+    .split("  native-companion:")[1]
+    .split("  codex-runtime:")[0];
+  const install = matrix.match(/run: (rustup toolchain install[^\n]+)/u)?.[1];
+  assert.ok(install?.includes(`rustup toolchain install ${version} `));
+  for (const component of components) {
+    assert.ok(install.includes(`--component ${component}`), component);
+  }
+  const prepare = matrix.indexOf(
+    "node apps/desktop/scripts/build-updater-verifier.mjs",
+  );
+  const tests = matrix.indexOf("run: npm test && npm run build");
+  assert.ok(prepare > matrix.indexOf(install));
+  assert.ok(tests > prepare);
+});
