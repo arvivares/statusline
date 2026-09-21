@@ -271,7 +271,7 @@ screenshots or support requests.
 
 ### Requirements
 
-- Node.js 24 and npm 11.
+- Node.js 26.9.0 and npm 11.19.1 (build tooling; see the [Node policy](docs/architecture/node-toolchain.md)).
 - Rust 1.98 through rustup.
 - An authenticated Codex runtime for real-data testing: the macOS desktop app or Codex CLI.
 - Native [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/) for the host OS.

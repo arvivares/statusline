@@ -40,8 +40,9 @@ Al añadir contenido, actualiza ambos idiomas.
 
 ## Desarrollo
 
-Se recomienda Node.js 24 y npm 11. El build también admite Node.js 22.13 o posterior
-mediante `--experimental-strip-types`, incluido en el comando del proyecto.
+Usa Node.js 26.9.0 y npm 11.19.1, fijados para las herramientas del repositorio.
+La [política de Node](../../docs/architecture/node-toolchain.md) explica el alcance
+y la validación. `--experimental-strip-types` se conserva en los comandos existentes.
 Desde este directorio:
 
 ```shell
@@ -93,7 +94,7 @@ o la configuración compartida de Node y formato, además del contenido público
 `branding/`, su generador y el QR compartido `docs/assets/readme/app-store-qr.svg`.
 Solo en esos casos instala desde
 el lockfile, comprueba TypeScript y formato, genera el build y valida sus artefactos
-SEO con Node.js 24. Los pushes relevantes a `main` y las ejecuciones manuales
+SEO con la versión fijada en `.node-version`. Los pushes relevantes a `main` y las ejecuciones manuales
 también validan la web. Ninguno de estos eventos despliega el sitio.
 
 El check obligatorio de `main` es **Website validation**. Siempre informa un

@@ -29,9 +29,6 @@ concurrency:
   group: website-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  NODE_VERSION: "24"
-
 jobs:
   changes:
     name: Detect website scope
@@ -50,7 +47,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".node-version"
 
       - name: Test scope detection and required check policy
         run: node --test scripts/website-ci.test.mjs
@@ -82,7 +79,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".node-version"
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
 
@@ -130,7 +127,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".node-version"
 
       - name: Enforce website validation result
         env:

@@ -19,6 +19,8 @@ requests are welcome.
 
 ## Architecture and protocol
 
+- [Node toolchain](architecture/node-toolchain.md): shared build/runtime-version
+  policy, compatibility validation and rollback boundaries.
 - [Cross-platform architecture](architecture/cross-platform-companion.md): component
   boundaries, data flow and platform coverage.
 - [Application localization](architecture/localization.md): system-language policy,

@@ -22,7 +22,7 @@ La candidata 0.1.23 recupera el foco principal y las filas abiertas de **Otras c
 
 ## Requisitos
 
-1. Node.js 24 o posterior.
+1. Node.js 26.9.0 y npm 11.19.1, según `.node-version` y la [política de Node](../../docs/architecture/node-toolchain.md).
 2. Rust 1.98 mediante rustup, con rustfmt y clippy.
 3. Codex autenticado mediante Sign in with ChatGPT: app de escritorio compatible o CLI; consulta las limitaciones y el estado de validación abajo.
 4. Los [prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/) del sistema.

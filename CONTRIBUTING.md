@@ -34,6 +34,10 @@ component-specific commands below.
 Node, Java and Rust versions are pinned at the repository root. Platform-specific native
 requirements are documented in each application directory.
 
+Use Node.js 26.9.0 and its bundled npm 11.19.1 for the four npm projects. The
+[Node toolchain policy](docs/architecture/node-toolchain.md) distinguishes build
+tools from the deployed Workers runtime and documents validation and rollback.
+
 The [website guide](apps/web/README.md) covers local development, bilingual content
 and deployment prerequisites. Changes to its CI scope or required-check policy
 must also pass `node --test scripts/website-ci.test.mjs` from the repository root.

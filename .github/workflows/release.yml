@@ -14,7 +14,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: "24"
   RUST_VERSION: "1.98.0"
   STATUSLINE_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
 
@@ -42,7 +41,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".node-version"
           cache: npm
           cache-dependency-path: |
             apps/desktop/package-lock.json
@@ -224,6 +223,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: ".node-version"
+
       - name: Create or refresh draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -303,7 +307,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".node-version"
 
       - name: Download all public candidate artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
