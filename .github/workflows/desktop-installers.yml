@@ -89,7 +89,6 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  NODE_VERSION: "24"
   RUST_VERSION: "1.98.0"
   STATUSLINE_RELAY_BASE_URL: ${{ vars.STATUSLINE_RELAY_BASE_URL }}
 
@@ -134,7 +133,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".node-version"
           cache: npm
           cache-dependency-path: |
             apps/desktop/package-lock.json
@@ -154,7 +153,7 @@ jobs:
 
       - name: Install pinned Rust formatter
         run: |
-          rustup toolchain install ${{ env.RUST_VERSION }} --profile minimal --component rustfmt
+          rustup toolchain install ${{ env.RUST_VERSION }} --profile minimal --component rustfmt --component clippy
           rustup default ${{ env.RUST_VERSION }}
 
       - name: Validate release metadata and frontend
@@ -409,7 +408,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".node-version"
           cache: npm
           cache-dependency-path: apps/desktop/package-lock.json
 
@@ -936,7 +935,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".node-version"
 
       - name: Install Linux smoke-test dependencies
         run: |
@@ -977,7 +976,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".node-version"
 
       - name: Download installer artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

@@ -246,7 +246,7 @@ El QR de emparejamiento del companion debe tratarse como una contraseña durante
 
 ### Requisitos generales
 
-- Node.js 24 o posterior y npm 11.
+- Node.js 26.9.0 y npm 11.19.1 (herramientas de build; consulta la [política de Node](docs/architecture/node-toolchain.md)).
 - Rust 1.98 mediante rustup para el companion Tauri.
 - Codex autenticado para probar datos reales: app de escritorio en macOS o Codex CLI.
 - Requisitos nativos de [Tauri 2](https://v2.tauri.app/start/prerequisites/) para cada escritorio.

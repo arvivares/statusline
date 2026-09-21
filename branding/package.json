@@ -6,8 +6,9 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=26.9.0 <27"
   },
+  "packageManager": "npm@11.19.1",
   "scripts": {
     "generate": "node ../scripts/generate-brand-assets.mjs",
     "check": "node ../scripts/generate-brand-assets.mjs --check && node --test ../scripts/brand-assets.test.mjs",

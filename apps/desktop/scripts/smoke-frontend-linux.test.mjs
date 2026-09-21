@@ -125,10 +125,15 @@ describe.skipIf(process.platform === "win32")(
       async (marker) => {
         const f = await fixture({ FIXTURE_MARKER: marker });
         const result = run(f);
+        expect(result.error).toBeUndefined();
+        expect(result.signal).toBeNull();
         expect(result.status, result.error?.message).toBe(1);
         expect(result.stderr).toContain("Frontend did not initialize");
         expect(result.stdout).not.toContain("IPC handshake succeeded");
       },
+      // These negative cases exhaust all 150 readiness polls. Allow slower
+      // macOS CI to finish; the child still has its independent 15-second cap.
+      20_000,
     );
 
     it("fails if the process exits before readiness", async () => {
