@@ -260,3 +260,37 @@ as an unsigned preview, not a trusted Authenticode publisher.
 The source-publication, account-security and repository-visibility gates are complete.
 Applied GitHub controls and the remaining binary-release gates are maintained in the
 [public repository launch checklist](../release/public-repository-checklist.md).
+
+### SignPath action v3 review — 21 September 2026
+
+Scope: Dependabot PR #68, the two signing-action references, their release
+preflight and the exact upstream v2-to-v3 diff. This is a targeted source review,
+not a new whole-application audit or a live signing certification.
+
+- **Info, resolved — stale integrity guard** (`apps/desktop/scripts/check-release.mjs:758`,
+  OWASP A08): Dependabot updated the workflow but left the guard requiring the old
+  SHA. Update both to reviewed commit `f6d04783b4569d051e0c80105fe66e82819d0092`;
+  retain the full-SHA requirement instead of accepting a mutable major tag.
+- **Info, reviewed — connector endpoint change** (`.github/workflows/desktop-installers.yml:559`
+  and `:610`, OWASP A02/A08): the official action changes its default from
+  `githubactions.connectors.signpath.io` to
+  `pipelineconnector.connectors.signpath.io/GitHubActions/GitHubCom`, both HTTPS.
+  Inputs, artifact IDs, outputs, token handling and the Node 24 action runtime
+  remain compatible in the inspected diff. No new repository permissions or
+  custom endpoint/token overrides are introduced.
+- **Info, remaining operational gate** (same signing stages): no approved live
+  SignPath signing request was performed. Windows still uses the explicit
+  `unsigned-preview` release profile. Before enabling Authenticode, validate the
+  account/project/policy with the new connector, both signing stages, returned
+  publisher identity and clean-machine installation. This update does not issue
+  a certificate or make existing Windows installers trusted publishers.
+
+No new critical or high finding was identified in this scoped diff. Regression
+checks in `scripts/dependabot-policy.test.mjs` cover both exact action pins,
+explicit Windows signing opt-in, artifact-ID inputs, bounded waits, temporary
+output locations and the unchanged read-only default permissions. Existing
+signature verification and release inventory gates remain in place. No agent
+credentials, mobile pairing, encryption, API routes or database migrations change.
+
+Reviewed primary sources: [v3.0 action manifest](https://github.com/SignPath/github-action-submit-signing-request/blob/f6d04783b4569d051e0c80105fe66e82819d0092/action.yml)
+and [complete upstream comparison](https://github.com/SignPath/github-action-submit-signing-request/compare/c92b958760219087e01f8d67a1669ed57afe2627...f6d04783b4569d051e0c80105fe66e82819d0092).
