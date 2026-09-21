@@ -755,7 +755,7 @@ for (const requiredWorkflowToken of [
   "SIGNPATH_INSTALLER_ARTIFACT_CONFIGURATION_SLUG",
   "SIGNPATH_EXPECTED_SIGNER_SUBJECT",
   "unix",
-  "signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627",
+  "signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092",
   "Build Windows application without bundling",
   "--no-bundle",
   "Bundle Windows installers without recompiling",
