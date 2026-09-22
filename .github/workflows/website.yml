@@ -104,6 +104,9 @@ jobs:
       - name: Validate localized product captures
         run: npm run test:media
 
+      - name: Validate provider descriptions and platform boundaries
+        run: npm run test:providers
+
       - name: Build production website
         run: npm run build
 

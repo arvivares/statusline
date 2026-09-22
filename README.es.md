@@ -1,8 +1,8 @@
 <div align="center">
   <img src="branding/statusline-icon.svg" alt="Logo de Statusline" width="112">
   <h1>Statusline</h1>
-  <p><strong>Tu uso de Codex, visible en todas partes.</strong></p>
-  <p>Companion multiplataforma, sincronización móvil cifrada y widgets nativos para iPhone y Android.</p>
+  <p><strong>Las cuotas de Codex, Antigravity y Claude Code de un vistazo.</strong></p>
+  <p>Un companion de escritorio. Límites separados, reinicios claros y sincronización móvil privada.</p>
   <p><a href="README.md">English</a> · <strong>Español</strong></p>
   <p><a href="https://statusline.inmerzion.io/es/"><strong>Sitio oficial</strong></a> · <a href="https://apps.apple.com/app/statusline/id6807851320">App Store</a> · <a href="https://github.com/arvivares/statusline/releases">Descargas</a></p>
 </div>
@@ -15,10 +15,39 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/arvivares/statusline?color=efc65a" alt="Licencia MIT"></a>
 </div>
 
-Statusline muestra el estado de la cuota de Codex en Windows, Linux, macOS, iPhone y Android, con widgets nativos y sincronización cifrada de extremo a extremo.
+Statusline muestra la cuota restante y los reinicios de **OpenAI Codex, Google
+Antigravity y Anthropic Claude Code** en un companion compacto para Windows,
+Linux y macOS. Cambia entre los servicios detectados sin abrir cada herramienta.
+Cada proveedor conserva sus propios límites y la hora de su muestra; una cuota
+no disponible nunca se presenta como llena ni agotada.
+
+La sincronización opcional cifrada de extremo a extremo lleva **Codex y
+Antigravity** a las apps y widgets compatibles de iPhone y Android. La cuota de
+Claude Code está disponible por ahora solo en escritorio. No necesitas los tres
+proveedores ni una API key de OpenAI para usar Statusline.
 
 > [!NOTE]
-> Statusline es un proyecto open source independiente. No está afiliado, patrocinado ni respaldado por OpenAI.
+> Statusline es un proyecto open source independiente. No está afiliado, patrocinado ni respaldado por OpenAI, Google ni Anthropic.
+
+## Proveedores compatibles
+
+| Proveedor                   | Qué muestra el companion                                                              | Requisito local                                                                          | Apps móviles y widgets                                               |
+| --------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **OpenAI · Codex**          | Cuota general de Codex: ventanas semanal y corta, reinicios y plan cuando se informan | Ejecutable de escritorio compatible o CLI de Codex con sesión de ChatGPT                 | Codex; los clientes antiguos conservan la vista semanal              |
+| **Google · Antigravity**    | Grupos de cuota de Google Gemini semanal y de cinco horas, cuando se informan         | Antigravity Desktop oficial o AGY CLI compatible, con sesión iniciada                    | Clientes compatibles con Codex/Antigravity y relay con `services-v1` |
+| **Anthropic · Claude Code** | Límites del plan de cinco horas y siete días, solo cuando Claude Code los informa     | Claude Code CLI, consentimiento explícito en **Activar cuota** y una respuesta de sesión | Todavía no compatible                                                |
+
+Son lecturas independientes, no un porcentaje combinado ni créditos intercambiables.
+Se excluyen las cuotas de modelos de terceros en Antigravity. Algunas cuentas de
+Claude informan una sola ventana; las sesiones con API key o proveedores cloud no
+aportan cuota del plan y un límite de gasto de gateway no se trata como cuota restante.
+
+Usa únicamente los servicios instalados en tu equipo. La consulta es independiente:
+un servicio no disponible no sustituye la lectura de otro. Consulta las guías de
+[Codex](docs/architecture/codex-sources.md),
+[Antigravity](docs/architecture/antigravity-companion.md) y
+[Claude Code](docs/architecture/claude-sources.md) para conocer las instalaciones
+compatibles y los límites de la validación.
 
 ## Interfaz
 
@@ -32,8 +61,8 @@ Statusline muestra el estado de la cuota de Codex en Windows, Linux, macOS, iPho
     </td>
   </tr>
   <tr>
-    <td align="center"><strong>Companion</strong><br><sub>Windows · Linux · macOS</sub></td>
-    <td align="center"><strong>iPhone</strong><br><sub>App nativa · demo local</sub></td>
+    <td align="center"><strong>Companion</strong><br><sub>Demo de Codex · captura de 0.1.20</sub></td>
+    <td align="center"><strong>iPhone</strong><br><sub>App nativa · demo local de Codex</sub></td>
   </tr>
 </table>
 
@@ -42,12 +71,13 @@ oscura cálida, tipografía discreta y una barra dorada segmentada con un cursor
 blanco al final. El companion ocupa 340 × 500 píxeles lógicos. iPhone, Android
 y los widgets nativos comparten el mismo estilo.
 
-Las capturas usan datos de demostración, no una cuenta personal. La imagen del
-iPhone procede del código actual ejecutado en el simulador de iOS; su publicación
-en la App Store es independiente. Consulta la [procedencia y reproducción de las capturas](docs/assets/readme/README.md#still-signature-product-captures).
+Estas capturas de Codex usan datos de demostración, no una cuenta personal. Se
+prepararon para 0.1.20 y no muestran la nueva interfaz multiproveedor. La imagen
+del iPhone procede de un simulador de iOS; los cambios de código y la publicación
+en la App Store son independientes. Consulta la [procedencia y reproducción de las capturas](docs/assets/readme/README.md#still-signature-product-captures).
 
 <details>
-  <summary>Configuración del companion · Codex y sincronización móvil</summary>
+  <summary>Configuración del companion · Codex y sincronización móvil · ejemplos de 0.1.20</summary>
   <br>
   <table>
     <tr>
@@ -66,7 +96,9 @@ variantes para cada plataforma se mantienen en el [kit de marca](branding/README
 
 La interfaz sigue el idioma principal del sistema: español o inglés. Para cualquier otro idioma usa inglés, también en los widgets. Consulta la [guía de localización](docs/architecture/localization.md).
 
-El companion consulta la sesión local de Codex; no requiere una API key de OpenAI ni una cuenta compartida entre el ordenador y el teléfono. Cuando el usuario activa la sincronización, publica únicamente un snapshot mínimo cifrado que el relay no puede descifrar.
+El companion consulta las fuentes locales compatibles de cada proveedor; no requiere
+una cuenta compartida entre el ordenador y el teléfono. Cuando activas la
+sincronización, publica muestras mínimas cifradas que el relay no puede descifrar.
 
 ### Descargar para iPhone
 
@@ -88,12 +120,14 @@ cuando la app esté aprobada. Los APK de la beta de Android ya están disponible
 
 ## Qué incluye
 
-- Estado semanal de Codex, porcentaje restante, fecha de reinicio, ventana corta y plan.
+- Codex, Antigravity y Claude Code en una vista de escritorio; Claude requiere activación explícita.
+- Ventanas propias de cada proveedor, porcentaje restante, reinicios y antigüedad de las muestras.
 - Companion de bandeja/barra de menú para Windows, Linux y macOS, construido con Tauri, Rust y TypeScript.
 - Avisos de nuevas versiones desde GitHub, descargas verificadas e instalación con
   confirmación; consulta el [soporte de actualizaciones](docs/architecture/companion-updates.md).
 - Aplicaciones nativas para iPhone y Android con emparejamiento mediante QR o vínculo privado.
-- Widgets Data Plane para iOS y Android alimentados desde caché local.
+- Codex y Antigravity en apps móviles y widgets compatibles de iOS y Android,
+  alimentados desde cachés privadas; los clientes antiguos siguen mostrando solo Codex.
 - Relay universal con credenciales separadas de publicación, emparejamiento y lectura.
 - Cifrado AES-256-GCM interoperable entre Rust, Swift y Kotlin.
 - Instaladores reproducibles y verificaciones automáticas en GitHub Actions.
@@ -112,7 +146,10 @@ cuando la app esté aprobada. Los APK de la beta de Android ya están disponible
 | Widget de Android           | Presentación | App Widget       | Incluido con la app Android                                     |
 | Cloudflare Workers + D1     | Relay        | TypeScript       | Despliegue con Wrangler                                         |
 
-`apps/desktop` contiene el companion multiplataforma que genera los instaladores públicos de escritorio. El target SwiftUI `StatuslineCompanion`, dentro de `apps/apple`, se conserva como implementación nativa de macOS; no es necesario para compilar Tauri.
+`apps/desktop` contiene el companion multiproveedor que genera los instaladores
+públicos de escritorio. El target SwiftUI `StatuslineCompanion`, dentro de
+`apps/apple`, se conserva como implementación nativa de macOS centrada en Codex;
+no es necesario para compilar Tauri ni equivale al companion multiproveedor.
 
 ## Releases
 
@@ -120,8 +157,9 @@ Las descargas permanentes se publican en [GitHub Releases](https://github.com/ar
 La entrada actual `windows-bootstrap-v0.1.6` es una preview de Windows explícitamente sin
 firma para el onboarding de SignPath Foundation; no es la beta pública para usuarios.
 
-La `v0.1.26` preparada aparecerá como release normal de GitHub marcada **Latest**, no
-como Pre-release. El producto sigue en beta y las prereleases anteriores no cambian.
+La versión del repositorio es **0.1.30 Beta**; consulta sus
+[notas de release](docs/release/notes/v0.1.30.md). La configuración publica una
+release normal de GitHub, no una Pre-release, pero el producto sigue en beta.
 Incluye previews NSIS/MSI de Windows, DEB/RPM/AppImage, DMG/PKG universal y APK/AAB firmados.
 Preparar los metadatos no publica los instaladores. El inventario, checksums, controles
 de confianza y attestations de procedencia deben aprobarse antes de hacerla pública.
@@ -136,9 +174,15 @@ inventario exacto, la configuración SignPath y los comandos de verificación.
 
 ## Roadmap
 
-Codex es la experiencia completa de v1. La siguiente etapa será una arquitectura de adaptadores por capacidades para mostrar Codex, AGY, Claude Code, GitHub Copilot y futuros agentes en una sola vista, manteniendo las unidades reales de cada proveedor.
+El companion de escritorio ya admite Codex, Antigravity y Claude Code con activación
+explícita. Las apps y widgets móviles compatibles con Codex/Antigravity usan el
+inventario cifrado de servicios sin sustituir los emparejamientos existentes.
 
-El orden propuesto es: publicar una base sólida de Codex, extraer el contrato común, validar AGY como primer adaptador adicional, leer la cuota de Claude Code mediante su hook documentado de status line con activación explícita y después investigar integraciones soportadas para GitHub Copilot. El backlog incluye widgets multiproveedor, timeline de resets, historial local, alertas de capacidad, pronósticos con confianza explícita y relay autohospedado.
+Los siguientes pasos incluyen Claude en móviles, validación de sesiones reales de
+Claude en Windows y Linux y más pruebas de paquetes instalados. El backlog incluye
+un timeline de reinicios entre proveedores, historial local, alertas de capacidad,
+pronósticos con confianza explícita y relay autohospedado. GitHub Copilot y otros
+adaptadores siguen en investigación; no son funciones actuales.
 
 Consulta el [roadmap completo de producto e ingeniería](ROADMAP.md) para ver factibilidad, principios de privacidad, hitos de arquitectura y definición de terminado.
 
@@ -147,19 +191,25 @@ Consulta el [roadmap completo de producto e ingeniería](ROADMAP.md) para ver fa
 ```mermaid
 flowchart TB
     publisher["DISPOSITIVO PUBLISHER · CONFIABLE"]
-    codex["CODEX CLI<br/>SESIÓN LOCAL"]
+    codex["CODEX<br/>APP SERVER LOCAL"]
+    agy["ANTIGRAVITY<br/>SESIÓN DESKTOP O CLI"]
+    claude["CLAUDE CODE<br/>PUENTE STATUS LINE CON CONSENTIMIENTO"]
     companion["STATUSLINE COMPANION<br/>SÓLO METADATOS DE CUOTA"]
     crypto{{"CIFRADO LOCAL<br/>AES-256-GCM"}}
     transport["FRONTERA DE RED · SIN CONOCIMIENTO"]
     relay(["STATUSLINE RELAY<br/>SÓLO CIPHERTEXT OPACO"])
     reader["DISPOSITIVO MÓVIL · CONFIABLE"]
-    mobile["iOS / ANDROID<br/>READER AUTENTICADO"]
-    cache[("CACHÉ PRIVADA<br/>SNAPSHOT VALIDADO")]
-    widget["WIDGET NATIVO<br/>SÓLO LECTURA LOCAL"]
+    mobile["iOS / ANDROID<br/>LECTOR CODEX + ANTIGRAVITY"]
+    cache[("CACHÉS PRIVADAS<br/>SNAPSHOT VALIDADO")]
+    widget["WIDGET NATIVO<br/>REFRESCO SEGÚN EL SISTEMA"]
     pairing["QR DE UN SOLO USO<br/>TOKEN + CLAVE · 10 MIN"]
 
     publisher --> codex
-    codex -->|"JSONL LOCAL"| companion
+    publisher --> agy
+    publisher --> claude
+    codex -->|"METADATOS DE CUOTA"| companion
+    agy -->|"SOLO CUOTA GOOGLE"| companion
+    claude -->|"LÍMITES DEL PLAN INFORMADOS"| companion
     companion -->|"SNAPSHOT MÍNIMO"| crypto
     crypto -->|"HTTPS · CIPHERTEXT"| transport
     transport --> relay
@@ -177,7 +227,7 @@ flowchart TB
     classDef storage fill:#14150F,stroke:#EFC65A,color:#ECE9DC,stroke-width:1px
 
     class publisher,transport,reader boundary
-    class codex,companion,mobile,widget panel
+    class codex,agy,claude,companion,mobile,widget panel
     class crypto signal
     class relay,pairing gateway
     class cache storage
@@ -186,26 +236,27 @@ flowchart TB
 
 Las líneas continuas representan el refresco recurrente. El trazado punteado es la entrega de emparejamiento de un solo uso; el relay nunca recibe la clave de cifrado.
 
-1. El companion inicia `codex app-server` mediante entrada/salida estándar y normaliza sólo los metadatos de cuota.
+1. Colectores independientes consultan las fuentes locales compatibles: Codex App Server, la sesión seleccionada de Antigravity Desktop/CLI y el puente status line de Claude Code activado con consentimiento. Conservan metadatos de cuota, no conversaciones ni código fuente.
 2. Al crear un canal, el relay entrega credenciales aleatorias de publisher y pairing; el companion genera localmente una clave AES-256.
 3. El QR contiene el identificador del canal, un token de un solo uso que vence en diez minutos y la clave. No contiene la credencial publisher ni la URL del relay.
 4. La app móvil cambia el token efímero por una credencial reader y conserva reader + clave en el almacén seguro del sistema.
-5. El relay almacena hashes de credenciales, timestamps operativos y un solo ciphertext por canal. Nunca recibe la clave de cifrado.
-6. La app móvil autentica y descifra el snapshot, lo guarda localmente y actualiza su widget.
+5. El relay almacena hashes de credenciales, timestamps operativos y muestras cifradas opacas. Nunca recibe la clave de cifrado. Un relay compatible acepta el inventario de servicios junto a la muestra de Codex para clientes antiguos.
+6. La app móvil autentica y descifra la muestra y actualiza su caché privada. Las apps y widgets actuales muestran Codex y Antigravity e ignoran las entradas de Claude. Los lectores antiguos conservan la muestra semanal de Codex.
 
-El contrato normativo está en [Statusline Relay Protocol v1](protocol/statusline-relay-v1.md), acompañado por un [vector AES-GCM compartido](protocol/fixtures/aes-gcm-v1.json).
+El contrato normativo está en [Statusline Relay Protocol v1](protocol/statusline-relay-v1.md), con su [extensión opcional services-v1](protocol/statusline-services-v1.md) y un [vector AES-GCM compartido](protocol/fixtures/aes-gcm-v1.json).
 
 ## Uso
 
-### 1. Preparar Codex
+### 1. Preparar los proveedores que uses
+
+#### Codex
 
 En macOS puedes usar **Codex integrado en ChatGPT o Codex.app**, sin instalar una
 CLI por separado. Instala la app de escritorio en Aplicaciones, abre Codex e inicia
 sesión con ChatGPT. Statusline detecta automáticamente su ejecutable integrado.
 
-La detección de apps de escritorio en Windows está implementada en el código para
-paquetes MSIX de OpenAI e instalaciones convencionales. **Faltan la validación en
-un Windows sin CLI y una nueva release de instaladores**; consulta la
+La detección de apps de escritorio en Windows admite paquetes MSIX de OpenAI e
+instalaciones convencionales. **Falta la validación en un Windows sin CLI**; consulta la
 [guía de orígenes](docs/architecture/codex-sources.md#windows-desktop-discovery).
 
 Como alternativa en macOS, Windows o Linux, instala Codex CLI y completa
@@ -222,23 +273,56 @@ Reutilizar la sesión de escritorio depende del modo de autenticación local de 
 Consulta [los orígenes de Codex](docs/architecture/codex-sources.md) para ver las rutas
 compatibles en macOS y qué hacer si el ejecutable integrado pide iniciar sesión.
 
+#### Antigravity
+
+Instala e inicia sesión en **Antigravity Desktop** oficial o **AGY CLI**. El companion
+detecta automáticamente las instalaciones compatibles y prefiere Desktop en la
+primera configuración. Recuerda el origen elegido: cerrar sesión o fallar una
+lectura no cambia de cuenta de forma silenciosa. **Configuración → Servicios**
+permite elegir un origen avanzado o desactivar la consulta.
+
+El adaptador CLI requiere la familia compatible de comandos de solo lectura
+`/usage` (versión mayor 1, desde 1.1.11). Solo incluye los grupos de Gemini de Google
+semanal y de cinco horas; consulta la [configuración y los límites de Antigravity](docs/architecture/antigravity-companion.md).
+
+#### Claude Code
+
+Instala **Claude Code CLI**, abre una sesión autenticada y elige **Activar cuota**
+en el companion o **Conectar Claude Code** en **Configuración → Servicios**.
+Es una activación explícita: Statusline añade su puente al ajuste `statusLine`
+de Claude Code, conserva una status line personalizada existente y la restaura
+al desconectar.
+
+La cuota aparece después de que Claude Code informe los límites del plan en una
+respuesta de sesión. Instalar solo la app de chat de Claude no basta. Las ventanas
+ausentes siguen siendo desconocidas; la última muestra no garantiza uso en vivo
+desde otros dispositivos o claude.ai. La validación con sesiones reales cubre macOS;
+Windows/Linux tienen pruebas y fixtures, con validación real pendiente. Consulta
+[los detalles del origen Claude](docs/architecture/claude-sources.md).
+
 ### 2. Instalar el companion
 
-Descarga el formato correspondiente desde los artefactos o releases del proyecto:
+Descarga el formato correspondiente desde
+[GitHub Releases](https://github.com/arvivares/statusline/releases) o compílalo desde el código:
 
 - Windows: NSIS para instalación normal; MSI para despliegues administrados.
 - Linux: DEB, RPM o AppImage.
 - macOS: DMG para arrastrar a Aplicaciones; PKG para instalación guiada.
 
-Los instaladores no incluyen Codex ni credenciales de usuario.
+Los instaladores no incluyen las aplicaciones de los proveedores ni credenciales de usuario.
 
 ### 3. Emparejar el móvil
 
-1. Abre **Conexiones → Origen Codex** y confirma que el ejecutable esté verificado (`APP DE ESCRITORIO` si usas el integrado en macOS).
-2. En **Universal Relay**, selecciona **Create pairing**.
+1. Confirma que el companion muestre una lectura de Codex o Antigravity. Claude todavía no se muestra en móviles.
+2. Abre la configuración de sincronización móvil y selecciona **Crear vínculo**.
 3. En iOS o Android, abre **Pair device** y escanea el QR o pega el vínculo privado.
 4. Actualiza el companion y después la app móvil.
 5. Añade el widget desde el selector del sistema.
+
+Sincronizar Antigravity requiere un relay con `services-v1` y lectores compatibles
+(implementados desde iOS 1.1.0 / Android 0.1.25). Las versiones de código no garantizan
+su publicación en las tiendas. Los emparejamientos existentes siguen siendo válidos;
+un cliente que solo admite Codex necesita actualizar su app para mostrar más servicios.
 
 El QR de emparejamiento del companion debe tratarse como una contraseña durante sus diez minutos de vigencia. No lo compartas en logs, capturas o solicitudes de soporte.
 
@@ -248,7 +332,8 @@ El QR de emparejamiento del companion debe tratarse como una contraseña durante
 
 - Node.js 26.9.0 y npm 11.19.1 (herramientas de build; consulta la [política de Node](docs/architecture/node-toolchain.md)).
 - Rust 1.98 mediante rustup para el companion Tauri.
-- Codex autenticado para probar datos reales: app de escritorio en macOS o Codex CLI.
+- Al menos un proveedor compatible instalado y autenticado para probar datos reales;
+  Claude Code requiere además activar el puente. Las pruebas sintéticas no necesitan cuenta.
 - Requisitos nativos de [Tauri 2](https://v2.tauri.app/start/prerequisites/) para cada escritorio.
 - Xcode actual para iOS, WidgetKit y el companion SwiftUI de macOS.
 - JDK 17, Android SDK Platform 37 y Build Tools 36.0.0 para Android.
@@ -385,14 +470,21 @@ El despliegue de referencia aplica:
 
 ## Seguridad y privacidad
 
-Statusline no lee ni transmite API keys, access tokens de Codex, correo, prompts, conversaciones o código fuente. El snapshot cifrado contiene únicamente:
+Statusline no envía credenciales de proveedores, correo, prompts, conversaciones ni
+código fuente a su relay o a las apps móviles. Codex y Antigravity usan los
+ejecutables locales del proveedor; Claude Code entrega JSON a un puente status line
+activado explícitamente. El puente conserva solo los límites informados y sus
+timestamps, descarta los demás campos de sesión y nunca abre transcripciones ni
+archivos de credenciales.
 
-- versión del esquema;
-- porcentaje semanal restante;
-- fecha de reinicio;
-- fecha de actualización.
+La muestra cifrada original contiene versión del esquema, porcentaje semanal de
+Codex, reinicio y hora de la muestra. El inventario opcional añade identificadores
+de proveedores, disponibilidad y ventanas de cuota con sus propias marcas de tiempo.
+No incluye tokens del proveedor, identificadores de cuenta, rutas privadas ni la
+clave de cifrado. Solo los dispositivos emparejados pueden descifrarlo.
 
-El relay no puede descifrarlo. La secuencia monotónica impide reproducir snapshots anteriores y las credenciales de publisher, pairing y reader tienen capacidades separadas.
+La secuencia monotónica impide reproducir muestras anteriores y las credenciales
+de publisher, pairing y reader tienen capacidades separadas.
 
 Consulta la [política de privacidad](PRIVACY.md), la [revisión de seguridad](docs/security/security-review.md) y el [modelo de arquitectura](docs/architecture/cross-platform-companion.md). Nunca añadas una API key de OpenAI, certificados, keystores o vínculos de pairing al repositorio.
 
@@ -435,7 +527,8 @@ valida los paquetes Linux y sus firmas OpenPGP; inspecciona arquitecturas, firma
 notarización, tickets grapados y Gatekeeper en macOS; y reúne el APK/AAB firmado. Cuando
 Windows esté habilitado también comprobará Authenticode e instalará y eliminará NSIS/MSI.
 Un tag `v<versión>` exige los controles del perfil declarado en `release.json` y publica el
-conjunto verificado como **Pre-release**. Los runs manuales sólo producen artefactos
+conjunto verificado según `distribution.publishPrerelease` (actualmente una release
+normal de GitHub, con el producto todavía en beta). Los runs manuales sólo producen artefactos
 temporales de QA.
 
 Consulta [Instaladores de Statusline Companion](docs/release/desktop-installers.md) para variables, secretos y smoke tests.
@@ -478,7 +571,9 @@ Las dependencias y salidas de build (`node_modules`, `target`, `dist`, `.gradle`
 ## Estado y limitaciones conocidas
 
 - Codex App Server sigue siendo experimental; un cambio incompatible puede requerir actualizar el companion.
-- Las apps móviles refrescan al abrirse o por acción del usuario. APNs/FCM todavía no señalizan snapshots en segundo plano.
+- La integración Desktop de Antigravity usa un servicio interno del proveedor, sin garantía de API pública.
+- Claude requiere activar el puente y una sesión que informe límites. Quedan pendientes las sesiones reales en Windows/Linux y su visualización en apps y widgets móviles.
+- El sistema operativo controla los refrescos de apps y widgets; no son push en tiempo real. Las publicaciones en tiendas son independientes del código y de los instaladores de GitHub.
 - El relay autohospedado para Linux está diseñado, pero su imagen y adaptador persistente aún no están publicados.
 - El updater integrado de Tauri todavía no está habilitado.
 - La firma Authenticode de Windows espera a SignPath Foundation; las previews públicas `.unsigned` son para pruebas y pueden activar SmartScreen.
@@ -494,7 +589,9 @@ Issues y pull requests son bienvenidos. Antes de participar, consulta [CONTRIBUT
 
 ## Marcas
 
-OpenAI, ChatGPT y Codex son marcas comerciales o registradas de sus respectivos propietarios. Su uso identifica la interoperabilidad con el software Codex instalado localmente y no implica afiliación ni respaldo.
+OpenAI, ChatGPT, Codex, Google, Gemini, Antigravity, Anthropic y Claude son marcas
+comerciales o registradas de sus respectivos propietarios. Su uso identifica la
+interoperabilidad con el software correspondiente y no implica afiliación ni respaldo.
 
 ## Licencia
 

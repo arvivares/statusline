@@ -10,11 +10,11 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
   "/": {
     title: "Statusline",
     eyebrow: "STL / DATA PLANE",
-    summary: "Private, cross-platform Codex quota telemetry.",
+    summary: "Private quota monitoring for Codex, Antigravity and Claude Code.",
     content: `
       <section>
         <h2>One status line. Every device.</h2>
-        <p>Statusline reads quota metadata from your local Codex session and can relay an end-to-end encrypted snapshot to your phone. The relay never receives your Codex credentials or encryption key.</p>
+        <p>Statusline Companion brings Codex, Antigravity's Google quota and Claude Code's reported plan limits into one desktop view. Updated iOS and Android apps and widgets receive Codex and Antigravity through an end-to-end encrypted relay; Claude Code remains desktop-only. The relay never receives provider credentials or your encryption key.</p>
       </section>
       <nav class="action-grid" aria-label="Public information">
         <a class="action" href="/privacy"><span>PRIVACY</span><strong>How data is handled</strong></a>
@@ -26,19 +26,25 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
   "/privacy": {
     title: "Privacy Policy",
     eyebrow: "STL / PRIVACY",
-    summary: "Effective 15 September 2026",
+    summary: "Effective 21 September 2026",
     content: `
       <section>
         <h2>Data processed locally</h2>
         <p>The desktop companion starts the locally installed Codex App Server and reads only the fields needed to show usage windows, reset times, account type and plan. It does not read, copy or store Codex access tokens, API keys, prompts, source code or conversation content.</p>
         <p>A manually selected Codex executable path stays in the computer's local application configuration and can be cleared from Source Settings.</p>
-        <p>Companion 0.1.22 requires manual opt-in for Antigravity. Companion 0.1.23 automatically discovers installed Desktop/AGY CLI sources, preferring Desktop on first discovery and remembering the source. Existing explicit selections and disabled services are preserved; you can disable discovery or select another source in Settings. There is no automatic account failover. Only Google weekly/five-hour quota reaches the interface. Desktop account-status fields are checked in memory to confirm a signed-in subscription and discarded; Claude/GPT buckets are also discarded. The vendor runtime manages its own authentication and requests to Google. Statusline does not extract or copy Google tokens or API keys.</p>
-        <p>Only the selected source/path and discovery preference are persisted; quota stays in memory and transient runtime data is removed after collection. Remove service saves a disabled preference and stops collection without signing out of Google or changing Codex/mobile pairing. Antigravity quota is not relayed to mobile in this Companion-only release.</p>
+        <p>Companion automatically discovers installed Antigravity Desktop/AGY CLI sources, preferring Desktop on first discovery and remembering the source. Existing explicit selections and disabled services are preserved; you can disable discovery or select another source in Settings. There is no automatic account failover. Only Google's reported weekly/five-hour quota reaches the interface. Desktop account-status fields are checked in memory to confirm a signed-in subscription and discarded; Claude/GPT buckets are also discarded. The vendor runtime manages its own authentication and requests to Google. Statusline does not extract or copy Google tokens or API keys.</p>
+        <p>Antigravity's selected source/path and discovery preference stay in local configuration. Its desktop quota is held in memory and transient runtime data is removed after collection. Optional encrypted sync also sends its quota to compatible mobile readers, which cache the latest decrypted sample. Remove service saves a disabled preference and stops collection without signing out of Google or changing the mobile pairing.</p>
+      </section>
+      <section>
+        <h2>Claude Code's optional local bridge</h2>
+        <p>Discovery checks local installation metadata; it does not launch Claude or access its credentials or conversations. Only selecting Enable quota or Connect Claude Code adds a <code>statusLine</code> command to Claude Code's <code>settings.json</code>, inside <code>CLAUDE_CONFIG_DIR</code> or the default <code>~/.claude</code> folder. Other settings are preserved. A verbatim backup of existing settings is saved once in Companion's local configuration; an existing custom status line is saved separately and continues running.</p>
+        <p>Claude Code sends session JSON to that command through standard input. The Statusline bridge keeps only the reported five-hour/seven-day rate-limit windows, a gateway spend limit when present and capture times. It discards session, transcript, workspace, cost, context and model fields instead of saving them. An existing custom status-line command receives the original input so it can continue working. Statusline does not open Claude credential or conversation files, call Claude endpoints or send a prompt to obtain quota.</p>
+        <p>The reduced capture stays in Companion's local configuration. Only reported quota windows are projected into optional encrypted sync; gateway spend limits are not quota windows and remain local. Current mobile apps and widgets ignore the Claude entry. Disconnecting Claude restores the previous status line, or removes Statusline's command, and removes the capture and saved custom-command files. The original settings backup remains local.</p>
       </section>
       <section>
         <h2>Universal encrypted relay</h2>
         <p>Sync is optional. Pairing creates an AES-256 encryption key on the desktop and transfers it directly to the mobile device with a short-lived, single-use credential. Publisher and reader credentials are role-separated and stored in the operating system secure store.</p>
-        <p>The relay receives a random channel identifier, SHA-256 hashes of random credentials, an opaque AES-256-GCM ciphertext and timestamps required for expiration and replay protection. It cannot decrypt the quota snapshot and never receives Codex credentials, email addresses, prompts or source code.</p>
+        <p>The relay receives a random channel identifier, SHA-256 hashes of random credentials, opaque AES-256-GCM ciphertext and metadata required for expiration and replay protection. The encrypted service snapshot contains provider identifiers, availability, reported quota windows and sample times. It cannot decrypt this content and never receives provider credentials, email addresses, prompts or source code. Updated readers support Codex and Antigravity; older readers continue receiving only Codex.</p>
       </section>
       <section>
         <h2>QR scanning on Android</h2>
@@ -53,12 +59,12 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
       <section>
         <h2>Desktop update checks</h2>
         <p>Starting with companion 0.1.17, the desktop checks the public GitHub releases of arvivares/statusline after startup and every six hours while running. Automatic checks can be disabled in Updates; manual checks remain available. Downloading and installing requires confirmation.</p>
-        <p>GitHub and its delivery network receive normal HTTPS request metadata, such as the IP address and a user agent. Statusline sends no Codex credentials, quota snapshots, pairing keys, account email or persistent device identifier. Preferences and the dismissed version stay in the local application configuration. These requests deliver software updates, not product analytics.</p>
+        <p>GitHub and its delivery network receive normal HTTPS request metadata, such as the IP address and a user agent. Statusline sends no provider credentials, quota snapshots, pairing keys, account email or persistent device identifier. Preferences and the dismissed version stay in the local application configuration. These requests deliver software updates, not product analytics.</p>
       </section>
       <section>
         <h2>Website analytics</h2>
         <p>The public website at statusline.inmerzion.io uses Plausible at plausible.inmerzion.io to understand visits, referral sources, page engagement and clicks on external links and downloads. The integration does not set analytics cookies or persistent visitor identifiers. Browser requests include page and referrer URLs, IP addresses and browser information; Plausible uses this information to produce aggregate statistics. Do not put private information in website URLs.</p>
-        <p>This measurement applies only to the public marketing website, not to the desktop or mobile applications, their widgets, pairing flows, privacy/support/data-deletion pages or the relay's public pages. No Codex credentials, quota snapshots, pairing keys or conversation content are sent by Statusline to Plausible. Blocking analytics does not prevent use of the website.</p>
+        <p>This measurement applies only to the public marketing website, not to the desktop or mobile applications, their widgets, pairing flows, privacy/support/data-deletion pages or the relay's public pages. No provider credentials, quota snapshots, pairing keys or conversation content are sent by Statusline to Plausible. Blocking analytics does not prevent use of the website.</p>
         <p>See <a href="https://plausible.io/data-policy" rel="noreferrer">Plausible's data policy</a> for its analytics processing model; hosting and operational logs of the Inmerzion instance are managed separately from the encrypted relay.</p>
       </section>
       <section>
@@ -69,7 +75,7 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
       </section>
       <section>
         <h2>Questions</h2>
-        <p>Email <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> or use the <a href="/support">Statusline support page</a> for privacy questions or reports. Never include pairing links, QR codes, API keys, access tokens or private Codex configuration.</p>
+        <p>Email <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> or use the <a href="/support">Statusline support page</a> for privacy questions or reports. Never include pairing links, QR codes, API keys, access tokens or private provider configuration.</p>
       </section>
     `,
   },
@@ -84,25 +90,44 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
       </section>
       <section>
         <h2>Codex source not found</h2>
-        <p>On macOS, Statusline can use the runtime bundled with the official Codex desktop app; a separate CLI installation is not required. Open Codex and sign in with ChatGPT first. On Windows and Linux, install or update the official Codex CLI and verify <code>codex --version</code>. Then use Connections → Codex Source → Scan again in Statusline Companion.</p>
+        <p>Use an official Codex CLI or a compatible ChatGPT/Codex desktop installation on macOS or Windows. Linux uses the CLI. Sign in with ChatGPT through the selected Codex installation, then open Codex Source in Companion and select Scan again. A desktop installation must include a compatible Codex runtime; detecting the app does not guarantee that its session is available to that runtime.</p>
         <p>If automatic detection fails, choose Select executable. Statusline validates the selected launcher with <code>codex --version</code> before saving it.</p>
+      </section>
+      <section>
+        <h2>Connect Antigravity</h2>
+        <ol>
+          <li>Install and sign in to official Antigravity Desktop or AGY CLI.</li>
+          <li>Open Companion. Automatic discovery prefers Desktop on its first scan and remembers the selected source.</li>
+          <li>If quota is unavailable, check that source's session and use Scan again in Services. Select a different source explicitly if needed; Statusline never switches accounts automatically.</li>
+        </ol>
+        <p>Only Google's Gemini weekly and five-hour limits are shown when reported. Claude or GPT limits inside Antigravity are excluded. A missing window is unavailable, not an estimated percentage.</p>
+      </section>
+      <section>
+        <h2>Enable Claude Code quota</h2>
+        <ol>
+          <li>Install Claude Code and use its own sign-in flow. The Claude desktop chat app alone is not a quota source.</li>
+          <li>Select Claude in Companion, read the configuration-change notice and choose Enable quota, or use Connect Claude Code in Settings → Services. This adds a local status-line bridge and preserves an existing custom status line.</li>
+          <li>Open or continue a Claude Code session. Quota appears after Claude Code reports limits, normally after its first response.</li>
+        </ol>
+        <p>Only reported five-hour/seven-day windows appear; some accounts expose just one. API-key and cloud-provider sessions may have no plan quota. A gateway spend limit is shown separately, not as a plan quota. Samples depend on Claude Code reports and are not a continuous live feed. Claude quota is currently desktop-only; real-session verification on Windows and Linux is still pending.</p>
       </section>
       <section>
         <h2>Phone does not receive a sample</h2>
         <ol>
           <li>Confirm Universal Relay shows a public HTTPS endpoint.</li>
-          <li>Create a new pairing and scan it within ten minutes.</li>
+          <li>If the phone is not paired, create a pairing and scan it within ten minutes. An existing pairing does not need to be replaced to add a supported service.</li>
           <li>Confirm the desktop changes from Pairing to Connected.</li>
-          <li>Refresh while Codex is authenticated, then refresh the phone.</li>
+          <li>Confirm Codex or Antigravity shows a current sample on the desktop, then refresh the phone.</li>
           <li>Verify desktop and mobile builds use the same relay origin.</li>
         </ol>
+        <p>Codex and Antigravity mobile sync requires compatible Companion, relay and reader versions. Older readers show only Codex; current mobile apps and widgets do not show Claude. Mobile and widget background refresh timing is controlled by the operating system.</p>
       </section>
       <section>
         <h2>Useful diagnostic details</h2>
         <ul>
           <li>Operating system and Statusline version.</li>
-          <li>Installer format and output of <code>codex --version</code>.</li>
-          <li>Codex Source origin, version and state.</li>
+          <li>Installer format and the affected provider.</li>
+          <li>Source type, version and state; for Claude, the bridge state and last sample time, not the raw session JSON or settings backup.</li>
           <li>Relay hostname and state, never the full pairing URL.</li>
         </ul>
       </section>
@@ -119,7 +144,7 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
     content: `
       <section>
         <h2>No Statusline account</h2>
-        <p>Statusline does not create a user account and does not receive your Codex credentials, email address, prompts, source code or conversation history. A paired device stores only local relay credentials, an encryption key and the latest decrypted quota snapshot.</p>
+        <p>Statusline does not create a user account or ask you to share provider credentials. Mobile sync stores local relay credentials, an encryption key and the latest decrypted quota snapshot. Desktop provider settings and Claude's optional local bridge are separate from that pairing.</p>
       </section>
       <section>
         <h2>Delete data from Android</h2>
@@ -128,7 +153,7 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
           <li>Select <strong>Disconnect</strong> and confirm.</li>
           <li>Statusline removes the reader credential, encryption key and cached quota snapshot from the device. You can also clear the local demo with <strong>Clear Demo</strong>.</li>
         </ol>
-        <p>Uninstalling Statusline removes its normal local application data according to Android's application-storage behavior.</p>
+        <p>Disconnecting the phone does not delete the remote channel or disable provider collection on the desktop. Uninstalling Statusline removes its normal local application data according to Android's application-storage behavior.</p>
       </section>
       <section>
         <h2>Disconnect an iPhone</h2>
@@ -144,8 +169,14 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
         <p>If the publisher is unavailable, stop using the channel. Pairing links expire after ten minutes and channels expire after thirty days without a successful publication; the daily cleanup task removes expired rows.</p>
       </section>
       <section>
+        <h2>Disconnect a provider on the desktop</h2>
+        <p>To stop Antigravity collection, use Remove service in its settings. This saves a disabled preference without signing out of Google or disconnecting the relay. Clearing a manually selected Codex path only clears that source preference; it does not delete the provider's account or credentials.</p>
+        <p>For Claude Code, select Disconnect in Settings → Services before removing Companion. This restores the previous custom status line, or removes Statusline's command, and deletes the local quota capture and saved custom-command files. It does not sign out of Claude Code or delete its conversations. A status line you changed independently is left untouched.</p>
+        <p>The original <code>claude-settings-backup-v1.json</code> remains in Companion's local configuration. After disconnecting, it can be removed separately if you no longer need the backup; ask support for help locating it. Do not delete Claude Code's own configuration folder. Disconnecting a provider is not the same as deleting the encrypted relay channel.</p>
+      </section>
+      <section>
         <h2>Request deletion or assistance</h2>
-        <p>Email <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> with the subject <strong>Statusline data deletion</strong>. State which device or relay channel you can no longer disconnect, but never send a pairing link, QR code, API key, access token, encryption key or Codex authentication file.</p>
+        <p>Email <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> with the subject <strong>Statusline data deletion</strong>. State which device or relay channel you can no longer disconnect, but never send a pairing link, QR code, API key, access token, encryption key, provider authentication file or Claude settings backup.</p>
         <p>Statusline support can explain local removal and retention. Because the relay stores only random identifiers, hashed random credentials and opaque ciphertext, support cannot identify a channel from your name or email and cannot decrypt its contents. Channel access expires thirty days after its last successful publication; the daily cleanup then removes expired data.</p>
       </section>
     `,
@@ -161,19 +192,25 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
   privacy: {
     title: "Política de privacidad",
     eyebrow: "STL / PRIVACIDAD",
-    summary: "En vigor desde el 15 de septiembre de 2026",
+    summary: "En vigor desde el 21 de septiembre de 2026",
     content: `
       <section>
         <h2>Datos procesados localmente</h2>
         <p>El companion de escritorio inicia el Codex App Server instalado localmente y lee únicamente los campos necesarios para mostrar los periodos de uso, sus reinicios, el tipo de cuenta y el plan. No lee, copia ni almacena tokens de acceso de Codex, claves API, instrucciones, código fuente ni conversaciones.</p>
         <p>Si seleccionas manualmente un ejecutable de Codex, su ruta permanece en la configuración local del ordenador y se puede borrar desde los ajustes del origen.</p>
-        <p>Companion 0.1.22 requiere activar Antigravity manualmente. Companion 0.1.23 detecta automáticamente las instalaciones de Desktop y AGY CLI, prioriza Desktop en la primera detección y recuerda la fuente. Se conservan las selecciones explícitas y los servicios desactivados; puedes desactivar la detección o elegir otra fuente en Configuración. No se cambia de cuenta automáticamente. Solo la cuota semanal y de cinco horas de Google llega a la interfaz. Los campos de estado de la cuenta de Desktop se comprueban en memoria para confirmar una suscripción con sesión iniciada y se descartan, al igual que las cuotas de Claude/GPT. El ejecutable del proveedor gestiona su autenticación y las peticiones a Google. Statusline no extrae ni copia tokens de Google ni claves API.</p>
-        <p>Solo se guardan el origen, su ruta y la preferencia de detección; la cuota permanece en memoria y los datos temporales se eliminan tras la lectura. Quitar servicio guarda la desactivación y detiene la lectura sin cerrar sesión en Google ni modificar el vínculo de Codex con el móvil. Esta entrega exclusiva de Companion no envía la cuota de Antigravity al relay ni a los móviles.</p>
+        <p>Companion detecta automáticamente las instalaciones de Antigravity Desktop y AGY CLI, prioriza Desktop en la primera detección y recuerda la fuente. Se conservan las selecciones explícitas y los servicios desactivados; puedes desactivar la detección o elegir otra fuente en Configuración. No se cambia de cuenta automáticamente. Solo la cuota semanal y de cinco horas que Google comunica llega a la interfaz. Los campos de estado de la cuenta de Desktop se comprueban en memoria para confirmar una suscripción con sesión iniciada y se descartan, al igual que las cuotas de Claude/GPT. El ejecutable del proveedor gestiona su autenticación y las peticiones a Google. Statusline no extrae ni copia tokens de Google ni claves API.</p>
+        <p>El origen, la ruta y la preferencia de detección de Antigravity permanecen en la configuración local. Su cuota de escritorio se mantiene en memoria y los datos temporales se eliminan tras la lectura. La sincronización cifrada opcional también envía su cuota a lectores móviles compatibles, que guardan la última muestra descifrada. Quitar servicio guarda la desactivación y detiene la lectura sin cerrar sesión en Google ni modificar el vínculo con el móvil.</p>
+      </section>
+      <section>
+        <h2>Puente local opcional de Claude Code</h2>
+        <p>La detección comprueba metadatos de las instalaciones locales; no inicia Claude ni accede a sus credenciales o conversaciones. Solo al seleccionar Activar cuota o Conectar Claude Code se añade un comando <code>statusLine</code> al <code>settings.json</code> de Claude Code, dentro de <code>CLAUDE_CONFIG_DIR</code> o la carpeta predeterminada <code>~/.claude</code>. Los demás ajustes se conservan. Se guarda una copia íntegra de la configuración existente una sola vez en la configuración local de Companion; una status line personalizada se guarda por separado y sigue ejecutándose.</p>
+        <p>Claude Code envía JSON de la sesión a ese comando por la entrada estándar. El puente de Statusline conserva solo las ventanas de límite de cinco horas y siete días comunicadas, el límite de gasto del gateway cuando existe y las marcas de tiempo de captura. Descarta los campos de sesión, transcripción, espacio de trabajo, coste, contexto y modelo en lugar de guardarlos. El comando de una status line personalizada recibe la entrada original para seguir funcionando. Statusline no abre archivos de credenciales o conversaciones de Claude, no llama a sus servidores ni envía instrucciones para obtener cuota.</p>
+        <p>La captura reducida permanece en la configuración local de Companion. Solo las ventanas de cuota comunicadas se incluyen en la sincronización cifrada opcional; los límites de gasto del gateway no son ventanas de cuota y permanecen locales. Las apps móviles y los widgets actuales ignoran la entrada de Claude. Desconectar Claude restaura la status line anterior, o elimina el comando de Statusline, y elimina los archivos de captura y del comando personalizado guardado. La copia original de la configuración permanece local.</p>
       </section>
       <section>
         <h2>Relay universal cifrado</h2>
         <p>La sincronización es opcional. El emparejamiento genera una clave AES-256 en el ordenador y la transfiere directamente al móvil mediante una credencial de corta duración y un solo uso. Las credenciales de publicación y lectura tienen funciones separadas y se guardan en el almacenamiento seguro del sistema operativo.</p>
-        <p>El relay recibe un identificador aleatorio de canal, hashes SHA-256 de credenciales aleatorias, un contenido opaco cifrado con AES-256-GCM y las marcas de tiempo necesarias para la caducidad y la protección contra repeticiones. No puede descifrar la muestra de cuota y nunca recibe credenciales de Codex, direcciones de correo, instrucciones ni código fuente.</p>
+        <p>El relay recibe un identificador aleatorio de canal, hashes SHA-256 de credenciales aleatorias, contenido opaco cifrado con AES-256-GCM y metadatos necesarios para la caducidad y la protección contra repeticiones. La muestra cifrada de servicios contiene identificadores de proveedores, disponibilidad, ventanas de cuota comunicadas y horas de las muestras. No puede descifrar ese contenido y nunca recibe credenciales de proveedores, direcciones de correo, instrucciones ni código fuente. Los lectores actualizados admiten Codex y Antigravity; los anteriores siguen recibiendo solo Codex.</p>
       </section>
       <section>
         <h2>Escaneo de QR en Android</h2>
@@ -188,12 +225,12 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
       <section>
         <h2>Búsqueda de actualizaciones de escritorio</h2>
         <p>Desde la versión 0.1.17, el companion consulta las releases públicas de arvivares/statusline en GitHub al iniciar y cada seis horas mientras está en ejecución. Puedes desactivar la búsqueda automática en Actualizaciones y seguir buscando manualmente. La descarga e instalación requieren confirmación.</p>
-        <p>GitHub y su red de distribución reciben los metadatos HTTPS habituales, como la dirección IP y el agente de usuario. Statusline no envía credenciales de Codex, muestras de cuota, claves de emparejamiento, correos de cuenta ni identificadores persistentes del dispositivo. Las preferencias y la versión pospuesta se guardan solo en la configuración local. Estas consultas distribuyen actualizaciones de software; no son analítica del producto.</p>
+        <p>GitHub y su red de distribución reciben los metadatos HTTPS habituales, como la dirección IP y el agente de usuario. Statusline no envía credenciales de proveedores, muestras de cuota, claves de emparejamiento, correos de cuenta ni identificadores persistentes del dispositivo. Las preferencias y la versión pospuesta se guardan solo en la configuración local. Estas consultas distribuyen actualizaciones de software; no son analítica del producto.</p>
       </section>
       <section>
         <h2>Analítica del sitio web</h2>
         <p>El sitio público statusline.inmerzion.io utiliza Plausible en plausible.inmerzion.io para conocer las visitas, las referencias, la interacción con las páginas y los clics en enlaces externos y descargas. La integración no utiliza cookies analíticas ni identificadores persistentes de visitantes. Las peticiones del navegador incluyen las URLs de la página y de referencia, direcciones IP e información del navegador; Plausible usa esa información para elaborar estadísticas agregadas. No incluyas información privada en las URLs del sitio.</p>
-        <p>Esta medición se aplica únicamente al sitio de presentación, no a las apps de escritorio o móviles, sus widgets, el emparejamiento, las páginas de privacidad, soporte y eliminación de datos ni las páginas públicas del relay. Statusline no envía a Plausible credenciales de Codex, muestras de cuota, claves de emparejamiento ni conversaciones. Bloquear la analítica no impide utilizar el sitio.</p>
+        <p>Esta medición se aplica únicamente al sitio de presentación, no a las apps de escritorio o móviles, sus widgets, el emparejamiento, las páginas de privacidad, soporte y eliminación de datos ni las páginas públicas del relay. Statusline no envía a Plausible credenciales de proveedores, muestras de cuota, claves de emparejamiento ni conversaciones. Bloquear la analítica no impide utilizar el sitio.</p>
         <p>Consulta la <a href="https://plausible.io/data-policy" rel="noreferrer">política de datos de Plausible</a>; el alojamiento y los registros operativos de la instancia de Inmerzion se gestionan de forma separada del relay cifrado.</p>
       </section>
       <section>
@@ -204,7 +241,7 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
       </section>
       <section>
         <h2>Consultas</h2>
-        <p>Escribe a <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> o visita la <a href="/support">página de soporte de Statusline</a> para consultas de privacidad. Nunca incluyas vínculos de emparejamiento, códigos QR, claves API, tokens de acceso ni configuración privada de Codex.</p>
+        <p>Escribe a <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> o visita la <a href="/support">página de soporte de Statusline</a> para consultas de privacidad. Nunca incluyas vínculos de emparejamiento, códigos QR, claves API, tokens de acceso ni configuración privada de proveedores.</p>
       </section>
     `,
   },
@@ -219,25 +256,44 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
       </section>
       <section>
         <h2>No se encuentra el origen de Codex</h2>
-        <p>En macOS, Statusline puede utilizar el ejecutable incluido en la aplicación oficial de escritorio de Codex; no necesitas instalar la CLI por separado. Abre Codex e inicia sesión con ChatGPT primero. En Windows y Linux, instala o actualiza la CLI oficial de Codex y comprueba <code>codex --version</code>. Después utiliza Conexiones → Origen de Codex → Buscar de nuevo en Statusline Companion.</p>
+        <p>Utiliza la CLI oficial de Codex o una instalación compatible de ChatGPT/Codex de escritorio en macOS o Windows. Linux utiliza la CLI. Inicia sesión con ChatGPT desde la instalación de Codex seleccionada y después abre Origen de Codex en Companion y elige Buscar de nuevo. La aplicación de escritorio debe incluir un ejecutable compatible de Codex; detectar la app no garantiza que ese ejecutable pueda acceder a su sesión.</p>
         <p>Si la detección automática falla, utiliza Seleccionar ejecutable. Statusline lo valida con <code>codex --version</code> antes de guardar la ruta.</p>
+      </section>
+      <section>
+        <h2>Conectar Antigravity</h2>
+        <ol>
+          <li>Instala Antigravity Desktop o AGY CLI oficiales e inicia sesión.</li>
+          <li>Abre Companion. La detección automática prioriza Desktop en la primera búsqueda y recuerda la fuente seleccionada.</li>
+          <li>Si no hay cuota disponible, comprueba la sesión de esa fuente y utiliza Buscar de nuevo en Servicios. Selecciona otra fuente explícitamente si lo necesitas; Statusline nunca cambia de cuenta automáticamente.</li>
+        </ol>
+        <p>Solo se muestran los límites semanales y de cinco horas de Gemini que Google comunica. Se excluyen los límites de Claude o GPT dentro de Antigravity. Una ventana ausente queda no disponible, sin estimar un porcentaje.</p>
+      </section>
+      <section>
+        <h2>Activar la cuota de Claude Code</h2>
+        <ol>
+          <li>Instala Claude Code e inicia sesión con su propio flujo. La app de chat de Claude para escritorio no es por sí sola un origen de cuota.</li>
+          <li>Selecciona Claude en Companion, lee el aviso sobre el cambio de configuración y elige Activar cuota, o utiliza Conectar Claude Code en Configuración → Servicios. Se añade un puente local a la status line y se conserva cualquier status line personalizada.</li>
+          <li>Abre o continúa una sesión de Claude Code. La cuota aparece cuando Claude Code comunica límites, normalmente tras su primera respuesta.</li>
+        </ol>
+        <p>Solo aparecen las ventanas de cinco horas y siete días comunicadas; algunas cuentas exponen únicamente una. Las sesiones con clave API o proveedor en la nube pueden no tener cuota de plan. El límite de gasto de un gateway se muestra por separado, no como cuota de plan. Las muestras dependen de los informes de Claude Code; no son una lectura continua en tiempo real. La cuota de Claude está disponible por ahora solo en escritorio; la verificación con sesiones reales en Windows y Linux sigue pendiente.</p>
       </section>
       <section>
         <h2>El teléfono no recibe una muestra</h2>
         <ol>
           <li>Comprueba que Relay universal muestra un servidor HTTPS público.</li>
-          <li>Crea un emparejamiento nuevo y escanéalo antes de diez minutos.</li>
+          <li>Si el teléfono no está emparejado, crea un vínculo y escanéalo antes de diez minutos. No necesitas sustituir un vínculo existente para añadir un servicio compatible.</li>
           <li>Comprueba que el escritorio pasa de Emparejando a Conectado.</li>
-          <li>Actualiza con la sesión de Codex iniciada y después actualiza el teléfono.</li>
+          <li>Comprueba que Codex o Antigravity muestra una muestra reciente en el escritorio y después actualiza el teléfono.</li>
           <li>Verifica que las versiones de escritorio y móvil utilizan el mismo origen del relay.</li>
         </ol>
+        <p>La sincronización móvil de Codex y Antigravity requiere versiones compatibles de Companion, relay y lector. Los lectores antiguos muestran solo Codex; las apps móviles y los widgets actuales no muestran Claude. El sistema operativo controla los tiempos de actualización en segundo plano y de los widgets.</p>
       </section>
       <section>
         <h2>Datos útiles para el diagnóstico</h2>
         <ul>
           <li>Sistema operativo y versión de Statusline.</li>
-          <li>Formato del instalador y salida de <code>codex --version</code>, si utilizas la CLI.</li>
-          <li>Origen, versión y estado de Codex.</li>
+          <li>Formato del instalador y proveedor afectado.</li>
+          <li>Tipo de origen, versión y estado; para Claude, estado del puente y hora de la última muestra, no el JSON original de la sesión ni la copia de configuración.</li>
           <li>Dominio y estado del relay, nunca el vínculo completo de emparejamiento.</li>
         </ul>
       </section>
@@ -254,7 +310,7 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
     content: `
       <section>
         <h2>Sin cuenta de Statusline</h2>
-        <p>Statusline no crea una cuenta de usuario ni recibe tus credenciales de Codex, correo electrónico, instrucciones, código fuente o historial de conversaciones. Un dispositivo emparejado guarda únicamente las credenciales locales del relay, una clave de cifrado y la última muestra de cuota descifrada.</p>
+        <p>Statusline no crea una cuenta de usuario ni te pide compartir credenciales de proveedores. La sincronización móvil guarda las credenciales locales del relay, una clave de cifrado y la última muestra de cuota descifrada. Los ajustes de proveedores de escritorio y el puente local opcional de Claude son independientes de ese vínculo.</p>
       </section>
       <section>
         <h2>Eliminar datos de Android</h2>
@@ -263,7 +319,7 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
           <li>Selecciona Desconectar y confirma.</li>
           <li>Statusline elimina la credencial de lectura, la clave de cifrado y la muestra de cuota de la app. También puedes borrar la demostración local con Borrar demo.</li>
         </ol>
-        <p>Desinstalar Statusline elimina sus datos de aplicación habituales según el comportamiento del almacenamiento de Android.</p>
+        <p>Desconectar el teléfono no elimina el canal remoto ni desactiva la lectura de proveedores en el escritorio. Desinstalar Statusline elimina sus datos de aplicación habituales según el comportamiento del almacenamiento de Android.</p>
       </section>
       <section>
         <h2>Desconectar un iPhone</h2>
@@ -279,8 +335,14 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
         <p>Si el escritorio no está disponible, deja de utilizar el canal. Los vínculos de emparejamiento caducan a los diez minutos y los canales caducan tras treinta días sin una publicación correcta; la tarea diaria elimina los registros caducados.</p>
       </section>
       <section>
+        <h2>Desconectar un proveedor en el escritorio</h2>
+        <p>Para detener la lectura de Antigravity, utiliza Quitar servicio en sus ajustes. Se guarda la desactivación sin cerrar sesión en Google ni desconectar el relay. Borrar una ruta de Codex seleccionada manualmente solo elimina esa preferencia de origen; no borra la cuenta ni las credenciales del proveedor.</p>
+        <p>Para Claude Code, selecciona Desconectar en Configuración → Servicios antes de eliminar Companion. Se restaura la status line personalizada anterior, o se elimina el comando de Statusline, y se borran los archivos locales de captura de cuota y del comando personalizado guardado. No se cierra sesión en Claude Code ni se eliminan sus conversaciones. Una status line que hayas cambiado por tu cuenta no se modifica.</p>
+        <p>El archivo original <code>claude-settings-backup-v1.json</code> permanece en la configuración local de Companion. Tras desconectar, puedes eliminarlo por separado si ya no necesitas la copia; pide ayuda a soporte para localizarlo. No elimines la carpeta de configuración de Claude Code. Desconectar un proveedor no equivale a eliminar el canal cifrado del relay.</p>
+      </section>
+      <section>
         <h2>Solicitar eliminación o ayuda</h2>
-        <p>Escribe a <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> con el asunto <strong>Eliminación de datos de Statusline</strong>. Indica qué dispositivo o canal ya no puedes desconectar, pero nunca envíes un vínculo de emparejamiento, QR, clave API, token de acceso, clave de cifrado ni archivo de autenticación de Codex.</p>
+        <p>Escribe a <a href="mailto:founder@inmerzion.io">founder@inmerzion.io</a> con el asunto <strong>Eliminación de datos de Statusline</strong>. Indica qué dispositivo o canal ya no puedes desconectar, pero nunca envíes un vínculo de emparejamiento, QR, clave API, token de acceso, clave de cifrado, archivo de autenticación de un proveedor ni copia de la configuración de Claude.</p>
         <p>Soporte puede explicar la eliminación local y la conservación. Como el relay guarda únicamente identificadores aleatorios, hashes de credenciales aleatorias y contenido cifrado opaco, soporte no puede identificar un canal a partir de tu nombre o correo ni descifrarlo. El acceso al canal caduca a los treinta días de su última publicación correcta; después se elimina mediante la limpieza diaria.</p>
       </section>
     `,

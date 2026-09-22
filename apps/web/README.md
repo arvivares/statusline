@@ -5,9 +5,39 @@ Conserva la identidad oscura y ámbar de Statusline y presenta capturas reales d
 Still Signature: superficies redondeadas, medidores segmentados y tipografía técnica.
 
 La web es una aplicación estática independiente construida con Vite 8.3.0,
-TypeScript 7.0.2, HTML y CSS. No necesita Codex, credenciales ni un backend de relay.
+TypeScript 7.0.2, HTML y CSS. No necesita instalar proveedores, credenciales ni un backend de relay.
 Las demostraciones interactivas usan datos de ejemplo identificados como tales;
 no representan la cuota de quien visita la página.
+
+## Alcance de los proveedores
+
+El sitio presenta las capacidades del código actual, no una promesa de que todas
+las tiendas ya distribuyan la misma versión:
+
+| Proveedor   | Companion de escritorio                                                   | Apps móviles y widgets compatibles |
+| ----------- | ------------------------------------------------------------------------- | ---------------------------------- |
+| Codex       | Cuota semanal y ventana corta que informa la sesión local autenticada     | Sí                                 |
+| Antigravity | Solo límites de Google Gemini, desde Desktop o AGY CLI oficial compatible | Sí                                 |
+| Claude Code | Ventanas informadas mediante conexión opcional al hook `statusLine`       | Todavía no                         |
+
+Claude Code necesita activación explícita y una sesión que informe límites del
+plan. Su puente recibe el JSON de sesión, pero conserva solo metadatos de límites
+(incluido el límite de gasto del gateway cuando existe) y marcas temporales. El
+gasto permanece local y no se trata como una ventana de cuota. No extrae credenciales
+ni almacena conversaciones. La línea de estado
+previa se conserva y se restaura al desconectar. La validación real está realizada
+en macOS; Windows y Linux tienen pruebas automatizadas y validación nativa pendiente.
+Las sesiones con API key o proveedores cloud no exponen cuota de suscripción.
+
+La sección de proveedores, las preguntas frecuentes, los requisitos de descarga,
+los metadatos EN/ES, el schema y `llms.txt` mantienen esa misma distinción. Los
+widgets muestran muestras guardadas y su actualización depende del sistema
+operativo. No presentar el soporte de Claude como disponible en móviles, ni
+convertir ventanas ausentes en porcentajes disponibles. Consulte las fuentes de
+[Codex](../../docs/architecture/codex-sources.md),
+[Antigravity](../../docs/architecture/antigravity-companion.md) y
+[Claude Code](../../docs/architecture/claude-sources.md), contrastando las secciones
+históricas con la implementación vigente.
 
 ## Idiomas
 
@@ -59,6 +89,7 @@ npm run test:dev
 npm run test:analytics
 npm run test:public
 npm run test:media
+npm run test:providers
 npm run build
 npm run test:seo
 ```
@@ -184,7 +215,7 @@ El script público configurado es
 habilita enlaces externos, descargas y envíos de formularios; el sitio no tiene
 formularios. Estos ajustes se administran en Plausible, no con listeners nuevos
 en la web. No se envían propiedades personalizadas, credenciales ni cuotas de
-Codex. Las visitas y los cambios EN/ES usan el seguimiento automático de
+ningún proveedor. Las visitas y los cambios EN/ES usan el seguimiento automático de
 `pushState`/`popstate`; no enviamos pageviews manuales ni activamos rutas por hash
 para los enlaces de sección. Consulta las
 [opciones oficiales de seguimiento](https://plausible.io/docs/script-extensions).
@@ -235,8 +266,9 @@ de `docs/assets/readme/still-signature/`, compartidas con el README. No se retoc
 recrean ni duplican en Git: `scripts/product-media.mjs` incorpora los PNG originales
 al build y sirve una lista cerrada de ocho rutas durante el desarrollo.
 
-Son ejemplos independientes, no dispositivos emparejados entre sí. Los pies lo
-indican y advierten que las versiones disponibles en las tiendas pueden variar.
+Son ejemplos de Codex anteriores al soporte multiproveedor, no dispositivos
+emparejados entre sí ni capturas de la última versión. El companion mostrado es
+0.1.20. Los pies lo indican y advierten que las versiones de las tiendas pueden variar.
 La procedencia y las versiones de cada captura están documentadas junto a los
 originales. No contienen credenciales ni datos de cuentas reales.
 

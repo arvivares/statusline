@@ -7,25 +7,25 @@
     <meta name="color-scheme" content="dark" />
     <meta
       name="description"
-      content="Your Codex quota, at a glance. Statusline connects desktop, mobile and widgets with end-to-end encrypted sync. Open source and independent."
+      content="Monitor Codex, Antigravity and Claude Code quota with Statusline. An open-source desktop companion with optional encrypted mobile sync for supported providers."
       data-i18n-content="meta.description"
     />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="en_US" />
     <meta
       property="og:title"
-      content="Statusline — Codex quota monitor for desktop &amp; mobile"
+      content="Statusline — Codex, Antigravity &amp; Claude Code quotas"
       data-i18n-content="meta.title"
     />
     <meta
       property="og:description"
-      content="Keep creating. Your Codex quota stays with you on desktop, mobile and widgets. Private by design. Open source."
+      content="Codex, Antigravity and Claude Code quota in one desktop companion. Keep creating, with your available limits in view. Independent and open source."
       data-i18n-content="meta.socialDescription"
     />
     <meta property="og:url" content="https://statusline.inmerzion.io/" />
     <meta
       property="og:image"
-      content="https://statusline.inmerzion.io/assets/social-card-en.png?v=segmented-s-2026"
+      content="https://statusline.inmerzion.io/assets/social-card-en.png?v=providers-20260921"
     />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -64,19 +64,112 @@
       href="/fonts/manrope-500.ttf"
       as="font"
       type="font/ttf"
-      crossorigin
+      crossorigin=""
     />
     <link
       rel="preload"
       href="/fonts/manrope-700.ttf"
       as="font"
       type="font/ttf"
-      crossorigin
+      crossorigin=""
     />
     <link rel="stylesheet" href="/src/styles.css" />
     <title data-i18n="meta.title">
-      Statusline — Codex quota monitor for desktop &amp; mobile
+      Statusline — Codex, Antigravity &amp; Claude Code quotas
     </title>
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:site_name" content="Statusline" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta
+      property="og:image:alt"
+      content="Statusline promotional graphic with a circular 73% quota meter. Illustrative sample data, not a connected account."
+      data-i18n-content="meta.imageAlt"
+    />
+    <meta
+      name="twitter:title"
+      content="Statusline — Codex, Antigravity &amp; Claude Code quotas"
+      data-i18n-content="meta.title"
+    />
+    <meta
+      name="twitter:description"
+      content="Codex, Antigravity and Claude Code quota in one desktop companion. Keep creating, with your available limits in view. Independent and open source."
+      data-i18n-content="meta.socialDescription"
+    />
+    <meta
+      name="twitter:image"
+      content="https://statusline.inmerzion.io/assets/social-card-en.png?v=providers-20260921"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Statusline promotional graphic with a circular 73% quota meter. Illustrative sample data, not a connected account."
+      data-i18n-content="meta.imageAlt"
+    />
+
+    <script id="structured-data" type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://statusline.inmerzion.io/#publisher",
+            "name": "Inmerzion",
+            "url": "https://inmerzion.io/"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://statusline.inmerzion.io/#website",
+            "name": "Statusline",
+            "url": "https://statusline.inmerzion.io/",
+            "inLanguage": ["en", "es"],
+            "publisher": { "@id": "https://statusline.inmerzion.io/#publisher" }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://statusline.inmerzion.io/#software",
+            "name": "Statusline",
+            "url": "https://statusline.inmerzion.io/",
+            "description": "Monitor Codex, Antigravity and Claude Code quota with Statusline. An open-source desktop companion with optional encrypted mobile sync for supported providers.",
+            "applicationCategory": "DeveloperApplication",
+            "featureList": [
+              "Desktop quota monitoring for Codex, Antigravity and Claude Code",
+              "Google Gemini quota windows from Antigravity",
+              "Opt-in Claude Code status-line bridge on desktop",
+              "Optional end-to-end encrypted Codex and Antigravity sync to compatible mobile apps and widgets"
+            ],
+            "isAccessibleForFree": true,
+            "license": "https://github.com/arvivares/statusline/blob/main/LICENSE",
+            "sameAs": ["https://github.com/arvivares/statusline"],
+            "image": "https://statusline.inmerzion.io/assets/statusline-mark.png?v=segmented-s-2026",
+            "publisher": { "@id": "https://statusline.inmerzion.io/#publisher" }
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://statusline.inmerzion.io/#webpage",
+            "url": "https://statusline.inmerzion.io/",
+            "name": "Statusline — Codex, Antigravity & Claude Code quotas",
+            "description": "Monitor Codex, Antigravity and Claude Code quota with Statusline. An open-source desktop companion with optional encrypted mobile sync for supported providers.",
+            "inLanguage": "en",
+            "isPartOf": { "@id": "https://statusline.inmerzion.io/#website" },
+            "mainEntity": { "@id": "https://statusline.inmerzion.io/#software" }
+          }
+        ]
+      }
+    </script>
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://statusline.inmerzion.io/"
+    />
+    <link
+      rel="alternate"
+      hreflang="es"
+      href="https://statusline.inmerzion.io/es/"
+    />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href="https://statusline.inmerzion.io/"
+    />
   </head>
   <body>
     <a class="skip-link" href="#contenido" data-i18n="accessibility.skip"
@@ -136,14 +229,15 @@
             aria-label="View Statusline on GitHub (opens in a new tab)"
             data-i18n-aria-label="navigation.github"
             ><svg class="icon" aria-hidden="true">
-              <use href="#icon-github" /></svg
+              <use href="#icon-github"></use></svg
             ><span>GitHub</span
             ><svg class="icon small" aria-hidden="true">
-              <use href="#icon-external" /></svg
+              <use href="#icon-external"></use></svg
           ></a>
           <a class="button button-small" href="#empezar"
             ><span data-i18n="navigation.start">Get started</span>
-            <svg class="icon" aria-hidden="true"><use href="#icon-arrow" /></svg
+            <svg class="icon" aria-hidden="true">
+              <use href="#icon-arrow"></use></svg
           ></a>
           <button
             class="menu-toggle"
@@ -161,7 +255,7 @@
         class="mobile-nav"
         aria-label="Mobile navigation"
         data-i18n-aria-label="navigation.mobile"
-        hidden
+        hidden=""
       >
         <a href="#producto"
           ><span data-i18n="navigation.product">The product</span>
@@ -177,7 +271,8 @@
         >
         <a href="#empezar"
           ><span data-i18n="navigation.start">Get started</span>
-          <svg class="icon" aria-hidden="true"><use href="#icon-arrow" /></svg
+          <svg class="icon" aria-hidden="true">
+            <use href="#icon-arrow"></use></svg
         ></a>
       </nav>
     </header>
@@ -193,25 +288,25 @@
                 >OPEN SOURCE. ALWAYS EVOLVING.</span
               >
               <svg class="icon small" aria-hidden="true">
-                <use href="#icon-arrow" /></svg
+                <use href="#icon-arrow"></use></svg
             ></a>
             <h1 id="hero-heading" data-i18n-html="hero.heading">
               Your quota.<br /><span>At a glance.</span>
             </h1>
             <p class="hero-description" data-i18n-html="hero.description">
-              Your next big project shouldn't catch you out of quota. Your
-              <strong>Codex</strong> usage, on your desktop and your phone.
-              Always within reach.
+              Your next big project shouldn't catch you out of quota.
+              <strong>Codex, Antigravity and Claude Code.</strong> Three
+              providers. One quiet companion.
             </p>
             <div class="hero-actions">
               <a class="button" href="#empezar"
                 ><span data-i18n="hero.discover">Discover Statusline</span>
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-arrow" /></svg
+                  <use href="#icon-arrow"></use></svg
               ></a>
               <a class="text-button" href="#producto"
                 ><span class="play-icon" aria-hidden="true"
-                  ><svg class="icon"><use href="#icon-play" /></svg
+                  ><svg class="icon"><use href="#icon-play"></use></svg
                 ></span>
                 <span data-i18n="hero.tryDemo">Try the demo</span></a
               >
@@ -219,7 +314,7 @@
             <div class="hero-proof">
               <span
                 ><svg class="icon small" aria-hidden="true">
-                  <use href="#icon-lock" />
+                  <use href="#icon-lock"></use>
                 </svg>
                 <span data-i18n="hero.encryption"
                   >End-to-end encrypted</span
@@ -231,7 +326,7 @@
 
           <div
             class="hero-scene"
-            aria-label="Illustrative Statusline desktop and mobile view with 73 percent of weekly quota remaining"
+            aria-label="Earlier Codex demo captures: Companion showing 53 percent and an unpaired iPhone example showing 70 percent"
             data-i18n-aria-label="hero.previewLabel"
           >
             <span
@@ -254,7 +349,7 @@
                   ><i></i><i></i><i></i></span
                 ><span>STATUSLINE COMPANION</span
                 ><svg class="icon small" aria-hidden="true">
-                  <use href="#icon-settings" />
+                  <use href="#icon-settings"></use>
                 </svg>
               </div>
               <div class="capture-window">
@@ -272,7 +367,7 @@
                 <span
                   ><span class="status-dot"></span>
                   <span data-i18n="hero.codexConnected"
-                    >CODEX CONNECTED</span
+                    >CODEX EXAMPLE / 0.1.20</span
                   ></span
                 ><span data-i18n="hero.sampleData">SAMPLE DATA</span>
               </div>
@@ -291,7 +386,7 @@
             </div>
             <div class="floating-label">
               <span class="connection-icon" aria-hidden="true"
-                ><svg class="icon"><use href="#icon-link" /></svg
+                ><svg class="icon"><use href="#icon-link"></use></svg
               ></span>
               <div data-i18n-html="hero.allDevices">
                 One status. All your devices.<span>ENCRYPTED CONNECTION</span>
@@ -305,13 +400,21 @@
             >
           </div>
         </div>
+        <p
+          class="container still-scene-note hero-capture-note"
+          data-i18n="screens.note"
+        >
+          Real interfaces showing Codex examples. Separate demo samples, not a
+          live connection. These captures predate multi-provider support; store
+          versions may differ.
+        </p>
         <div class="container hero-footer">
           <span class="mono" data-i18n="hero.flow"
             >LESS GUESSWORK. MORE FLOW.</span
           ><a href="#producto" class="scroll-link"
             ><span data-i18n="hero.explore">EXPLORE THE SYSTEM</span>
             <svg class="icon small" aria-hidden="true">
-              <use href="#icon-down" /></svg
+              <use href="#icon-down"></use></svg
           ></a>
         </div>
       </section>
@@ -324,27 +427,27 @@
           <div class="platform-names">
             <span
               ><svg class="icon" aria-hidden="true">
-                <use href="#icon-apple" />
+                <use href="#icon-apple"></use>
               </svg>
               macOS</span
             ><span
               ><svg class="icon" aria-hidden="true">
-                <use href="#icon-windows" />
+                <use href="#icon-windows"></use>
               </svg>
               Windows</span
             ><span
               ><svg class="icon" aria-hidden="true">
-                <use href="#icon-terminal" />
+                <use href="#icon-terminal"></use>
               </svg>
               Linux</span
             ><span
               ><svg class="icon" aria-hidden="true">
-                <use href="#icon-phone" />
+                <use href="#icon-phone"></use>
               </svg>
               iOS</span
             ><span
               ><svg class="icon" aria-hidden="true">
-                <use href="#icon-android" />
+                <use href="#icon-android"></use>
               </svg>
               Android</span
             >
@@ -352,10 +455,137 @@
           <a href="#empezar" class="mono availability-link"
             ><span data-i18n="platforms.availability">CHECK AVAILABILITY</span>
             <svg class="icon small" aria-hidden="true">
-              <use href="#icon-external" /></svg
+              <use href="#icon-external"></use></svg
           ></a>
         </div>
       </div>
+
+      <section
+        class="section providers-section"
+        id="providers"
+        aria-labelledby="providers-heading"
+      >
+        <div class="container">
+          <div class="section-heading reveal">
+            <div>
+              <p class="eyebrow">
+                <span data-i18n="providers.eyebrow"
+                  >THREE PROVIDERS / ONE COMPANION</span
+                ><i></i>
+              </p>
+              <h2 id="providers-heading" data-i18n="providers.heading">
+                Know your limits. Keep your momentum.
+              </h2>
+            </div>
+            <p data-i18n="providers.description">
+              Different tools, one place to check. Each provider keeps its own
+              quota windows and reset times. Statusline shows what the source
+              reports, without inventing missing readings.
+            </p>
+          </div>
+          <div class="provider-grid">
+            <article
+              class="provider-card reveal"
+              data-provider="codex"
+              aria-labelledby="provider-codex"
+            >
+              <div class="provider-card-top">
+                <span class="provider-number" aria-hidden="true">01</span
+                ><span class="provider-label" data-i18n="providers.codexLabel"
+                  >LOCAL SESSION</span
+                >
+              </div>
+              <h3 id="provider-codex">
+                Codex<span aria-hidden="true">↗</span>
+              </h3>
+              <p class="provider-company">OpenAI</p>
+              <p
+                class="provider-description"
+                data-i18n="providers.codexDescription"
+              >
+                Keep weekly and short-window quota in view, with the reset times
+                reported by your local Codex session. Optional encrypted sync
+                brings those readings to your phone and widgets.
+              </p>
+              <p
+                class="provider-requirement"
+                data-i18n="providers.codexRequirement"
+              >
+                Sign in through Codex CLI or a compatible desktop installation.
+              </p>
+            </article>
+            <article
+              class="provider-card reveal"
+              data-provider="antigravity"
+              aria-labelledby="provider-antigravity"
+            >
+              <div class="provider-card-top">
+                <span class="provider-number" aria-hidden="true">02</span
+                ><span
+                  class="provider-label"
+                  data-i18n="providers.antigravityLabel"
+                  >GEMINI QUOTA</span
+                >
+              </div>
+              <h3 id="provider-antigravity">
+                Antigravity<span aria-hidden="true">↗</span>
+              </h3>
+              <p class="provider-company">Google</p>
+              <p
+                class="provider-description"
+                data-i18n="providers.antigravityDescription"
+              >
+                See Gemini weekly and five-hour limits from your selected
+                Antigravity installation. Discovery remembers your source, keeps
+                its account separate and supports encrypted sync to compatible
+                mobile apps and widgets.
+              </p>
+              <p
+                class="provider-requirement"
+                data-i18n="providers.antigravityRequirement"
+              >
+                Official Antigravity Desktop or a compatible AGY CLI, signed in.
+              </p>
+            </article>
+            <article
+              class="provider-card reveal"
+              data-provider="claude"
+              aria-labelledby="provider-claude"
+            >
+              <div class="provider-card-top">
+                <span class="provider-number" aria-hidden="true">03</span
+                ><span class="provider-label" data-i18n="providers.claudeLabel"
+                  >OPT-IN BRIDGE</span
+                >
+              </div>
+              <h3 id="provider-claude">
+                Claude Code<span aria-hidden="true">↗</span>
+              </h3>
+              <p class="provider-company">Anthropic</p>
+              <p
+                class="provider-description"
+                data-i18n="providers.claudeDescription"
+              >
+                Connect Claude Code's status line to see the quota windows it
+                reports. Your existing status line is preserved; missing windows
+                stay unknown. Available in the desktop companion.
+              </p>
+              <p
+                class="provider-requirement"
+                data-i18n="providers.claudeRequirement"
+              >
+                Enable quota, then use a Claude Code session that reports plan
+                limits.
+              </p>
+            </article>
+          </div>
+          <p class="provider-availability" data-i18n="providers.note">
+            Mobile apps and widgets support Codex and Antigravity; Claude Code
+            is desktop-only today. Provider support depends on the installed
+            version. Store releases may lag behind the repository.
+          </p>
+        </div>
+      </section>
 
       <section
         class="section product-section"
@@ -379,24 +609,25 @@
             </p>
           </div>
           <p class="product-definition reveal" data-i18n="product.definition">
-            Statusline is an independent, open source Codex quota monitor by
-            Inmerzion. It shows your remaining quota and reset times on desktop,
-            mobile and native widgets, with optional end-to-end encrypted sync.
+            Statusline is an independent, open source quota monitor by
+            Inmerzion. Track Codex, Antigravity's Gemini limits and Claude Code
+            on desktop. Sync Codex and Antigravity to compatible mobile apps and
+            native widgets with optional end-to-end encryption.
           </p>
           <div class="feature-grid">
             <article class="feature-card quota-card reveal">
               <div class="card-heading">
                 <span class="icon-box"
                   ><svg class="icon" aria-hidden="true">
-                    <use href="#icon-activity" /></svg></span
+                    <use href="#icon-activity"></use></svg></span
                 ><span class="card-index" data-i18n="quota.index"
                   >01.1 / VISIBILITY</span
                 >
               </div>
               <h3 data-i18n="quota.heading">One glance. Now you know.</h3>
               <p data-i18n="quota.description">
-                Available quota, short window and next reset. Everything you
-                need to plan your next session.
+                Available quota, reported windows and next reset. The context
+                you need to plan your next session, without mixing providers.
               </p>
               <div class="interactive-demo" id="demo">
                 <div class="demo-top">
@@ -457,12 +688,13 @@
                     max="100"
                     value="73"
                     aria-describedby="demo-note"
+                    aria-valuetext="73% available, weekly window"
                   /><svg class="icon small" aria-hidden="true">
-                    <use href="#icon-sliders" />
+                    <use href="#icon-sliders"></use>
                   </svg>
                 </div>
                 <p id="demo-note" class="demo-note" data-i18n="demo.note">
-                  Sample data. Your account is not connected.
+                  Codex example data. Your account is not connected.
                 </p>
                 <span
                   id="demo-announcement"
@@ -476,15 +708,16 @@
               <div class="card-heading">
                 <span class="icon-box"
                   ><svg class="icon" aria-hidden="true">
-                    <use href="#icon-grid" /></svg></span
+                    <use href="#icon-grid"></use></svg></span
                 ><span class="card-index" data-i18n="widgets.index"
                   >01.2 / NATIVE WIDGETS</span
                 >
               </div>
               <h3 data-i18n="widgets.heading">Your quota goes with you.</h3>
               <p data-i18n="widgets.description">
-                On your home screen, without opening another app. Native widgets
-                for iPhone and Android.
+                Codex and Antigravity on your home screen, without opening
+                another app. Native widgets for compatible iPhone and Android
+                releases.
               </p>
               <div
                 class="widget-stage"
@@ -501,7 +734,7 @@
                   <div class="widget-value">
                     73<span>%</span
                     ><svg class="icon" aria-hidden="true">
-                      <use href="#icon-activity" />
+                      <use href="#icon-activity"></use>
                     </svg>
                   </div>
                   <div
@@ -522,7 +755,7 @@
             <article class="feature-card compact-card reveal">
               <span class="icon-box"
                 ><svg class="icon" aria-hidden="true">
-                  <use href="#icon-command" /></svg
+                  <use href="#icon-command"></use></svg
               ></span>
               <div>
                 <h3 data-i18n="companion.heading">
@@ -538,7 +771,7 @@
             <article class="feature-card compact-card reveal">
               <span class="icon-box"
                 ><svg class="icon" aria-hidden="true">
-                  <use href="#icon-code" /></svg
+                  <use href="#icon-code"></use></svg
               ></span>
               <div>
                 <h3 data-i18n="opensource.heading">
@@ -557,7 +790,7 @@
                 aria-label="Explore the code on GitHub (opens in a new tab)"
                 data-i18n-aria-label="opensource.linkLabel"
                 ><svg class="icon" aria-hidden="true">
-                  <use href="#icon-external" /></svg
+                  <use href="#icon-external"></use></svg
               ></a>
             </article>
           </div>
@@ -577,8 +810,8 @@
               </h2>
             </div>
             <p data-i18n="screens.settingsDescription">
-              Find your local Codex installation and manage private sync in one
-              quiet settings panel.
+              A look at local Codex setup and private sync. Current releases add
+              provider discovery and an opt-in Claude Code connection.
             </p>
           </div>
           <div class="settings-captures">
@@ -637,8 +870,8 @@
               </h2>
             </div>
             <p data-i18n-html="connect.description">
-              Your Codex session is where it starts.<br />One QR code is all
-              that separates<br />your computer from your phone.
+              Your desktop is where it starts.<br />Pair once to take supported
+              quotas<br />from your computer to your phone.
             </p>
           </div>
           <div class="connection-experience reveal">
@@ -649,7 +882,7 @@
               </div>
               <div class="network-node node-desktop">
                 <svg class="node-icon" aria-hidden="true">
-                  <use href="#icon-monitor" /></svg
+                  <use href="#icon-monitor"></use></svg
                 ><span class="mono">COMPANION</span
                 ><span class="node-caption" data-i18n="connect.source"
                   >Where the signal starts</span
@@ -658,7 +891,7 @@
               <div class="network-node node-relay">
                 <div class="relay-core">
                   <svg class="icon" aria-hidden="true">
-                    <use href="#icon-lock" />
+                    <use href="#icon-lock"></use>
                   </svg>
                 </div>
                 <span class="mono" data-i18n="connect.relay"
@@ -669,7 +902,7 @@
               </div>
               <div class="network-node node-mobile">
                 <svg class="node-icon" aria-hidden="true">
-                  <use href="#icon-phone" /></svg
+                  <use href="#icon-phone"></use></svg
                 ><span class="mono" data-i18n="connect.mobile">YOUR PHONE</span
                 ><span class="node-caption" data-i18n="connect.quota"
                   >Your quota goes with you</span
@@ -688,10 +921,10 @@
                 <div>
                   <h3 data-i18n="connect.step1Title">Install the companion</h3>
                   <p data-i18n="connect.step1Description">
-                    With Codex already signed in, Statusline detects your local
-                    session and shows your quota. On Mac and Windows, a
-                    compatible Codex desktop installation works too; Linux uses
-                    the CLI.
+                    Choose your provider. Codex and Antigravity use compatible
+                    local installations you've signed in to. Claude Code needs
+                    an explicit connection to its status line and a session that
+                    reports quota.
                   </p>
                 </div>
               </article>
@@ -700,8 +933,9 @@
                 <div>
                   <h3 data-i18n="connect.step2Title">Scan. Connect.</h3>
                   <p data-i18n="connect.step2Description">
-                    Create a pairing and scan the QR code with your phone. No
-                    extra account.
+                    Create a pairing and scan the QR code with a compatible
+                    mobile app. Codex and Antigravity sync without an extra
+                    Statusline account.
                   </p>
                 </div>
               </article>
@@ -712,8 +946,9 @@
                     Get back to what drives you
                   </h3>
                   <p data-i18n="connect.step3Description">
-                    Add the widget. See your latest synced quota from your home
-                    screen.
+                    Add a widget for Codex or Antigravity. See the latest synced
+                    sample from your home screen. Claude Code stays on desktop
+                    for now.
                   </p>
                 </div>
               </article>
@@ -729,7 +964,7 @@
               rel="noopener noreferrer"
               ><span data-i18n="connect.setupLink">Setup guide</span>
               <svg class="icon small" aria-hidden="true">
-                <use href="#icon-external" /></svg
+                <use href="#icon-external"></use></svg
             ></a>
           </div>
         </div>
@@ -760,12 +995,12 @@
               <svg viewBox="0 0 120 140">
                 <path
                   d="M60 8 106 25v42c0 29-21 48-46 64C35 115 14 96 14 67V25Z"
-                />
+                ></path>
                 <path
                   class="shield-inner"
                   d="M60 23 93 35v31c0 22-16 39-33 51-17-12-33-29-33-51V35Z"
-                /></svg
-              ><svg class="shield-lock"><use href="#icon-lock" /></svg>
+                ></path></svg
+              ><svg class="shield-lock"><use href="#icon-lock"></use></svg>
             </div>
             <div class="privacy-art-label">
               <span class="status-dot"></span>
@@ -788,7 +1023,7 @@
             <ul class="privacy-list">
               <li>
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-check" />
+                  <use href="#icon-check"></use>
                 </svg>
                 <span data-i18n="privacy.metadata"
                   >Quota metadata only. No code or conversations.</span
@@ -796,15 +1031,15 @@
               </li>
               <li>
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-check" />
+                  <use href="#icon-check"></use>
                 </svg>
                 <span data-i18n="privacy.credentials"
-                  >Your Codex credentials stay private.</span
+                  >Provider credentials never travel through the relay.</span
                 >
               </li>
               <li>
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-check" />
+                  <use href="#icon-check"></use>
                 </svg>
                 <span data-i18n="privacy.pairing"
                   >Single-use pairing. You're in control.</span
@@ -819,7 +1054,7 @@
               rel="noopener noreferrer"
               ><span data-i18n="privacy.link">How we protect your data</span>
               <svg class="icon small" aria-hidden="true">
-                <use href="#icon-external" /></svg
+                <use href="#icon-external"></use></svg
             ></a>
             <div class="privacy-signature mono">
               <span>AES-256-GCM</span
@@ -860,9 +1095,10 @@
                 Your quota. One glance away.
               </h3>
               <p class="app-store-description" data-i18n="appStore.description">
-                Keep your Codex quota and reset time on your home screen. Pair
-                with the desktop companion for encrypted sync, or explore the
-                app with the built-in demo.
+                Take supported quotas from your desktop to your iPhone with
+                encrypted sync. Current source supports Codex and Antigravity in
+                the app and widgets; check the App Store version. A built-in
+                demo works offline.
               </p>
               <a
                 class="button"
@@ -872,7 +1108,7 @@
                 rel="noopener noreferrer"
               >
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-apple" />
+                  <use href="#icon-apple"></use>
                 </svg>
                 <span data-i18n="appStore.cta">Download on the App Store</span>
               </a>
@@ -935,7 +1171,7 @@
                 data-platform="macos"
               >
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-apple" /></svg
+                  <use href="#icon-apple"></use></svg
                 >macOS</button
               ><button
                 id="tab-linux"
@@ -947,7 +1183,7 @@
                 data-platform="linux"
               >
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-terminal" /></svg
+                  <use href="#icon-terminal"></use></svg
                 >Linux</button
               ><button
                 id="tab-windows"
@@ -959,7 +1195,7 @@
                 data-platform="windows"
               >
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-windows" /></svg
+                  <use href="#icon-windows"></use></svg
                 >Windows</button
               ><button
                 id="tab-android"
@@ -971,7 +1207,7 @@
                 data-platform="android"
               >
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-android" /></svg
+                  <use href="#icon-android"></use></svg
                 >Android</button
               ><button
                 id="tab-ios"
@@ -983,7 +1219,7 @@
                 data-platform="ios"
               >
                 <svg class="icon" aria-hidden="true">
-                  <use href="#icon-phone" /></svg
+                  <use href="#icon-phone"></use></svg
                 >iOS
               </button>
             </div>
@@ -1006,7 +1242,7 @@
                 <span
                   class="download-requirement mono"
                   id="platform-requirement"
-                  >REQUIRES CODEX CLI OR COMPATIBLE DESKTOP APP, SIGNED IN</span
+                  >SUPPORTED LOCAL PROVIDER · CLAUDE CODE REQUIRES OPT-IN</span
                 >
               </div>
               <a
@@ -1017,7 +1253,7 @@
                 rel="noopener noreferrer"
                 ><span id="platform-link-label">Explore releases</span
                 ><svg class="icon" aria-hidden="true">
-                  <use href="#icon-external" /></svg
+                  <use href="#icon-external"></use></svg
               ></a>
             </div>
           </div>
@@ -1028,7 +1264,7 @@
               tabindex="0"
               aria-labelledby="availability-caption"
             >
-              <table class="availability-table" data-platform-table>
+              <table class="availability-table" data-platform-table="">
                 <caption
                   id="availability-caption"
                   data-i18n="availability.caption"
@@ -1066,8 +1302,8 @@
                     </td>
                     <td>
                       <p data-i18n="availability.macosRequirements">
-                        Apple Silicon or Intel Mac. Sign in through Codex CLI or
-                        a compatible Codex desktop installation.
+                        Apple Silicon or Intel Mac. Configure a supported local
+                        provider; Claude Code requires opt-in setup.
                       </p>
                     </td>
                     <td>
@@ -1078,7 +1314,7 @@
                         ><span data-i18n="availability.macosLink"
                           >macOS releases</span
                         ><svg class="icon small" aria-hidden="true">
-                          <use href="#icon-external" /></svg
+                          <use href="#icon-external"></use></svg
                       ></a>
                     </td>
                   </tr>
@@ -1096,7 +1332,9 @@
                     </td>
                     <td>
                       <p data-i18n="availability.linuxRequirements">
-                        Linux x64. Codex CLI installed and signed in.
+                        Linux x64. Configure a supported local provider. Claude
+                        Code bridge coverage is automated; native validation is
+                        pending.
                       </p>
                     </td>
                     <td>
@@ -1107,7 +1345,7 @@
                         ><span data-i18n="availability.linuxLink"
                           >Linux releases</span
                         ><svg class="icon small" aria-hidden="true">
-                          <use href="#icon-external" /></svg
+                          <use href="#icon-external"></use></svg
                       ></a>
                     </td>
                   </tr>
@@ -1126,9 +1364,9 @@
                     </td>
                     <td>
                       <p data-i18n="availability.windowsRequirements">
-                        Windows x64. Sign in through Codex CLI or a compatible
-                        Codex desktop installation. SmartScreen may warn or
-                        block installation.
+                        Windows x64. Configure a supported local provider.
+                        SmartScreen may warn or block installation; Claude Code
+                        native validation is pending.
                       </p>
                     </td>
                     <td>
@@ -1139,7 +1377,7 @@
                         ><span data-i18n="availability.windowsLink"
                           >Windows preview releases</span
                         ><svg class="icon small" aria-hidden="true">
-                          <use href="#icon-external" /></svg
+                          <use href="#icon-external"></use></svg
                       ></a>
                     </td>
                   </tr>
@@ -1158,8 +1396,9 @@
                     </td>
                     <td>
                       <p data-i18n="availability.androidRequirements">
-                        Android 6.0+. Companion and relay for sync; offline demo
-                        available.
+                        Android 6.0+. Compatible releases sync Codex and
+                        Antigravity through the companion and relay. Offline
+                        demo available; no Claude Code view yet.
                       </p>
                     </td>
                     <td>
@@ -1170,7 +1409,7 @@
                         ><span data-i18n="availability.androidLink"
                           >Android releases</span
                         ><svg class="icon small" aria-hidden="true">
-                          <use href="#icon-external" /></svg
+                          <use href="#icon-external"></use></svg
                       ></a>
                     </td>
                   </tr>
@@ -1189,8 +1428,9 @@
                     </td>
                     <td>
                       <p data-i18n="availability.iosRequirements">
-                        iPhone with iOS 17+. Companion and relay for sync;
-                        offline demo available.
+                        iPhone with iOS 17+. Compatible releases sync Codex and
+                        Antigravity through the companion and relay. Offline
+                        demo available; no Claude Code view yet.
                       </p>
                     </td>
                     <td>
@@ -1201,7 +1441,7 @@
                         ><span data-i18n="availability.iosLink"
                           >Download on the App Store</span
                         ><svg class="icon small" aria-hidden="true">
-                          <use href="#icon-external" /></svg
+                          <use href="#icon-external"></use></svg
                       ></a>
                     </td>
                   </tr>
@@ -1221,7 +1461,7 @@
           </div>
           <div class="source-note reveal">
             <svg class="icon" aria-hidden="true">
-              <use href="#icon-github" /></svg
+              <use href="#icon-github"></use></svg
             ><span data-i18n="source.question">Rather build it yourself?</span
             ><a
               href="https://github.com/arvivares/statusline"
@@ -1231,7 +1471,7 @@
                 >The code is yours to explore.</span
               >
               <svg class="icon small" aria-hidden="true">
-                <use href="#icon-arrow" /></svg></a
+                <use href="#icon-arrow"></use></svg></a
             ><a
               class="mono source-license"
               href="https://github.com/arvivares/statusline/blob/main/LICENSE"
@@ -1261,7 +1501,7 @@
               rel="noopener noreferrer"
               ><span data-i18n="faq.help">Help center</span>
               <svg class="icon small" aria-hidden="true">
-                <use href="#icon-external" /></svg
+                <use href="#icon-external"></use></svg
             ></a>
           </div>
           <div class="faq-list reveal">
@@ -1270,10 +1510,11 @@
                 What exactly is Statusline?<span aria-hidden="true">+</span>
               </summary>
               <p data-i18n="faq.whatAnswer">
-                Statusline is an open source project that shows the quota for
-                your local Codex session: how much you have left, when it resets
-                and your short window. The companion lives on your desktop and
-                can sync an encrypted summary to your phone and its widgets.
+                Statusline is an open source quota monitor for Codex,
+                Antigravity's Gemini limits and Claude Code. The desktop
+                companion shows the windows and reset times each source reports.
+                Codex and Antigravity can sync encrypted readings to compatible
+                phone apps and widgets; Claude Code is currently desktop-only.
               </p>
             </details>
             <details>
@@ -1283,11 +1524,11 @@
                 >
               </summary>
               <p data-i18n="faq.accountAnswer">
-                You don't need an API key or a Statusline account. For automatic
-                sync, sign in to Codex on your computer and pair the companion
-                with your phone. Mac and Windows support the CLI or a compatible
-                Codex desktop installation; Linux requires the CLI. The local
-                demo works without a companion or an account.
+                No Statusline account or API key is required. Sign in through
+                your provider's official local app or CLI. For Claude Code,
+                explicitly enable the status-line connection and use a session
+                that reports plan quota; API-key and cloud-provider sessions
+                don't expose that quota. The offline demo needs no account.
               </p>
             </details>
             <details>
@@ -1297,35 +1538,38 @@
                 >
               </summary>
               <p data-i18n="faq.widgetAnswer">
-                The widget shows the latest synced sample, saved in the local
-                cache. Update frequency depends on the companion, your
-                connection and iOS or Android restrictions. Check the update
-                timestamp to see how recent your quota reading is.
+                No. Compatible widgets show the latest synced Codex or
+                Antigravity sample from the local cache. Updates depend on the
+                companion, your connection and iOS or Android restrictions.
+                Check the sample timestamp. Claude Code is not available in
+                mobile apps or widgets yet.
               </p>
             </details>
             <details>
               <summary data-i18n-html="faq.agentsQuestion">
-                Does it work with other AI agents?<span aria-hidden="true"
-                  >+</span
-                >
+                Which providers work today?<span aria-hidden="true">+</span>
               </summary>
               <p data-i18n="faq.agentsAnswer">
-                Codex is the complete integration today. The roadmap includes an
-                architecture for adding other agents, with AGY proposed as the
-                first additional adapter and Claude Code and GitHub Copilot
-                under research. These integrations aren't available yet.
+                The desktop companion supports Codex, Antigravity's Google
+                Gemini quota and Claude Code. It does not show third-party model
+                buckets from Antigravity. Claude Code reports only the windows
+                available to its session, after you enable the bridge; live
+                verification is on macOS, with Windows and Linux covered by
+                automated tests pending native validation. Other integrations
+                remain on the roadmap.
               </p>
             </details>
             <details>
               <summary data-i18n-html="faq.officialQuestion">
-                Is this an official OpenAI product?<span aria-hidden="true"
+                Is this an official provider product?<span aria-hidden="true"
                   >+</span
                 >
               </summary>
               <p data-i18n="faq.officialAnswer">
                 No. Statusline is an independent project by Inmerzion. It is not
-                affiliated with, sponsored or endorsed by OpenAI. Codex, ChatGPT
-                and OpenAI are trademarks of their respective owners.
+                affiliated with, sponsored or endorsed by OpenAI, Google or
+                Anthropic. All product names and trademarks belong to their
+                respective owners.
               </p>
             </details>
           </div>
@@ -1354,7 +1598,7 @@
               rel="noopener noreferrer"
               >GitHub
               <svg class="icon small" aria-hidden="true">
-                <use href="#icon-external" /></svg></a
+                <use href="#icon-external"></use></svg></a
             ><a
               href="https://github.com/arvivares/statusline/blob/main/ROADMAP.md"
               target="_blank"
@@ -1397,11 +1641,12 @@
               >Inmerzion ↗</a
             ></span
           ><span data-i18n="footer.independent"
-            >Independent. Not affiliated with OpenAI.</span
+            >Independent. Not affiliated with OpenAI, Google or Anthropic.</span
           ><button
             class="motion-toggle mono"
             type="button"
             aria-pressed="false"
+            aria-label="Pause decorative animation"
           >
             <span class="status-dot"></span
             ><span id="motion-label">PAUSE ANIMATION</span>
@@ -1417,88 +1662,88 @@
     >
       <defs>
         <symbol id="icon-arrow" viewBox="0 0 24 24">
-          <path d="M4 12h16m-6-6 6 6-6 6" />
+          <path d="M4 12h16m-6-6 6 6-6 6"></path>
         </symbol>
         <symbol id="icon-external" viewBox="0 0 24 24">
-          <path d="M6 18 18 6M6 6h12v12" />
+          <path d="M6 18 18 6M6 6h12v12"></path>
         </symbol>
         <symbol id="icon-down" viewBox="0 0 24 24">
-          <path d="M12 4v16m-6-6 6 6 6-6" />
+          <path d="M12 4v16m-6-6 6 6 6-6"></path>
         </symbol>
         <symbol id="icon-play" viewBox="0 0 24 24">
-          <path d="m9 5 10 7-10 7Z" />
+          <path d="m9 5 10 7-10 7Z"></path>
         </symbol>
         <symbol id="icon-lock" viewBox="0 0 24 24">
-          <rect x="5" y="10" width="14" height="11" rx="2" />
-          <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2" />
+          <rect x="5" y="10" width="14" height="11" rx="2"></rect>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"></path>
         </symbol>
         <symbol id="icon-link" viewBox="0 0 24 24">
           <path
             d="m9 15 6-6m-7 4-2 2a3.5 3.5 0 0 0 5 5l3-3a3.5 3.5 0 0 0 0-5m2-1 2-2a3.5 3.5 0 0 0-5-5L10 7a3.5 3.5 0 0 0 0 5"
-          />
+          ></path>
         </symbol>
         <symbol id="icon-settings" viewBox="0 0 24 24">
-          <path d="M4 6h8m4 0h4M4 12h2m4 0h10M4 18h11m4 0h1" />
-          <circle cx="14" cy="6" r="2" />
-          <circle cx="8" cy="12" r="2" />
-          <circle cx="17" cy="18" r="2" />
+          <path d="M4 6h8m4 0h4M4 12h2m4 0h10M4 18h11m4 0h1"></path>
+          <circle cx="14" cy="6" r="2"></circle>
+          <circle cx="8" cy="12" r="2"></circle>
+          <circle cx="17" cy="18" r="2"></circle>
         </symbol>
         <symbol id="icon-sliders" viewBox="0 0 24 24">
-          <path d="M4 6h8m4 0h4M4 18h3m4 0h9" />
-          <circle cx="14" cy="6" r="2" />
-          <circle cx="9" cy="18" r="2" />
+          <path d="M4 6h8m4 0h4M4 18h3m4 0h9"></path>
+          <circle cx="14" cy="6" r="2"></circle>
+          <circle cx="9" cy="18" r="2"></circle>
         </symbol>
         <symbol id="icon-github" viewBox="0 0 24 24">
           <path
             d="M9 19c-4.3 1.3-4.3-2-6-2.5M15 22v-3.3c0-.9-.1-1.5-.5-2 3.3-.4 6.5-1.6 6.5-7a5.4 5.4 0 0 0-1.5-3.8 5 5 0 0 0-.1-3.8s-1.2-.4-3.9 1.5a13 13 0 0 0-7 0C5.8 1.7 4.6 2.1 4.6 2.1A5 5 0 0 0 4.5 6 5.4 5.4 0 0 0 3 9.7c0 5.4 3.2 6.6 6.5 7-.4.5-.5 1.1-.5 2V22"
-          />
+          ></path>
         </symbol>
         <symbol id="icon-apple" viewBox="0 0 24 24">
           <path
             d="M16.6 2c0 1.8-1.5 3.8-3.6 4 0-2 1.7-3.7 3.6-4ZM20.5 17c-1.1 2.7-2.6 5-4.6 5-1.3 0-1.7-.8-3.4-.8s-2.3.8-3.5.8C6 22 3 17.1 3 12.7 3 9 5.2 7 7.7 7c1.7 0 3 1 4.3 1 1.2 0 3-1.1 4.6-1 1.7 0 3.2.8 4.1 2-3.6 1.9-3.5 6.3-.2 8Z"
-          />
+          ></path>
         </symbol>
         <symbol id="icon-windows" viewBox="0 0 24 24">
           <path
             d="m3 5 8-1v7H3Zm10-1.3L22 2v9h-9ZM3 13h8v7l-8-1Zm10 0h9v9l-9-1.7Z"
-          />
+          ></path>
         </symbol>
         <symbol id="icon-terminal" viewBox="0 0 24 24">
-          <rect x="2" y="4" width="20" height="16" rx="3" />
-          <path d="m6 9 3 3-3 3m7 0h5" />
+          <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+          <path d="m6 9 3 3-3 3m7 0h5"></path>
         </symbol>
         <symbol id="icon-phone" viewBox="0 0 24 24">
-          <rect x="6" y="2" width="12" height="20" rx="3" />
-          <path d="M10 5h4m-3 14h2" />
+          <rect x="6" y="2" width="12" height="20" rx="3"></rect>
+          <path d="M10 5h4m-3 14h2"></path>
         </symbol>
         <symbol id="icon-android" viewBox="0 0 24 24">
           <path
             d="m6 3 2 3m10-3-2 3M4 13V9a8 5 0 0 1 16 0v4H4Zm0 2v4h16v-4M8 19v3m8-3v3M1 11v6m22-6v6M8 10h.01M16 10h.01"
-          />
+          ></path>
         </symbol>
         <symbol id="icon-activity" viewBox="0 0 24 24">
-          <path d="M2 12h4l3-8 6 16 3-8h4" />
+          <path d="M2 12h4l3-8 6 16 3-8h4"></path>
         </symbol>
         <symbol id="icon-grid" viewBox="0 0 24 24">
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
         </symbol>
         <symbol id="icon-command" viewBox="0 0 24 24">
           <path
             d="M9 7V5a2 2 0 1 0-2 2h10a2 2 0 1 0-2-2v14a2 2 0 1 0 2-2H7a2 2 0 1 0 2 2V7Z"
-          />
+          ></path>
         </symbol>
         <symbol id="icon-code" viewBox="0 0 24 24">
-          <path d="m7 6-6 6 6 6m10-12 6 6-6 6M14 3l-4 18" />
+          <path d="m7 6-6 6 6 6m10-12 6 6-6 6M14 3l-4 18"></path>
         </symbol>
         <symbol id="icon-monitor" viewBox="0 0 24 24">
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <path d="M8 22h8m-4-5v5M8 8l-2 2 2 2m8-4 2 2-2 2" />
+          <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+          <path d="M8 22h8m-4-5v5M8 8l-2 2 2 2m8-4 2 2-2 2"></path>
         </symbol>
         <symbol id="icon-check" viewBox="0 0 24 24">
-          <path d="m5 12 4 4L19 6" />
+          <path d="m5 12 4 4L19 6"></path>
         </symbol>
       </defs>
     </svg>

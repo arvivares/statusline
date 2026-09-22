@@ -218,6 +218,33 @@ export async function validateSEO(outDir) {
       staticMessages[language]["meta.description"],
     );
     assert.equal(elements.filter((node) => node.tagName === "h1").length, 1);
+    const providers = elements.filter((node) =>
+      attribute(node, "data-provider"),
+    );
+    assert.deepEqual(
+      providers.map((node) => attribute(node, "data-provider")),
+      ["codex", "antigravity", "claude"],
+      "All three provider descriptions must be present without JavaScript",
+    );
+    for (const name of ["Codex", "Antigravity", "Claude Code"]) {
+      assert(
+        meta("description").includes(name),
+        `Missing provider metadata: ${name}`,
+      );
+      assert(
+        text(
+          elements.find((node) => attribute(node, "id") === "providers"),
+        ).includes(name),
+      );
+    }
+    assert(
+      text(
+        elements.find(
+          (node) => attribute(node, "data-i18n") === "providers.note",
+        ),
+      ) === staticMessages[language]["providers.note"],
+      "Mobile support limits must be visible without JavaScript",
+    );
     assert.equal(
       elements.filter(
         (node) =>
@@ -409,6 +436,8 @@ export async function validateSEO(outDir) {
   assert(!/^Disallow:\s*\/$/m.test(robots));
   const llms = await readFile(resolve(outDir, "llms.txt"), "utf8");
   assert(llms.startsWith("# Statusline"));
+  for (const name of ["Codex", "Antigravity", "Claude Code"])
+    assert(llms.includes(name), `LLM context missing ${name}`);
   assert(
     llms.includes(`${siteOrigin}/es/`) &&
       llms.includes("https://github.com/arvivares/statusline"),

@@ -1,10 +1,33 @@
 # Statusline
 
-> Statusline is an independent open-source companion for viewing Codex quota and reset times on desktop, mobile apps and widgets.
+> Statusline is an independent open-source desktop companion for monitoring Codex, Antigravity's Google Gemini quota and Claude Code. Compatible mobile apps and widgets support Codex and Antigravity.
 
-The desktop companion reads usage metadata from the local Codex session. Optional
-mobile synchronization uses end-to-end encrypted quota snapshots. Statusline is
-not affiliated with, sponsored by or endorsed by OpenAI.
+The desktop companion shows each provider's reported quota windows and reset times,
+without treating absent data as available quota. Optional mobile synchronization
+uses end-to-end encrypted snapshots. Statusline is not affiliated with, sponsored
+by or endorsed by OpenAI, Google or Anthropic.
+
+## Current provider support
+
+- Codex: local signed-in Codex CLI or compatible desktop installation; reported weekly and short-window quota. Desktop, compatible mobile apps and widgets.
+- Antigravity: selected official Desktop or compatible AGY CLI installation, signed in by the user. Google Gemini weekly and five-hour buckets only, not third-party model quotas. Desktop, compatible mobile apps and widgets.
+- Claude Code: desktop quota via an opt-in connection to Claude Code's statusLine hook. It displays only rate-limit windows the session actually reports, after a response. No Claude Code view in mobile apps or widgets yet. Live verification is on macOS; Windows and Linux have automated coverage, with native validation pending.
+
+Claude Code requires explicit activation in Companion. Its previous status line is
+preserved and restored on disconnect. The bridge receives the session payload but
+retains reported rate-limit metadata (including a gateway spend limit when present)
+and capture times, not transcripts or workspace content. Gateway spend is not a
+quota window and stays local. It does not read Claude credentials, run prompts or call Claude endpoints.
+Plan windows vary by session; API-key and cloud-provider sessions do not report
+subscription quota. Usage reported by another device is not visible until a new
+Claude Code report arrives. Missing windows are never inferred.
+
+Mobile support depends on the installed version. Codex and Antigravity support
+is implemented in the current repository; older apps may show Codex only, and
+store releases can lag behind source. Claude Code remains desktop-only. Widgets
+show cached samples and update on schedules controlled by iOS or Android, not in
+real time. The website's screenshots predate multi-provider support and show
+independent Codex demo examples, not connected accounts.
 
 ## Website
 
@@ -18,10 +41,13 @@ not affiliated with, sponsored by or endorsed by OpenAI.
 - [Releases](https://github.com/arvivares/statusline/releases): Published downloads and release notes.
 - [Documentation index](https://github.com/arvivares/statusline/blob/main/docs/README.md): Architecture, operations, release and security documentation.
 - [Setup guide](https://github.com/arvivares/statusline/blob/main/SETUP.md): Installation and configuration instructions in Spanish.
+- [Codex source](https://github.com/arvivares/statusline/blob/main/docs/architecture/codex-sources.md): Local runtime and supported discovery paths.
+- [Antigravity integration](https://github.com/arvivares/statusline/blob/main/docs/architecture/antigravity-companion.md): Gemini collection, source selection and encrypted mobile delivery. Historical release sections have narrower scope.
+- [Claude Code source](https://github.com/arvivares/statusline/blob/main/docs/architecture/claude-sources.md): Opt-in bridge, quota availability, privacy and platform verification boundaries.
 - [MIT license](https://github.com/arvivares/statusline/blob/main/LICENSE): License terms for the project.
 
-Android is in beta, with APKs available on GitHub Releases. Public Google Play
-availability is coming soon.
+Android is in beta, with APKs available on GitHub Releases. Google Play is in
+closed testing; no public availability date is promised here.
 
 ## Support and privacy
 

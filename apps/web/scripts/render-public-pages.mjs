@@ -14,7 +14,8 @@ const labels = {
     support: "Support",
     "delete-data": "Data control",
     skip: "Skip to content",
-    independent: "Independent project. Not endorsed by OpenAI.",
+    independent:
+      "Independent project. Not endorsed by OpenAI, Google or Anthropic.",
   },
   es: {
     home: "Volver a Statusline",
@@ -24,7 +25,8 @@ const labels = {
     support: "Soporte",
     "delete-data": "Control de datos",
     skip: "Ir al contenido",
-    independent: "Proyecto independiente. No respaldado por OpenAI.",
+    independent:
+      "Proyecto independiente. No respaldado por OpenAI, Google ni Anthropic.",
   },
 };
 const escapeHTML = (value) =>

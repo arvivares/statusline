@@ -60,7 +60,7 @@ export const platformMessages: Record<
       badge: "BETA",
       description:
         "A universal companion for Apple Silicon and Intel Macs. Explore the project's releases for DMG and PKG installers.",
-      requirement: "REQUIRES CODEX CLI OR COMPATIBLE DESKTOP APP, SIGNED IN",
+      requirement: "SUPPORTED LOCAL PROVIDER · CLAUDE CODE REQUIRES OPT-IN",
       cta: "Explore releases",
     },
     linux: {
@@ -68,7 +68,7 @@ export const platformMessages: Record<
       badge: "BETA",
       description:
         "A companion for Linux x64, with DEB, RPM and AppImage packages. Explore the test releases and their verification instructions.",
-      requirement: "REQUIRES CODEX CLI, INSTALLED AND SIGNED IN",
+      requirement: "LOCAL PROVIDER SETUP · CLAUDE CODE NATIVE QA PENDING",
       cta: "Explore releases",
     },
     windows: {
@@ -77,22 +77,22 @@ export const platformMessages: Record<
       description:
         "Public NSIS and MSI installers are available without Authenticode signing. SmartScreen may warn or block installation; verify the signed checksums and provenance.",
       requirement:
-        "UNSIGNED · REQUIRES CODEX CLI OR COMPATIBLE DESKTOP APP, SIGNED IN",
+        "UNSIGNED · LOCAL PROVIDER SETUP · CLAUDE CODE NATIVE QA PENDING",
       cta: "Explore preview releases",
     },
     android: {
       title: "Your quota, on your home screen.",
       badge: "IN TESTING",
       description:
-        "A native app and widget for Android 6.0 and later. Explore prerelease APKs; distribution through Google Play is still going through closed testing.",
-      requirement: "COMPANION SYNC · OFFLINE DEMO DATA",
+        "A native app and widgets for Android 6.0 and later. Compatible releases show Codex and Antigravity, not Claude Code yet. Explore prerelease APKs; Google Play remains in closed testing.",
+      requirement: "COMPATIBLE MOBILE RELEASE · ENCRYPTED COMPANION SYNC",
       cta: "Explore releases",
     },
     ios: {
       title: "A quick glance from your iPhone.",
       badge: "AVAILABLE",
       description:
-        "Free on the App Store. See your Codex quota in the native iPhone app and home screen widgets. Pair with the desktop companion for encrypted sync.",
+        "Free on the App Store. Compatible releases show Codex and Antigravity in the native app and widgets, with encrypted companion sync. Claude Code is desktop-only; check the store version.",
       requirement: "IPHONE · IOS 17+ · WIDGETKIT",
       cta: "Download on the App Store",
     },
@@ -104,7 +104,7 @@ export const platformMessages: Record<
       description:
         "Companion universal para Mac con Apple Silicon e Intel. Consulta los instaladores DMG y PKG en las versiones del proyecto.",
       requirement:
-        "REQUIERE SESIÓN EN CODEX CLI O APP DE ESCRITORIO COMPATIBLE",
+        "PROVEEDOR LOCAL COMPATIBLE · CLAUDE CODE REQUIERE ACTIVACIÓN",
       cta: "Explorar versiones",
     },
     linux: {
@@ -112,7 +112,8 @@ export const platformMessages: Record<
       badge: "BETA",
       description:
         "Companion para Linux x64, con paquetes DEB, RPM y AppImage. Revisa las versiones para testers y sus instrucciones de verificación.",
-      requirement: "REQUIERE CODEX CLI INSTALADO Y AUTENTICADO",
+      requirement:
+        "PROVEEDOR LOCAL · VALIDACIÓN NATIVA DE CLAUDE CODE PENDIENTE",
       cta: "Explorar versiones",
     },
     windows: {
@@ -121,23 +122,23 @@ export const platformMessages: Record<
       description:
         "Los instaladores públicos NSIS y MSI no tienen firma Authenticode. SmartScreen puede advertir o bloquear la instalación; verifica los checksums firmados y la procedencia.",
       requirement:
-        "SIN FIRMA · REQUIERE SESIÓN EN CODEX CLI O APP DE ESCRITORIO COMPATIBLE",
+        "SIN FIRMA · PROVEEDOR LOCAL · VALIDACIÓN NATIVA DE CLAUDE CODE PENDIENTE",
       cta: "Explorar previews",
     },
     android: {
       title: "Tu cuota, en tu pantalla de inicio.",
       badge: "EN PRUEBAS",
       description:
-        "App nativa y widget para Android 6.0 o posterior. Consulta los APK de las prereleases; la distribución en Google Play sigue su proceso de pruebas cerradas.",
+        "App nativa y widgets para Android 6.0 o posterior. Las versiones compatibles muestran Codex y Antigravity, todavía no Claude Code. Consulta los APK de las prereleases; Google Play sigue en pruebas cerradas.",
       requirement:
-        "SINCRONIZACIÓN CON EL COMPANION · DATOS DE DEMO SIN CONEXIÓN",
+        "VERSIÓN MÓVIL COMPATIBLE · SINCRONIZACIÓN CIFRADA CON EL COMPANION",
       cta: "Explorar versiones",
     },
     ios: {
       title: "Un vistazo desde tu iPhone.",
       badge: "DISPONIBLE",
       description:
-        "Gratis en el App Store. Consulta tu cuota de Codex en la app nativa para iPhone y sus widgets. Empareja el companion de escritorio para sincronizar con cifrado.",
+        "Gratis en el App Store. Las versiones compatibles muestran Codex y Antigravity en la app y sus widgets, con sincronización cifrada. Claude Code es solo para escritorio; comprueba la versión de la tienda.",
       requirement: "IPHONE · IOS 17+ · WIDGETKIT",
       cta: "Descargar en el App Store",
     },

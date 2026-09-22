@@ -3868,6 +3868,114 @@ html:not(.js) .demo-segments {
   }
 }
 
+/* A single instrument panel, with each provider's capabilities kept distinct. */
+.providers-section {
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #efc65a04, transparent 70%);
+}
+.providers-section .section-heading h2 {
+  max-width: 750px;
+  font-size: clamp(34px, 4.4vw, 64px);
+  text-wrap: balance;
+}
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.provider-card {
+  padding: clamp(24px, 3vw, 40px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #14150f;
+}
+.provider-card + .provider-card {
+  border-left: 1px solid var(--line);
+}
+.provider-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font: 500 10px/1.6 var(--mono);
+  letter-spacing: 0.08em;
+  margin-bottom: 36px;
+}
+.provider-number {
+  color: var(--muted);
+}
+.provider-label {
+  color: var(--gold);
+  text-align: right;
+}
+.provider-card h3 {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(23px, 2.35vw, 34px);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+.provider-card h3 span {
+  color: var(--gold);
+  font-size: 20px;
+}
+.provider-company {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 8px 0 24px;
+}
+.provider-description {
+  color: var(--muted);
+  line-height: 1.8;
+  font-size: 14px;
+  margin: 0 0 28px;
+}
+.provider-requirement {
+  margin: auto 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.provider-availability {
+  max-width: 840px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+  padding-left: 18px;
+  border-left: 2px solid var(--gold);
+  margin: 28px 0 0;
+}
+.hero-capture-note {
+  max-width: 760px;
+  text-align: center;
+}
+@media (max-width: 760px) {
+  .provider-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .provider-card + .provider-card {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .provider-card-top {
+    margin-bottom: 20px;
+  }
+  .provider-description {
+    max-width: 560px;
+  }
+  .provider-card h3 {
+    font-size: 30px;
+  }
+}
+
 /* Still Signature: real product captures, shared with the README. */
 .hero-real-device {
   top: 58px;

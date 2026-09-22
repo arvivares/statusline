@@ -12,6 +12,7 @@ export const platformLinks: Record<Platform, string> = {
   ios: appStoreUrl,
 };
 export const brandAssetVersion = "segmented-s-2026";
+const socialAssetVersion = "providers-20260921";
 export const languagePaths: Record<Language, string> = { en: "/", es: "/es/" };
 
 export function languageFromPath(path: string): Language {
@@ -23,7 +24,7 @@ export function pageMetadata(language: Language) {
     canonical: `${siteOrigin}${languagePaths[language]}`,
     locale: language === "en" ? "en_US" : "es_ES",
     alternateLocale: language === "en" ? "es_ES" : "en_US",
-    image: `${siteOrigin}/assets/${language === "en" ? "social-card-en.png" : "social-card.png"}?v=${brandAssetVersion}`,
+    image: `${siteOrigin}/assets/${language === "en" ? "social-card-en.png" : "social-card.png"}?v=${socialAssetVersion}`,
   };
 }
 
@@ -59,6 +60,20 @@ export function structuredData(
         url: `${siteOrigin}/`,
         description,
         applicationCategory: "DeveloperApplication",
+        featureList:
+          language === "en"
+            ? [
+                "Desktop quota monitoring for Codex, Antigravity and Claude Code",
+                "Google Gemini quota windows from Antigravity",
+                "Opt-in Claude Code status-line bridge on desktop",
+                "Optional end-to-end encrypted Codex and Antigravity sync to compatible mobile apps and widgets",
+              ]
+            : [
+                "Cuotas de Codex, Antigravity y Claude Code en el escritorio",
+                "Ventanas de cuota de Google Gemini desde Antigravity",
+                "Puente opcional con la línea de estado de Claude Code en escritorio",
+                "Sincronización cifrada opcional de Codex y Antigravity con apps móviles y widgets compatibles",
+              ],
         isAccessibleForFree: true,
         license: `${repository}/blob/main/LICENSE`,
         sameAs: [repository],
