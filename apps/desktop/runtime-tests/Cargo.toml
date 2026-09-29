@@ -19,7 +19,7 @@ time = { version = "=0.3.55", features = ["parsing"] }
 tempfile = "=3.27.0"
 uuid = { version = "=1.26.1", features = ["serde"] }
 sys-locale = "=0.3.2"
-thiserror = "=2.0.20"
+thiserror = "=2.0.21"
 tokio = { version = "=1.53.1", features = ["io-util", "macros", "net", "process", "rt", "time", "sync", "test-util"] }
 
 [target.'cfg(windows)'.dependencies]
