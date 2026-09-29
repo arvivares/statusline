@@ -9,6 +9,7 @@ Companion de bandeja para consultar cuotas en Windows, Linux y macOS. Está cons
 - Source Settings detecta el Codex integrado en apps compatibles de ChatGPT/Codex en macOS y Windows o la CLI, valida codex --version y permite guardar una ruta local. La detección de escritorio en Windows está pendiente de QA en el dispositivo afectado.
 - Universal Relay publica sólo el snapshot mínimo de Codex cifrado de extremo a extremo para iOS y Android, sin cambiar claves ni emparejamientos existentes.
 - La candidata 0.1.23 detecta Antigravity automáticamente, prioriza Desktop en la primera detección y recuerda la fuente. Respeta selecciones y desactivaciones previas; solo muestra servicios presentes. Las rutas manuales quedan como opción avanzada. Sus lecturas, errores y ajustes son independientes de Codex. Consulta el [contrato del adaptador](../../docs/architecture/antigravity-companion.md) y las limitaciones de Windows/Linux.
+- Claude Code se detecta automáticamente en macOS, Windows y Linux. Cuando existe la CLI, Companion instala de forma reversible el bridge documentado de `statusLine`, conserva y encadena la configuración existente y no lee credenciales, conversaciones ni transcripts. Si sólo está instalada la aplicación desktop, la detección permanece informativa porque no expone el payload de cuota.
 - La credencial publisher y la clave AES permanecen en Keychain, Windows Credential Manager o Secret Service.
 - El frontend recibe estado operacional y el vínculo de emparejamiento mientras está vigente; nunca recibe la credencial publisher.
 
@@ -18,7 +19,7 @@ Codex App Server continúa marcado como experimental. Una ruptura de su protocol
 
 La interfaz usa una superficie #181813, texto #F2F0EB y señal #EFC65A. La ventana de 340 × 500 mantiene el medidor segmentado 4:2 con el último segmento activo blanco, fuentes de sistema y estados explícitos. No hay tarjetas anidadas ni espacios reservados para servicios ausentes. Las animaciones respetan prefers-reduced-motion.
 
-La candidata 0.1.23 recupera el foco principal y las filas abiertas de **Otras cuotas** aprobadas en Still Signature, sustituyendo las pestañas de proveedores de 0.1.22. Se puede intercambiar la ventana semanal/corta sin cambiar lo que se publica al relay. Claude no aparece hasta que exista su adaptador real.
+La candidata 0.1.23 recupera el foco principal y las filas abiertas de **Otras cuotas** aprobadas en Still Signature, sustituyendo las pestañas de proveedores de 0.1.22. Se puede intercambiar la ventana semanal/corta sin cambiar lo que se publica al relay. Claude Code aparece sólo cuando está detectado en el Companion de ese usuario; no se anuncia en móviles hasta que el adaptador esté incluido en el contrato móvil.
 
 ## Requisitos
 
