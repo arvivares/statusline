@@ -1,6 +1,7 @@
 # Claude Code source
 
-Status: opt-in live quota through Claude Code's documented `statusLine` hook.
+Status: automatic live quota through Claude Code's documented `statusLine` hook
+when the Claude Code CLI is detected; desktop-only discovery remains informational.
 Research checked against Anthropic documentation on 2026-09-16 and verified on a
 real Claude Code 2.1.276 session on macOS on 2026-09-18 (Enterprise seat). Windows
 and Linux execution of the bridge is covered by unit tests and fixtures only.
@@ -20,19 +21,18 @@ Companion uses that hook as its transport:
    A detected installation creates the Claude row; nothing is run. No shell init
    file, credential or conversation is read. Discovery runs at startup, on focus
    when its cache is older than 60 seconds, and on the native five-minute schedule.
-2. **Enable quota** appears directly in the Claude focus view when a CLI or a
-   previous bridge capture is detected. Before the user clicks, the view explains
-   that Claude Code's status line will be updated and the existing one preserved.
-   **Connect Claude Code** in Settings › Services remains an alternative. Neither
-   discovery nor viewing the row grants consent: only clicking a connect button
-   writes a
+2. **Automatic enablement** runs after CLI discovery. Companion writes a
    `statusLine` object into the user's Claude Code `settings.json` whose command
    runs the Companion executable in bridge mode:
    `"<companion>" --statusline-claude-bridge "<config dir>/claude-statusline-capture-v1.json"`,
    with `refreshInterval: 60` so idle sessions keep reporting. Every other key in
-   `settings.json` is preserved and a verbatim backup is stored once in
-   Companion's config folder. An existing custom status line is saved to a chain
+   `settings.json` is preserved and a verbatim backup is stored once in Companion's
+   config folder. An existing compatible custom status line is saved to a chain
    file, keeps running with the same stdin, and is restored by **Disconnect**.
+   Unknown or malformed status-line values are left untouched. The manual
+   **Connect Claude Code** action remains as a recovery path if automatic setup
+   cannot proceed. Desktop-only discovery never writes settings because Claude
+   Desktop does not expose this status-line transport.
 3. **Bridge** (`claude::run_bridge`) reads at most 64 KiB from stdin, keeps only
    the three documented windows plus a capture time, writes them atomically with
    `0600` permissions and prints either the chained status line or a one-line

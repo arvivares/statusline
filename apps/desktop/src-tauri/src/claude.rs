@@ -1,4 +1,4 @@
-//! Passive Claude discovery plus the opt-in Claude Code statusline bridge.
+//! Automatic Claude discovery plus the Claude Code statusline bridge.
 //!
 //! Claude Code documents one supported way to expose subscription quota to an
 //! external program: the user's `statusLine` command receives session JSON on
@@ -145,6 +145,46 @@ pub struct State {
     pending: tokio::sync::Mutex<Option<tokio::task::JoinHandle<Installations>>>,
 }
 
+/// Connect Claude Code as soon as its CLI is discovered. The operation is
+/// deliberately limited to Claude Code installations: the desktop app alone
+/// has no status-line transport and must not cause a settings write.
+///
+/// `connect` is safe to repeat. It atomically preserves the user's existing
+/// settings, chains an existing custom status line, and disconnect restores it.
+/// An unreadable settings file or an unsupported Companion path leaves the
+/// discovered installation visible without changing the user's configuration.
+fn auto_connect_with_executable(
+    directory: Option<&Path>,
+    claude_dir: Option<&Path>,
+    installations: Installations,
+    connection: Connection,
+    executable: Option<&Path>,
+) -> Connection {
+    if !installations.cli || matches!(connection, Connection::Connected | Connection::Unknown) {
+        return connection;
+    }
+    let (Some(directory), Some(claude_dir), Some(executable)) = (directory, claude_dir, executable)
+    else {
+        return connection;
+    };
+    connect(directory, &claude_dir, executable).unwrap_or(connection)
+}
+
+fn auto_connect(
+    directory: Option<&Path>,
+    installations: Installations,
+    connection: Connection,
+) -> Connection {
+    let executable = env::current_exe().ok();
+    auto_connect_with_executable(
+        directory,
+        claude_config_dir().as_deref(),
+        installations,
+        connection,
+        executable.as_deref(),
+    )
+}
+
 impl State {
     async fn scan(&self, deadline: Duration) -> Option<Installations> {
         let mut pending = self.pending.lock().await;
@@ -174,7 +214,15 @@ pub async fn refresh(state: &State, directory: Option<&Path>, age: Duration) -> 
             // Isolate filesystem probes from the async runtime. A slow/missing
             // installation cannot hold up Codex/Gemini or the startup inventory.
             match state.scan(Duration::from_secs(3)).await {
-                Some(installations) => View::build(installations, connection, reading),
+                Some(installations) => {
+                    let config_directory = directory.map(Path::to_path_buf);
+                    let connected = tokio::task::spawn_blocking(move || {
+                        auto_connect(config_directory.as_deref(), installations, connection)
+                    })
+                    .await
+                    .unwrap_or(connection);
+                    View::build(installations, connected, reading)
+                }
                 _ => View {
                     revision: REVISION.fetch_add(1, Ordering::Relaxed) + 1,
                     checked_at: now,
@@ -977,12 +1025,26 @@ pub fn connect(
     let command = bridge_command(executable, &capture)?;
     let settings_path = claude_dir.join("settings.json");
     let (original, mut settings) = read_settings(&settings_path)?;
+    let previous = settings.get("statusLine").cloned();
+    if let Some(previous) = previous.as_ref().filter(|value| !value.is_null()) {
+        // Do not silently replace a format we cannot preserve or chain. Claude
+        // normally uses an object with a command, but an unknown value may be
+        // another integration's configuration and must remain untouched.
+        if !previous.is_object()
+            || (!is_bridge(Some(previous))
+                && previous
+                    .get("command")
+                    .and_then(serde_json::Value::as_str)
+                    .is_none())
+        {
+            return Err(ConnectFailure::InvalidSettings);
+        }
+    }
     fs::create_dir_all(directory).map_err(|_| ConnectFailure::StorageUnavailable)?;
     let backup = directory.join(BACKUP_FILE);
     if !original.is_empty() && !backup.exists() {
         write_atomically(&backup, &original).map_err(|_| ConnectFailure::StorageUnavailable)?;
     }
-    let previous = settings.get("statusLine").cloned();
     let mut status_line = serde_json::Map::new();
     if let Some(previous) = previous.as_ref().filter(|v| v.is_object()) {
         if !is_bridge(Some(previous)) {
@@ -1646,6 +1708,63 @@ mod tests {
         assert!(line.contains("74") && line.contains("53"), "{line}");
         assert!(!line.contains("spend"));
         assert!(summary(None).starts_with("Claude"));
+    }
+
+    #[test]
+    fn automatic_connection_only_writes_for_cli_and_preserves_unknown_status_lines() {
+        let root = tempfile::tempdir().unwrap();
+        let companion = root.path().join("companion");
+        let claude = root.path().join("claude");
+        let executable = root.path().join("statusline");
+
+        // Desktop-only discovery is informational: it cannot provide the
+        // documented status-line payload and must not edit Claude settings.
+        assert_eq!(
+            auto_connect_with_executable(
+                Some(&companion),
+                Some(&claude),
+                Installations {
+                    cli: false,
+                    desktop: true,
+                },
+                Connection::None,
+                Some(&executable),
+            ),
+            Connection::None
+        );
+        assert!(!claude.join("settings.json").exists());
+
+        // A discovered CLI is connected without a separate user action.
+        assert_eq!(
+            auto_connect_with_executable(
+                Some(&companion),
+                Some(&claude),
+                Installations {
+                    cli: true,
+                    desktop: false,
+                },
+                Connection::None,
+                Some(&executable),
+            ),
+            Connection::Connected
+        );
+        assert_eq!(connection_state(Some(&claude)), Connection::Connected);
+
+        // An unsupported existing value is left untouched instead of being
+        // overwritten by automatic setup.
+        fs::write(
+            claude.join("settings.json"),
+            br#"{"statusLine":"managed-by-another-tool"}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            connect(&companion, &claude, &executable),
+            Err(ConnectFailure::InvalidSettings)
+        );
+        assert_eq!(
+            fs::read(claude.join("settings.json")).unwrap(),
+            br#"{"statusLine":"managed-by-another-tool"}"#
+        );
     }
 
     #[test]

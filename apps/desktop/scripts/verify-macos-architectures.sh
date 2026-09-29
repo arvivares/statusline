@@ -4,6 +4,8 @@ set -euo pipefail
 binary_path=${1:?'Usage: verify-macos-architectures.sh <universal-executable>'}
 [[ -f "$binary_path" && ! -L "$binary_path" ]] || { echo "Expected a regular universal executable." >&2; exit 1; }
 
-# -verify_arch consumes the remaining arguments as architecture names. The
-# executable must precede the option, including when its path contains spaces.
-/usr/bin/lipo "$binary_path" -verify_arch arm64 x86_64
+# Current Apple toolchains accept one architecture per -verify_arch check.
+# Keep the path as one quoted argument so spaces and Unicode remain valid.
+for architecture in arm64 x86_64; do
+  /usr/bin/lipo "$binary_path" -verify_arch "$architecture"
+done

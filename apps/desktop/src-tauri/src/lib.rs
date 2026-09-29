@@ -285,8 +285,9 @@ async fn claude_status(app: AppHandle, force: Option<bool>) -> claude::View {
     .await
 }
 
-/// Explicit user action: write the bridge into Claude Code's `statusLine`.
-/// Never runs automatically; discovery alone must not edit vendor settings.
+/// Manual recovery action: write the bridge into Claude Code's `statusLine`.
+/// Normal startup performs the same reversible operation automatically when a
+/// Claude Code CLI is discovered.
 #[tauri::command]
 async fn connect_claude(app: AppHandle) -> Result<claude::View, claude::ConnectFailure> {
     let directory = app
