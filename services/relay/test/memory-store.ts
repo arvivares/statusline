@@ -138,7 +138,7 @@ export class MemoryRelayStore implements RelayStore {
     if (result.kind !== "ok") return result;
     this.channels.delete(channelID);
     this.pushDevices.delete(channelID);
-    for (const [key, event] of this.pushEvents) {
+    for (const [key] of this.pushEvents) {
       if (key.startsWith(`${channelID}:`)) this.pushEvents.delete(key);
     }
     return { kind: "ok", value: null };
@@ -275,7 +275,7 @@ export class MemoryRelayStore implements RelayStore {
       if (channel.expiresAt < now) {
         this.channels.delete(id);
         this.pushDevices.delete(id);
-        for (const [key, event] of this.pushEvents) {
+        for (const [key] of this.pushEvents) {
           if (key.startsWith(`${id}:`)) this.pushEvents.delete(key);
         }
         count += 1;

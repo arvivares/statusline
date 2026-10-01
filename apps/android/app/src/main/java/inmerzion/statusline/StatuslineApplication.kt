@@ -46,9 +46,7 @@ class StatuslineApplication : Application() {
                 .build()
             FirebaseApp.initializeApp(this, options)
         }
-        FirebaseApp.getInstance().let { app ->
-            FirebaseMessaging.getInstance(app).isAutoInitEnabled = false
-        }
+        FirebaseMessaging.getInstance().isAutoInitEnabled = false
     }
 
     companion object {
