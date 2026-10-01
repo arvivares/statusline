@@ -19,6 +19,13 @@ interface RelayTransport {
 }
 
 class RelayHttpClient(private val configuration: RelayConfiguration) : RelayTransport {
+    fun supportsResetPush(): Boolean {
+        val response = perform(method = "GET", path = arrayOf("health"))
+        requireStatus(response, setOf(HttpURLConnection.HTTP_OK))
+        val capabilities = JSONObject(response.bodyAsText()).optJSONArray("capabilities") ?: return false
+        return (0 until capabilities.length()).any { capabilities.optString(it) == "reset-push-v1" }
+    }
+
     override fun claim(channelId: String, pairingToken: String): String {
         val response = perform(
             method = "POST",
@@ -72,11 +79,37 @@ class RelayHttpClient(private val configuration: RelayConfiguration) : RelayTran
         }
     }
 
+    fun registerPushDevice(channelId: String, readerToken: String, deviceId: String, fid: String, language: String) {
+        val body = JSONObject()
+            .put("deviceId", deviceId)
+            .put("fid", fid)
+            .put("language", language)
+            .toString()
+            .toByteArray(StandardCharsets.UTF_8)
+        val response = perform(
+            method = "PUT",
+            path = arrayOf("v1", "channels", channelId, "push-device"),
+            token = readerToken,
+            body = body,
+        )
+        requireStatus(response, setOf(HttpURLConnection.HTTP_CREATED, HttpURLConnection.HTTP_NO_CONTENT))
+    }
+
+    fun unregisterPushDevice(channelId: String, readerToken: String) {
+        val response = perform(
+            method = "DELETE",
+            path = arrayOf("v1", "channels", channelId, "push-device"),
+            token = readerToken,
+        )
+        requireStatus(response, setOf(HttpURLConnection.HTTP_NO_CONTENT, HttpURLConnection.HTTP_NOT_FOUND))
+    }
+
     private fun perform(
         method: String,
         path: Array<String>,
-        token: String,
+        token: String? = null,
         accept: String = "application/json",
+        body: ByteArray? = null,
     ): HttpResponse {
         val connection = configuration.endpoint(*path).toURL().openConnection() as HttpURLConnection
         try {
@@ -86,8 +119,13 @@ class RelayHttpClient(private val configuration: RelayConfiguration) : RelayTran
             connection.connectTimeout = CONNECT_TIMEOUT_MILLIS
             connection.readTimeout = READ_TIMEOUT_MILLIS
             connection.setRequestProperty("Accept", accept)
-            connection.setRequestProperty("Authorization", "Bearer $token")
-            if (method == "POST") {
+            token?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
+            if (body != null) {
+                connection.setRequestProperty("Content-Type", "application/json")
+                connection.doOutput = true
+                connection.setFixedLengthStreamingMode(body.size)
+                connection.outputStream.use { it.write(body) }
+            } else if (method == "POST") {
                 connection.doOutput = true
                 connection.setFixedLengthStreamingMode(0)
                 connection.outputStream.use { }

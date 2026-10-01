@@ -37,6 +37,14 @@
         "period": 60,
       },
     },
+    {
+      "name": "PUSH_EVENT_RATE_LIMITER",
+      "namespace_id": "41004",
+      "simple": {
+        "limit": 2,
+        "period": 60,
+      },
+    },
   ],
   "triggers": {
     "crons": ["17 3 * * *"],

@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -67,6 +68,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import inmerzion.statusline.StatuslineUiState
 import inmerzion.statusline.StatuslineViewModel
+import inmerzion.statusline.StatuslineApplication
 import inmerzion.statusline.SyncPhase
 import inmerzion.statusline.protocol.AgentProviderId
 import inmerzion.statusline.protocol.AgentProviderReading
@@ -80,6 +82,7 @@ import kotlin.math.max
 fun StatuslineApp(
     viewModel: StatuslineViewModel,
     onSelectProvider: (AgentProviderId) -> Unit,
+    onSetResetNotifications: (Boolean) -> Unit,
     onScanPairing: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenSupport: () -> Unit,
@@ -149,6 +152,14 @@ fun StatuslineApp(
                         onClick = { viewModel.refresh() },
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                     )
+                    if (state.inventory?.providers?.any { it.id == AgentProviderId.CODEX } == true) {
+                        ResetNotificationControl(
+                            enabled = state.resetNotificationsEnabled,
+                            busy = state.resetNotificationsBusy,
+                            available = state.isPaired && StatuslineApplication.isPushConfigured(),
+                            onChange = onSetResetNotifications,
+                        )
+                    }
                     PlaneDivider()
                     TextButton(
                         onClick = { syncExpanded = !syncExpanded },
@@ -203,6 +214,47 @@ fun StatuslineApp(
                 },
             )
         }
+    }
+}
+
+@Composable
+private fun ResetNotificationControl(
+    enabled: Boolean,
+    busy: Boolean,
+    available: Boolean,
+    onChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(
+                L10n.text("Notify me when new Codex reset credits are added"),
+                style = MaterialTheme.typography.bodyMedium,
+                color = DataPlaneColors.Ink,
+            )
+            Text(
+                L10n.text("Statusline sends a generic alert; reset details stay encrypted."),
+                style = MaterialTheme.typography.bodySmall,
+                color = DataPlaneColors.Muted,
+            )
+            Text(
+                L10n.text("With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration."),
+                style = MaterialTheme.typography.bodySmall,
+                color = DataPlaneColors.Muted,
+            )
+        }
+        Switch(
+            checked = enabled,
+            onCheckedChange = onChange,
+            enabled = available && !busy,
+            modifier = Modifier.semantics {
+                contentDescription = L10n.text("Codex reset notifications")
+                stateDescription = L10n.text(if (enabled) "On" else "Off")
+            },
+        )
     }
 }
 
@@ -307,6 +359,21 @@ private fun AgentFocusPanel(
                 if (ready) {
                     Text(
                         text = L10n.text("Resets") + " " + formatDate(window.resetAtEpochSeconds, "dd MMM · HH:mm"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = DataPlaneColors.Muted,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    )
+                }
+                provider.resetCredits?.let { resets ->
+                    val expiry = resets.nextExpiryEpochSeconds()
+                    Text(
+                        text = buildString {
+                            append(L10n.text("{0} reset credits", resets.availableCount))
+                            if (expiry != null) {
+                                append(" · ")
+                                append(L10n.text("Next expires {0}", formatDate(expiry, "dd MMM · HH:mm")))
+                            }
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = DataPlaneColors.Muted,
                         modifier = Modifier.align(Alignment.CenterHorizontally),

@@ -20,12 +20,23 @@ data class AgentQuotaWindow(
     val windowMinutes: Int,
 )
 
+data class ResetCreditExpiry(val expiresAtEpochSeconds: Long?)
+
+data class ResetCreditsSummary(
+    val availableCount: Int,
+    val credits: List<ResetCreditExpiry>?,
+) {
+    fun nextExpiryEpochSeconds(now: Long = System.currentTimeMillis() / 1_000): Long? =
+        credits.orEmpty().mapNotNull { it.expiresAtEpochSeconds }.filter { it > now }.minOrNull()
+}
+
 data class AgentProviderReading(
     val id: AgentProviderId,
     val status: String,
     val updatedAtEpochSeconds: Long,
     val weekly: AgentQuotaWindow? = null,
     val shortWindow: AgentQuotaWindow? = null,
+    val resetCredits: ResetCreditsSummary? = null,
 ) {
     val defaultPeriod: AgentQuotaPeriod
         get() = if (id == AgentProviderId.ANTIGRAVITY) {

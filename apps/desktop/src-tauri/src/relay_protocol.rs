@@ -9,10 +9,11 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::services_snapshot::ServicesSnapshot;
-use crate::usage::UsageResponse;
+use crate::usage::{ResetCreditsSummary, UsageResponse};
 
 pub const PROTOCOL_VERSION: u8 = 1;
 pub const SERVICES_CAPABILITY: &str = "services-v1";
+pub const RESET_PUSH_CAPABILITY: &str = "reset-push-v1";
 const KEY_BYTES: usize = 32;
 const NONCE_BYTES: usize = 12;
 const TAG_BYTES: usize = 16;
@@ -26,13 +27,18 @@ pub struct UsageSnapshot {
     pub remaining_percentage: i64,
     pub reset_at: i64,
     pub updated_at: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reset_credits: Option<ResetCreditsSummary>,
 }
 
 impl UsageSnapshot {
     #[must_use]
     pub fn from_usage(usage: &UsageResponse) -> Option<Self> {
         let UsageResponse::Ready {
-            weekly, checked_at, ..
+            weekly,
+            reset_credits,
+            checked_at,
+            ..
         } = usage
         else {
             return None;
@@ -42,6 +48,7 @@ impl UsageSnapshot {
             remaining_percentage: weekly.remaining_percent.round().clamp(0.0, 100.0) as i64,
             reset_at: weekly.resets_at,
             updated_at: *checked_at,
+            reset_credits: reset_credits.clone(),
         })
     }
 }
@@ -408,6 +415,7 @@ mod tests {
             remaining_percentage: 53,
             reset_at: 2_000_500_000,
             updated_at: 1_900_000_000,
+            reset_credits: None,
         };
         let key_bytes = [7_u8; 32];
         let nonce_bytes = [3_u8; 12];

@@ -1,11 +1,22 @@
-use std::{env, time::Duration};
+use std::{
+    collections::HashSet,
+    env,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use reqwest::{Client, StatusCode, Url, redirect::Policy};
+use ring::{
+    digest,
+    rand::{SecureRandom, SystemRandom},
+};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use tokio::{
     sync::{Mutex, Notify},
     task,
 };
+use uuid::Uuid;
 
 use crate::{
     antigravity,
@@ -15,13 +26,16 @@ use crate::{
         encrypt_services, encrypt_snapshot, validate_channel_metadata,
     },
     services_snapshot::{ServicesInventory, ServicesSnapshot},
-    usage::UsageResponse,
+    usage::{ResetCreditsSummary, UsageResponse},
 };
 
 const KEYRING_SERVICE: &str = "inmerzion.statusline.relay";
 const KEYRING_ACCOUNT: &str = "universal-publisher-v1";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
 const MAX_RESPONSE_BYTES: usize = 64 * 1024;
+const RESET_PUSH_STATE_FILE: &str = "codex-reset-push-v1.json";
+const MAX_TRACKED_RESET_IDS: usize = 1_024;
+const MAX_PENDING_RESET_EVENTS: usize = 64;
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(
@@ -213,6 +227,26 @@ impl RelayClient {
         ensure_empty_success(response, &[StatusCode::CREATED, StatusCode::NO_CONTENT]).await
     }
 
+    async fn send_reset_credit_event(
+        &self,
+        configuration: &RelayConfiguration,
+        credentials: &PublisherCredentials,
+        event_id: &str,
+    ) -> Result<(), RelayError> {
+        let response = self
+            .http
+            .post(configuration.endpoint(&format!(
+                "v1/channels/{}/reset-credit-events",
+                credentials.channel_id
+            ))?)
+            .bearer_auth(&credentials.publisher_token)
+            .json(&serde_json::json!({ "eventId": event_id }))
+            .send()
+            .await
+            .map_err(|_| RelayError::Transport)?;
+        ensure_empty_success(response, &[StatusCode::NO_CONTENT]).await
+    }
+
     async fn create_channel(
         &self,
         configuration: &RelayConfiguration,
@@ -264,6 +298,7 @@ pub struct UniversalRelayState {
     inventory: Mutex<ServicesInventory>,
     publication_requested: Notify,
     last_publication: Mutex<Option<(String, ServicesSnapshot)>>,
+    reset_push: ResetPushTracker,
 }
 
 impl UniversalRelayState {
@@ -274,9 +309,15 @@ impl UniversalRelayState {
     }
 
     pub async fn record_codex(&self, usage: &UsageResponse) {
-        if self.inventory.lock().await.record_codex(usage) {
+        let inventory_changed = self.inventory.lock().await.record_codex(usage);
+        let reset_added = self.reset_push.observe(usage).await;
+        if inventory_changed || reset_added || self.reset_push.has_pending().await {
             self.publication_requested.notify_one();
         }
+    }
+
+    pub async fn configure_reset_push_tracking(&self, app_config_dir: &Path) {
+        self.reset_push.configure(app_config_dir).await;
     }
 
     pub async fn record_google(&self, view: &antigravity::View) {
@@ -320,49 +361,69 @@ impl UniversalRelayState {
             // No authoritative inventory until both collectors have returned.
             return status_for_credentials(configuration, &credentials);
         };
-        if let Some((channel, previous)) = self.last_publication.lock().await.as_ref()
-            && *channel == credentials.channel_id
-            && *previous == snapshot
-        {
-            return status_for_credentials(configuration, &credentials);
-        }
+        let snapshot_changed =
+            !self
+                .last_publication
+                .lock()
+                .await
+                .as_ref()
+                .is_some_and(|(channel, previous)| {
+                    *channel == credentials.channel_id && *previous == snapshot
+                });
         // Uses the existing authenticated metadata request, not a health poll.
         let metadata = refresh_claim_state(&self.client, configuration, &mut credentials).await?;
-        let sequence = credentials.next_sequence()?;
+        if snapshot_changed {
+            let sequence = credentials.next_sequence()?;
+            if metadata
+                .capabilities
+                .iter()
+                .any(|value| value == SERVICES_CAPABILITY)
+            {
+                let services = encrypt_services(&snapshot, &credentials, sequence)?;
+                let codex = codex
+                    .as_ref()
+                    .map(|value| encrypt_snapshot(value, &credentials, sequence))
+                    .transpose()?;
+                self.client
+                    .publish_services(
+                        configuration,
+                        &credentials,
+                        &ServicesPublication { services, codex },
+                    )
+                    .await?;
+                credentials.last_services_published_at = Some(snapshot.updated_at);
+            } else if let Some(codex) = &codex {
+                // Self-hosted/older relays keep working with their original payload.
+                let envelope = encrypt_snapshot(codex, &credentials, sequence)?;
+                self.client
+                    .publish_snapshot(configuration, &credentials, &envelope)
+                    .await?;
+                credentials.last_services_published_at = None;
+            }
+            credentials.last_sequence = Some(sequence);
+            credentials.last_published_at = Some(snapshot.updated_at);
+            *self.last_publication.lock().await = Some((credentials.channel_id.clone(), snapshot));
+        }
+
         if metadata
             .capabilities
             .iter()
-            .any(|value| value == SERVICES_CAPABILITY)
+            .any(|value| value == crate::relay_protocol::RESET_PUSH_CAPABILITY)
         {
-            let services = encrypt_services(&snapshot, &credentials, sequence)?;
-            let codex = codex
-                .as_ref()
-                .map(|value| encrypt_snapshot(value, &credentials, sequence))
-                .transpose()?;
-            self.client
-                .publish_services(
-                    configuration,
-                    &credentials,
-                    &ServicesPublication { services, codex },
-                )
-                .await?;
-            credentials.last_services_published_at = Some(snapshot.updated_at);
-        } else if let Some(codex) = &codex {
-            // Self-hosted/older relays keep working with their original payload.
-            let envelope = encrypt_snapshot(codex, &credentials, sequence)?;
-            self.client
-                .publish_snapshot(configuration, &credentials, &envelope)
-                .await?;
-            credentials.last_services_published_at = None;
-        } else {
-            save_credentials(credentials.clone()).await?;
-            return status_for_credentials(configuration, &credentials);
+            for event_id in self.reset_push.pending().await {
+                if self
+                    .client
+                    .send_reset_credit_event(configuration, &credentials, &event_id)
+                    .await
+                    .is_ok()
+                {
+                    self.reset_push.complete(&event_id).await;
+                }
+            }
         }
-        credentials.last_sequence = Some(sequence);
-        credentials.last_published_at = Some(snapshot.updated_at);
+
         let status = status_for_credentials(configuration, &credentials)?;
-        save_credentials(credentials.clone()).await?;
-        *self.last_publication.lock().await = Some((credentials.channel_id, snapshot));
+        save_credentials(credentials).await?;
         Ok(status)
     }
 
@@ -417,6 +478,7 @@ impl UniversalRelayState {
         {
             let _ = self.client.delete_channel(configuration, credentials).await;
         }
+        self.reset_push.clear().await;
         match delete_credentials().await {
             Ok(()) => configuration.map_or(RelayStatus::NotConfigured, |configuration| {
                 RelayStatus::Unpaired {
@@ -441,6 +503,249 @@ impl UniversalRelayState {
         let status = status_for_credentials(configuration, &credentials)?;
         save_credentials(credentials).await?;
         Ok(status)
+    }
+}
+
+#[derive(Default)]
+struct ResetPushTracker {
+    state: Mutex<ResetPushState>,
+    state_path: Mutex<Option<PathBuf>>,
+}
+
+#[derive(Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ResetPushState {
+    schema_version: u8,
+    baseline_established: bool,
+    salt: String,
+    reset_id_hashes: Vec<String>,
+    pending_event_ids: Vec<String>,
+}
+
+impl ResetPushTracker {
+    async fn configure(&self, directory: &Path) {
+        let path = directory.join(RESET_PUSH_STATE_FILE);
+        let mut state = self.state.lock().await;
+        if let Ok(metadata) = tokio::fs::metadata(&path).await
+            && metadata.len() <= 64 * 1_024
+            && let Ok(bytes) = tokio::fs::read(&path).await
+            && let Ok(loaded) = serde_json::from_slice::<ResetPushState>(&bytes)
+            && loaded.schema_version == 1
+            && loaded.reset_id_hashes.len() <= MAX_TRACKED_RESET_IDS
+            && loaded.pending_event_ids.len() <= MAX_PENDING_RESET_EVENTS
+            && decode_tracker_salt(&loaded.salt).is_some()
+        {
+            *state = loaded;
+        }
+        *self.state_path.lock().await = Some(path);
+    }
+
+    async fn observe(&self, usage: &UsageResponse) -> bool {
+        let UsageResponse::Ready {
+            reset_credits: Some(summary),
+            ..
+        } = usage
+        else {
+            return false;
+        };
+        let Some(credits) = summary.credits.as_ref() else {
+            return false;
+        };
+        // The wire reader caps detail at 16 entries. A count mismatch means the
+        // ID set is partial, so it must not establish a baseline or trigger an alert.
+        if summary.available_count < 0
+            || summary.available_count as usize != credits.len()
+            || credits.iter().any(|credit| credit.id.is_empty())
+        {
+            return false;
+        }
+        let mut state = self.state.lock().await;
+        if state.salt.is_empty() {
+            let mut salt = [0_u8; 16];
+            if SystemRandom::new().fill(&mut salt).is_err() {
+                return false;
+            }
+            state.salt = URL_SAFE_NO_PAD.encode(salt);
+        }
+        state.schema_version = 1;
+        let Some(salt) = decode_tracker_salt(&state.salt) else {
+            *state = ResetPushState::default();
+            return false;
+        };
+        let known: HashSet<String> = state.reset_id_hashes.iter().cloned().collect();
+        let hashes = credits
+            .iter()
+            .map(|credit| hash_reset_id(&salt, &credit.id))
+            .collect::<Vec<_>>();
+        let has_new = state.baseline_established && hashes.iter().any(|hash| !known.contains(hash));
+        let mut changed = false;
+        if !state.baseline_established {
+            state.baseline_established = true;
+            changed = true;
+        }
+        for hash in hashes {
+            if !state.reset_id_hashes.contains(&hash) {
+                state.reset_id_hashes.push(hash);
+                changed = true;
+            }
+        }
+        if state.reset_id_hashes.len() > MAX_TRACKED_RESET_IDS {
+            let overflow = state.reset_id_hashes.len() - MAX_TRACKED_RESET_IDS;
+            state.reset_id_hashes.drain(..overflow);
+            changed = true;
+        }
+        if has_new && state.pending_event_ids.len() < MAX_PENDING_RESET_EVENTS {
+            state.pending_event_ids.push(Uuid::new_v4().to_string());
+            changed = true;
+        }
+        drop(state);
+        if changed {
+            self.persist().await;
+        }
+        has_new
+    }
+
+    async fn has_pending(&self) -> bool {
+        !self.state.lock().await.pending_event_ids.is_empty()
+    }
+
+    async fn pending(&self) -> Vec<String> {
+        self.state.lock().await.pending_event_ids.clone()
+    }
+
+    async fn complete(&self, event_id: &str) {
+        let mut state = self.state.lock().await;
+        let before = state.pending_event_ids.len();
+        state.pending_event_ids.retain(|value| value != event_id);
+        let changed = state.pending_event_ids.len() != before;
+        drop(state);
+        if changed {
+            self.persist().await;
+        }
+    }
+
+    async fn clear(&self) {
+        *self.state.lock().await = ResetPushState::default();
+        if let Some(path) = self.state_path.lock().await.as_ref() {
+            let _ = tokio::fs::remove_file(path).await;
+        }
+    }
+
+    async fn persist(&self) {
+        let Some(path) = self.state_path.lock().await.clone() else {
+            return;
+        };
+        let Ok(bytes) = serde_json::to_vec(&*self.state.lock().await) else {
+            return;
+        };
+        if let Some(directory) = path.parent()
+            && tokio::fs::create_dir_all(directory).await.is_ok()
+        {
+            let temporary = directory.join(format!(".reset-push-{}.tmp", Uuid::new_v4()));
+            if tokio::fs::write(&temporary, bytes).await.is_ok() {
+                if tokio::fs::rename(&temporary, &path).await.is_err() {
+                    if tokio::fs::remove_file(&path).await.is_ok() {
+                        let _ = tokio::fs::rename(&temporary, &path).await;
+                    }
+                    let _ = tokio::fs::remove_file(temporary).await;
+                }
+            }
+        }
+    }
+}
+
+fn decode_tracker_salt(value: &str) -> Option<Vec<u8>> {
+    URL_SAFE_NO_PAD
+        .decode(value)
+        .ok()
+        .filter(|bytes| bytes.len() == 16)
+}
+
+fn hash_reset_id(salt: &[u8], id: &str) -> String {
+    let mut input = Vec::with_capacity(salt.len() + id.len() + 32);
+    input.extend_from_slice(b"statusline-codex-reset-id-v1\0");
+    input.extend_from_slice(salt);
+    input.extend_from_slice(id.as_bytes());
+    URL_SAFE_NO_PAD.encode(digest::digest(&digest::SHA256, &input).as_ref())
+}
+
+#[cfg(test)]
+mod reset_push_tests {
+    use super::*;
+    use crate::usage::ResetCredit;
+
+    fn summary(ids: &[&str]) -> ResetCreditsSummary {
+        ResetCreditsSummary {
+            available_count: ids.len() as i64,
+            credits: Some(
+                ids.iter()
+                    .map(|id| ResetCredit {
+                        id: (*id).to_owned(),
+                        expires_at: Some(1_900_000_000),
+                    })
+                    .collect(),
+            ),
+        }
+    }
+
+    #[tokio::test]
+    async fn first_complete_observation_is_a_baseline_and_new_ids_create_an_opaque_event() {
+        let tracker = ResetPushTracker::default();
+        let first = UsageResponse::Ready {
+            weekly: crate::usage::UsageWindow {
+                used_percent: 10.0,
+                remaining_percent: 90.0,
+                window_duration_mins: 10_080,
+                resets_at: 1_900_000_000,
+                label: "Codex".into(),
+            },
+            short_window: None,
+            reset_credits: Some(summary(&["existing-reset"])),
+            plan: None,
+            account_type: "plus".into(),
+            checked_at: 1_900_000_000,
+            limit_count: 1,
+        };
+        assert!(!tracker.observe(&first).await);
+        assert!(!tracker.has_pending().await);
+        let next = UsageResponse::Ready {
+            reset_credits: Some(summary(&["existing-reset", "new-reset"])),
+            ..first.clone()
+        };
+        assert!(tracker.observe(&next).await);
+        let events = tracker.pending().await;
+        assert_eq!(events.len(), 1);
+        assert!(!events[0].contains("reset"));
+        assert!(!tracker.observe(&next).await);
+        assert_eq!(tracker.pending().await, events);
+    }
+
+    #[tokio::test]
+    async fn partial_detail_does_not_create_a_baseline_or_an_event() {
+        let tracker = ResetPushTracker::default();
+        let incomplete = UsageResponse::Ready {
+            weekly: crate::usage::UsageWindow {
+                used_percent: 10.0,
+                remaining_percent: 90.0,
+                window_duration_mins: 10_080,
+                resets_at: 1_900_000_000,
+                label: "Codex".into(),
+            },
+            short_window: None,
+            reset_credits: Some(ResetCreditsSummary {
+                available_count: 2,
+                credits: Some(vec![ResetCredit {
+                    id: "one".into(),
+                    expires_at: None,
+                }]),
+            }),
+            plan: None,
+            account_type: "plus".into(),
+            checked_at: 1_900_000_000,
+            limit_count: 1,
+        };
+        assert!(!tracker.observe(&incomplete).await);
+        assert!(!tracker.has_pending().await);
     }
 }
 

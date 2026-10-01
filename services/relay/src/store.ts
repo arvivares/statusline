@@ -1,4 +1,8 @@
-import type { D1Database } from "./types";
+import type {
+  D1Database,
+  PushDevice,
+  PushEventClaim,
+} from "./types";
 import type {
   SnapshotEnvelope,
   ServicesEnvelope,
@@ -65,6 +69,47 @@ export interface RelayStore {
   delete(
     channelID: string,
     publisherTokenHash: string,
+    now: number,
+  ): Promise<StoreResult<null>>;
+  registerPushDevice(
+    channelID: string,
+    readerTokenHash: string,
+    device: PushDevice,
+    now: number,
+  ): Promise<StoreResult<null>>;
+  unregisterPushDevice(
+    channelID: string,
+    readerTokenHash: string,
+    now: number,
+  ): Promise<StoreResult<null>>;
+  unregisterInvalidPushDevice(
+    channelID: string,
+    publisherTokenHash: string,
+    deviceID: string,
+    now: number,
+  ): Promise<StoreResult<null>>;
+  readPushDevice(
+    channelID: string,
+    publisherTokenHash: string,
+    now: number,
+  ): Promise<StoreResult<PushDevice | null>>;
+  claimPushEvent(
+    channelID: string,
+    publisherTokenHash: string,
+    eventID: string,
+    now: number,
+    expiresAt: number,
+  ): Promise<StoreResult<PushEventClaim>>;
+  completePushEvent(
+    channelID: string,
+    publisherTokenHash: string,
+    eventID: string,
+    now: number,
+  ): Promise<StoreResult<null>>;
+  releasePushEvent(
+    channelID: string,
+    publisherTokenHash: string,
+    eventID: string,
     now: number,
   ): Promise<StoreResult<null>>;
   purgeExpired(now: number): Promise<number>;
@@ -331,6 +376,189 @@ export class D1RelayStore implements RelayStore {
     return { kind: "ok", value: null };
   }
 
+  async registerPushDevice(
+    channelID: string,
+    readerTokenHash: string,
+    device: PushDevice,
+    now: number,
+  ): Promise<StoreResult<null>> {
+    const current = await this.authorized(
+      channelID,
+      "reader_token_hash",
+      readerTokenHash,
+      now,
+    );
+    if (current.kind !== "ok") return current;
+    const result = await this.database
+      .prepare(
+        `INSERT INTO relay_push_devices (
+          channel_id, device_id, fid_nonce, fid_ciphertext, language, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(channel_id) DO UPDATE SET
+          device_id = excluded.device_id,
+          fid_nonce = excluded.fid_nonce,
+          fid_ciphertext = excluded.fid_ciphertext,
+          language = excluded.language,
+          updated_at = excluded.updated_at`,
+      )
+      .bind(
+        channelID,
+        device.deviceID,
+        device.nonce,
+        device.ciphertext,
+        device.language,
+        now,
+      )
+      .run();
+    if (!result.success) throw new Error("D1 could not register a push device.");
+    return { kind: "ok", value: null };
+  }
+
+  async unregisterPushDevice(
+    channelID: string,
+    readerTokenHash: string,
+    now: number,
+  ): Promise<StoreResult<null>> {
+    const current = await this.authorized(
+      channelID,
+      "reader_token_hash",
+      readerTokenHash,
+      now,
+    );
+    if (current.kind !== "ok") return current;
+    const result = await this.database
+      .prepare("DELETE FROM relay_push_devices WHERE channel_id = ?")
+      .bind(channelID)
+      .run();
+    if (!result.success) throw new Error("D1 could not unregister a push device.");
+    return { kind: "ok", value: null };
+  }
+
+  async unregisterInvalidPushDevice(
+    channelID: string,
+    publisherTokenHash: string,
+    deviceID: string,
+    now: number,
+  ): Promise<StoreResult<null>> {
+    const current = await this.authorized(
+      channelID,
+      "publisher_token_hash",
+      publisherTokenHash,
+      now,
+    );
+    if (current.kind !== "ok") return current;
+    const result = await this.database
+      .prepare("DELETE FROM relay_push_devices WHERE channel_id = ? AND device_id = ?")
+      .bind(channelID, deviceID)
+      .run();
+    if (!result.success) throw new Error("D1 could not remove an invalid push device.");
+    return { kind: "ok", value: null };
+  }
+
+  async readPushDevice(
+    channelID: string,
+    publisherTokenHash: string,
+    now: number,
+  ): Promise<StoreResult<PushDevice | null>> {
+    const current = await this.authorized(
+      channelID,
+      "publisher_token_hash",
+      publisherTokenHash,
+      now,
+    );
+    if (current.kind !== "ok") return current;
+    const row = await this.database
+      .prepare("SELECT * FROM relay_push_devices WHERE channel_id = ?")
+      .bind(channelID)
+      .first<RelayPushDeviceRow>();
+    return { kind: "ok", value: row === null ? null : mapPushDevice(row) };
+  }
+
+  async claimPushEvent(
+    channelID: string,
+    publisherTokenHash: string,
+    eventID: string,
+    now: number,
+    expiresAt: number,
+  ): Promise<StoreResult<PushEventClaim>> {
+    const current = await this.authorized(
+      channelID,
+      "publisher_token_hash",
+      publisherTokenHash,
+      now,
+    );
+    if (current.kind !== "ok") return current;
+    const inserted = await this.database
+      .prepare(
+        `INSERT OR IGNORE INTO relay_push_events (
+          channel_id, event_id, status, locked_until, created_at, expires_at
+        ) VALUES (?, ?, 'pending', 0, ?, ?)`,
+      )
+      .bind(channelID, eventID, now, expiresAt)
+      .run();
+    if (!inserted.success) throw new Error("D1 could not persist a push event.");
+    const claimed = await this.database
+      .prepare(
+        `UPDATE relay_push_events
+         SET status = 'sending', locked_until = ?
+         WHERE channel_id = ? AND event_id = ? AND status != 'sent' AND locked_until <= ?`,
+      )
+      .bind(now + 60, channelID, eventID, now)
+      .run();
+    if (!claimed.success) throw new Error("D1 could not claim a push event.");
+    if ((claimed.meta.changes ?? 0) > 0) return { kind: "ok", value: "claimed" };
+    const row = await this.database
+      .prepare("SELECT status FROM relay_push_events WHERE channel_id = ? AND event_id = ?")
+      .bind(channelID, eventID)
+      .first<Readonly<{ status: string }>>();
+    return {
+      kind: "ok",
+      value: row?.status === "sent" ? "sent" : "busy",
+    };
+  }
+
+  async completePushEvent(
+    channelID: string,
+    publisherTokenHash: string,
+    eventID: string,
+    now: number,
+  ): Promise<StoreResult<null>> {
+    const current = await this.authorized(
+      channelID,
+      "publisher_token_hash",
+      publisherTokenHash,
+      now,
+    );
+    if (current.kind !== "ok") return current;
+    const result = await this.database
+      .prepare("UPDATE relay_push_events SET status = 'sent', locked_until = 0 WHERE channel_id = ? AND event_id = ?")
+      .bind(channelID, eventID)
+      .run();
+    if (!result.success) throw new Error("D1 could not complete a push event.");
+    return { kind: "ok", value: null };
+  }
+
+  async releasePushEvent(
+    channelID: string,
+    publisherTokenHash: string,
+    eventID: string,
+    now: number,
+  ): Promise<StoreResult<null>> {
+    const current = await this.authorized(
+      channelID,
+      "publisher_token_hash",
+      publisherTokenHash,
+      now,
+    );
+    if (current.kind !== "ok") return current;
+    const result = await this.database
+      .prepare("UPDATE relay_push_events SET status = 'pending', locked_until = 0 WHERE channel_id = ? AND event_id = ? AND status = 'sending'")
+      .bind(channelID, eventID)
+      .run();
+    if (!result.success) throw new Error("D1 could not release a push event.");
+    return { kind: "ok", value: null };
+  }
+
   async purgeExpired(now: number): Promise<number> {
     const result = await this.database
       .prepare("DELETE FROM relay_channels WHERE expires_at < ?")
@@ -339,6 +567,11 @@ export class D1RelayStore implements RelayStore {
     if (!result.success) {
       throw new Error("D1 could not purge expired relay channels.");
     }
+    const pushEvents = await this.database
+      .prepare("DELETE FROM relay_push_events WHERE expires_at < ?")
+      .bind(now)
+      .run();
+    if (!pushEvents.success) throw new Error("D1 could not purge expired push events.");
     return result.meta.changes ?? 0;
   }
 
@@ -364,6 +597,24 @@ export class D1RelayStore implements RelayStore {
     }
     return { kind: "ok", value: channel };
   }
+}
+
+interface RelayPushDeviceRow {
+  readonly device_id: string;
+  readonly fid_nonce: string;
+  readonly fid_ciphertext: string;
+  readonly language: "en" | "es";
+  readonly updated_at: number;
+}
+
+function mapPushDevice(row: RelayPushDeviceRow): PushDevice {
+  return {
+    deviceID: row.device_id,
+    nonce: row.fid_nonce,
+    ciphertext: row.fid_ciphertext,
+    language: row.language,
+    updatedAt: row.updated_at,
+  };
 }
 
 function mapRow(row: RelayChannelRow): RelayChannel {

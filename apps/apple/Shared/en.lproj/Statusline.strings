@@ -11,6 +11,7 @@
 "{0} percent remaining" = "{0} percent remaining";
 "{0} percent remaining. Resets {1}" = "{0} percent remaining. Resets {1}";
 "{0} quota" = "{0} quota";
+"{0} reset credits" = "{0} reset credits";
 "{0} WINDOW" = "{0} WINDOW";
 "{0}% downloaded" = "{0}% downloaded";
 "{0}% left" = "{0}% left";
@@ -21,6 +22,7 @@
 "% LEFT" = "% LEFT";
 "5h {0}% left" = "5h {0}% left";
 "7d {0}% left" = "7d {0}% left";
+"A Codex reset is available" = "A Codex reset is available";
 "A new version of Statusline Companion is ready." = "A new version of Statusline Companion is ready.";
 "Account" = "Account";
 "ACCOUNT CHANNEL" = "ACCOUNT CHANNEL";
@@ -32,6 +34,8 @@
 "AES-256-GCM · 30 DAY TTL" = "AES-256-GCM · 30 DAY TTL";
 "AES-256-GCM · UNIVERSAL" = "AES-256-GCM · UNIVERSAL";
 "Agent usage" = "Agent usage";
+"Allow notifications in Android Settings to receive Codex reset alerts." = "Allow notifications in Android Settings to receive Codex reset alerts.";
+"Allow notifications in iOS Settings to receive Codex reset alerts." = "Allow notifications in iOS Settings to receive Codex reset alerts.";
 "An encrypted snapshot is available on this device." = "An encrypted snapshot is available on this device.";
 "Antigravity · {0}% left" = "Antigravity · {0}% left";
 "Antigravity · no weekly data" = "Antigravity · no weekly data";
@@ -124,6 +128,8 @@
 "Codex read. Configure the relay endpoint to sync other devices." = "Codex read. Configure the relay endpoint to sync other devices.";
 "Codex read. Create a pairing to sync iOS or Android." = "Codex read. Create a pairing to sync iOS or Android.";
 "Codex relay" = "Codex relay";
+"Codex reset alerts" = "Codex reset alerts";
+"Codex reset notifications" = "Codex reset notifications";
 "Codex response timed out" = "Codex response timed out";
 "CODEX SESSION LOCAL" = "CODEX SESSION LOCAL";
 "CODEX SOURCE" = "CODEX SOURCE";
@@ -169,6 +175,7 @@
 "Could not access this device’s secure storage." = "Could not access this device’s secure storage.";
 "Could not complete the update" = "Could not complete the update";
 "Could not connect to the relay. Check your connection and try again." = "Could not connect to the relay. Check your connection and try again.";
+"Could not enable notifications. Check your connection and try again." = "Could not enable notifications. Check your connection and try again.";
 "Could not encrypt or decrypt the snapshot." = "Could not encrypt or decrypt the snapshot.";
 "Could not open downloads. Please try again." = "Could not open downloads. Please try again.";
 "Could not open file picker" = "Could not open file picker";
@@ -180,6 +187,8 @@
 "Could not sign in to Codex. Please try again." = "Could not sign in to Codex. Please try again.";
 "Could not start the camera. You can paste the link manually." = "Could not start the camera. You can paste the link manually.";
 "Could not start the QR reader. You can paste the link manually." = "Could not start the QR reader. You can paste the link manually.";
+"Could not unregister this device. Check your connection before disconnecting." = "Could not unregister this device. Check your connection before disconnecting.";
+"Could not unregister this device. It will retry when Statusline opens." = "Could not unregister this device. It will retry when Statusline opens.";
 "Create a pairing and scan its QR in Statusline on iOS or Android. The relay stores only an encrypted snapshot; your Codex session stays local." = "Create a pairing and scan its QR in Statusline on iOS or Android. The relay stores only an encrypted snapshot; your Codex session stays local.";
 "Create a pairing to connect iOS or Android." = "Create a pairing to connect iOS or Android.";
 "Create a private QR for Statusline on iOS or Android. No platform account is required." = "Create a private QR for Statusline on iOS or Android. No platform account is required.";
@@ -303,6 +312,7 @@
 "Mobile sync" = "Mobile sync";
 "Needs attention" = "Needs attention";
 "New version" = "New version";
+"Next expires {0}" = "Next expires {0}";
 "NEXT WEEKLY WINDOW" = "NEXT WEEKLY WINDOW";
 "No active QR" = "No active QR";
 "NO ACTIVE QR" = "NO ACTIVE QR";
@@ -334,18 +344,26 @@
 "NOT PUBLISHED" = "NOT PUBLISHED";
 "Not selected" = "Not selected";
 "NOT UPLOADED" = "NOT UPLOADED";
+"Notifications are off because permission was revoked." = "Notifications are off because permission was revoked.";
+"Notifications are off on this device. Relay cleanup will retry when you open Statusline." = "Notifications are off on this device. Relay cleanup will retry when you open Statusline.";
+"Notifications are off. This device was unregistered." = "Notifications are off. This device was unregistered.";
+"Notifications are ready. Statusline will alert you when Codex reset credits are added." = "Notifications are ready. Statusline will alert you when Codex reset credits are added.";
 "Notify me about new versions. Installation always needs my approval." = "Notify me about new versions. Installation always needs my approval.";
+"Notify me when new Codex reset credits are added" = "Notify me when new Codex reset credits are added";
 "NOW" = "NOW";
 "NPM GLOBAL" = "NPM GLOBAL";
+"Off" = "Off";
 "OFFICIAL SETUP" = "OFFICIAL SETUP";
 "OFFLINE" = "OFFLINE";
 "OFFLINE · NO SAMPLE AVAILABLE" = "OFFLINE · NO SAMPLE AVAILABLE";
+"On" = "On";
 "On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically." = "On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically.";
 "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits." = "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits.";
 "Open OpenAI" = "Open OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Open Source Settings to detect or select a local Codex runtime.";
 "Open Source Settings to detect or select the local CLI." = "Open Source Settings to detect or select the local CLI.";
 "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample." = "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample.";
+"Open Statusline to see your reset count and expiry." = "Open Statusline to see your reset count and expiry.";
 "OpenAI · Codex" = "OpenAI · Codex";
 "Opening secure OpenAI sign-in…" = "Opening secure OpenAI sign-in…";
 "Opens an external web page" = "Opens an external web page";
@@ -381,6 +399,8 @@
 "PRIVATE.RELAY" = "PRIVATE.RELAY";
 "Processing" = "Processing";
 "Publisher credentials and the encryption key stay in your system vault." = "Publisher credentials and the encryption key stay in your system vault.";
+"Push notifications are not available on this relay yet." = "Push notifications are not available on this relay yet.";
+"Push notifications are not configured for this build." = "Push notifications are not configured for this build.";
 "QR / PAIR" = "QR / PAIR";
 "QR code scanner" = "QR code scanner";
 "QR expired" = "QR expired";
@@ -421,6 +441,7 @@
 "Relay / waiting" = "Relay / waiting";
 "RELAY NEEDS ATTENTION" = "RELAY NEEDS ATTENTION";
 "Relay not configured" = "Relay not configured";
+"Relay registration removed; notification cleanup will retry when Statusline opens." = "Relay registration removed; notification cleanup will retry when Statusline opens.";
 "Relay server" = "Relay server";
 "Relay URL not configured" = "Relay URL not configured";
 "RELAY URL NOT CONFIGURED" = "RELAY URL NOT CONFIGURED";
@@ -525,6 +546,7 @@
 "Statusline is independent and is not affiliated with or endorsed by OpenAI or Google." = "Statusline is independent and is not affiliated with or endorsed by OpenAI or Google.";
 "Statusline needs a ChatGPT session, not an API key." = "Statusline needs a ChatGPT session, not an API key.";
 "Statusline needs camera permission to scan the QR. You can also paste the link manually." = "Statusline needs camera permission to scan the QR. You can also paste the link manually.";
+"Statusline sends a generic alert; reset details stay encrypted." = "Statusline sends a generic alert; reset details stay encrypted.";
 "Statusline stores only the selected local path." = "Statusline stores only the selected local path.";
 "Statusline uses the camera to scan the companion’s private pairing QR." = "Statusline uses the camera to scan the companion’s private pairing QR.";
 "Stays on Mac" = "Stays on Mac";
@@ -638,6 +660,7 @@
 "WEEKLY QUOTA" = "WEEKLY QUOTA";
 "Weekly quota, reset and private sync in one view." = "Weekly quota, reset and private sync in one view.";
 "Weekly window unavailable" = "Weekly window unavailable";
+"With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration." = "With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration.";
 "Working" = "Working";
 "WORKING" = "WORKING";
 "Writing Claude Code status line…" = "Writing Claude Code status line…";

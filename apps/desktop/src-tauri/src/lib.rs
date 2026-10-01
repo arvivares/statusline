@@ -601,8 +601,15 @@ pub fn run() {
             updates::start(app.handle());
             let refresh_app = app.handle().clone();
             let publisher_app = app.handle().clone();
+            let reset_tracking_directory = app.path().app_config_dir().ok();
+            let (reset_tracking_ready, reset_tracking_initialized) =
+                tokio::sync::oneshot::channel();
             tauri::async_runtime::spawn(async move {
                 let relay = publisher_app.state::<UniversalRelayState>();
+                if let Some(directory) = reset_tracking_directory.as_deref() {
+                    relay.configure_reset_push_tracking(directory).await;
+                }
+                let _ = reset_tracking_ready.send(());
                 loop {
                     relay.wait_for_publication().await;
                     tokio::time::sleep(Duration::from_millis(400)).await;
@@ -611,6 +618,7 @@ pub fn run() {
                 }
             });
             tauri::async_runtime::spawn(async move {
+                let _ = reset_tracking_initialized.await;
                 let mut interval = refresh_interval();
                 loop {
                     interval.tick().await;

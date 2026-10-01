@@ -45,8 +45,18 @@ Rules:
 GET /health → 200
 
 ```json
-{ "status": "ok", "protocolVersion": 1 }
+{
+  "status": "ok",
+  "protocolVersion": 1,
+  "capabilities": ["services-v1", "reset-push-v1"]
+}
 ```
+
+`capabilities` is additive and optional for older v1 relays. A client must only
+use an optional feature when its capability is advertised. `reset-push-v1` is
+advertised only while push delivery is configured and cryptographic key
+material is usable. A relay that does not advertise it remains fully compatible
+with existing pairing and snapshot synchronization.
 
 ### Create channel
 
@@ -119,6 +129,65 @@ The pairing token cannot read snapshots.
 ### Delete
 
 DELETE /v1/channels/{channelId} with publisher authorization → 204.
+
+### Optional reset-credit push notifications (`reset-push-v1`)
+
+This extension does not change `protocolVersion`, pairing URIs, token roles, or
+the existing snapshot endpoints. Clients must first check for
+`reset-push-v1`; when it is absent, they must leave push registration disabled
+and continue normal synchronization.
+
+Register or refresh one mobile installation with its **reader token**:
+
+```http
+PUT /v1/channels/{channelId}/push-device
+Authorization: Bearer <readerToken>
+Content-Type: application/json
+→ 204
+```
+
+```json
+{
+  "deviceId": "018f47a0-7b52-4c15-9e55-5f0f266b7440",
+  "fid": "<Firebase Installation ID>",
+  "language": "en"
+}
+```
+
+`language` is `en` or `es`. The relay encrypts the FID at rest. A device may
+remove its registration with `DELETE /v1/channels/{channelId}/push-device`
+and the reader token → 204. Unregister is intentionally available even if push
+delivery is temporarily unconfigured. Deleting the channel cascades to its
+registration and event records.
+
+When the companion detects a newly added Codex reset credit after establishing
+an initial complete local baseline, it submits one opaque, stable event ID with
+its **publisher token**:
+
+```http
+POST /v1/channels/{channelId}/reset-credit-events
+Authorization: Bearer <publisherToken>
+Content-Type: application/json
+→ 204
+```
+
+```json
+{ "eventId": "018f47a0-7b52-4c15-9e55-5f0f266b7440" }
+```
+
+The relay deduplicates event IDs, then sends a generic notification to the
+registered installation. The push payload must not include Codex reset IDs,
+quota values, or expiry timestamps. Those details are synchronized only inside
+the existing encrypted snapshot, whose optional reset-credit data is described
+in [the reset-credit architecture note](../docs/architecture/codex-reset-credits.md).
+Push delivery is best-effort; the encrypted snapshot remains the source of
+truth. Unsupported or unavailable push delivery must not prevent snapshot
+publication or reading.
+
+These endpoints are rate-limited independently of snapshot publication where
+the deployment supports a dedicated push-event limiter. Duplicate event IDs
+are idempotent. A successful request with no active device registration is a
+no-op.
 
 ## Encrypted payload
 

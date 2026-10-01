@@ -58,6 +58,21 @@ struct AgentFocusPanel: View {
                     .font(.footnote).foregroundStyle(DataPlaneTheme.muted)
                     .multilineTextAlignment(.center)
             }
+            if provider.id == .codex, let resets = provider.resetCredits {
+                HStack(spacing: 8) {
+                    Label(L10n.text("{0} reset credits", resets.availableCount), systemImage: "arrow.counterclockwise.circle")
+                        .foregroundStyle(DataPlaneTheme.ink)
+                    Spacer(minLength: 6)
+                    if let expiry = resets.nextExpiry {
+                        Text(L10n.text("Next expires {0}", expiry.formatted(
+                            .dateTime.day().month(.abbreviated).hour().minute().locale(L10n.locale))))
+                            .foregroundStyle(DataPlaneTheme.muted)
+                    }
+                }
+                .font(.caption)
+                .padding(.top, 14)
+                .accessibilityElement(children: .combine)
+            }
             Text(provider.status == "ready"
                 ? L10n.text("Last sample: {0}", L10n.relative(provider.updatedAt))
                 : L10n.text("Last attempt: {0}", L10n.relative(provider.updatedAt)))

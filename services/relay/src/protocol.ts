@@ -5,12 +5,54 @@ export const MAX_CIPHERTEXT_BYTES = 4_096;
 export const CHANNEL_TTL_SECONDS = 30 * 24 * 60 * 60;
 export const PAIRING_TTL_SECONDS = 10 * 60;
 export const SERVICES_CAPABILITY = "services-v1";
+export const RESET_PUSH_CAPABILITY = "reset-push-v1";
 export const SERVICES_MEDIA_TYPE =
   "application/vnd.statusline.services-v1+json";
 
 const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/u;
 const CHANNEL_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
+
+export interface PushDeviceRegistration {
+  readonly deviceID: string;
+  readonly fid: string;
+  readonly language: "en" | "es";
+}
+
+export interface ResetCreditPushEvent {
+  readonly eventID: string;
+}
+
+export function parsePushDeviceRegistration(value: unknown): PushDeviceRegistration {
+  const object = readObject(value);
+  const deviceID = object.deviceId;
+  const fid = object.fid;
+  const language = object.language;
+  if (typeof deviceID !== "string" || !CHANNEL_PATTERN.test(deviceID)) {
+    throw new ProtocolError("deviceId must be a UUID v4.");
+  }
+  if (
+    typeof fid !== "string" ||
+    fid.length < 20 ||
+    fid.length > 4_096 ||
+    !/^[\x21-\x7e]+$/u.test(fid)
+  ) {
+    throw new ProtocolError("A valid Firebase installation ID is required.");
+  }
+  if (language !== "en" && language !== "es") {
+    throw new ProtocolError("language must be en or es.");
+  }
+  return { deviceID, fid, language };
+}
+
+export function parseResetCreditPushEvent(value: unknown): ResetCreditPushEvent {
+  const object = readObject(value);
+  const eventID = object.eventId;
+  if (typeof eventID !== "string" || !CHANNEL_PATTERN.test(eventID)) {
+    throw new ProtocolError("eventId must be a UUID v4.");
+  }
+  return { eventID };
+}
 
 export interface SnapshotEnvelope {
   readonly protocolVersion: 1;

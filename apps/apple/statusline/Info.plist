@@ -10,5 +10,17 @@
 	<string>Statusline uses the camera to scan the companion’s private pairing QR.</string>
 	<key>StatuslineRelayBaseURL</key>
 	<string>$(STATUSLINE_RELAY_BASE_URL)</string>
+	<key>StatuslineFirebaseAPIKey</key>
+	<string>$(STATUSLINE_FIREBASE_API_KEY)</string>
+	<key>StatuslineFirebaseProjectID</key>
+	<string>$(STATUSLINE_FIREBASE_PROJECT_ID)</string>
+	<key>StatuslineFirebaseSenderID</key>
+	<string>$(STATUSLINE_FIREBASE_SENDER_ID)</string>
+	<key>StatuslineFirebaseAppID</key>
+	<string>$(STATUSLINE_FIREBASE_IOS_APP_ID)</string>
+	<key>FirebaseMessagingAutoInitEnabled</key>
+	<false/>
+	<key>FirebaseMessagingInstallationIdEnabled</key>
+	<true/>
 </dict>
 </plist>
