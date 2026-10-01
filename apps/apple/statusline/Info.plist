@@ -11,7 +11,7 @@
 	<key>StatuslineRelayBaseURL</key>
 	<string>$(STATUSLINE_RELAY_BASE_URL)</string>
 	<key>StatuslineFirebaseAPIKey</key>
-	<string>$(STATUSLINE_FIREBASE_API_KEY)</string>
+	<string>$(STATUSLINE_FIREBASE_IOS_API_KEY)</string>
 	<key>StatuslineFirebaseProjectID</key>
 	<string>$(STATUSLINE_FIREBASE_PROJECT_ID)</string>
 	<key>StatuslineFirebaseSenderID</key>

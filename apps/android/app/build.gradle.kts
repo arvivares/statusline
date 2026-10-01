@@ -15,7 +15,7 @@ fun configuredFirebaseValue(name: String): String = providers.gradleProperty(nam
     .orElse("")
     .get()
 
-val firebaseApiKey = configuredFirebaseValue("STATUSLINE_FIREBASE_API_KEY")
+val firebaseApiKey = configuredFirebaseValue("STATUSLINE_FIREBASE_ANDROID_API_KEY")
 val firebaseProjectId = configuredFirebaseValue("STATUSLINE_FIREBASE_PROJECT_ID")
 val firebaseSenderId = configuredFirebaseValue("STATUSLINE_FIREBASE_SENDER_ID")
 val firebaseAndroidAppId = configuredFirebaseValue("STATUSLINE_FIREBASE_ANDROID_APP_ID")

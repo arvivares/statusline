@@ -631,7 +631,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Statusline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_StatuslineRelayBaseURL = "$(STATUSLINE_RELAY_BASE_URL)";
-				STATUSLINE_FIREBASE_API_KEY = "";
+				STATUSLINE_FIREBASE_IOS_API_KEY = "";
 				STATUSLINE_FIREBASE_PROJECT_ID = "";
 				STATUSLINE_FIREBASE_SENDER_ID = "";
 				STATUSLINE_FIREBASE_IOS_APP_ID = "";
@@ -672,7 +672,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Statusline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_StatuslineRelayBaseURL = "$(STATUSLINE_RELAY_BASE_URL)";
-				STATUSLINE_FIREBASE_API_KEY = "";
+				STATUSLINE_FIREBASE_IOS_API_KEY = "";
 				STATUSLINE_FIREBASE_PROJECT_ID = "";
 				STATUSLINE_FIREBASE_SENDER_ID = "";
 				STATUSLINE_FIREBASE_IOS_APP_ID = "";
@@ -759,7 +759,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
-				STATUSLINE_FIREBASE_API_KEY = "";
+				STATUSLINE_FIREBASE_IOS_API_KEY = "";
 				STATUSLINE_FIREBASE_PROJECT_ID = "";
 				STATUSLINE_FIREBASE_SENDER_ID = "";
 				STATUSLINE_FIREBASE_IOS_APP_ID = "";
@@ -821,7 +821,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
-				STATUSLINE_FIREBASE_API_KEY = "";
+				STATUSLINE_FIREBASE_IOS_API_KEY = "";
 				STATUSLINE_FIREBASE_PROJECT_ID = "";
 				STATUSLINE_FIREBASE_SENDER_ID = "";
 				STATUSLINE_FIREBASE_IOS_APP_ID = "";
