@@ -1,4 +1,6 @@
-# Copy this file to .dev.vars only when the Worker needs local runtime secrets.
-# Statusline Relay currently has no runtime secret variables: D1 and rate-limit
-# bindings are configured in wrangler.jsonc, while Wrangler authentication stays
-# in its own user profile or in CLOUDFLARE_* shell variables.
+# Copy this file to .dev.vars for local relay development. Keep real values out
+# of Git. Push is disabled unless both optional values are configured.
+# FCM_SERVICE_ACCOUNT_JSON: service-account JSON with only FCM send permission.
+FCM_SERVICE_ACCOUNT_JSON=
+# 32-byte random key encoded as unpadded base64url; encrypts FIDs in D1.
+PUSH_TOKEN_ENCRYPTION_KEY=

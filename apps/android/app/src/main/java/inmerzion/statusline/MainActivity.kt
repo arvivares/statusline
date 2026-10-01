@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
@@ -22,7 +23,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private val viewModel by viewModels<StatuslineViewModel>()
-    private var firstResume = true
     private val scannerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
@@ -51,6 +51,13 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) viewModel.enableResetNotifications()
+        else viewModel.notificationPermissionDenied()
+    }
+    private var firstResume = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +66,7 @@ class MainActivity : ComponentActivity() {
             StatuslineApp(
                 viewModel = viewModel,
                 onSelectProvider = viewModel::selectProvider,
+                onSetResetNotifications = ::setResetNotifications,
                 onScanPairing = ::scanPairingCode,
                 onOpenPrivacy = { openPublicPage("privacy") },
                 onOpenSupport = { openPublicPage("support") },
@@ -70,7 +78,8 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        consumePairingUri(intent)?.let(viewModel::pair)
+        val pairingUri = consumePairingUri(intent)
+        if (pairingUri != null) viewModel.pair(pairingUri) else viewModel.refreshIfPaired()
     }
 
     override fun onResume() {
@@ -79,6 +88,21 @@ class MainActivity : ComponentActivity() {
             firstResume = false
         } else {
             viewModel.refreshIfPaired()
+        }
+    }
+
+    private fun setResetNotifications(enabled: Boolean) {
+        if (!enabled) {
+            viewModel.disableResetNotifications()
+            return
+        }
+        viewModel.prepareResetNotifications {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                viewModel.enableResetNotifications()
+            } else {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
 

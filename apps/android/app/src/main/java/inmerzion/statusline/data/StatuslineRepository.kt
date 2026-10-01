@@ -11,6 +11,7 @@ import inmerzion.statusline.protocol.UsageStatus
 import inmerzion.statusline.security.SecureCredentialStore
 import inmerzion.statusline.protocol.AgentProviderId
 import inmerzion.statusline.protocol.AgentServicesSnapshot
+import java.util.UUID
 
 class StatuslineRepository(context: Context) {
     private val configuration = RelayConfiguration.parse(
@@ -21,6 +22,10 @@ class StatuslineRepository(context: Context) {
     private val legacyCache = StatusCache(context)
     private val servicesCache = AgentServicesCache(context)
     private val client = RelayHttpClient(configuration)
+    private val notificationPreferences = context.applicationContext.getSharedPreferences(
+        RESET_PUSH_PREFERENCES,
+        Context.MODE_PRIVATE,
+    )
 
     val endpoint: String
         get() = configuration.origin
@@ -53,6 +58,67 @@ class StatuslineRepository(context: Context) {
 
     fun isPaired(): Boolean = credentials.load() != null
 
+    fun resetNotificationsEnabled(): Boolean =
+        notificationPreferences.getBoolean(RESET_PUSH_ENABLED, false)
+
+    fun supportsResetPush(): Boolean = client.supportsResetPush()
+
+    fun registerResetNotifications(fid: String, language: String) {
+        val reader = credentials.load() ?: throw StatuslineException(
+            FailureKind.NOT_PAIRED,
+            "Pair this device with Statusline Companion first.",
+        )
+        val deviceId = notificationPreferences.getString(RESET_PUSH_DEVICE_ID, null)
+            ?.takeIf(RelayProtocol::validateChannelId)
+            ?: UUID.randomUUID().toString().lowercase().also {
+                notificationPreferences.edit().putString(RESET_PUSH_DEVICE_ID, it).apply()
+            }
+        client.registerPushDevice(
+            reader.channelId,
+            reader.readerToken,
+            deviceId,
+            fid,
+            if (language == "es") "es" else "en",
+        )
+        notificationPreferences.edit()
+            .putBoolean(RESET_PUSH_ENABLED, true)
+            .putBoolean(RESET_PUSH_REMOVE_PENDING, false)
+            .apply()
+    }
+
+    fun beginResetNotificationRemoval() {
+        notificationPreferences.edit()
+            .putBoolean(RESET_PUSH_ENABLED, false)
+            .putBoolean(RESET_PUSH_REMOVE_PENDING, true)
+            .apply()
+    }
+
+    fun unregisterResetNotifications() {
+        beginResetNotificationRemoval()
+        val reader = credentials.load() ?: run {
+            notificationPreferences.edit().putBoolean(RESET_PUSH_REMOVE_PENDING, false).apply()
+            return
+        }
+        client.unregisterPushDevice(reader.channelId, reader.readerToken)
+        notificationPreferences.edit().putBoolean(RESET_PUSH_REMOVE_PENDING, false).apply()
+    }
+
+    fun retryResetNotificationRemoval() {
+        if (notificationPreferences.getBoolean(RESET_PUSH_REMOVE_PENDING, false)) {
+            runCatching { unregisterResetNotifications() }
+        }
+    }
+
+    fun disconnect() {
+        if (resetNotificationsEnabled() ||
+            notificationPreferences.getBoolean(RESET_PUSH_REMOVE_PENDING, false)) {
+            unregisterResetNotifications()
+        }
+        credentials.clear()
+        servicesCache.clear()
+        legacyCache.clear()
+    }
+
     fun enableDemo(): AgentServicesSnapshot {
         val status = DemoStatusFactory.create()
         val snapshot = AgentServicesSnapshot.fromLegacy(status).copy(isDemo = true)
@@ -70,6 +136,11 @@ class StatuslineRepository(context: Context) {
 
     fun pair(rawValue: String): AgentServicesSnapshot? {
         val pairing = RelayProtocol.parsePairing(rawValue)
+        credentials.load()
+            ?.takeIf { it.channelId != pairing.channelId && resetNotificationsEnabled() }
+            ?.let { previous ->
+                client.unregisterPushDevice(previous.channelId, previous.readerToken)
+            }
         val readerToken = client.claim(pairing.channelId, pairing.pairingToken)
         val readerCredentials = ReaderCredentials(
             protocolVersion = RelayProtocol.VERSION,
@@ -100,12 +171,6 @@ class StatuslineRepository(context: Context) {
         return fetch(readerCredentials)
     }
 
-    fun disconnect() {
-        credentials.clear()
-        servicesCache.clear()
-        legacyCache.clear()
-    }
-
     private fun fetch(readerCredentials: ReaderCredentials): AgentServicesSnapshot? {
         val envelope = client.fetchSnapshot(
             readerCredentials.channelId,
@@ -125,5 +190,12 @@ class StatuslineRepository(context: Context) {
         servicesCache.save(incoming)
         incoming.focusedProvider(servicesCache.focusedProvider())?.usageStatus(incoming.isDemo)?.let(legacyCache::save)
         return incoming
+    }
+
+    private companion object {
+        const val RESET_PUSH_PREFERENCES = "statusline.resetPush"
+        const val RESET_PUSH_ENABLED = "enabled"
+        const val RESET_PUSH_DEVICE_ID = "deviceId"
+        const val RESET_PUSH_REMOVE_PENDING = "removePending"
     }
 }

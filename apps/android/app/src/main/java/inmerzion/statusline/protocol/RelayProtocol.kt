@@ -153,7 +153,7 @@ object RelayProtocol {
             val values = body.getJSONArray("providers")
             require(values.length() <= 16)
             val seen = mutableSetOf<String>()
-            val providers = buildList {
+            val providers = buildList<AgentProviderReading> {
                 for (index in 0 until values.length()) {
                     val value = values.getJSONObject(index)
                     val wireId = value.get("id") as? String ?: error("Invalid provider ID")
@@ -177,8 +177,33 @@ object RelayProtocol {
                     }
                     val weekly = window("weekly")
                     val short = window("shortWindow")
+                    val resetCredits: ResetCreditsSummary? = if (id == AgentProviderId.CODEX &&
+                        value.has("resetCredits") && !value.isNull("resetCredits")) {
+                        val reset = value.getJSONObject("resetCredits")
+                        val count = reset.strictLong("availableCount")
+                        require(count in 0L..10_000L)
+                        val credits: List<ResetCreditExpiry>? =
+                            if (!reset.has("credits") || reset.isNull("credits")) {
+                                null
+                            } else {
+                                val rows = reset.getJSONArray("credits")
+                                require(rows.length() <= 16)
+                                buildList<ResetCreditExpiry> {
+                                    for (creditIndex in 0 until rows.length()) {
+                                        val credit = rows.getJSONObject(creditIndex)
+                                        val expiry = if (!credit.has("expiresAt") || credit.isNull("expiresAt")) {
+                                            null
+                                        } else {
+                                            credit.strictLong("expiresAt").also { require(validTimestamp(it)) }
+                                        }
+                                        add(ResetCreditExpiry(expiry))
+                                    }
+                                }
+                            }
+                        ResetCreditsSummary(count.toInt(), credits)
+                    } else null
                     require(if (status == "ready") weekly != null || short != null else weekly == null && short == null)
-                    add(AgentProviderReading(id, requireNotNull(status), sampleTime, weekly, short))
+                    add(AgentProviderReading(id, requireNotNull(status), sampleTime, weekly, short, resetCredits))
                 }
             }
             return AgentServicesSnapshot(providers, updatedAt, channelId, sequence)

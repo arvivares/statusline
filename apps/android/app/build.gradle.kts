@@ -10,6 +10,15 @@ val relayBaseURL = providers.gradleProperty("STATUSLINE_RELAY_BASE_URL")
     .orElse(providers.environmentVariable("STATUSLINE_RELAY_BASE_URL"))
     .orElse("https://statusline-relay.inmerzion.workers.dev")
     .get()
+fun configuredFirebaseValue(name: String): String = providers.gradleProperty(name)
+    .orElse(providers.environmentVariable(name))
+    .orElse("")
+    .get()
+
+val firebaseApiKey = configuredFirebaseValue("STATUSLINE_FIREBASE_API_KEY")
+val firebaseProjectId = configuredFirebaseValue("STATUSLINE_FIREBASE_PROJECT_ID")
+val firebaseSenderId = configuredFirebaseValue("STATUSLINE_FIREBASE_SENDER_ID")
+val firebaseAndroidAppId = configuredFirebaseValue("STATUSLINE_FIREBASE_ANDROID_APP_ID")
 
 val releaseKeystorePath = providers.environmentVariable("STATUSLINE_ANDROID_KEYSTORE_FILE").orNull
 val releaseKeystorePassword =
@@ -63,6 +72,10 @@ android {
         versionName = "0.1.31"
 
         buildConfigField("String", "RELAY_BASE_URL", relayBaseURL.asBuildConfigLiteral())
+        buildConfigField("String", "FIREBASE_API_KEY", firebaseApiKey.asBuildConfigLiteral())
+        buildConfigField("String", "FIREBASE_PROJECT_ID", firebaseProjectId.asBuildConfigLiteral())
+        buildConfigField("String", "FIREBASE_SENDER_ID", firebaseSenderId.asBuildConfigLiteral())
+        buildConfigField("String", "FIREBASE_ANDROID_APP_ID", firebaseAndroidAppId.asBuildConfigLiteral())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["usesCleartextTraffic"] = "false"
     }
@@ -129,6 +142,9 @@ android {
 }
 
 dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
+    implementation("com.google.firebase:firebase-installations")
+    implementation("com.google.firebase:firebase-messaging")
     // Compose 1.12 requires compileSdk 37; targetSdk remains independently pinned to 36.
     val composeBOM = platform("androidx.compose:compose-bom:2026.09.00")
 

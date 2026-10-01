@@ -25,12 +25,27 @@ struct AgentQuotaWindow: Codable, Equatable, Sendable {
     }
 }
 
+struct ResetCreditExpiry: Codable, Equatable, Sendable {
+    let expiresAt: Int64?
+}
+
+struct ResetCreditsSummary: Codable, Equatable, Sendable {
+    let availableCount: Int
+    let credits: [ResetCreditExpiry]?
+
+    var nextExpiry: Date? {
+        credits?.compactMap(\.expiresAt).map { Date(timeIntervalSince1970: TimeInterval($0)) }
+            .filter { $0 > .now }.min()
+    }
+}
+
 struct AgentProviderReading: Codable, Equatable, Identifiable, Sendable {
     let id: AgentProviderID
     let status: String
     let updatedAt: Date
     let weekly: AgentQuotaWindow?
     let shortWindow: AgentQuotaWindow?
+    var resetCredits: ResetCreditsSummary? = nil
 
     var defaultPeriod: AgentQuotaPeriod { id == .codex ? .weekly : .shortWindow }
     func window(for period: AgentQuotaPeriod? = nil) -> AgentQuotaWindow? {
@@ -123,8 +138,22 @@ struct AgentServicesSnapshot: Codable, Equatable, Sendable {
                 || (value.shortWindow.map { $0.windowMinutes != 300 } ?? false)) { throw CodexRelayError.invalidSnapshot }
             guard status == "ready" ? (value.weekly != nil || value.shortWindow != nil)
                 : (value.weekly == nil && value.shortWindow == nil) else { throw CodexRelayError.invalidSnapshot }
+            let resetCredits: ResetCreditsSummary?
+            if id == .codex, let wire = value.resetCredits {
+                guard (0...10_000).contains(wire.availableCount),
+                      (wire.credits?.count ?? 0) <= 16,
+                      wire.credits?.allSatisfy({ credit in
+                          credit.expiresAt.map(validTimestamp) ?? true
+                      }) ?? true else { throw CodexRelayError.invalidSnapshot }
+                resetCredits = ResetCreditsSummary(
+                    availableCount: wire.availableCount,
+                    credits: wire.credits?.map { ResetCreditExpiry(expiresAt: $0.expiresAt) }
+                )
+            } else {
+                resetCredits = nil
+            }
             return AgentProviderReading(id: id, status: status, updatedAt: Date(timeIntervalSince1970: TimeInterval(updated)),
-                weekly: value.weekly, shortWindow: value.shortWindow)
+                weekly: value.weekly, shortWindow: value.shortWindow, resetCredits: resetCredits)
         }
         return Self(providers: providers, updatedAt: Date(timeIntervalSince1970: TimeInterval(wire.updatedAt)), channelID: channelID, sequence: sequence)
     }
@@ -144,7 +173,8 @@ private struct ServicePayload: Decodable {
     var updatedAt: Int64?
     var weekly: AgentQuotaWindow?
     var shortWindow: AgentQuotaWindow?
-    enum CodingKeys: String, CodingKey { case id, status, updatedAt, weekly, shortWindow }
+    var resetCredits: ResetCreditsWire?
+    enum CodingKeys: String, CodingKey { case id, status, updatedAt, weekly, shortWindow, resetCredits }
     init(from decoder: any Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         id = try values.decode(String.self, forKey: .id)
@@ -153,7 +183,17 @@ private struct ServicePayload: Decodable {
         updatedAt = try values.decode(Int64.self, forKey: .updatedAt)
         weekly = try values.decodeIfPresent(AgentQuotaWindow.self, forKey: .weekly)
         shortWindow = try values.decodeIfPresent(AgentQuotaWindow.self, forKey: .shortWindow)
+        resetCredits = try values.decodeIfPresent(ResetCreditsWire.self, forKey: .resetCredits)
     }
+}
+
+private struct ResetCreditsWire: Decodable {
+    let availableCount: Int
+    let credits: [ResetCreditWire]?
+}
+
+private struct ResetCreditWire: Decodable {
+    let expiresAt: Int64?
 }
 
 @MainActor

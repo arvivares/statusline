@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct statuslineApp: App {
+    @UIApplicationDelegateAdaptor(StatuslineAppDelegate.self) private var appDelegate
+
     var body: some Scene {
         WindowGroup {
             ContentView()

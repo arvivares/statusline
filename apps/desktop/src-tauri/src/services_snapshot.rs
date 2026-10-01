@@ -2,7 +2,11 @@
 //! enter this model. A complete inventory replaces the previous inventory.
 use serde::{Deserialize, Serialize};
 
-use crate::{antigravity, claude, relay_protocol::UsageSnapshot, usage::UsageResponse};
+use crate::{
+    antigravity, claude,
+    relay_protocol::UsageSnapshot,
+    usage::{ResetCreditsSummary, UsageResponse},
+};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -30,6 +34,8 @@ pub struct ProviderSnapshot {
     pub updated_at: i64,
     pub weekly: Option<QuotaWindow>,
     pub short_window: Option<QuotaWindow>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reset_credits: Option<ResetCreditsSummary>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -98,6 +104,7 @@ impl ServicesInventory {
             UsageResponse::Ready {
                 weekly,
                 short_window,
+                reset_credits,
                 checked_at,
                 ..
             } => (
@@ -114,6 +121,7 @@ impl ServicesInventory {
                     short_window: short_window.as_ref().map(|w| {
                         QuotaWindow::new(w.remaining_percent, w.resets_at, w.window_duration_mins)
                     }),
+                    reset_credits: reset_credits.clone(),
                 }),
             ),
             UsageResponse::Error {
@@ -166,6 +174,7 @@ impl ServicesInventory {
                         .short_window
                         .as_ref()
                         .map(|w| QuotaWindow::new(w.remaining_percent, w.resets_at, 300)),
+                    reset_credits: None,
                 }),
             ),
             antigravity::Usage::Unavailable { checked_at, .. } if visible => {
@@ -218,6 +227,7 @@ pub fn claude_quota_projection(sample: &claude::QuotaSample) -> ProviderSnapshot
             .short_window
             .as_ref()
             .map(|w| QuotaWindow::new(w.remaining_percent, w.resets_at, 300)),
+        reset_credits: None,
     }
 }
 
@@ -228,6 +238,7 @@ fn unavailable(id: &str, updated_at: i64) -> ProviderSnapshot {
         updated_at,
         weekly: None,
         short_window: None,
+        reset_credits: None,
     }
 }
 

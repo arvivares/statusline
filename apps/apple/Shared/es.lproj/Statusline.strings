@@ -11,6 +11,7 @@
 "{0} percent remaining" = "{0} por ciento restante";
 "{0} percent remaining. Resets {1}" = "{0} por ciento restante. Reinicia {1}";
 "{0} quota" = "Cuota de {0}";
+"{0} reset credits" = "{0} créditos de reinicio";
 "{0} WINDOW" = "PERIODO DE {0}";
 "{0}% downloaded" = "{0}% descargado";
 "{0}% left" = "{0}% libre";
@@ -21,6 +22,7 @@
 "% LEFT" = "% LIBRE";
 "5h {0}% left" = "5h {0}% libre";
 "7d {0}% left" = "7d {0}% libre";
+"A Codex reset is available" = "Hay un nuevo reset de Codex";
 "A new version of Statusline Companion is ready." = "Hay una nueva versión de Statusline Companion disponible.";
 "Account" = "Cuenta";
 "ACCOUNT CHANNEL" = "CANAL DE LA CUENTA";
@@ -32,6 +34,8 @@
 "AES-256-GCM · 30 DAY TTL" = "AES-256-GCM · CADUCA EN 30 DÍAS";
 "AES-256-GCM · UNIVERSAL" = "AES-256-GCM · UNIVERSAL";
 "Agent usage" = "Uso de agentes";
+"Allow notifications in Android Settings to receive Codex reset alerts." = "Permite las notificaciones en los ajustes de Android para recibir avisos de resets de Codex.";
+"Allow notifications in iOS Settings to receive Codex reset alerts." = "Permite las notificaciones en los ajustes de iOS para recibir avisos de resets de Codex.";
 "An encrypted snapshot is available on this device." = "Hay una muestra cifrada disponible en este dispositivo.";
 "Antigravity · {0}% left" = "Antigravity · {0}% libre";
 "Antigravity · no weekly data" = "Antigravity · sin datos semanales";
@@ -124,6 +128,8 @@
 "Codex read. Configure the relay endpoint to sync other devices." = "Codex leído. Configura el servidor relay para sincronizar otros dispositivos.";
 "Codex read. Create a pairing to sync iOS or Android." = "Codex leído. Crea un vínculo para sincronizar iOS o Android.";
 "Codex relay" = "Relay de Codex";
+"Codex reset alerts" = "Avisos de resets de Codex";
+"Codex reset notifications" = "Notificaciones de resets de Codex";
 "Codex response timed out" = "Codex no respondió a tiempo";
 "CODEX SESSION LOCAL" = "SESIÓN LOCAL DE CODEX";
 "CODEX SOURCE" = "ORIGEN CODEX";
@@ -169,6 +175,7 @@
 "Could not access this device’s secure storage." = "No se pudo acceder al almacén seguro del dispositivo.";
 "Could not complete the update" = "No se pudo completar la actualización";
 "Could not connect to the relay. Check your connection and try again." = "No se pudo conectar con el relay. Comprueba la conexión e inténtalo de nuevo.";
+"Could not enable notifications. Check your connection and try again." = "No se pudieron activar las notificaciones. Comprueba la conexión e inténtalo de nuevo.";
 "Could not encrypt or decrypt the snapshot." = "No se pudo cifrar o descifrar la muestra.";
 "Could not open downloads. Please try again." = "No se pudieron abrir las descargas. Inténtalo de nuevo.";
 "Could not open file picker" = "No se pudo abrir el selector de archivos";
@@ -180,6 +187,8 @@
 "Could not sign in to Codex. Please try again." = "No se pudo iniciar sesión en Codex. Inténtalo de nuevo.";
 "Could not start the camera. You can paste the link manually." = "No se pudo iniciar la cámara. Puedes pegar el vínculo manualmente.";
 "Could not start the QR reader. You can paste the link manually." = "No se pudo iniciar el lector QR. Puedes pegar el vínculo manualmente.";
+"Could not unregister this device. Check your connection before disconnecting." = "No se pudo desvincular este dispositivo. Comprueba la conexión antes de desconectarlo.";
+"Could not unregister this device. It will retry when Statusline opens." = "No se pudo desvincular este dispositivo. Se volverá a intentar al abrir Statusline.";
 "Create a pairing and scan its QR in Statusline on iOS or Android. The relay stores only an encrypted snapshot; your Codex session stays local." = "Crea un vínculo y escanea su QR desde Statusline en iOS o Android. El relay solo almacena una muestra cifrada; tu sesión de Codex permanece local.";
 "Create a pairing to connect iOS or Android." = "Crea un vínculo para conectar iOS o Android.";
 "Create a private QR for Statusline on iOS or Android. No platform account is required." = "Crea un QR privado para Statusline en iOS o Android. No se requiere una cuenta adicional.";
@@ -303,6 +312,7 @@
 "Mobile sync" = "Sincronización móvil";
 "Needs attention" = "Requiere atención";
 "New version" = "Nueva versión";
+"Next expires {0}" = "Vence próximamente: {0}";
 "NEXT WEEKLY WINDOW" = "PRÓXIMO PERIODO SEMANAL";
 "No active QR" = "Sin QR activo";
 "NO ACTIVE QR" = "SIN QR ACTIVO";
@@ -334,18 +344,26 @@
 "NOT PUBLISHED" = "SIN PUBLICAR";
 "Not selected" = "No seleccionado";
 "NOT UPLOADED" = "NO SE ENVÍA";
+"Notifications are off because permission was revoked." = "Las notificaciones están desactivadas porque se retiró el permiso.";
+"Notifications are off on this device. Relay cleanup will retry when you open Statusline." = "Las notificaciones están desactivadas en este dispositivo. Se volverá a limpiar el relay cuando abras Statusline.";
+"Notifications are off. This device was unregistered." = "Las notificaciones están desactivadas. Este dispositivo se desvinculó.";
+"Notifications are ready. Statusline will alert you when Codex reset credits are added." = "Las notificaciones están activas. Statusline te avisará cuando se añadan créditos de reinicio de Codex.";
 "Notify me about new versions. Installation always needs my approval." = "Avisarme de nuevas versiones. La instalación siempre requiere mi aprobación.";
+"Notify me when new Codex reset credits are added" = "Avisarme cuando haya nuevos créditos de reinicio de Codex";
 "NOW" = "AHORA";
 "NPM GLOBAL" = "NPM GLOBAL";
+"Off" = "Desactivadas";
 "OFFICIAL SETUP" = "INSTALACIÓN OFICIAL";
 "OFFLINE" = "SIN CONEXIÓN";
 "OFFLINE · NO SAMPLE AVAILABLE" = "SIN CONEXIÓN · SIN MUESTRA DISPONIBLE";
+"On" = "Activadas";
 "On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically." = "En la primera detección, Desktop tiene prioridad sobre CLI. Se recuerda la fuente elegida y nunca se cambia de cuenta automáticamente.";
 "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits." = "Habilita solo una instalación de Antigravity de confianza que utilices. Statusline lee la cuota de Google, no los límites de Claude o GPT.";
 "Open OpenAI" = "Abrir OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Abre la configuración de origen para detectar o seleccionar un ejecutable local de Codex.";
 "Open Source Settings to detect or select the local CLI." = "Abre la configuración de origen para detectar o seleccionar la CLI local.";
 "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample." = "Abre Statusline Companion en Windows, Linux o macOS, crea un vínculo y escanea su QR para recibir la primera muestra cifrada.";
+"Open Statusline to see your reset count and expiry." = "Abre Statusline para ver cuántos resets tienes y cuándo vencen.";
 "OpenAI · Codex" = "OpenAI · Codex";
 "Opening secure OpenAI sign-in…" = "Abriendo el inicio de sesión seguro de OpenAI…";
 "Opens an external web page" = "Abre una página web externa";
@@ -381,6 +399,8 @@
 "PRIVATE.RELAY" = "RELAY.PRIVADO";
 "Processing" = "Procesando";
 "Publisher credentials and the encryption key stay in your system vault." = "Las credenciales de publicación y la clave de cifrado permanecen en el almacén seguro del sistema.";
+"Push notifications are not available on this relay yet." = "Este relay todavía no tiene habilitadas las notificaciones push.";
+"Push notifications are not configured for this build." = "Las notificaciones push no están configuradas en esta versión.";
 "QR / PAIR" = "QR / VINCULAR";
 "QR code scanner" = "Escáner de código QR";
 "QR expired" = "QR caducado";
@@ -421,6 +441,7 @@
 "Relay / waiting" = "Relay / en espera";
 "RELAY NEEDS ATTENTION" = "EL RELAY REQUIERE ATENCIÓN";
 "Relay not configured" = "Relay no configurado";
+"Relay registration removed; notification cleanup will retry when Statusline opens." = "Se eliminó el registro del relay; la limpieza de notificaciones se reintentará al abrir Statusline.";
 "Relay server" = "Servidor relay";
 "Relay URL not configured" = "URL del relay sin configurar";
 "RELAY URL NOT CONFIGURED" = "SERVIDOR RELAY SIN CONFIGURAR";
@@ -525,6 +546,7 @@
 "Statusline is independent and is not affiliated with or endorsed by OpenAI or Google." = "Statusline es independiente y no está afiliada ni respaldada por OpenAI o Google.";
 "Statusline needs a ChatGPT session, not an API key." = "Statusline necesita una sesión de ChatGPT, no una API key.";
 "Statusline needs camera permission to scan the QR. You can also paste the link manually." = "Statusline necesita permiso de cámara para escanear el QR. También puedes pegar el vínculo manualmente.";
+"Statusline sends a generic alert; reset details stay encrypted." = "Statusline envía un aviso genérico; los detalles de los resets permanecen cifrados.";
 "Statusline stores only the selected local path." = "Statusline solo guarda la ruta local seleccionada.";
 "Statusline uses the camera to scan the companion’s private pairing QR." = "Statusline usa la cámara para escanear el QR privado de emparejamiento del companion.";
 "Stays on Mac" = "Solo en el Mac";
@@ -638,6 +660,7 @@
 "WEEKLY QUOTA" = "CUOTA SEMANAL";
 "Weekly quota, reset and private sync in one view." = "Cuota semanal, reinicio y sincronización privada en una sola vista.";
 "Weekly window unavailable" = "Periodo semanal no disponible";
+"With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration." = "Con tu permiso, Statusline guarda un Firebase Installation ID cifrado en el relay para enviarte este aviso. Al desactivar los avisos, se elimina ese registro.";
 "Working" = "Procesando";
 "WORKING" = "PROCESANDO";
 "Writing Claude Code status line…" = "Escribiendo la status line de Claude Code…";

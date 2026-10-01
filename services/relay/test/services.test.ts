@@ -74,6 +74,7 @@ async function fixture(kind: "memory" | "sqlite") {
       "0001_initial.sql",
       "0002_rotate_pairing_credentials.sql",
       "0003_optional_services_snapshot.sql",
+      "0004_reset_credit_push.sql",
     ])
       migrate(db, migration);
     store = new D1RelayStore(sqliteAdapter(db));

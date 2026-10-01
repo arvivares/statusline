@@ -1,6 +1,9 @@
 package inmerzion.statusline
 
 import android.app.Application
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import inmerzion.statusline.data.StatuslineRepository
@@ -11,6 +14,9 @@ import inmerzion.statusline.protocol.FailureKind
 import inmerzion.statusline.protocol.StatuslineException
 import inmerzion.statusline.protocol.UsageStatus
 import inmerzion.statusline.widget.StatuslineWidgetProvider
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.installations.FirebaseInstallations
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 
 enum class SyncPhase {
     UNPAIRED,
@@ -43,6 +50,8 @@ data class StatuslineUiState(
     val endpoint: String? = null,
     val feedback: UserFeedback? = null,
     val isPaired: Boolean = false,
+    val resetNotificationsEnabled: Boolean = false,
+    val resetNotificationsBusy: Boolean = false,
 ) {
     val isBusy: Boolean
         get() = phase == SyncPhase.PAIRING || phase == SyncPhase.SYNCING
@@ -69,6 +78,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
             inventory = initialInventory,
             focusId = initialFocus,
             endpoint = repository?.endpoint,
+            resetNotificationsEnabled = repository?.resetNotificationsEnabled() == true,
         ),
     )
     private var operation: Job? = null
@@ -92,6 +102,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
             pair(pairingUri)
         } else {
             refresh(userInitiated = false)
+            refreshPushRegistration()
         }
     }
 
@@ -125,6 +136,7 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
                     ),
                 )
                 updateWidgets()
+                refreshPushRegistration()
             }.onFailure(::showFailure)
         }
     }
@@ -172,7 +184,162 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun refreshIfPaired() {
-        if (mutableState.value.isPaired) refresh(userInitiated = false)
+        if (mutableState.value.isPaired) {
+            refresh(userInitiated = false)
+            refreshPushRegistration()
+        }
+    }
+
+    fun enableResetNotifications() {
+        val activeRepository = repository ?: return
+        if (!mutableState.value.isPaired) return
+        if (!StatuslineApplication.isPushConfigured()) {
+            mutableState.value = mutableState.value.copy(
+                feedback = UserFeedback("Push notifications are not configured for this build.", isError = true),
+            )
+            return
+        }
+        mutableState.value = mutableState.value.copy(resetNotificationsBusy = true)
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    val messaging = FirebaseMessaging.getInstance()
+                    messaging.isAutoInitEnabled = true
+                    Tasks.await(messaging.register(), 30, TimeUnit.SECONDS)
+                    val installationId = Tasks.await(FirebaseInstallations.getInstance().id, 30, TimeUnit.SECONDS)
+                    require(installationId.isNotBlank())
+                    activeRepository.registerResetNotifications(installationId, inmerzion.statusline.localization.L10n.locale.language)
+                }
+            }.onSuccess {
+                mutableState.value = mutableState.value.copy(
+                    resetNotificationsEnabled = true,
+                    resetNotificationsBusy = false,
+                    feedback = UserFeedback("Notifications are ready. Statusline will alert you when Codex reset credits are added.", isError = false),
+                )
+            }.onFailure {
+                withContext(Dispatchers.IO) {
+                    runCatching { activeRepository.unregisterResetNotifications() }
+                    disableFirebasePushRegistration()
+                }
+                mutableState.value = mutableState.value.copy(
+                    resetNotificationsBusy = false,
+                    resetNotificationsEnabled = activeRepository.resetNotificationsEnabled(),
+                    feedback = UserFeedback("Could not enable notifications. Check your connection and try again.", isError = true),
+                )
+            }
+        }
+    }
+
+    fun prepareResetNotifications(onRelayAvailable: () -> Unit) {
+        val activeRepository = repository ?: return
+        if (!mutableState.value.isPaired) return
+        if (!StatuslineApplication.isPushConfigured()) {
+            mutableState.value = mutableState.value.copy(
+                feedback = UserFeedback("Push notifications are not configured for this build.", isError = true),
+            )
+            return
+        }
+        mutableState.value = mutableState.value.copy(resetNotificationsBusy = true)
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) { activeRepository.supportsResetPush() }
+            }
+            mutableState.value = mutableState.value.copy(resetNotificationsBusy = false)
+            result.onSuccess { available ->
+                if (available) {
+                    onRelayAvailable()
+                } else {
+                    mutableState.value = mutableState.value.copy(
+                        feedback = UserFeedback("Push notifications are not available on this relay yet.", isError = true),
+                    )
+                }
+            }.onFailure { error ->
+                val failure = error as? StatuslineException
+                mutableState.value = mutableState.value.copy(
+                    feedback = UserFeedback(failureMessage(failure?.kind), isError = true),
+                )
+            }
+        }
+    }
+
+    fun disableResetNotifications() {
+        val activeRepository = repository ?: return
+        if (!mutableState.value.resetNotificationsEnabled) return
+        activeRepository.beginResetNotificationRemoval()
+        if (StatuslineApplication.isPushConfigured()) {
+            FirebaseMessaging.getInstance().isAutoInitEnabled = false
+        }
+        mutableState.value = mutableState.value.copy(
+            resetNotificationsEnabled = false,
+            resetNotificationsBusy = true,
+        )
+        viewModelScope.launch {
+            val relayUnregistered = withContext(Dispatchers.IO) {
+                if (StatuslineApplication.isPushConfigured()) {
+                    disableFirebasePushRegistration()
+                }
+                val removed = runCatching { activeRepository.unregisterResetNotifications() }.isSuccess
+                removed
+            }
+            mutableState.value = mutableState.value.copy(
+                resetNotificationsBusy = false,
+                resetNotificationsEnabled = false,
+                feedback = if (relayUnregistered) {
+                    UserFeedback("Notifications are off. This device was unregistered.", isError = false)
+                } else {
+                    UserFeedback("Notifications are off on this device. Relay cleanup will retry when you open Statusline.", isError = true)
+                },
+            )
+        }
+    }
+
+    fun notificationPermissionDenied() {
+        mutableState.value = mutableState.value.copy(
+            feedback = UserFeedback("Allow notifications in Android Settings to receive Codex reset alerts.", isError = true),
+        )
+    }
+
+    private fun refreshPushRegistration() {
+        val activeRepository = repository ?: return
+        viewModelScope.launch {
+            val permissionWasRevoked = withContext(Dispatchers.IO) {
+                val permissionMissing = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    getApplication<Application>().checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+                    PackageManager.PERMISSION_GRANTED
+                if (permissionMissing && activeRepository.resetNotificationsEnabled()) {
+                    activeRepository.beginResetNotificationRemoval()
+                    disableFirebasePushRegistration()
+                    runCatching { activeRepository.unregisterResetNotifications() }
+                    true
+                } else {
+                    false
+                }
+            }
+            if (permissionWasRevoked) {
+                mutableState.value = mutableState.value.copy(
+                    resetNotificationsEnabled = false,
+                    resetNotificationsBusy = false,
+                    feedback = UserFeedback("Allow notifications in Android Settings to receive Codex reset alerts.", isError = true),
+                )
+                return@launch
+            }
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    activeRepository.retryResetNotificationRemoval()
+                    if (!StatuslineApplication.isPushConfigured()) return@withContext
+                    if (activeRepository.resetNotificationsEnabled() && activeRepository.isPaired()) {
+                        val messaging = FirebaseMessaging.getInstance()
+                        messaging.isAutoInitEnabled = true
+                        Tasks.await(messaging.register(), 30, TimeUnit.SECONDS)
+                        val installationId = Tasks.await(FirebaseInstallations.getInstance().id, 30, TimeUnit.SECONDS)
+                        activeRepository.registerResetNotifications(
+                            installationId,
+                            inmerzion.statusline.localization.L10n.locale.language,
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun selectProvider(provider: AgentProviderId) {
@@ -228,10 +395,22 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
     fun disconnect() {
         if (operation?.isActive == true) return
         val activeRepository = repository ?: return
+        if (activeRepository.resetNotificationsEnabled()) {
+            activeRepository.beginResetNotificationRemoval()
+            if (StatuslineApplication.isPushConfigured()) {
+                FirebaseMessaging.getInstance().isAutoInitEnabled = false
+            }
+        }
         operation = viewModelScope.launch {
             runCatching {
-                withContext(Dispatchers.IO) { activeRepository.disconnect() }
+                withContext(Dispatchers.IO) {
+                    disableFirebasePushRegistration()
+                    activeRepository.disconnect()
+                }
             }.onSuccess {
+                withContext(Dispatchers.IO) {
+                    disableFirebasePushRegistration()
+                }
                 mutableState.value = StatuslineUiState(
                     endpoint = activeRepository.endpoint,
                     feedback = UserFeedback(
@@ -240,7 +419,20 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
                     ),
                 )
                 updateWidgets()
-            }.onFailure(::showFailure)
+            }.onFailure {
+                withContext(Dispatchers.IO) {
+                    disableFirebasePushRegistration()
+                }
+                mutableState.value = mutableState.value.copy(
+                    isPaired = activeRepository.isPaired(),
+                    resetNotificationsEnabled = activeRepository.resetNotificationsEnabled(),
+                    resetNotificationsBusy = false,
+                    feedback = UserFeedback(
+                        "Could not unregister this device. Check your connection before disconnecting.",
+                        isError = true,
+                    ),
+                )
+            }
         }
     }
 
@@ -300,6 +492,14 @@ class StatuslineViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun updateWidgets() {
         StatuslineWidgetProvider.updateAll(getApplication())
+    }
+
+    private fun disableFirebasePushRegistration() {
+        if (!StatuslineApplication.isPushConfigured()) return
+        val messaging = FirebaseMessaging.getInstance()
+        messaging.isAutoInitEnabled = false
+        runCatching { Tasks.await(messaging.unregister(), 30, TimeUnit.SECONDS) }
+        runCatching { Tasks.await(FirebaseInstallations.getInstance().delete(), 30, TimeUnit.SECONDS) }
     }
 
     private fun failureMessage(kind: FailureKind?): String = when (kind) {

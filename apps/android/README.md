@@ -23,6 +23,8 @@ El build usa por defecto `https://statusline-relay.inmerzion.workers.dev`. Para 
 
 También puede usarse la variable de entorno `STATUSLINE_RELAY_BASE_URL`. Release rechaza HTTP; Debug lo admite únicamente para loopback.
 
+Las alertas push requieren las variables de configuración pública de Firebase `STATUSLINE_FIREBASE_API_KEY`, `STATUSLINE_FIREBASE_PROJECT_ID`, `STATUSLINE_FIREBASE_SENDER_ID` y `STATUSLINE_FIREBASE_ANDROID_APP_ID`. El workflow de release las lee de **Repository variables** en GitHub; la app deja FCM sin inicializar hasta que la persona active alertas y conceda permiso. Restringe la API key en Google Cloud. Sin esa configuración la app y su sincronización normal siguen funcionando, pero el control de notificaciones no se habilita.
+
 ## Validación y APK
 
 ```shell

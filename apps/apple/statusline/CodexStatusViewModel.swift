@@ -96,24 +96,31 @@ final class CodexStatusViewModel {
     private(set) var preferredProvider: AgentProviderID?
     private(set) var feedback: CodexStatusFeedback?
     private(set) var relaySyncState: CodexRelaySyncState = .unpaired
+    private(set) var resetNotificationsEnabled: Bool
+    private(set) var resetNotificationsBusy = false
     private let store: CodexStatusStore
     private let relayRepository: any CodexRelayReading
+    private let resetPushManager: ResetPushManager
     private var isRefreshing = false
     private var pairingGeneration = 0
 
     convenience init() {
         self.init(
             store: CodexStatusStore(),
-            relayRepository: CodexRelayReaderRepository()
+            relayRepository: CodexRelayReaderRepository(),
+            resetPushManager: .shared
         )
     }
 
     init(
         store: CodexStatusStore,
-        relayRepository: any CodexRelayReading
+        relayRepository: any CodexRelayReading,
+        resetPushManager: ResetPushManager = .shared
     ) {
         self.store = store
         self.relayRepository = relayRepository
+        self.resetPushManager = resetPushManager
+        resetNotificationsEnabled = resetPushManager.isEnabled
         preferredProvider = store.servicesStore.focusedProvider
 
         reloadLocalStatus()
@@ -131,11 +138,107 @@ final class CodexStatusViewModel {
 
     var relayEndpoint: String? { relayRepository.endpoint }
 
+    func setResetNotifications(_ enabled: Bool) {
+        guard !resetNotificationsBusy else { return }
+        if !enabled {
+            resetNotificationsEnabled = false
+            resetPushManager.beginOptOut()
+            resetNotificationsBusy = true
+            Task {
+                do {
+                    try await relayRepository.unregisterPushDevice()
+                    let firebaseCleanupCompleted = await resetPushManager.finishOptOut()
+                    feedback = firebaseCleanupCompleted
+                        ? .success(L10n.text("Notifications are off. This device was unregistered."))
+                        : .error(L10n.text("Relay registration removed; notification cleanup will retry when Statusline opens."))
+                } catch {
+                    await resetPushManager.invalidateTokenForOptOut()
+                    feedback = .error(L10n.text("Could not unregister this device. It will retry when Statusline opens."))
+                }
+                resetNotificationsBusy = false
+            }
+            return
+        }
+        guard relaySyncState.isPaired else { return }
+        resetNotificationsBusy = true
+        Task {
+            do {
+                guard try await relayRepository.supportsResetPush() else {
+                    throw ResetPushError.relayUnavailable
+                }
+                let installationID = try await resetPushManager.requestPermissionAndInstallationID()
+                try await relayRepository.registerPushDevice(
+                    deviceID: resetPushManager.deviceID,
+                    fid: installationID,
+                    language: L10n.language
+                )
+                resetPushManager.markEnabled()
+                resetNotificationsEnabled = true
+                feedback = .success(L10n.text("Notifications are ready. Statusline will alert you when Codex reset credits are added."))
+            } catch ResetPushError.permissionDenied {
+                feedback = .error(L10n.text("Allow notifications in iOS Settings to receive Codex reset alerts."))
+            } catch ResetPushError.notConfigured {
+                feedback = .error(L10n.text("Push notifications are not configured for this build."))
+            } catch ResetPushError.relayUnavailable {
+                feedback = .error(L10n.text("Push notifications are not available on this relay yet."))
+            } catch {
+                resetPushManager.beginOptOut()
+                do {
+                    try await relayRepository.unregisterPushDevice()
+                    _ = await resetPushManager.finishOptOut()
+                } catch {
+                    await resetPushManager.invalidateTokenForOptOut()
+                }
+                resetNotificationsEnabled = false
+                feedback = .error(L10n.text("Could not enable notifications. Check your connection and try again."))
+            }
+            resetNotificationsBusy = false
+        }
+    }
+
+    private func refreshResetPushRegistration() async {
+        if resetPushManager.pendingUnregistration {
+            do {
+                try await relayRepository.unregisterPushDevice()
+                guard await resetPushManager.finishOptOut() else { return }
+            } catch {
+                return
+            }
+        }
+        guard resetPushManager.isEnabled else { return }
+        guard await resetPushManager.hasNotificationPermission() else {
+            resetPushManager.beginOptOut()
+            resetNotificationsEnabled = false
+            do {
+                try await relayRepository.unregisterPushDevice()
+                let firebaseCleanupCompleted = await resetPushManager.finishOptOut()
+                feedback = firebaseCleanupCompleted
+                    ? .success(L10n.text("Notifications are off because permission was revoked."))
+                    : .error(L10n.text("Relay registration removed; notification cleanup will retry when Statusline opens."))
+            } catch {
+                await resetPushManager.invalidateTokenForOptOut()
+                feedback = .error(L10n.text("Could not unregister this device. It will retry when Statusline opens."))
+            }
+            return
+        }
+        do {
+            let installationID = try await resetPushManager.currentInstallationID()
+            try await relayRepository.registerPushDevice(
+                deviceID: resetPushManager.deviceID,
+                fid: installationID,
+                language: L10n.language
+            )
+        } catch {
+            // A temporary push-registration failure must not interrupt quota sync.
+        }
+    }
+
     /// Owned by ContentView.task(id: scenePhase); cancels when no longer active.
     func runForegroundRefresh(
         sleep: (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
     ) async {
         reloadLocalStatus()
+        await refreshResetPushRegistration()
         while !Task.isCancelled {
             await start()
             do { try await sleep(CodexSyncPolicy.foregroundInterval) }
@@ -177,6 +280,7 @@ final class CodexStatusViewModel {
             WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
             feedback = .success(L10n.text("Device connected with encryption."))
             relaySyncState = .waitingForDesktop
+            await refreshResetPushRegistration()
             await refreshFromRelay()
         } catch {
             relaySyncState = .failed(L10n.error(error))
@@ -232,20 +336,36 @@ final class CodexStatusViewModel {
     }
 
     func disconnectRelay() {
-        do {
-            try relayRepository.disconnect()
-            pairingGeneration += 1
-            store.clear()
-            store.servicesStore.clear()
-            services = nil
-            preferredProvider = nil
-            status = nil
-            relaySyncState = .unpaired
-            feedback = .success(L10n.text("This device was disconnected from the relay."))
-            WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
-        } catch {
-            relaySyncState = .failed(L10n.error(error))
-            feedback = .error(L10n.error(error))
+        Task {
+            if resetPushManager.isEnabled || resetPushManager.pendingUnregistration {
+                resetPushManager.beginOptOut()
+                resetNotificationsEnabled = false
+                do {
+                    try await relayRepository.unregisterPushDevice()
+                } catch {
+                    await resetPushManager.invalidateTokenForOptOut()
+                    resetNotificationsBusy = false
+                    feedback = .error(L10n.text("Could not unregister this device. Check your connection before disconnecting."))
+                    return
+                }
+                await resetPushManager.finishOptOut()
+                resetNotificationsEnabled = false
+            }
+            do {
+                try relayRepository.disconnect()
+                pairingGeneration += 1
+                store.clear()
+                store.servicesStore.clear()
+                services = nil
+                preferredProvider = nil
+                status = nil
+                relaySyncState = .unpaired
+                feedback = .success(L10n.text("This device was disconnected from the relay."))
+                WidgetCenter.shared.reloadTimelines(ofKind: CodexStatusConstants.widgetKind)
+            } catch {
+                relaySyncState = .failed(L10n.error(error))
+                feedback = .error(L10n.error(error))
+            }
         }
     }
 

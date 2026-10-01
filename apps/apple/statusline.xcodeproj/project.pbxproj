@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		A1000000000000000000000D /* CodexStatusWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* CodexStatusWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F10000000000000000000003 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = F10000000000000000000001 /* FirebaseMessaging */; };
+		F10000000000000000000005 /* FirebaseInstallations in Frameworks */ = {isa = PBXBuildFile; productRef = F10000000000000000000004 /* FirebaseInstallations */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -131,6 +133,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F10000000000000000000003 /* FirebaseMessaging in Frameworks */,
+				F10000000000000000000005 /* FirebaseInstallations in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,6 +250,8 @@
 			);
 			name = statusline;
 			packageProductDependencies = (
+				F10000000000000000000001 /* FirebaseMessaging */,
+				F10000000000000000000004 /* FirebaseInstallations */,
 			);
 			productName = statusline;
 			productReference = EF6DA028303FA260007F6F4C /* statusline.app */;
@@ -318,13 +324,16 @@
 					B20000000000000000000006 = {
 						CreatedOnToolsVersion = 26.3;
 					};
-					EF6DA027303FA260007F6F4C = {
-						CreatedOnToolsVersion = 26.3;
-						SystemCapabilities = {
-							com.apple.ApplicationGroups.iOS = {
-								enabled = 1;
+						EF6DA027303FA260007F6F4C = {
+							CreatedOnToolsVersion = 26.3;
+							SystemCapabilities = {
+								com.apple.ApplicationGroups.iOS = {
+									enabled = 1;
+								};
+								com.apple.Push = {
+									enabled = 1;
+								};
 							};
-						};
 					};
 					EF6DA038303FA262007F6F4C = {
 						CreatedOnToolsVersion = 26.3;
@@ -337,6 +346,9 @@
 				};
 			};
 			buildConfigurationList = EF6DA023303FA260007F6F4C /* Build configuration list for PBXProject "statusline" */;
+			packageReferences = (
+				F10000000000000000000002 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -619,6 +631,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Statusline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_StatuslineRelayBaseURL = "$(STATUSLINE_RELAY_BASE_URL)";
+				STATUSLINE_FIREBASE_API_KEY = "";
+				STATUSLINE_FIREBASE_PROJECT_ID = "";
+				STATUSLINE_FIREBASE_SENDER_ID = "";
+				STATUSLINE_FIREBASE_IOS_APP_ID = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -656,6 +672,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Statusline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_StatuslineRelayBaseURL = "$(STATUSLINE_RELAY_BASE_URL)";
+				STATUSLINE_FIREBASE_API_KEY = "";
+				STATUSLINE_FIREBASE_PROJECT_ID = "";
+				STATUSLINE_FIREBASE_SENDER_ID = "";
+				STATUSLINE_FIREBASE_IOS_APP_ID = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -739,6 +759,10 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
+				STATUSLINE_FIREBASE_API_KEY = "";
+				STATUSLINE_FIREBASE_PROJECT_ID = "";
+				STATUSLINE_FIREBASE_SENDER_ID = "";
+				STATUSLINE_FIREBASE_IOS_APP_ID = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -797,6 +821,10 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				STATUSLINE_RELAY_BASE_URL = "https://statusline-relay.inmerzion.workers.dev";
+				STATUSLINE_FIREBASE_API_KEY = "";
+				STATUSLINE_FIREBASE_PROJECT_ID = "";
+				STATUSLINE_FIREBASE_SENDER_ID = "";
+				STATUSLINE_FIREBASE_IOS_APP_ID = "";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -943,6 +971,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F10000000000000000000002 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.19.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F10000000000000000000004 /* FirebaseInstallations */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F10000000000000000000002 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseInstallations;
+		};
+		F10000000000000000000001 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F10000000000000000000002 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EF6DA020303FA260007F6F4C /* Project object */;
 }

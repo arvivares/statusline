@@ -28,6 +28,16 @@ Validated against the iPhone source, Apple frameworks and the production relay o
 
 The conservative **Other Data Types** declaration covers the random channel identifier, hashes, opaque ciphertext and protocol timestamps retained by the relay for app functionality. None of them is tied to an email address, Apple ID, Codex account or device identifier, and none is used for tracking.
 
-Reclassify this record before submission if production logging is enabled or analytics, crash reporting, push-token storage or other SDK telemetry is added.
+## Required delta before submitting a build with reset push enabled
+
+The published build represented above does not include Firebase push registration. For the next build that enables reset alerts, update App Store Connect before submission:
+
+- Add **Identifiers → Device ID**.
+- Mark it as collected for **App Functionality**, **not linked to the user**, and **not used for tracking**.
+- This covers the opt-in Firebase Installation ID (FID) and APNs registration association used to route a generic reset alert. The app has no Statusline account and does not use the identifier for advertising or analytics.
+- Firebase Messaging's Apple disclosure states that it associates the APNs token with an app installation ID; see [Firebase's current Apple data-collection disclosure](https://firebase.google.com/docs/ios/app-store-data-collection).
+- The app sends no quota count, reset ID, expiry, prompt, account email or other Codex data in the push payload. The payload contains only generic notification text.
+
+Recheck the current Apple questionnaire and bundled Firebase manifests when submitting. The existing live 1.0 listing is unchanged until a new version is submitted and released. See [PRIVACY.md](../../../PRIVACY.md) and [the reset-push architecture note](../../../docs/architecture/codex-reset-credits.md).
 
 The data-disclosure answers were published on 2 September 2026, originally with relay-hosted URLs. On 10 September, the localized website URLs above were saved for the next app version, after their public destinations returned HTTP 200. Apple explicitly states URL edits are released with the next version. The data declarations were not changed; the product-page preview still reports **Data Not Linked to You → Other Data**. Do not describe the new URLs as already present on the published 1.0 listing.

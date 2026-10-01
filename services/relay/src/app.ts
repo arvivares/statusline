@@ -2,12 +2,15 @@ import {
   CHANNEL_TTL_SECONDS,
   PAIRING_TTL_SECONDS,
   PROTOCOL_VERSION,
+  RESET_PUSH_CAPABILITY,
   SERVICES_CAPABILITY,
   SERVICES_MEDIA_TYPE,
   ProtocolError,
   hashToken,
   parseBearerToken,
   parseChannelID,
+  parsePushDeviceRegistration,
+  parseResetCreditPushEvent,
   parseSnapshotEnvelope,
   parseServicesPublication,
   randomToken,
@@ -15,7 +18,7 @@ import {
 } from "./protocol";
 import { publicPageResponse } from "./public-pages";
 import type { RelayChannel, RelayStore, StoreResult } from "./store";
-import type { RateLimitBinding } from "./types";
+import type { PushDevice, PushGateway, RateLimitBinding } from "./types";
 
 const MAX_REQUEST_BYTES = 8_192;
 
@@ -24,6 +27,8 @@ export interface RelayAppDependencies {
   readonly clientRateLimiter: RateLimitBinding;
   readonly createRateLimiter: RateLimitBinding;
   readonly channelRateLimiter: RateLimitBinding;
+  readonly pushEventRateLimiter?: RateLimitBinding;
+  readonly pushGateway?: PushGateway;
   readonly now?: () => number;
   readonly randomBytes?: (length: number) => Uint8Array;
   readonly randomUUID?: () => string;
@@ -33,6 +38,13 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
   const now = dependencies.now ?? (() => Math.floor(Date.now() / 1_000));
   const randomBytes = dependencies.randomBytes ?? secureRandomBytes;
   const randomUUID = dependencies.randomUUID ?? (() => crypto.randomUUID());
+  const candidatePushGateway = dependencies.pushGateway;
+  const pushGateway = candidatePushGateway
+    ? Promise.resolve()
+        .then(() => candidatePushGateway.isReady())
+        .then((isReady) => (isReady ? candidatePushGateway : null))
+        .catch(() => null)
+    : Promise.resolve(null);
 
   return async (request: Request): Promise<Response> => {
     try {
@@ -43,10 +55,14 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
       }
 
       if (request.method === "GET" && url.pathname === "/health") {
+        const readyGateway = await pushGateway;
         return json({
           status: "ok",
           protocolVersion: PROTOCOL_VERSION,
-          capabilities: [SERVICES_CAPABILITY],
+          capabilities: [
+            SERVICES_CAPABILITY,
+            ...(readyGateway ? [RESET_PUSH_CAPABILITY] : []),
+          ],
         });
       }
 
@@ -93,10 +109,21 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
       const tokenHash = await hashToken(token);
       // Legacy and multi-service publication share the same rate-limit budget.
       const route =
-        segments[3] === "services" ? "snapshot" : (segments[3] ?? "metadata");
+        segments[3] === "services"
+          ? "snapshot"
+          : segments[3] === "push-device"
+            ? "push"
+            : segments[3] === "reset-credit-events"
+              ? "push-event"
+              : (segments[3] ?? "metadata");
+      const routeLimiter =
+        route === "push-event"
+          ? (dependencies.pushEventRateLimiter ??
+            dependencies.channelRateLimiter)
+          : dependencies.channelRateLimiter;
       if (
         !(
-          await dependencies.channelRateLimiter.limit({
+          await routeLimiter.limit({
             key: `${route}:${tokenHash}`,
           })
         ).success
@@ -107,6 +134,9 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
       if (segments.length === 3 && request.method === "GET") {
         return metadata(
           await dependencies.store.metadata(channelID, tokenHash, now()),
+          (await pushGateway)
+            ? [SERVICES_CAPABILITY, RESET_PUSH_CAPABILITY]
+            : [SERVICES_CAPABILITY],
         );
       }
       if (segments.length === 3 && request.method === "DELETE") {
@@ -126,6 +156,132 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
           now(),
           randomBytes,
         );
+      }
+      if (
+        segments.length === 4 &&
+        segments[3] === "push-device" &&
+        request.method === "PUT"
+      ) {
+        const gateway = await pushGateway;
+        if (!gateway)
+          return apiError(
+            503,
+            "pushUnavailable",
+            "Push notifications are not configured.",
+          );
+        const registration = parsePushDeviceRegistration(
+          await readJSON(request, 8_192),
+        );
+        const encrypted = await gateway.encryptInstallationID(registration.fid);
+        const device: PushDevice = {
+          deviceID: registration.deviceID,
+          nonce: encrypted.nonce,
+          ciphertext: encrypted.ciphertext,
+          language: registration.language,
+          updatedAt: now(),
+        };
+        return emptyResult(
+          await dependencies.store.registerPushDevice(
+            channelID,
+            tokenHash,
+            device,
+            now(),
+          ),
+        );
+      }
+      if (
+        segments.length === 4 &&
+        segments[3] === "push-device" &&
+        request.method === "DELETE"
+      ) {
+        return emptyResult(
+          await dependencies.store.unregisterPushDevice(
+            channelID,
+            tokenHash,
+            now(),
+          ),
+        );
+      }
+      if (
+        segments.length === 4 &&
+        segments[3] === "reset-credit-events" &&
+        request.method === "POST"
+      ) {
+        const gateway = await pushGateway;
+        if (!gateway)
+          return apiError(
+            503,
+            "pushUnavailable",
+            "Push notifications are not configured.",
+          );
+        const { eventID } = parseResetCreditPushEvent(
+          await readJSON(request, 1_024),
+        );
+        const timestamp = now();
+        const claim = await dependencies.store.claimPushEvent(
+          channelID,
+          tokenHash,
+          eventID,
+          timestamp,
+          timestamp + CHANNEL_TTL_SECONDS,
+        );
+        if (claim.kind !== "ok") return storeError(claim);
+        if (claim.value !== "claimed")
+          return emptyResult({ kind: "ok", value: null });
+
+        const registered = await dependencies.store.readPushDevice(
+          channelID,
+          tokenHash,
+          timestamp,
+        );
+        if (registered.kind !== "ok") {
+          await dependencies.store.releasePushEvent(
+            channelID,
+            tokenHash,
+            eventID,
+            timestamp,
+          );
+          return storeError(registered);
+        }
+        if (registered.value === null) {
+          await dependencies.store.completePushEvent(
+            channelID,
+            tokenHash,
+            eventID,
+            timestamp,
+          );
+          return emptyResult({ kind: "ok", value: null });
+        }
+        try {
+          const sent = await gateway.sendResetAdded(registered.value);
+          if (sent === "invalidToken") {
+            await dependencies.store.unregisterInvalidPushDevice(
+              channelID,
+              tokenHash,
+              registered.value.deviceID,
+              timestamp,
+            );
+          }
+          await dependencies.store.completePushEvent(
+            channelID,
+            tokenHash,
+            eventID,
+            timestamp,
+          );
+          return emptyResult({ kind: "ok", value: null });
+        } catch {
+          await dependencies.store.releasePushEvent(
+            channelID,
+            tokenHash,
+            eventID,
+            timestamp,
+          );
+          return apiError(
+            503,
+            "pushDeliveryUnavailable",
+            "Push delivery is temporarily unavailable.",
+          );
+        }
       }
       if (
         segments.length === 4 &&
@@ -260,7 +416,10 @@ async function claimChannel(
   );
 }
 
-function metadata(result: StoreResult<RelayChannel>): Response {
+function metadata(
+  result: StoreResult<RelayChannel>,
+  capabilities: readonly string[],
+): Response {
   if (result.kind !== "ok") {
     return storeError(result);
   }
@@ -271,7 +430,7 @@ function metadata(result: StoreResult<RelayChannel>): Response {
     lastPublishedAt:
       result.value.sequence === null ? null : result.value.updatedAt,
     expiresAt: result.value.expiresAt,
-    capabilities: [SERVICES_CAPABILITY],
+    capabilities,
     servicesLastPublishedAt: result.value.servicesUpdatedAt,
   });
 }
@@ -337,6 +496,12 @@ function storeError(
       return apiError(410, "pairingExpired", "Pairing code expired.");
     case "stale":
       return apiError(409, "staleSnapshot", "A newer snapshot already exists.");
+    default:
+      return apiError(
+        500,
+        "internalError",
+        "The relay could not complete this request.",
+      );
   }
 }
 

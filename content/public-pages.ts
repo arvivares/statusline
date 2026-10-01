@@ -26,7 +26,7 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
   "/privacy": {
     title: "Privacy Policy",
     eyebrow: "STL / PRIVACY",
-    summary: "Effective 15 September 2026",
+    summary: "Effective 1 October 2026",
     content: `
       <section>
         <h2>Data processed locally</h2>
@@ -39,6 +39,12 @@ export const englishPages: Readonly<Record<string, PublicPage>> = {
         <h2>Universal encrypted relay</h2>
         <p>Sync is optional. Pairing creates an AES-256 encryption key on the desktop and transfers it directly to the mobile device with a short-lived, single-use credential. Publisher and reader credentials are role-separated and stored in the operating system secure store.</p>
         <p>The relay receives a random channel identifier, SHA-256 hashes of random credentials, an opaque AES-256-GCM ciphertext and timestamps required for expiration and replay protection. It cannot decrypt the quota snapshot and never receives Codex credentials, email addresses, prompts or source code.</p>
+      </section>
+      <section>
+        <h2>Optional Codex reset notifications</h2>
+        <p>After pairing, you can opt in to a generic push alert when Companion detects a newly available Codex reset credit. The first complete reading is a baseline; later alerts are best-effort. Reset IDs, quota values and expiry times are not included in the push message. Opaque reset IDs stay in Companion memory and are never serialized to the relay; Companion persists only locally salted hashes for deduplication. The encrypted mobile snapshot carries the current count and available expiry times.</p>
+        <p>With your consent and OS permission, the mobile app sends a Firebase Installation ID (FID), a random device ID and your selected app language to the relay over HTTPS. The Worker encrypts the FID before storing it and decrypts it in memory to request delivery from Firebase Cloud Messaging. Google processes the FID and technical app/device metadata; iOS notifications are delivered through Apple Push Notification service. Turning notifications off or disconnecting removes the relay registration and asks Firebase to unregister and delete the installation. Relay registration and event records expire with the paired channel after thirty days without publication. Provider-side deletion follows Firebase's retention process.</p>
+        <p>Notifications may be delayed or suppressed by device settings, network conditions, FCM or APNs. See <a href="https://firebase.google.com/docs/android/play-data-disclosure" rel="noreferrer">Firebase's Android disclosure</a> and <a href="https://firebase.google.com/docs/ios/app-store-data-collection" rel="noreferrer">Apple-platform disclosure</a>.</p>
       </section>
       <section>
         <h2>QR scanning on Android</h2>
@@ -161,7 +167,7 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
   privacy: {
     title: "Política de privacidad",
     eyebrow: "STL / PRIVACIDAD",
-    summary: "En vigor desde el 15 de septiembre de 2026",
+    summary: "En vigor desde el 1 de octubre de 2026",
     content: `
       <section>
         <h2>Datos procesados localmente</h2>
@@ -174,6 +180,12 @@ const spanishPages: Readonly<Record<PublicPageID, PublicPage>> = {
         <h2>Relay universal cifrado</h2>
         <p>La sincronización es opcional. El emparejamiento genera una clave AES-256 en el ordenador y la transfiere directamente al móvil mediante una credencial de corta duración y un solo uso. Las credenciales de publicación y lectura tienen funciones separadas y se guardan en el almacenamiento seguro del sistema operativo.</p>
         <p>El relay recibe un identificador aleatorio de canal, hashes SHA-256 de credenciales aleatorias, un contenido opaco cifrado con AES-256-GCM y las marcas de tiempo necesarias para la caducidad y la protección contra repeticiones. No puede descifrar la muestra de cuota y nunca recibe credenciales de Codex, direcciones de correo, instrucciones ni código fuente.</p>
+      </section>
+      <section>
+        <h2>Notificaciones opcionales de resets de Codex</h2>
+        <p>Después de emparejar el móvil, puedes activar un aviso push genérico cuando Companion detecte un crédito de reinicio de Codex nuevo. La primera lectura completa sirve como referencia inicial; los avisos posteriores son de mejor esfuerzo. El mensaje push no incluye IDs de reset, valores de cuota ni fechas de vencimiento. Companion conserva localmente solo hashes con sal aleatoria para evitar avisos repetidos; el recuento actual y el próximo vencimiento se leen de la muestra cifrada del móvil.</p>
+        <p>Con tu consentimiento y el permiso del sistema operativo, la app móvil envía al relay por HTTPS un Firebase Installation ID (FID), un identificador aleatorio del dispositivo y el idioma seleccionado. El Worker cifra el FID antes de guardarlo y lo descifra en memoria para solicitar el envío mediante Firebase Cloud Messaging. Google procesa el FID y metadatos técnicos de la app/dispositivo; en iOS, la entrega utiliza Apple Push Notification service. Al desactivar los avisos o desconectar el móvil se elimina el registro del relay y se solicita a Firebase que anule el registro y elimine la instalación. Los registros del relay caducan con el canal emparejado tras treinta días sin publicaciones. Firebase aplica su propio proceso de conservación y eliminación.</p>
+        <p>Los avisos pueden retrasarse o no llegar por la configuración del dispositivo, la conexión o los servicios FCM/APNs. Consulta la <a href="https://firebase.google.com/docs/android/play-data-disclosure" rel="noreferrer">declaración de Firebase para Android</a> y la <a href="https://firebase.google.com/docs/ios/app-store-data-collection" rel="noreferrer">declaración para plataformas Apple</a>.</p>
       </section>
       <section>
         <h2>Escaneo de QR en Android</h2>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createRelayApp } from "../src/app";
-import type { RateLimitBinding } from "../src/types";
+import type { PushGateway, RateLimitBinding } from "../src/types";
 import { MemoryRelayStore } from "./memory-store";
 
 const NOW = 1_900_000_000;
@@ -12,9 +12,14 @@ interface TestLimiters {
   readonly client?: RateLimitBinding;
   readonly create?: RateLimitBinding;
   readonly channel?: RateLimitBinding;
+  readonly pushEvent?: RateLimitBinding;
 }
 
-function makeApp(store = new MemoryRelayStore(), limiters: TestLimiters = {}) {
+function makeApp(
+  store = new MemoryRelayStore(),
+  limiters: TestLimiters = {},
+  pushGateway?: PushGateway,
+) {
   let fill = 0;
   return {
     store,
@@ -23,6 +28,10 @@ function makeApp(store = new MemoryRelayStore(), limiters: TestLimiters = {}) {
       clientRateLimiter: limiters.client ?? allow,
       createRateLimiter: limiters.create ?? allow,
       channelRateLimiter: limiters.channel ?? allow,
+      ...(limiters.pushEvent
+        ? { pushEventRateLimiter: limiters.pushEvent }
+        : {}),
+      ...(pushGateway ? { pushGateway } : {}),
       now: () => NOW,
       randomUUID: () => CHANNEL_ID,
       randomBytes: (length) => {
@@ -191,6 +200,190 @@ describe("Statusline universal relay", () => {
       }),
     );
     expect(wrongRole.status).toBe(404);
+  });
+
+  it("registers an opt-in Firebase installation with the reader credential and sends one generic event with the publisher credential", async () => {
+    const deliveries: string[] = [];
+    const gateway: PushGateway = {
+      async isReady() {
+        return true;
+      },
+      async encryptInstallationID(fid) {
+        return { nonce: "encrypted-nonce", ciphertext: `encrypted:${fid}` };
+      },
+      async sendResetAdded(device) {
+        deliveries.push(device.deviceID);
+        return "sent";
+      },
+    };
+    const { app, store } = makeApp(new MemoryRelayStore(), {}, gateway);
+    const created = await app(
+      new Request("https://relay.test/v1/channels", { method: "POST" }),
+    );
+    const { publisherToken, pairingToken } = (await created.json()) as {
+      publisherToken: string;
+      pairingToken: string;
+    };
+    const claim = await app(
+      new Request(`https://relay.test/v1/channels/${CHANNEL_ID}/claim`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${pairingToken}` },
+      }),
+    );
+    const { readerToken } = (await claim.json()) as { readerToken: string };
+    const deviceID = "f9e8cfd0-4ec4-4a57-8f9a-00a3f0670d50";
+    const eventID = "65ca6543-7652-4bde-a4cf-01c5c0766f8b";
+    const malformedRegistration = await app(
+      new Request(`https://relay.test/v1/channels/${CHANNEL_ID}/push-device`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${readerToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          deviceId: deviceID,
+          fid: "short",
+          language: "en",
+        }),
+      }),
+    );
+    expect(malformedRegistration.status).toBe(400);
+
+    const registered = await app(
+      new Request(`https://relay.test/v1/channels/${CHANNEL_ID}/push-device`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${readerToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          deviceId: deviceID,
+          fid: "firebase-installation-id-0123456789",
+          language: "en",
+        }),
+      }),
+    );
+    expect(registered.status).toBe(204);
+    expect(store.pushDevices.get(CHANNEL_ID)?.ciphertext).toBe(
+      "encrypted:firebase-installation-id-0123456789",
+    );
+
+    const wrongRole = await app(
+      new Request(
+        `https://relay.test/v1/channels/${CHANNEL_ID}/reset-credit-events`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${readerToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ eventId: eventID }),
+        },
+      ),
+    );
+    expect(wrongRole.status).toBe(404);
+
+    const eventRequest = () =>
+      new Request(
+        `https://relay.test/v1/channels/${CHANNEL_ID}/reset-credit-events`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${publisherToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ eventId: eventID }),
+        },
+      );
+    expect((await app(eventRequest())).status).toBe(204);
+    expect((await app(eventRequest())).status).toBe(204);
+    expect(deliveries).toEqual([deviceID]);
+  });
+
+  it("does not advertise or accept push when provider credentials are absent", async () => {
+    const { app } = makeApp();
+    const health = (await (
+      await app(new Request("https://relay.test/health"))
+    ).json()) as {
+      capabilities: string[];
+    };
+    expect(health.capabilities).not.toContain("reset-push-v1");
+  });
+
+  it("does not expose push when provider keys cannot be imported", async () => {
+    const gateway: PushGateway = {
+      async isReady() {
+        return false;
+      },
+      async encryptInstallationID() {
+        throw new Error("unready gateway must not encrypt");
+      },
+      async sendResetAdded() {
+        throw new Error("unready gateway must not send");
+      },
+    };
+    const { app } = makeApp(new MemoryRelayStore(), {}, gateway);
+    const health = (await (
+      await app(new Request("https://relay.test/health"))
+    ).json()) as {
+      capabilities: string[];
+    };
+    expect(health.capabilities).not.toContain("reset-push-v1");
+
+    const response = await app(
+      new Request(`https://relay.test/v1/channels/${CHANNEL_ID}/push-device`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${"A".repeat(43)}` },
+        body: "{}",
+      }),
+    );
+    expect(response.status).toBe(503);
+  });
+
+  it("uses the dedicated push-event limiter before deduplication or delivery", async () => {
+    const keys: string[] = [];
+    const denied: RateLimitBinding = {
+      limit: async ({ key }) => {
+        keys.push(key);
+        return { success: false };
+      },
+    };
+    const gateway: PushGateway = {
+      async isReady() {
+        return true;
+      },
+      async encryptInstallationID() {
+        return { nonce: "nonce", ciphertext: "ciphertext" };
+      },
+      async sendResetAdded() {
+        throw new Error("must not deliver a rate-limited event");
+      },
+    };
+    const { app, store } = makeApp(
+      new MemoryRelayStore(),
+      { pushEvent: denied },
+      gateway,
+    );
+    const response = await app(
+      new Request(
+        `https://relay.test/v1/channels/${CHANNEL_ID}/reset-credit-events`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${"A".repeat(43)}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventId: "65ca6543-7652-4bde-a4cf-01c5c0766f8b",
+          }),
+        },
+      ),
+    );
+
+    expect(response.status).toBe(429);
+    expect(keys).toHaveLength(1);
+    expect(keys[0]).toMatch(/^push-event:[A-Za-z0-9_-]{43}$/u);
+    expect(store.pushEvents.size).toBe(0);
   });
 
   it("rejects replayed snapshot sequences", async () => {

@@ -39,6 +39,20 @@ These types are optional because QR scanning is optional and the app retains a m
 
 If the current form groups package/app version or device model under an additional **App info and performance** subtype, include it conservatively and record the exact label here after submission.
 
+## Required delta before submitting a build with reset push enabled
+
+The submitted `0.1.10` record above predates Firebase Cloud Messaging. Before a build with reset alerts is distributed on any Play track, update the global Play Data safety form:
+
+| Play data type | Collected | Shared | Required | Purpose |
+| --- | --- | --- | --- | --- |
+| Device or other IDs (Firebase Installation ID) | Yes | No* | Optional | App functionality |
+
+The FID is transmitted only after a user opts in, grants notification permission and pairs the app. It is sent to Statusline's relay over HTTPS, encrypted at rest there, and used by the relay to request delivery through Firebase Cloud Messaging. Firebase's current Android disclosure also describes its automatically collected app version and Firebase user agent; review those against the exact release dependency and the current Play form. The app does not include Firebase Analytics, and notification interaction analytics are not enabled.
+
+`No*` reflects Google Play's definition of sharing: Firebase processes the data to provide the requested messaging service and says it does not transfer the data to third parties except subprocessors or as instructed by the developer. Re-evaluate if the Firebase project is linked to additional services or if the current form's definition changes. The FID is not linked to an account or used for tracking. The generic notification payload contains no quota/reset details.
+
+Sources: [Firebase Android data disclosure](https://firebase.google.com/docs/android/play-data-disclosure), [Google Play data-type definitions](https://support.google.com/googleplay/android-developer/answer/10787469).
+
 ## Relay and hosting notes
 
-Cloudflare necessarily processes IP address and request metadata to deliver and protect HTTPS traffic. Statusline does not store the IP address or its rate-limit digest in D1, and persistent Worker invocation logs are disabled. The encrypted quota payload is opaque to the relay and consists only of weekly percentage, reset time, update time and schema version. Any future analytics, crash-reporting, push notification or advertising dependency requires a new audit before release.
+Cloudflare necessarily processes IP address and request metadata to deliver and protect HTTPS traffic. Statusline does not store the IP address or its rate-limit digest in D1, and persistent Worker invocation logs are disabled. The encrypted quota payload is opaque to the relay and consists of quota fields, reset-credit count/expiry and schema version. For opt-in reset push, D1 also stores the FID encrypted with AES-256-GCM, a random device ID, language and opaque event IDs; relay and event rows are deleted on opt-out or channel expiry.

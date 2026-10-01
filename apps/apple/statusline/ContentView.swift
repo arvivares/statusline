@@ -23,6 +23,29 @@ struct ContentView: View {
                         )
                     }
 
+                    if viewModel.relaySyncState.isPaired,
+                       viewModel.services?.providers.contains(where: { $0.id == .codex }) == true {
+                        Toggle(isOn: Binding(
+                            get: { viewModel.resetNotificationsEnabled },
+                            set: viewModel.setResetNotifications
+                        )) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(L10n.text("Notify me when new Codex reset credits are added"))
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(DataPlaneTheme.ink)
+                                Text(L10n.text("Statusline sends a generic alert; reset details stay encrypted."))
+                                    .font(.caption)
+                                    .foregroundStyle(DataPlaneTheme.muted)
+                                Text(L10n.text("With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration."))
+                                    .font(.caption)
+                                    .foregroundStyle(DataPlaneTheme.muted)
+                            }
+                        }
+                        .tint(DataPlaneTheme.signal)
+                        .disabled(viewModel.resetNotificationsBusy || !ResetPushManager.shared.isConfigured)
+                        .accessibilityIdentifier("codexResetNotifications")
+                    }
+
                     if viewModel.focusedProvider == nil {
                         relayControls
                     } else {
