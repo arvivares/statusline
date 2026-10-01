@@ -23,7 +23,9 @@ export interface ResetCreditPushEvent {
   readonly eventID: string;
 }
 
-export function parsePushDeviceRegistration(value: unknown): PushDeviceRegistration {
+export function parsePushDeviceRegistration(
+  value: unknown,
+): PushDeviceRegistration {
   const object = readObject(value);
   const deviceID = object.deviceId;
   const fid = object.fid;
@@ -45,7 +47,9 @@ export function parsePushDeviceRegistration(value: unknown): PushDeviceRegistrat
   return { deviceID, fid, language };
 }
 
-export function parseResetCreditPushEvent(value: unknown): ResetCreditPushEvent {
+export function parseResetCreditPushEvent(
+  value: unknown,
+): ResetCreditPushEvent {
   const object = readObject(value);
   const eventID = object.eventId;
   if (typeof eventID !== "string" || !CHANNEL_PATTERN.test(eventID)) {

@@ -13,8 +13,10 @@ function pushGateway(env: Env): ReturnType<typeof createFcmPushGateway> {
   const serviceAccountJSON = env.FCM_SERVICE_ACCOUNT_JSON ?? "";
   const encryptionKey = env.PUSH_TOKEN_ENCRYPTION_KEY ?? "";
   const cached = gatewayCache;
-  if (cached?.serviceAccountJSON === serviceAccountJSON &&
-      cached.encryptionKey === encryptionKey) {
+  if (
+    cached?.serviceAccountJSON === serviceAccountJSON &&
+    cached.encryptionKey === encryptionKey
+  ) {
     return cached.gateway;
   }
   const gateway = createFcmPushGateway(env);

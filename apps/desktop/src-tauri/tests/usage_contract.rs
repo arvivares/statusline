@@ -406,6 +406,7 @@ fn tray_tooltip_reports_rounded_weekly_remaining_percentage() {
             label: "Codex".to_owned(),
         },
         short_window: None,
+        reset_credits: None,
         plan: Some("plus".to_owned()),
         account_type: "chatgpt".to_owned(),
         checked_at: 1_900_000_000,

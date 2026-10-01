@@ -5,7 +5,10 @@ import type { RelayChannel, RelayStore, StoreResult } from "../src/store";
 export class MemoryRelayStore implements RelayStore {
   readonly channels = new Map<string, RelayChannel>();
   readonly pushDevices = new Map<string, PushDevice>();
-  readonly pushEvents = new Map<string, { status: "sending" | "sent"; lockedUntil: number; expiresAt: number }>();
+  readonly pushEvents = new Map<
+    string,
+    { status: "sending" | "sent"; lockedUntil: number; expiresAt: number }
+  >();
 
   async create(channel: RelayChannel): Promise<void> {
     this.channels.set(channel.id, channel);
@@ -170,7 +173,12 @@ export class MemoryRelayStore implements RelayStore {
     deviceID: string,
     now: number,
   ): Promise<StoreResult<null>> {
-    const result = this.authorized(channelID, publisherTokenHash, "publisher", now);
+    const result = this.authorized(
+      channelID,
+      publisherTokenHash,
+      "publisher",
+      now,
+    );
     if (result.kind !== "ok") return result;
     if (this.pushDevices.get(channelID)?.deviceID === deviceID) {
       this.pushDevices.delete(channelID);
@@ -183,7 +191,12 @@ export class MemoryRelayStore implements RelayStore {
     publisherTokenHash: string,
     now: number,
   ): Promise<StoreResult<PushDevice | null>> {
-    const result = this.authorized(channelID, publisherTokenHash, "publisher", now);
+    const result = this.authorized(
+      channelID,
+      publisherTokenHash,
+      "publisher",
+      now,
+    );
     return result.kind === "ok"
       ? { kind: "ok", value: this.pushDevices.get(channelID) ?? null }
       : result;
@@ -196,13 +209,23 @@ export class MemoryRelayStore implements RelayStore {
     now: number,
     expiresAt: number,
   ): Promise<StoreResult<PushEventClaim>> {
-    const result = this.authorized(channelID, publisherTokenHash, "publisher", now);
+    const result = this.authorized(
+      channelID,
+      publisherTokenHash,
+      "publisher",
+      now,
+    );
     if (result.kind !== "ok") return result;
     const key = `${channelID}:${eventID}`;
     const existing = this.pushEvents.get(key);
     if (existing?.status === "sent") return { kind: "ok", value: "sent" };
-    if (existing && existing.lockedUntil > now) return { kind: "ok", value: "busy" };
-    this.pushEvents.set(key, { status: "sending", lockedUntil: now + 60, expiresAt });
+    if (existing && existing.lockedUntil > now)
+      return { kind: "ok", value: "busy" };
+    this.pushEvents.set(key, {
+      status: "sending",
+      lockedUntil: now + 60,
+      expiresAt,
+    });
     return { kind: "ok", value: "claimed" };
   }
 
@@ -212,10 +235,20 @@ export class MemoryRelayStore implements RelayStore {
     eventID: string,
     now: number,
   ): Promise<StoreResult<null>> {
-    const result = this.authorized(channelID, publisherTokenHash, "publisher", now);
+    const result = this.authorized(
+      channelID,
+      publisherTokenHash,
+      "publisher",
+      now,
+    );
     if (result.kind !== "ok") return result;
     const event = this.pushEvents.get(`${channelID}:${eventID}`);
-    if (event) this.pushEvents.set(`${channelID}:${eventID}`, { ...event, status: "sent", lockedUntil: 0 });
+    if (event)
+      this.pushEvents.set(`${channelID}:${eventID}`, {
+        ...event,
+        status: "sent",
+        lockedUntil: 0,
+      });
     return { kind: "ok", value: null };
   }
 
@@ -225,7 +258,12 @@ export class MemoryRelayStore implements RelayStore {
     eventID: string,
     now: number,
   ): Promise<StoreResult<null>> {
-    const result = this.authorized(channelID, publisherTokenHash, "publisher", now);
+    const result = this.authorized(
+      channelID,
+      publisherTokenHash,
+      "publisher",
+      now,
+    );
     if (result.kind !== "ok") return result;
     this.pushEvents.delete(`${channelID}:${eventID}`);
     return { kind: "ok", value: null };

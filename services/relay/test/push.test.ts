@@ -21,7 +21,9 @@ beforeAll(async () => {
     true,
     ["sign", "verify"],
   );
-  const privateKey = encodeBase64(new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey)));
+  const privateKey = encodeBase64(
+    new Uint8Array(await crypto.subtle.exportKey("pkcs8", pair.privateKey)),
+  );
   serviceAccountJSON = JSON.stringify({
     project_id: PROJECT_ID,
     client_email: "statusline-push@statusline-12345.iam.gserviceaccount.com",
@@ -35,19 +37,29 @@ describe("Firebase reset push gateway", () => {
     const requests: Array<{ url: string; body?: Record<string, unknown> }> = [];
     const fetcher: typeof fetch = async (input, init) => {
       const url = String(input);
-      const body = typeof init?.body === "string"
-        ? JSON.parse(init.body) as Record<string, unknown>
-        : undefined;
+      const body =
+        typeof init?.body === "string"
+          ? (JSON.parse(init.body) as Record<string, unknown>)
+          : undefined;
       requests.push({ url, ...(body ? { body } : {}) });
       if (url === "https://oauth2.googleapis.com/token") {
-        return Response.json({ access_token: "short-lived-test-access-token", expires_in: 3_600 });
+        return Response.json({
+          access_token: "short-lived-test-access-token",
+          expires_in: 3_600,
+        });
       }
-      return Response.json({ name: `projects/${PROJECT_ID}/messages/test-message` });
+      return Response.json({
+        name: `projects/${PROJECT_ID}/messages/test-message`,
+      });
     };
-    const gateway = createFcmPushGateway({
-      FCM_SERVICE_ACCOUNT_JSON: serviceAccountJSON,
-      PUSH_TOKEN_ENCRYPTION_KEY: encryptionKey,
-    }, fetcher, () => NOW);
+    const gateway = createFcmPushGateway(
+      {
+        FCM_SERVICE_ACCOUNT_JSON: serviceAccountJSON,
+        PUSH_TOKEN_ENCRYPTION_KEY: encryptionKey,
+      },
+      fetcher,
+      () => NOW,
+    );
     expect(gateway).not.toBeNull();
     if (!gateway) throw new Error("Expected a configured FCM gateway.");
     await expect(gateway.isReady()).resolves.toBe(true);
@@ -95,27 +107,39 @@ describe("Firebase reset push gateway", () => {
         },
       },
     });
-    expect(JSON.stringify(message)).not.toMatch(/resetId|quota|expiry|weekly|percentage/iu);
+    expect(JSON.stringify(message)).not.toMatch(
+      /resetId|quota|expiry|weekly|percentage/iu,
+    );
   });
 
   it("marks an installation as invalid when FCM reports UNREGISTERED", async () => {
     let fcmAttempt = 0;
     const fetcher: typeof fetch = async (input) => {
       if (String(input) === "https://oauth2.googleapis.com/token") {
-        return Response.json({ access_token: "short-lived-test-access-token", expires_in: 3_600 });
+        return Response.json({
+          access_token: "short-lived-test-access-token",
+          expires_in: 3_600,
+        });
       }
       fcmAttempt += 1;
-      return Response.json({ error: { status: "UNREGISTERED" } }, { status: 404 });
+      return Response.json(
+        { error: { status: "UNREGISTERED" } },
+        { status: 404 },
+      );
     };
-    const gateway = createFcmPushGateway({
-      FCM_SERVICE_ACCOUNT_JSON: serviceAccountJSON,
-      PUSH_TOKEN_ENCRYPTION_KEY: encryptionKey,
-    }, fetcher, () => NOW);
+    const gateway = createFcmPushGateway(
+      {
+        FCM_SERVICE_ACCOUNT_JSON: serviceAccountJSON,
+        PUSH_TOKEN_ENCRYPTION_KEY: encryptionKey,
+      },
+      fetcher,
+      () => NOW,
+    );
     if (!gateway) throw new Error("Expected a configured FCM gateway.");
     await expect(gateway.isReady()).resolves.toBe(true);
     const device: PushDevice = {
       deviceID: "f9e8cfd0-4ec4-4a57-8f9a-00a3f0670d50",
-      ...await gateway.encryptInstallationID(FID),
+      ...(await gateway.encryptInstallationID(FID)),
       language: "en",
       updatedAt: NOW,
     };
@@ -128,8 +152,10 @@ describe("Firebase reset push gateway", () => {
     const gateway = createFcmPushGateway({
       FCM_SERVICE_ACCOUNT_JSON: JSON.stringify({
         project_id: PROJECT_ID,
-        client_email: "statusline-push@statusline-12345.iam.gserviceaccount.com",
-        private_key: "-----BEGIN PRIVATE KEY-----\nYWJj\n-----END PRIVATE KEY-----",
+        client_email:
+          "statusline-push@statusline-12345.iam.gserviceaccount.com",
+        private_key:
+          "-----BEGIN PRIVATE KEY-----\nYWJj\n-----END PRIVATE KEY-----",
       }),
       PUSH_TOKEN_ENCRYPTION_KEY: encryptionKey,
     });
@@ -145,5 +171,8 @@ function encodeBase64(bytes: Uint8Array): string {
 }
 
 function encodeBase64URL(bytes: Uint8Array): string {
-  return encodeBase64(bytes).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/u, "");
+  return encodeBase64(bytes)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/u, "");
 }

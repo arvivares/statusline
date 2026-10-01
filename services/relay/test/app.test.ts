@@ -28,7 +28,9 @@ function makeApp(
       clientRateLimiter: limiters.client ?? allow,
       createRateLimiter: limiters.create ?? allow,
       channelRateLimiter: limiters.channel ?? allow,
-      ...(limiters.pushEvent ? { pushEventRateLimiter: limiters.pushEvent } : {}),
+      ...(limiters.pushEvent
+        ? { pushEventRateLimiter: limiters.pushEvent }
+        : {}),
       ...(pushGateway ? { pushGateway } : {}),
       now: () => NOW,
       randomUUID: () => CHANNEL_ID,
@@ -203,7 +205,9 @@ describe("Statusline universal relay", () => {
   it("registers an opt-in Firebase installation with the reader credential and sends one generic event with the publisher credential", async () => {
     const deliveries: string[] = [];
     const gateway: PushGateway = {
-      async isReady() { return true; },
+      async isReady() {
+        return true;
+      },
       async encryptInstallationID(fid) {
         return { nonce: "encrypted-nonce", ciphertext: `encrypted:${fid}` };
       },
@@ -236,7 +240,11 @@ describe("Statusline universal relay", () => {
           Authorization: `Bearer ${readerToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ deviceId: deviceID, fid: "short", language: "en" }),
+        body: JSON.stringify({
+          deviceId: deviceID,
+          fid: "short",
+          language: "en",
+        }),
       }),
     );
     expect(malformedRegistration.status).toBe(400);
@@ -248,35 +256,45 @@ describe("Statusline universal relay", () => {
           Authorization: `Bearer ${readerToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ deviceId: deviceID, fid: "firebase-installation-id-0123456789", language: "en" }),
+        body: JSON.stringify({
+          deviceId: deviceID,
+          fid: "firebase-installation-id-0123456789",
+          language: "en",
+        }),
       }),
     );
     expect(registered.status).toBe(204);
-    expect(store.pushDevices.get(CHANNEL_ID)?.ciphertext).toBe("encrypted:firebase-installation-id-0123456789");
+    expect(store.pushDevices.get(CHANNEL_ID)?.ciphertext).toBe(
+      "encrypted:firebase-installation-id-0123456789",
+    );
 
     const wrongRole = await app(
-      new Request(`https://relay.test/v1/channels/${CHANNEL_ID}/reset-credit-events`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${readerToken}`,
-          "Content-Type": "application/json",
+      new Request(
+        `https://relay.test/v1/channels/${CHANNEL_ID}/reset-credit-events`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${readerToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ eventId: eventID }),
         },
-        body: JSON.stringify({ eventId: eventID }),
-      }),
+      ),
     );
     expect(wrongRole.status).toBe(404);
 
-    const eventRequest = () => new Request(
-      `https://relay.test/v1/channels/${CHANNEL_ID}/reset-credit-events`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${publisherToken}`,
-          "Content-Type": "application/json",
+    const eventRequest = () =>
+      new Request(
+        `https://relay.test/v1/channels/${CHANNEL_ID}/reset-credit-events`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${publisherToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ eventId: eventID }),
         },
-        body: JSON.stringify({ eventId: eventID }),
-      },
-    );
+      );
     expect((await app(eventRequest())).status).toBe(204);
     expect((await app(eventRequest())).status).toBe(204);
     expect(deliveries).toEqual([deviceID]);
@@ -284,7 +302,9 @@ describe("Statusline universal relay", () => {
 
   it("does not advertise or accept push when provider credentials are absent", async () => {
     const { app } = makeApp();
-    const health = (await (await app(new Request("https://relay.test/health"))).json()) as {
+    const health = (await (
+      await app(new Request("https://relay.test/health"))
+    ).json()) as {
       capabilities: string[];
     };
     expect(health.capabilities).not.toContain("reset-push-v1");
@@ -292,12 +312,20 @@ describe("Statusline universal relay", () => {
 
   it("does not expose push when provider keys cannot be imported", async () => {
     const gateway: PushGateway = {
-      async isReady() { return false; },
-      async encryptInstallationID() { throw new Error("unready gateway must not encrypt"); },
-      async sendResetAdded() { throw new Error("unready gateway must not send"); },
+      async isReady() {
+        return false;
+      },
+      async encryptInstallationID() {
+        throw new Error("unready gateway must not encrypt");
+      },
+      async sendResetAdded() {
+        throw new Error("unready gateway must not send");
+      },
     };
     const { app } = makeApp(new MemoryRelayStore(), {}, gateway);
-    const health = (await (await app(new Request("https://relay.test/health"))).json()) as {
+    const health = (await (
+      await app(new Request("https://relay.test/health"))
+    ).json()) as {
       capabilities: string[];
     };
     expect(health.capabilities).not.toContain("reset-push-v1");
@@ -321,20 +349,35 @@ describe("Statusline universal relay", () => {
       },
     };
     const gateway: PushGateway = {
-      async isReady() { return true; },
-      async encryptInstallationID() { return { nonce: "nonce", ciphertext: "ciphertext" }; },
-      async sendResetAdded() { throw new Error("must not deliver a rate-limited event"); },
+      async isReady() {
+        return true;
+      },
+      async encryptInstallationID() {
+        return { nonce: "nonce", ciphertext: "ciphertext" };
+      },
+      async sendResetAdded() {
+        throw new Error("must not deliver a rate-limited event");
+      },
     };
-    const { app, store } = makeApp(new MemoryRelayStore(), { pushEvent: denied }, gateway);
+    const { app, store } = makeApp(
+      new MemoryRelayStore(),
+      { pushEvent: denied },
+      gateway,
+    );
     const response = await app(
-      new Request(`https://relay.test/v1/channels/${CHANNEL_ID}/reset-credit-events`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${"A".repeat(43)}`,
-          "Content-Type": "application/json",
+      new Request(
+        `https://relay.test/v1/channels/${CHANNEL_ID}/reset-credit-events`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${"A".repeat(43)}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventId: "65ca6543-7652-4bde-a4cf-01c5c0766f8b",
+          }),
         },
-        body: JSON.stringify({ eventId: "65ca6543-7652-4bde-a4cf-01c5c0766f8b" }),
-      }),
+      ),
     );
 
     expect(response.status).toBe(429);

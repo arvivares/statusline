@@ -37,9 +37,7 @@ export type PushEventClaim = "claimed" | "sent" | "busy";
 export interface PushGateway {
   isReady(): Promise<boolean>;
   encryptInstallationID(fid: string): Promise<EncryptedPushToken>;
-  sendResetAdded(
-    device: PushDevice,
-  ): Promise<"sent" | "invalidToken">;
+  sendResetAdded(device: PushDevice): Promise<"sent" | "invalidToken">;
 }
 
 export interface Env {

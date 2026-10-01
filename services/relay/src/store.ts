@@ -1,8 +1,4 @@
-import type {
-  D1Database,
-  PushDevice,
-  PushEventClaim,
-} from "./types";
+import type { D1Database, PushDevice, PushEventClaim } from "./types";
 import type {
   SnapshotEnvelope,
   ServicesEnvelope,
@@ -410,7 +406,8 @@ export class D1RelayStore implements RelayStore {
         now,
       )
       .run();
-    if (!result.success) throw new Error("D1 could not register a push device.");
+    if (!result.success)
+      throw new Error("D1 could not register a push device.");
     return { kind: "ok", value: null };
   }
 
@@ -430,7 +427,8 @@ export class D1RelayStore implements RelayStore {
       .prepare("DELETE FROM relay_push_devices WHERE channel_id = ?")
       .bind(channelID)
       .run();
-    if (!result.success) throw new Error("D1 could not unregister a push device.");
+    if (!result.success)
+      throw new Error("D1 could not unregister a push device.");
     return { kind: "ok", value: null };
   }
 
@@ -448,10 +446,13 @@ export class D1RelayStore implements RelayStore {
     );
     if (current.kind !== "ok") return current;
     const result = await this.database
-      .prepare("DELETE FROM relay_push_devices WHERE channel_id = ? AND device_id = ?")
+      .prepare(
+        "DELETE FROM relay_push_devices WHERE channel_id = ? AND device_id = ?",
+      )
       .bind(channelID, deviceID)
       .run();
-    if (!result.success) throw new Error("D1 could not remove an invalid push device.");
+    if (!result.success)
+      throw new Error("D1 could not remove an invalid push device.");
     return { kind: "ok", value: null };
   }
 
@@ -496,7 +497,8 @@ export class D1RelayStore implements RelayStore {
       )
       .bind(channelID, eventID, now, expiresAt)
       .run();
-    if (!inserted.success) throw new Error("D1 could not persist a push event.");
+    if (!inserted.success)
+      throw new Error("D1 could not persist a push event.");
     const claimed = await this.database
       .prepare(
         `UPDATE relay_push_events
@@ -506,9 +508,12 @@ export class D1RelayStore implements RelayStore {
       .bind(now + 60, channelID, eventID, now)
       .run();
     if (!claimed.success) throw new Error("D1 could not claim a push event.");
-    if ((claimed.meta.changes ?? 0) > 0) return { kind: "ok", value: "claimed" };
+    if ((claimed.meta.changes ?? 0) > 0)
+      return { kind: "ok", value: "claimed" };
     const row = await this.database
-      .prepare("SELECT status FROM relay_push_events WHERE channel_id = ? AND event_id = ?")
+      .prepare(
+        "SELECT status FROM relay_push_events WHERE channel_id = ? AND event_id = ?",
+      )
       .bind(channelID, eventID)
       .first<Readonly<{ status: string }>>();
     return {
@@ -531,7 +536,9 @@ export class D1RelayStore implements RelayStore {
     );
     if (current.kind !== "ok") return current;
     const result = await this.database
-      .prepare("UPDATE relay_push_events SET status = 'sent', locked_until = 0 WHERE channel_id = ? AND event_id = ?")
+      .prepare(
+        "UPDATE relay_push_events SET status = 'sent', locked_until = 0 WHERE channel_id = ? AND event_id = ?",
+      )
       .bind(channelID, eventID)
       .run();
     if (!result.success) throw new Error("D1 could not complete a push event.");
@@ -552,7 +559,9 @@ export class D1RelayStore implements RelayStore {
     );
     if (current.kind !== "ok") return current;
     const result = await this.database
-      .prepare("UPDATE relay_push_events SET status = 'pending', locked_until = 0 WHERE channel_id = ? AND event_id = ? AND status = 'sending'")
+      .prepare(
+        "UPDATE relay_push_events SET status = 'pending', locked_until = 0 WHERE channel_id = ? AND event_id = ? AND status = 'sending'",
+      )
       .bind(channelID, eventID)
       .run();
     if (!result.success) throw new Error("D1 could not release a push event.");
@@ -571,7 +580,8 @@ export class D1RelayStore implements RelayStore {
       .prepare("DELETE FROM relay_push_events WHERE expires_at < ?")
       .bind(now)
       .run();
-    if (!pushEvents.success) throw new Error("D1 could not purge expired push events.");
+    if (!pushEvents.success)
+      throw new Error("D1 could not purge expired push events.");
     return result.meta.changes ?? 0;
   }
 

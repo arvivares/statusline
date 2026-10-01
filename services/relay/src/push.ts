@@ -23,7 +23,10 @@ export function createFcmPushGateway(
 
   let encryptionKey: Promise<CryptoKey> | null = null;
   let signingKey: Promise<CryptoKey> | null = null;
-  let cachedAccessToken: { readonly value: string; readonly expiresAt: number } | null = null;
+  let cachedAccessToken: {
+    readonly value: string;
+    readonly expiresAt: number;
+  } | null = null;
   let cachedAccount: ServiceAccount | null = null;
   let readiness: Promise<boolean> | null = null;
 
@@ -35,7 +38,9 @@ export function createFcmPushGateway(
         typeof parsed.project_id !== "string" ||
         !/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/u.test(parsed.project_id) ||
         typeof parsed.client_email !== "string" ||
-        !/^[^\s@]+@[^\s@]+\.iam\.gserviceaccount\.com$/u.test(parsed.client_email) ||
+        !/^[^\s@]+@[^\s@]+\.iam\.gserviceaccount\.com$/u.test(
+          parsed.client_email,
+        ) ||
         typeof parsed.private_key !== "string" ||
         !parsed.private_key.includes("BEGIN PRIVATE KEY") ||
         (parsed.token_uri !== undefined && parsed.token_uri !== OAUTH_TOKEN_URL)
@@ -53,8 +58,15 @@ export function createFcmPushGateway(
     if (!encryptionKey) {
       encryptionKey = (async () => {
         const raw = decodeBase64URL(encodedEncryptionKey);
-        if (raw.byteLength !== 32) throw new Error("Push encryption key is invalid.");
-        return crypto.subtle.importKey("raw", toArrayBuffer(raw), "AES-GCM", false, ["encrypt", "decrypt"]);
+        if (raw.byteLength !== 32)
+          throw new Error("Push encryption key is invalid.");
+        return crypto.subtle.importKey(
+          "raw",
+          toArrayBuffer(raw),
+          "AES-GCM",
+          false,
+          ["encrypt", "decrypt"],
+        );
       })();
     }
     return encryptionKey;
@@ -63,8 +75,8 @@ export function createFcmPushGateway(
   const getSigningKey = (): Promise<CryptoKey> => {
     if (!signingKey) {
       signingKey = (async () => {
-        const pem = account().private_key
-          .replace("-----BEGIN PRIVATE KEY-----", "")
+        const pem = account()
+          .private_key.replace("-----BEGIN PRIVATE KEY-----", "")
           .replace("-----END PRIVATE KEY-----", "")
           .replace(/\s+/gu, "");
         return crypto.subtle.importKey(
@@ -118,7 +130,9 @@ export function createFcmPushGateway(
       typeof tokenResponse.expires_in !== "number" ||
       tokenResponse.expires_in <= 0
     ) {
-      throw new Error("Push provider returned an invalid authorization response.");
+      throw new Error(
+        "Push provider returned an invalid authorization response.",
+      );
     }
     cachedAccessToken = {
       value: tokenResponse.access_token,
@@ -154,7 +168,10 @@ export function createFcmPushGateway(
         await getEncryptionKey(),
         toArrayBuffer(new TextEncoder().encode(fid)),
       );
-      return { nonce: encodeBytes(nonce), ciphertext: encodeBytes(new Uint8Array(ciphertext)) };
+      return {
+        nonce: encodeBytes(nonce),
+        ciphertext: encodeBytes(new Uint8Array(ciphertext)),
+      };
     },
 
     async sendResetAdded(device: PushDevice): Promise<"sent" | "invalidToken"> {
@@ -174,9 +191,16 @@ export function createFcmPushGateway(
         throw new Error("Stored push registration could not be decrypted.");
       }
 
-      const content = device.language === "es"
-        ? { title: "Hay un nuevo reset de Codex", body: "Abre Statusline para ver la cantidad y su vencimiento." }
-        : { title: "A Codex reset is available", body: "Open Statusline to see your reset count and expiry." };
+      const content =
+        device.language === "es"
+          ? {
+              title: "Hay un nuevo reset de Codex",
+              body: "Abre Statusline para ver la cantidad y su vencimiento.",
+            }
+          : {
+              title: "A Codex reset is available",
+              body: "Open Statusline to see your reset count and expiry.",
+            };
       const response = await fetcher(
         `https://fcm.googleapis.com/v1/projects/${account().project_id}/messages:send`,
         {
@@ -192,7 +216,10 @@ export function createFcmPushGateway(
               android: {
                 priority: "high",
                 ttl: "3600s",
-                notification: { tag: "codex-reset-credit", channel_id: "reset_alerts" },
+                notification: {
+                  tag: "codex-reset-credit",
+                  channel_id: "reset_alerts",
+                },
               },
               apns: {
                 headers: {
@@ -213,9 +240,14 @@ export function createFcmPushGateway(
         },
       );
       if (response.ok) return "sent";
-      const error = (await response.json().catch(() => null)) as FCMErrorEnvelope | null;
-      if (response.status === 404 && isUnregistered(error)) return "invalidToken";
-      throw new Error("Push provider could not deliver the reset notification.");
+      const error = (await response
+        .json()
+        .catch(() => null)) as FCMErrorEnvelope | null;
+      if (response.status === 404 && isUnregistered(error))
+        return "invalidToken";
+      throw new Error(
+        "Push provider could not deliver the reset notification.",
+      );
     },
   };
 }
@@ -228,8 +260,13 @@ interface FCMErrorEnvelope {
 }
 
 function isUnregistered(response: FCMErrorEnvelope | null): boolean {
-  return response?.error?.status === "UNREGISTERED" ||
-    (response?.error?.details?.some((detail) => detail.errorCode === "UNREGISTERED") ?? false);
+  return (
+    response?.error?.status === "UNREGISTERED" ||
+    (response?.error?.details?.some(
+      (detail) => detail.errorCode === "UNREGISTERED",
+    ) ??
+      false)
+  );
 }
 
 function encodeJSON(value: unknown): string {
@@ -239,7 +276,10 @@ function encodeJSON(value: unknown): string {
 function encodeBytes(bytes: Uint8Array): string {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/u, "");
+  return btoa(binary)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/u, "");
 }
 
 function decodeBase64URL(value: string): Uint8Array<ArrayBuffer> {
@@ -251,7 +291,9 @@ function decodeBase64URL(value: string): Uint8Array<ArrayBuffer> {
 
 function decodeBase64(value: string): Uint8Array<ArrayBuffer> {
   const normalized = value.replace(/-/gu, "+").replace(/_/gu, "/");
-  const binary = atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="));
+  const binary = atob(
+    normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="),
+  );
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) {
     bytes[index] = binary.charCodeAt(index);
