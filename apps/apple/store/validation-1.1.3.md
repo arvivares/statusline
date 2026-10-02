@@ -20,6 +20,12 @@
 - Local release preflight, formatting, localization, documentation links and
   frontend checks passed (315 tests passed, one skipped). These checks are not
   evidence of physical notification delivery.
+- The complete `statuslineTests` suite passed on an isolated iPhone 17 Pro
+  simulator running iOS 27: 80 test cases passed, one fixture-seeding test skipped,
+  zero failures and zero runtime warnings. The Xcode result summary groups these
+  into 42 passed test methods and one skipped method; parameterized runs account
+  for the larger case count. This includes push-category preferences and relay
+  compatibility checks, but not physical APNs delivery or a real quota rollover.
 - Exported IPA SHA-256:
   `a737e9820c346f1e88cf71eb045959f9611f3069f21e420c7b10b2e6531a1f51`.
   Apple may re-sign the archive on upload; that upload can have a different hash.
