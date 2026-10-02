@@ -1,8 +1,9 @@
 # Android internal quota-alert delivery — 0.1.34 (30)
 
 Observed in authenticated Play Console on 2 October 2026. Account-holder-only
-Internal testing is available; this is not an Alpha or production publication,
-nor proof of installation or push delivery on the physical phone.
+Internal testing is available and the physical Google Play installation and
+synthetic quota-push transport were verified below. This is not an Alpha or
+production publication, or proof of a real provider rollover.
 
 ## Artifact and internal publication
 
@@ -23,7 +24,7 @@ nor proof of installation or push delivery on the physical phone.
 - Confirmed **Save and publish** for Internal testing. The track is **Active**,
   shows this release as **Latest** and **Available to internal testers**, and
   records release time **20:54 Europe/Madrid**. This replaces versionCode 27 only
-  on that track; availability in the device's Play Store still needs checking.
+  on that track. The physical Play installation was subsequently verified below.
 - Verified Internal testing selects only the existing account-holder email list;
   the 16-user Alpha list is not selected on Internal. No list, email, country
   or opt-in link was changed. Closed testing Alpha remains `0.1.28-alpha.1`.
@@ -51,18 +52,48 @@ nor proof of installation or push delivery on the physical phone.
   beyond account-holder QA. The operator confirmed they will handle deployment;
   no website deployment was performed by this delivery operation.
 
+## Physical Android QA — 2 October 2026
+
+- After the operator unlocked the connected Samsung, ADB confirmed
+  `versionName=0.1.34`, `versionCode=30`, installer `com.android.vending`.
+  No GitHub APK sideload, uninstall or data reset was needed. The installed
+  app retained its pairing, selected Antigravity focus and live Codex watchlist.
+- UI baseline: Codex credit alerts **on**, new quota alerts **off**. Temporarily
+  enabling quota preserved the credit opt-in and registered the new category.
+- Using short-lived diagnostic channels, copied only the operator-approved
+  encrypted routing registration; no FID decryption, credential extraction or
+  user-channel/snapshot replacement was performed. Selection required exactly
+  one newly opted-in quota registration with the credit preference unchanged.
+- With Statusline in the background, the real Android Notification Manager and
+  notification-drawer UI confirmed **Codex: quota available again** for the
+  synthetic 5h recovery and **Codex: use your weekly quota** for the synthetic
+  weekly warning. Both notification bodies were in English, matching the device.
+- Repeated each exact event ID: the relay retained one completed event per case;
+  no duplicate notification or update was observed. Android's automatic group
+  summary is distinct from an extra feature-event delivery.
+- Tapping the weekly notification opened Statusline and fetched real current
+  readings. Detailed quota snapshots were never fabricated for the test.
+- With quota turned off and credits kept on, a new synthetic recovery event was
+  acknowledged without a new Android post or notification update. The channel
+  no longer advertised quota-alert delivery. Also checked the reverse preference
+  combination: credits off with quota on remained registered independently.
+- Restored the original **credits on / quota off** preferences in UI and relay.
+  The two original push registrations and their category totals were unchanged
+  at completion. All three newly created diagnostic channels, registrations and
+  deduplication-event rows were removed and absence verified. Existing user
+  channels and published snapshots were not replaced or deleted.
+- The installed widget provider remains bound. Rendering and independent refresh
+  were not observed because its widget was not visible on the current home page;
+  no new widget was added and no launcher layout was changed.
+
 ## Remaining gates
 
-- ADB now sees the Samsung, but it is locked. The installed app remains
-  `0.1.31 (27)`, installed by `com.android.vending`. No version-30 installation,
-  pairing change or new notification preference is claimed during preparation.
-- Validate an upgrade from the user's existing installation, independent category
-  preferences, widgets, English/Spanish and real background notification delivery.
-  If the installed app comes from Play App Signing, use a Google Play update;
-  do not uninstall it to bypass a signing-key mismatch with the GitHub APK.
-- Use an isolated diagnostic registration for synthetic push checks, without
-  replacing live quota snapshots. Confirm event deduplication and category
-  opt-out before distribution beyond the account-holder internal test.
+- Observe the existing widget rendering and a fresh background sample; complete
+  physical Spanish/fallback UI and notification QA if required by the release
+  matrix. The physical notification observations above cover English only.
+- Observe a real provider exhaustion/recovery or last-hour weekly warning
+  separately. Synthetic transport and server ACKs do not prove provider rollover,
+  exact timing, delivery during device suspension or every agent's data source.
 - Submit the corrected Data safety information and promote to Alpha only after
   policy and device gates pass. Do not create a new testing track/list or alter
   opted-in tester continuity as part of this upgrade.

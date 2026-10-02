@@ -7,8 +7,10 @@ This directory is the versioned source of truth for the Statusline Google Play l
 Play Console confirms **0.1.34 (30)**, release
 `0.1.34-internal.1 - Quota notifications`, as **Available to internal testers**
 at **20:54 Europe/Madrid**. Internal testing selects only the account holder's
-existing list. Alpha and production were not changed; device upgrade/push QA,
-the operator's website policy deployment and Data safety review remain pending.
+existing list. A physical Play installation and background quota-push transport,
+deduplication and independent preferences were verified; original settings were
+restored. Alpha and production were not changed. Widget/locale follow-up, the
+operator's website policy deployment and Data safety review remain pending.
 See [validation-0.1.34.md](validation-0.1.34.md).
 
 Closed testing — Alpha still serves `0.1.28-alpha.1` (`versionCode 24`), published
