@@ -26,7 +26,7 @@ use crate::{
         encrypt_services, encrypt_snapshot, validate_channel_metadata,
     },
     services_snapshot::{ServicesInventory, ServicesSnapshot},
-    usage::{ResetCreditsSummary, UsageResponse},
+    usage::UsageResponse,
 };
 
 const KEYRING_SERVICE: &str = "inmerzion.statusline.relay";
@@ -672,7 +672,167 @@ fn hash_reset_id(salt: &[u8], id: &str) -> String {
 #[cfg(test)]
 mod reset_push_tests {
     use super::*;
-    use crate::usage::ResetCredit;
+    use crate::usage::{ResetCredit, ResetCreditsSummary};
+    use serde_json::json;
+
+    fn read_credits(rows: serde_json::Value, count: i64, reset_at: i64) -> UsageResponse {
+        crate::usage::normalize_usage(
+            json!({"account": {"type": "chatgpt", "planType": "plus"}}),
+            json!({
+                "rateLimitsByLimitId": {
+                    "codex": {"limitId": "codex", "secondary": {
+                        "usedPercent": 25, "windowDurationMins": 10080, "resetsAt": reset_at
+                    }}
+                },
+                "rateLimitResetCredits": {"availableCount": count, "credits": rows}
+            }),
+            1_900_000_000,
+        )
+    }
+
+    fn row(id: &str, status: &str) -> serde_json::Value {
+        json!({"id": id, "resetType": "codexRateLimits", "status": status,
+            "grantedAt": 1_899_000_000, "expiresAt": 1_901_000_000})
+    }
+
+    #[tokio::test]
+    async fn normalized_existing_credit_is_a_silent_baseline() {
+        let tracker = ResetPushTracker::default();
+        let first = read_credits(
+            json!([row("fixture-existing", "available")]),
+            1,
+            1_900_000_000,
+        );
+        assert!(!tracker.observe(&first).await);
+        assert!(!tracker.has_pending().await);
+        assert!(tracker.state.lock().await.baseline_established);
+    }
+
+    #[tokio::test]
+    async fn new_id_after_complete_empty_baseline_enqueues_exactly_one_event() {
+        let tracker = ResetPushTracker::default();
+        assert!(
+            !tracker
+                .observe(&read_credits(json!([]), 0, 1_900_000_000))
+                .await
+        );
+        let new = read_credits(json!([row("fixture-new", "available")]), 1, 1_900_000_000);
+        assert!(tracker.observe(&new).await);
+        let events = tracker.pending().await;
+        assert_eq!(events.len(), 1);
+        assert!(uuid::Uuid::parse_str(&events[0]).is_ok());
+        assert!(!events[0].contains("fixture"));
+        assert!(!tracker.observe(&new).await);
+        assert_eq!(tracker.pending().await, events);
+        tracker.complete(&events[0]).await;
+        assert!(!tracker.has_pending().await);
+    }
+
+    #[tokio::test]
+    async fn unchanged_count_with_different_identity_detects_new_reset() {
+        let tracker = ResetPushTracker::default();
+        let first = read_credits(json!([row("fixture-a", "available")]), 1, 1_900_000_000);
+        let next = read_credits(json!([row("fixture-b", "available")]), 1, 1_900_000_000);
+        assert!(!tracker.observe(&first).await);
+        assert!(tracker.observe(&next).await);
+        assert_eq!(tracker.pending().await.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn disappearance_and_reappearance_of_known_id_do_not_alert() {
+        let tracker = ResetPushTracker::default();
+        let existing = read_credits(json!([row("fixture-a", "available")]), 1, 1_900_000_000);
+        assert!(!tracker.observe(&existing).await);
+        assert!(
+            !tracker
+                .observe(&read_credits(json!([]), 0, 1_900_000_000))
+                .await
+        );
+        assert!(!tracker.observe(&existing).await);
+        assert!(!tracker.has_pending().await);
+    }
+
+    #[tokio::test]
+    async fn reordered_existing_ids_and_weekly_reset_time_do_not_alert() {
+        let tracker = ResetPushTracker::default();
+        let first = read_credits(
+            json!([row("fixture-a", "available"), row("fixture-b", "available")]),
+            2,
+            1_900_000_000,
+        );
+        let next = read_credits(
+            json!([row("fixture-b", "available"), row("fixture-a", "available")]),
+            2,
+            1_900_604_800,
+        );
+        assert!(!tracker.observe(&first).await);
+        assert!(!tracker.observe(&next).await);
+        assert!(!tracker.has_pending().await);
+    }
+
+    #[tokio::test]
+    async fn count_only_partial_and_expired_rows_cannot_trigger_false_alert() {
+        let tracker = ResetPushTracker::default();
+        for usage in [
+            read_credits(serde_json::Value::Null, 2, 1_900_000_000),
+            read_credits(json!([row("fixture-a", "available")]), 2, 1_900_000_000),
+            read_credits(json!([row("fixture-expired", "expired")]), 1, 1_900_000_000),
+        ] {
+            assert!(!tracker.observe(&usage).await);
+            assert!(!tracker.state.lock().await.baseline_established);
+        }
+        assert!(!tracker.has_pending().await);
+    }
+
+    #[tokio::test]
+    async fn unavailable_read_does_not_erase_baseline_or_create_alert() {
+        let tracker = ResetPushTracker::default();
+        let existing = read_credits(json!([row("fixture-a", "available")]), 1, 1_900_000_000);
+        assert!(!tracker.observe(&existing).await);
+        let unavailable = UsageResponse::Error {
+            code: "offline".into(),
+            message: "fixture unavailable".into(),
+            checked_at: 1_900_000_001,
+        };
+        assert!(!tracker.observe(&unavailable).await);
+        assert!(tracker.state.lock().await.baseline_established);
+        assert!(!tracker.observe(&existing).await);
+        assert!(!tracker.has_pending().await);
+    }
+
+    #[tokio::test]
+    async fn persistence_retains_pending_event_without_raw_ids_and_restart_deduplicates() {
+        let directory = tempfile::tempdir().unwrap();
+        let tracker = ResetPushTracker::default();
+        tracker.configure(directory.path()).await;
+        assert!(
+            !tracker
+                .observe(&read_credits(json!([]), 0, 1_900_000_000))
+                .await
+        );
+        let new = read_credits(
+            json!([row("fixture-secret-id-not-persisted", "available")]),
+            1,
+            1_900_000_000,
+        );
+        assert!(tracker.observe(&new).await);
+        let pending = tracker.pending().await;
+        let persisted = tokio::fs::read_to_string(directory.path().join(RESET_PUSH_STATE_FILE))
+            .await
+            .unwrap();
+        assert!(!persisted.contains("fixture-secret-id-not-persisted"));
+        assert!(!persisted.contains("expiresAt"));
+        let restarted = ResetPushTracker::default();
+        restarted.configure(directory.path()).await;
+        assert_eq!(restarted.pending().await, pending);
+        assert!(!restarted.observe(&new).await);
+        assert_eq!(restarted.pending().await, pending);
+        restarted.complete(&pending[0]).await;
+        let completed = ResetPushTracker::default();
+        completed.configure(directory.path()).await;
+        assert!(!completed.has_pending().await);
+        assert!(!completed.observe(&new).await);
+    }
 
     fn summary(ids: &[&str]) -> ResetCreditsSummary {
         ResetCreditsSummary {
@@ -708,10 +868,10 @@ mod reset_push_tests {
         };
         assert!(!tracker.observe(&first).await);
         assert!(!tracker.has_pending().await);
-        let next = UsageResponse::Ready {
-            reset_credits: Some(summary(&["existing-reset", "new-reset"])),
-            ..first.clone()
-        };
+        let mut next = first.clone();
+        if let UsageResponse::Ready { reset_credits, .. } = &mut next {
+            *reset_credits = Some(summary(&["existing-reset", "new-reset"]));
+        }
         assert!(tracker.observe(&next).await);
         let events = tracker.pending().await;
         assert_eq!(events.len(), 1);

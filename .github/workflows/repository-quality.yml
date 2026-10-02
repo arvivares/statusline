@@ -109,7 +109,7 @@ jobs:
           node-version-file: ".node-version"
       - name: Check formatting
         run: cargo fmt --manifest-path apps/desktop/runtime-tests/Cargo.toml --all -- --check
-      - name: Test production Codex modules without a CLI, credentials or WebView
+      - name: Test production agent and reset-push modules without credentials or WebView
         run: cargo test --manifest-path apps/desktop/runtime-tests/Cargo.toml --locked
 
       - name: Test Windows desktop package query with fixture metadata

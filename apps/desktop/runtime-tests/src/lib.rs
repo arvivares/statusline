@@ -17,6 +17,8 @@ pub mod refresh;
 pub mod relay_protocol;
 #[path = "../../src-tauri/src/services_snapshot.rs"]
 pub mod services_snapshot;
+#[path = "../../src-tauri/src/universal_relay.rs"]
+pub mod universal_relay;
 #[path = "../../src-tauri/src/update_policy.rs"]
 pub mod update_policy;
 #[path = "../../src-tauri/src/update_signature.rs"]
