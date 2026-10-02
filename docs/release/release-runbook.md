@@ -10,11 +10,11 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.30` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.30`;
-- Android candidate: `versionCode 26` (Google Play submission is separate);
-- recorded iOS source version: `1.1.1 (10)`, with the current automatic-sync
-  experience. This metadata is not a live App Store/TestFlight status report.
+- prepared product tag: `v0.1.32` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.32`;
+- Android candidate: `versionCode 28` (Google Play submission is separate);
+- recorded iOS source version: `1.1.2 (11)`, with optional reset-credit push
+  alerts. This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
   before taking any store action. Build 5 has an empty widget endpoint and
   must not be publicly released. Historical device and submission evidence is
@@ -55,7 +55,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.30`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.32`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -149,7 +149,22 @@ approval: after every build, trust, inventory, checksum and provenance gate pass
 draft is published automatically according to `distribution.publishPrerelease`.
 The current profile publishes a normal GitHub release marked **Latest**.
 
-### 0.1.30 candidate gates
+### 0.1.32 candidate gates
+
+- Run the lightweight production runtime suite on macOS, Linux and Windows.
+  It now includes the real universal relay and reset tracker, with temporary
+  persistence fixtures only; tests must not access credentials or live pairings.
+- Confirm silent initial baselines, new IDs with unchanged counts, no alert for
+  weekly rollover or partial details, and restart/acknowledgement deduplication.
+- Preserve the embedded updater public key and asset names. Publish updater
+  metadata only alongside the complete verified installer inventory.
+- Notification transport was observed on physical Android and TestFlight iOS
+  `1.1.2 (11)` devices. A real future OpenAI grant after the updated Companion's
+  baseline remains a separate end-to-end check, not a claimed CI result.
+- No Worker deployment, D1 migration, pairing replacement or mobile-store
+  rollout is part of this GitHub release. See the [release notes](notes/v0.1.32.md).
+
+### Historical 0.1.30 candidate gates
 
 - Verify passive Claude CLI discovery, bounded platform-specific installation
   paths and explicit activation consent. Discovery must not execute found

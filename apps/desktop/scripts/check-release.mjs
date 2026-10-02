@@ -105,6 +105,12 @@ const macosInfoPlist = readText("src-tauri/Info.macos.plist");
 const cargoToml = readText("src-tauri/Cargo.toml");
 const cargoLock = readText("src-tauri/Cargo.lock");
 const runtimeTestCargo = readText("runtime-tests/Cargo.toml");
+assert(
+  readText("runtime-tests/src/lib.rs").includes(
+    '#[path = "../../src-tauri/src/universal_relay.rs"]',
+  ),
+  "runtime-tests must compile the production relay and reset-push tracker",
+);
 for (const dependency of [
   "base64",
   "minisign-verify",
@@ -121,6 +127,7 @@ for (const dependency of [
   "tempfile",
   "time",
   "ring",
+  "keyring",
   "reqwest",
   "uuid",
   "windows-sys",
