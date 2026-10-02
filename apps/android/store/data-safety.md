@@ -1,6 +1,25 @@
 # Google Play Data safety inventory
 
-Validated and submitted for Android `0.1.10` (`versionCode 6`) and the production Cloudflare relay on 2 September 2026. This is an audit record, not a substitute for rechecking the live Play Console definitions.
+This is a dated audit record, not a substitute for rechecking the live Play Console definitions.
+
+## Saved quota-alert update — 2 October 2026
+
+The authenticated form now has a saved draft adding **App functionality** to
+**App interactions** and **Device or other IDs**, alongside the existing ML Kit
+**Analytics** purpose. Collection remains optional, non-ephemeral and not shared;
+diagnostics/performance declarations and encrypted transport were preserved.
+Play confirmed the changes were saved and must be sent for review from Publishing
+overview. No reviewed/public Data safety update is claimed.
+
+Android `0.1.34 (30)` was made available only to the account holder on the existing
+Internal testing track for physical QA. No Alpha or production promotion was
+requested. The updated public privacy policy and device tests remain gates for
+broader distribution; see [validation-0.1.34.md](validation-0.1.34.md).
+
+## Historical submitted inventory — 2 September 2026
+
+The declarations below were validated and submitted for Android `0.1.10`
+(`versionCode 6`) and the production Cloudflare relay on that date.
 
 ## Product behavior
 
@@ -41,7 +60,7 @@ If the current form groups package/app version or device model under an addition
 
 ## Required delta before submitting a build with reset push enabled
 
-The submitted `0.1.10` record above predates Firebase Cloud Messaging. Before a build with reset alerts is distributed on any Play track, update the global Play Data safety form:
+The submitted `0.1.10` record above predates Firebase Cloud Messaging. Update the global Play Data safety form before broader testing or production distribution of reset alerts; account-holder-only internal QA does not assert that the draft has been approved:
 
 | Play data type                                 | Collected | Shared | Required | Purpose           |
 | ---------------------------------------------- | --------- | ------ | -------- | ----------------- |

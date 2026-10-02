@@ -77,7 +77,7 @@ Push registration is off until the user opts in. Turning off one category preser
 
 The relay does not receive the encryption key, Codex credentials, email address, prompts or source code, and therefore cannot decrypt the quota snapshot. The Cloudflare deployment applies abuse limits before credential parsing using a SHA-256 digest of the source IP address. Neither the source IP nor that digest is written to the Statusline D1 database.
 
-Persistent Cloudflare Worker invocation logs are disabled in the production project configuration. Cloudflare may still process IP addresses and request metadata at its edge for request delivery, security, abuse prevention, aggregate metrics and billing. The Statusline desktop and mobile applications do not integrate advertising SDKs or their own product analytics SDK. The ML Kit diagnostics described above are the only bundled third-party SDK telemetry currently identified in the mobile applications.
+Persistent Cloudflare Worker invocation logs are disabled in the production project configuration. Cloudflare may still process IP addresses and request metadata at its edge for request delivery, security, abuse prevention, aggregate metrics and billing. The Statusline desktop and mobile applications do not integrate advertising SDKs or their own product analytics SDK. Bundled mobile SDK telemetry includes the ML Kit diagnostics described above and Firebase's technical platform and SDK diagnostics documented in its data disclosures. Firebase Analytics and Crashlytics are not included. SDK operational measurement is separate from first-party behavioral analytics.
 
 ## Desktop update checks
 

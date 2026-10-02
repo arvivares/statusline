@@ -7,7 +7,8 @@
   with app and widget version-only changes to `1.1.3 (12)`.
 - Generated one Release archive with Xcode 27, reusing the existing Firebase
   package checkout and device build cache. Exported that same archive using
-  automatic App Store Connect distribution signing; no upload has occurred.
+  automatic App Store Connect distribution signing. Reused that archive for the
+  successful upload recorded below; no second archive was needed.
 - Both archived and exported bundles passed the mandatory relay guard: matching
   production HTTPS endpoint, marketing version and build number in the app/widget.
 - The exported app passed strict recursive signature verification. Its signed
@@ -30,25 +31,35 @@
   `a737e9820c346f1e88cf71eb045959f9611f3069f21e420c7b10b2e6531a1f51`.
   Apple may re-sign the archive on upload; that upload can have a different hash.
 
-## Store and device gates still open
+## Internal TestFlight delivery — 2 October 2026
 
-- App Store Connect requests authentication. No live latest-build, current App
-  Privacy label, TestFlight processing or Internal QA assignment is claimed for
-  this candidate. Verify the live listing before allocating/submitting the build.
+- Apple authentication was restored. Xcode reported successful upload at
+  **20:29:33 Europe/Madrid**; the package subsequently completed processing.
+- The iOS Builds page shows `1.1.3 (12)` as **Ready to Submit**, assigned to
+  **Internal QA**. That group's Builds tab separately confirms **Testing** for
+  build 12. The group contains only the account holder; no tester was added.
+- Saved the complete English and Spanish What to Test notes linked below.
+  No External Beta review or App Store submission was requested.
+- Updated and published the global App Privacy label after inspecting the
+  exact exported SDK privacy manifests. The data types, purposes and linkage
+  answers are recorded in [app-privacy.md](app-privacy.md). This does not publish
+  a new binary or deploy the website policy.
+- The Distribution page still shows `1.1.1` as **Ready for Distribution**.
+  Build 12 is an internal test candidate, not an App Store release.
+
+## Device and broader distribution gates still open
+
 - The public website privacy page still states an effective date of 21 September
   and omits Firebase and quota notifications. Relay privacy URLs redirect there,
   so they are not an alternative current policy. The updated site source is on
-  main; publishing that site remains the operator's responsibility.
-- Reassess Apple's current privacy questionnaire using the exact bundled SDKs.
-  Declare opt-in installation identifiers and quota-alert metadata, for app
-  functionality with no tracking/advertising. Do not treat a retained installation
-  identifier as anonymous solely because there is no account/email: Apple includes
-  device linkage in its identity question. Verify the actual linkage choices
-  before publishing the disclosure; this record does not assert those choices
-  were already saved in the portal.
+  main; the operator confirmed they will handle deployment. Verify the live
+  policy before broader distribution; no site deployment is claimed here.
 - The connected iPhone initially reported the previous `1.1.2 (11)` installation;
-  it later became unavailable. No new build was installed and no existing pairing
-  or notification preference was changed during this preparation.
+  the Internal QA tester page still reports build 11 installed. CoreDevice then
+  reported the phone unavailable and rejected connection with error 4016.
+  A private UI-test runner built successfully, but its installation failed at
+  that connection gate. No build-12 installation or physical UI/push pass is
+  claimed; the existing pairing and preferences were not changed.
 - Complete a TestFlight upgrade, independent widget synchronization, category
   opt-in/opt-out preservation and real APNs delivery before broader distribution.
   Use an isolated diagnostic registration for synthetic transport checks; do not
@@ -63,8 +74,8 @@ Prepared What to Test instructions:
 
 Related Android staging is recorded in
 [the Android 0.1.34 validation record](../../android/store/validation-0.1.34.md).
-No mobile-store publication, tester-list change or new GitHub installer release
-is implied by these source/version updates.
+Only account-holder internal delivery is confirmed. No broader mobile-store
+publication, tester-list change or new GitHub installer release was performed.
 
 ## Primary references checked for this preparation
 
