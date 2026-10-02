@@ -32,8 +32,11 @@ in that message. D1 stores preferences and opaque dedup IDs, not typed event bod
 
 An unauthenticated request cannot allocate a dedup row or send a notification.
 A reader cannot publish events; a publisher cannot change the reader's category
-preferences. Legacy subscriptions default to credit-only. Concurrent in-flight
-events return a retryable error rather than incorrectly acknowledging delivery.
+preferences. Legacy subscriptions default to credit-only.
+Publisher capability additionally requires that channel's quota opt-in; health
+only advertises server support for the activation flow. No new alert metadata is
+sent by Companion before that category consent, or after capability withdrawal.
+Concurrent in-flight events return a retryable error rather than incorrectly acknowledging delivery.
 Missing/inactive providers and expired warnings cannot leak into later delivery.
 Mobile preference operations are serialized. In Android, a separate short-lived
 state lock invalidates in-flight registration on opt-out without waiting for the

@@ -137,13 +137,34 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
       }
 
       if (segments.length === 3 && request.method === "GET") {
+        const timestamp = now();
+        const channel = await dependencies.store.metadata(
+          channelID,
+          tokenHash,
+          timestamp,
+        );
+        const gateway = await pushGateway;
+        const device =
+          gateway && channel.kind === "ok"
+            ? await dependencies.store.readPushDevice(
+                channelID,
+                tokenHash,
+                timestamp,
+              )
+            : null;
+        // Health announces server support so a mobile can opt in. Publisher
+        // metadata announces quota delivery only after that channel's consent,
+        // preventing even service/threshold metadata from leaving Companion
+        // while the paired reader has quota alerts off.
+        const quotaEnabled =
+          device?.kind === "ok" && device.value?.quotaAlerts === true;
         return metadata(
-          await dependencies.store.metadata(channelID, tokenHash, now()),
-          (await pushGateway)
+          channel,
+          gateway
             ? [
                 SERVICES_CAPABILITY,
                 RESET_PUSH_CAPABILITY,
-                QUOTA_ALERTS_CAPABILITY,
+                ...(quotaEnabled ? [QUOTA_ALERTS_CAPABILITY] : []),
               ]
             : [SERVICES_CAPABILITY],
         );
