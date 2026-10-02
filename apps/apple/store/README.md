@@ -1,5 +1,16 @@
 # Apple App Store release kit
 
+## Prepared quota-alert candidate — 2 October 2026
+
+**1.1.3 (12)** adds independent optional quota notifications for services present
+in Companion 0.1.34 or later. A single Release archive and distribution-signed
+export passed endpoint, version, production-APNs, signature and compiled EN/ES
+checks. This candidate has **not** been uploaded to TestFlight or submitted to
+App Review. Apple authentication, current public privacy information and new
+physical-device push QA remain required. See [validation-1.1.3.md](validation-1.1.3.md)
+and the prepared [English](testflight/1.1.3-12-en-US.txt) and
+[Spanish](testflight/1.1.3-12-es-ES.txt) What to Test notes.
+
 ## Current status — 20 September 2026
 
 App Store Connect now shows **iOS 1.1.0 (9), Ready for Distribution**.
