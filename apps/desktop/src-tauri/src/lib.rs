@@ -3,9 +3,9 @@ pub mod app_server;
 pub mod claude;
 pub mod codex_installation;
 pub mod localization;
-pub mod quota_alerts;
 #[cfg(target_os = "macos")]
 mod macos_update;
+pub mod quota_alerts;
 pub mod refresh;
 pub mod relay_protocol;
 pub mod services_snapshot;

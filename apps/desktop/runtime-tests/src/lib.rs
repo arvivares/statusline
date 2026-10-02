@@ -8,11 +8,11 @@ pub mod claude;
 pub mod codex_installation;
 #[path = "../../src-tauri/src/localization.rs"]
 pub mod localization;
-#[path = "../../src-tauri/src/quota_alerts.rs"]
-pub mod quota_alerts;
 #[cfg(target_os = "macos")]
 #[path = "../../src-tauri/src/macos_update.rs"]
 pub mod macos_update;
+#[path = "../../src-tauri/src/quota_alerts.rs"]
+pub mod quota_alerts;
 #[path = "../../src-tauri/src/refresh.rs"]
 pub mod refresh;
 #[path = "../../src-tauri/src/relay_protocol.rs"]
