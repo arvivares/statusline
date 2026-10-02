@@ -76,6 +76,19 @@ the Samsung after Internal publication; ADB confirms its current Play installati
 is still build **30**, with notification permission granted. Preserve the install and its pairing;
 do not sideload a differently signed APK or reset app data to bypass validation.
 
+After the operator unlocked it, the scoped Play Store UI showed `Statusline
+(Internal Early Access)` with **Open**, not **Update**, and a last-updated date of
+2 October. Reopening that exact listing still showed Open. An existing Statusline
+widget is registered. Internal Console availability is therefore established,
+but on-device propagation/upgrade and build-31 worker execution are not; no app
+cache/data was cleared to force delivery.
+
+A scoped read-only check of the still-installed build-30 app confirmed Codex focus,
+its Antigravity watchlist entry and both enabled notification controls. The actual
+checkable descendants (not their unchecked accessibility-label containers) were
+**credits on / quota on**. This matches the operator's newer intentional Android
+opt-in; no switch, focus, account or pairing was changed during this follow-up.
+
 Validate an in-place Play upgrade, unchanged pairing/focus/notification preferences, independent redraw with
 the app inactive, one persistent job across process death/reboot, offline cache,
 no network after removing the last widget, and safe disconnect/re-pair races.
