@@ -1,7 +1,7 @@
 # Periodic quota push alerts
 
-Implemented for the 0.1.33 candidate. Deployment and distribution are separate
-release steps; see the [candidate notes](../release/notes/v0.1.33.md). This extends the
+Implemented for the 0.1.34 candidate. Deployment and distribution are separate
+release steps; see the [candidate notes](../release/notes/v0.1.34.md). This extends the
 existing FCM/APNs transport, not the earned Codex reset-credit detector.
 
 ## Rules
@@ -61,6 +61,11 @@ source limitation, not multi-account support.
 iOS and Android offer a separate **Quota notifications** switch, alongside the
 existing Codex-credit switch. Both use OS permission and the same encrypted-at-rest
 Firebase installation registration. Existing opt-ins do not opt into quota alerts.
+Server health advertises support so mobiles can opt in. Authenticated publisher
+metadata advertises `quota-alerts-v1` only while that channel's reader has quota
+alerts enabled. Companion therefore keeps events local before consent, and sends
+no provider/threshold alert metadata while the category is off. Pending events
+still expire normally; there is no retroactive delivery of expired warnings.
 One-category opt-out preserves the other; all-category opt-out removes registration
 and requests Firebase installation deletion. UI controls remain accessible to turn
 off an existing opt-in even after a provider disappears.

@@ -17,6 +17,18 @@ See the [threat model](THREAT-MODEL.md) for traced boundaries and residual risks
 
 No unresolved high or critical issue was identified in the feature additions.
 
+### Resolved in 0.1.34: quota metadata sent before category consent
+
+- Severity: medium; OWASP A04 insecure design/privacy boundary.
+- File: `services/relay/src/app.ts` (publisher capability negotiation).
+- The original candidate advertised quota capability to every publisher, allowing
+  service/window/threshold event metadata to reach the relay before mobile opt-in,
+  although notifications were correctly suppressed there.
+- Correction: publisher capability is per-channel and requires an active quota
+  opt-in. Health retains global support for the mobile activation flow. Tests
+  cover missing/legacy registrations, opt-in, opt-out and registration removal.
+- The unpublished 0.1.33 draft was cancelled; 0.1.34 includes the corrected source.
+
 ## Passed checks and boundaries
 
 - Publisher-only events and reader-only preferences; neither role can cross over.

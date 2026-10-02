@@ -104,7 +104,7 @@ once the app is approved. Android beta APKs are already available on
 
 ### Project status
 
-The 0.1.33 candidate adds optional notifications when an exhausted
+The 0.1.34 candidate adds optional notifications when an exhausted
 5h/weekly quota recovers, plus a one-hour weekly reminder with at least 20% left.
 Requires the updated relay and an opted-in compatible mobile build; iOS delivery
 remains separate from GitHub releases.

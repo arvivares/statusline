@@ -191,6 +191,14 @@ no-op.
 
 ### Optional periodic quota alerts (`quota-alerts-v1`)
 
+`GET /health` advertises server support when the push gateway is ready, allowing
+mobile opt-in. Authenticated publisher channel metadata advertises this capability
+only while that channel has a registered reader with `quotaAlerts: true`.
+Companion must not send quota-alert events without the channel capability.
+Opt-out/removal withdraws it; inactive subscriptions therefore receive no new
+provider/threshold event metadata from a conforming Companion. Existing credit
+capability and encrypted snapshots are unchanged.
+
 This additive capability leaves protocol version 1, snapshot encryption, role
 credentials and pairing unchanged. It is advertised only when the push gateway
 is ready. Deploy migration `0005_quota_alert_preferences.sql` before the Worker.

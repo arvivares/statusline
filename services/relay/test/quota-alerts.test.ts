@@ -160,6 +160,34 @@ describe("Quota alert contract", () => {
     ).toBe(204);
     expect(f.credits).toHaveLength(1);
   });
+  it("gates publisher capability on current per-channel quota consent", async () => {
+    const f = await fixture();
+    const capability = async () => {
+      const response = await f.app(
+        new Request(`https://relay.test/v1/channels/${CHANNEL}`, {
+          headers: { Authorization: `Bearer ${f.publisherToken}` },
+        }),
+      );
+      expect(response.status).toBe(200);
+      return ((await response.json()) as { capabilities: string[] })
+        .capabilities;
+    };
+    expect(await capability()).not.toContain("quota-alerts-v1");
+    await f.register();
+    expect(await capability()).not.toContain("quota-alerts-v1");
+    await f.register({ quotaAlerts: true, resetCredits: false });
+    expect(await capability()).toContain("quota-alerts-v1");
+    await f.register({ quotaAlerts: false, resetCredits: true });
+    expect(await capability()).not.toContain("quota-alerts-v1");
+    expect(await capability()).toContain("reset-push-v1");
+    await f.register({ quotaAlerts: true });
+    expect(await capability()).toContain("quota-alerts-v1");
+    expect(
+      (await f.request("push-device", "DELETE", undefined, f.readerToken))
+        .status,
+    ).toBe(204);
+    expect(await capability()).not.toContain("quota-alerts-v1");
+  });
   it("negotiates, enforces roles, deduplicates and keeps category opt-out independent", async () => {
     const f = await fixture();
     const health = (await (
