@@ -189,6 +189,58 @@ the deployment supports a dedicated push-event limiter. Duplicate event IDs
 are idempotent. A successful request with no active device registration is a
 no-op.
 
+### Optional periodic quota alerts (`quota-alerts-v1`)
+
+This additive capability leaves protocol version 1, snapshot encryption, role
+credentials and pairing unchanged. It is advertised only when the push gateway
+is ready. Deploy migration `0005_quota_alert_preferences.sql` before the Worker.
+
+The existing reader-authenticated `PUT .../push-device` accepts two optional
+boolean fields: `resetCredits` (default `true`) and `quotaAlerts` (default `false`).
+Old registrations and old clients retain their original Codex-credit-only scope.
+New clients obtain a separate quota-alert opt-in and negotiate this capability
+before registering it. Disabling one category must preserve the other. Disabling
+both uses the existing DELETE endpoint and Firebase installation cleanup.
+
+```http
+POST /v1/channels/{channelId}/quota-alert-events
+Authorization: Bearer <publisherToken>
+Content-Type: application/json
+→ 204
+```
+
+```json
+{
+  "eventId": "018f47a0-7b52-4c15-9e55-5f0f266b7440",
+  "provider": "codex",
+  "kind": "weeklyExpiring",
+  "window": "weekly",
+  "expiresAt": 2000500000
+}
+```
+
+Providers are allowlisted to `codex`, `antigravity`, `claude`; window is `short`
+(reported 5h) or `weekly`. Kind is `quotaRecovered` or `weeklyExpiring`, the latter
+valid only for `weekly`. `expiresAt` must be an integer strictly after relay time
+and at most 3600 seconds later. A weekly warning expires at the reported reset,
+not an hour after submission. Input bodies are bounded to 1024 bytes and use the
+same authenticated event rate budget as credit alerts.
+
+The relay cannot verify quota criteria inside an encrypted snapshot; the paired
+publisher is the trusted detector. Only opted-in readers receive these messages.
+An unregistered/opted-out recipient is a successful no-op. Event IDs are opaque,
+stable UUID v4 values persisted by Companion; repeats are idempotent. A busy
+delivery or provider failure returns 503 and is retried with the same event ID
+while still valid. FCM acceptance is not proof of device delivery. Android TTL
+and APNs expiration bound stale delivery; distinct service/kind/window tags avoid
+overwriting another window's notification.
+
+Unlike the generic credit event, these events reveal service, event/window kind,
+delivery expiration and the warning's threshold condition, not exact readings,
+account IDs or credit identifiers. Event metadata is used in memory and not
+persisted in D1; D1 keeps category preferences and opaque deduplication IDs.
+See [quota-alert detection and limits](../docs/architecture/quota-alerts.md).
+
 ## Encrypted payload
 
 Plaintext is UTF-8 JSON:

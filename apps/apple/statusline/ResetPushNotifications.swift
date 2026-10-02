@@ -16,8 +16,9 @@ enum ResetPushError: Error {
 final class ResetPushManager {
     static let shared = ResetPushManager()
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
     private let enabledKey = "statusline.codexResetPush.enabled"
+    private let quotaEnabledKey = "statusline.quotaAlerts.enabled"
     private let deviceIDKey = "statusline.codexResetPush.deviceID"
     private let pendingUnregistrationKey = "statusline.codexResetPush.pendingUnregistration"
     private var apnsRegistrationWaiter: CheckedContinuation<Void, Error>?
@@ -26,7 +27,11 @@ final class ResetPushManager {
     private var registrationWaiters: [CheckedContinuation<String, Error>] = []
     private var latestInstallationID: String?
 
-    var isEnabled: Bool { defaults.bool(forKey: enabledKey) }
+    init(defaults: UserDefaults = .standard) { self.defaults = defaults }
+
+    var resetCreditsEnabled: Bool { defaults.bool(forKey: enabledKey) }
+    var quotaAlertsEnabled: Bool { defaults.bool(forKey: quotaEnabledKey) }
+    var isEnabled: Bool { resetCreditsEnabled || quotaAlertsEnabled }
     var pendingUnregistration: Bool { defaults.bool(forKey: pendingUnregistrationKey) }
     var isConfigured: Bool { FirebaseApp.app() != nil }
 
@@ -98,6 +103,11 @@ final class ResetPushManager {
     }
 
     func markEnabled() { defaults.set(true, forKey: enabledKey) }
+    func markPreferences(resetCredits: Bool, quotaAlerts: Bool) {
+        defaults.set(resetCredits, forKey: enabledKey)
+        defaults.set(quotaAlerts, forKey: quotaEnabledKey)
+        defaults.set(false, forKey: pendingUnregistrationKey)
+    }
 
     func didReceiveRegistration(_ installationID: String?) {
         guard let installationID, !installationID.isEmpty else { return }
@@ -108,6 +118,7 @@ final class ResetPushManager {
 
     func beginOptOut() {
         defaults.set(false, forKey: enabledKey)
+        defaults.set(false, forKey: quotaEnabledKey)
         defaults.set(true, forKey: pendingUnregistrationKey)
         if FirebaseApp.app() != nil { Messaging.messaging().isAutoInitEnabled = false }
     }
@@ -205,7 +216,9 @@ final class StatuslineAppDelegate: NSObject, UIApplicationDelegate, UNUserNotifi
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        ResetPushManager.shared.isEnabled ? [.banner, .sound] : []
+        let quota = notification.request.content.userInfo["alertCategory"] as? String == "quota"
+        let allowed = quota ? ResetPushManager.shared.quotaAlertsEnabled : ResetPushManager.shared.resetCreditsEnabled
+        return allowed ? [.banner, .sound] : []
     }
 
     nonisolated func messaging(_ messaging: Messaging, didReceiveRegistration installationID: String?) {

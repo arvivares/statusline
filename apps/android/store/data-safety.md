@@ -28,12 +28,12 @@ Source: https://developers.google.com/ml-kit/android-data-disclosure
 
 Declare the following collected, not shared data types for ML Kit, using the closest labels exposed by the current Play form:
 
-| Play data type | Collected | Shared | Required | Purpose |
-| --- | --- | --- | --- | --- |
-| App interactions | Yes | No | Optional | Analytics |
-| Diagnostics | Yes | No | Optional | Analytics |
-| Other app performance data | Yes | No | Optional | Analytics |
-| Device or other IDs | Yes | No | Optional | Analytics |
+| Play data type             | Collected | Shared | Required | Purpose   |
+| -------------------------- | --------- | ------ | -------- | --------- |
+| App interactions           | Yes       | No     | Optional | Analytics |
+| Diagnostics                | Yes       | No     | Optional | Analytics |
+| Other app performance data | Yes       | No     | Optional | Analytics |
+| Device or other IDs        | Yes       | No     | Optional | Analytics |
 
 These types are optional because QR scanning is optional and the app retains a manual-link fallback. They are not processed ephemerally in the submitted form. No data type is declared as shared.
 
@@ -43,9 +43,9 @@ If the current form groups package/app version or device model under an addition
 
 The submitted `0.1.10` record above predates Firebase Cloud Messaging. Before a build with reset alerts is distributed on any Play track, update the global Play Data safety form:
 
-| Play data type | Collected | Shared | Required | Purpose |
-| --- | --- | --- | --- | --- |
-| Device or other IDs (Firebase Installation ID) | Yes | No* | Optional | App functionality |
+| Play data type                                 | Collected | Shared | Required | Purpose           |
+| ---------------------------------------------- | --------- | ------ | -------- | ----------------- |
+| Device or other IDs (Firebase Installation ID) | Yes       | No*    | Optional | App functionality |
 
 The FID is transmitted only after a user opts in, grants notification permission and pairs the app. It is sent to Statusline's relay over HTTPS, encrypted at rest there, and used by the relay to request delivery through Firebase Cloud Messaging. Firebase's current Android disclosure also describes its automatically collected app version and Firebase user agent; review those against the exact release dependency and the current Play form. The app does not include Firebase Analytics, and notification interaction analytics are not enabled.
 
@@ -55,4 +55,22 @@ Sources: [Firebase Android data disclosure](https://firebase.google.com/docs/and
 
 ## Relay and hosting notes
 
-Cloudflare necessarily processes IP address and request metadata to deliver and protect HTTPS traffic. Statusline does not store the IP address or its rate-limit digest in D1, and persistent Worker invocation logs are disabled. The encrypted quota payload is opaque to the relay and consists of quota fields, reset-credit count/expiry and schema version. For opt-in reset push, D1 also stores the FID encrypted with AES-256-GCM, a random device ID, language and opaque event IDs; relay and event rows are deleted on opt-out or channel expiry.
+### Periodic quota alerts (development delta)
+
+Before distributing this feature, reassess the live form: the optional alert now
+reveals a service (Codex/Antigravity/Claude Code), event/window kind, delivery
+expiration and, for the unused-weekly warning, that at least 20% remained. Exact
+readings, vendor/account identifiers and credentials are not sent. The relay
+uses this event content in memory; FCM/APNs process it for delivery. This is not
+end-to-end encrypted metadata, unlike the quota snapshot. Declare this optional
+feature-use information under the live form's applicable **App interactions**
+or usage-data category for **App functionality**, in addition to installation ID.
+Do not mark it ephemeral without verifying actual FCM retention. The older
+"generic payload contains no quota details" statement above applies to credit
+alerts only. These are preparation notes, not a claim that Play Console changed.
+
+Independent category preferences are stored with the encrypted installation ID.
+Turning off all categories removes registration; opaque deduplication rows expire
+after at most thirty days or channel deletion, not immediately on category opt-out.
+
+Cloudflare necessarily processes IP address and request metadata to deliver and protect HTTPS traffic. Statusline does not store the IP address or its rate-limit digest in D1, and persistent Worker invocation logs are disabled. The encrypted quota payload is opaque to the relay and consists of quota fields, reset-credit count/expiry and schema version. For opt-in push, D1 also stores the FID encrypted with AES-256-GCM, a random device ID, language, category preferences and opaque event IDs. Registration is removed when all categories are disabled; event rows expire within thirty days or on channel deletion.

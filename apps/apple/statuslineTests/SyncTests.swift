@@ -169,7 +169,7 @@ struct SyncTests {
         await reader.started.wait()
         await vm.refreshFromRelay()
         #expect(reader.calls == 1)
-        vm.disconnectRelay()
+        await vm.disconnectRelay().value
         reader.resume.open()
         await task.value
         #expect(vm.status == nil)

@@ -30,6 +30,18 @@ The conservative **Other Data Types** declaration covers the random channel iden
 
 ## Required delta before submitting a build with reset push enabled
 
+### Periodic quota alerts (development delta)
+
+The independent quota-alert opt-in sends a service, event/window kind and delivery
+expiration to the relay and FCM/APNs. A weekly warning reveals its 20%-remaining
+threshold condition, not the exact quota value, account ID, prompt or credit ID.
+This operational metadata is not end-to-end encrypted and must be disclosed in
+addition to the installation identifier. Before submitting, reassess **Usage Data
+→ Product Interaction** (or the current form's closest quota/feature-use category)
+for **App Functionality**; no advertising/tracking purpose is introduced. Do not
+claim the current store declarations already include this change. The generic
+credit-payload statement below does not describe the new typed quota alert.
+
 The published build represented above does not include Firebase push registration. For the next build that enables reset alerts, update App Store Connect before submission:
 
 - Add **Identifiers → Device ID**.

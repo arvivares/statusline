@@ -100,6 +100,11 @@ cuando la app esté aprobada. Los APK de la beta de Android ya están disponible
 
 ## Plataformas
 
+La candidata 0.1.33 añade avisos opcionales cuando vuelve a estar
+disponible una cuota de 5 h/semanal agotada, y una hora antes del reinicio semanal
+si queda al menos un 20 %. Requiere relay y móvil compatibles con avisos activados;
+iOS se distribuye aparte de GitHub. Consulta el [funcionamiento y despliegue](docs/architecture/quota-alerts.md).
+
 | Plataforma                  | Rol          | Implementación   | Distribución                                                    |
 | --------------------------- | ------------ | ---------------- | --------------------------------------------------------------- |
 | Windows x64                 | Publisher    | Tauri + Rust     | NSIS `.exe` y MSI                                               |

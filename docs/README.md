@@ -19,6 +19,9 @@ requests are welcome.
 
 ## Architecture and protocol
 
+- [Periodic quota notifications](architecture/quota-alerts.md): exhausted-window
+  recovery, one-hour weekly warnings, opt-in migration and delivery limitations.
+
 - [Node toolchain](architecture/node-toolchain.md): shared build/runtime-version
   policy, compatibility validation and rollback boundaries.
 - [Cross-platform architecture](architecture/cross-platform-companion.md): component
@@ -54,7 +57,7 @@ requests are welcome.
 
 - [Public release runbook](release/release-runbook.md): canonical version, unified tag,
   required assets, SignPath inputs, provenance and publication procedure.
-- [Current beta candidate notes](release/notes/v0.1.32.md): curated user-facing notes and
+- [Current beta candidate notes](release/notes/v0.1.33.md): curated user-facing notes and
   known limitations for the next candidate.
 - [Desktop installers](release/desktop-installers.md): build matrix, signing, checksums and
   smoke tests.
@@ -69,6 +72,8 @@ requests are welcome.
 ## Security and policy
 
 - [Security policy](../SECURITY.md): private vulnerability reporting.
+- [Quota-alert threat model](security/quota-alerts/THREAT-MODEL.md): event roles,
+  privacy boundaries, persistence, expiry and verification gates.
 - [Privacy policy](../PRIVACY.md): data processing, retention and deletion.
 - [Security review](security/security-review.md): resolved findings, accepted dependency
   exceptions and operational risks.

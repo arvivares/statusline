@@ -30,6 +30,16 @@ export interface PushDevice {
   readonly ciphertext: string;
   readonly language: "en" | "es";
   readonly updatedAt: number;
+  readonly resetCredits?: boolean;
+  readonly quotaAlerts?: boolean;
+}
+
+export interface QuotaAlert {
+  readonly eventID: string;
+  readonly provider: "codex" | "antigravity" | "claude";
+  readonly kind: "quotaRecovered" | "weeklyExpiring";
+  readonly window: "short" | "weekly";
+  readonly expiresAt: number;
 }
 
 export type PushEventClaim = "claimed" | "sent" | "busy";
@@ -38,6 +48,10 @@ export interface PushGateway {
   isReady(): Promise<boolean>;
   encryptInstallationID(fid: string): Promise<EncryptedPushToken>;
   sendResetAdded(device: PushDevice): Promise<"sent" | "invalidToken">;
+  sendQuotaAlert(
+    device: PushDevice,
+    alert: QuotaAlert,
+  ): Promise<"sent" | "invalidToken">;
 }
 
 export interface Env {

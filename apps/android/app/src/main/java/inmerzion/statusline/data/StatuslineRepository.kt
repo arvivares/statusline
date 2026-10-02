@@ -61,46 +61,74 @@ class StatuslineRepository(context: Context) {
     fun resetNotificationsEnabled(): Boolean =
         notificationPreferences.getBoolean(RESET_PUSH_ENABLED, false)
 
-    fun supportsResetPush(): Boolean = client.supportsResetPush()
+    fun quotaNotificationsEnabled(): Boolean = notificationPreferences.getBoolean(QUOTA_PUSH_ENABLED, false)
+    fun anyNotificationsEnabled(): Boolean = resetNotificationsEnabled() || quotaNotificationsEnabled()
 
-    fun registerResetNotifications(fid: String, language: String) {
-        val reader = credentials.load() ?: throw StatuslineException(
-            FailureKind.NOT_PAIRED,
-            "Pair this device with Statusline Companion first.",
-        )
-        val deviceId = notificationPreferences.getString(RESET_PUSH_DEVICE_ID, null)
-            ?.takeIf(RelayProtocol::validateChannelId)
-            ?: UUID.randomUUID().toString().lowercase().also {
-                notificationPreferences.edit().putString(RESET_PUSH_DEVICE_ID, it).apply()
-            }
+    fun supportsResetPush(): Boolean = client.supportsResetPush()
+    fun supportsQuotaAlerts(): Boolean = client.supportsResetPush("quota-alerts-v1")
+
+    fun registerResetNotifications(fid: String, language: String,
+                                   resetCredits: Boolean? = null,
+                                   quotaAlerts: Boolean? = null) = PUSH_COORDINATOR.serializeRemote {
+        // Resolve refresh preferences inside the serialized operation, not at
+        // invocation time: a queued Firebase callback must use the latest choice.
+        val (revision, registration) = PUSH_COORDINATOR.snapshot {
+            val reader = credentials.load() ?: throw StatuslineException(
+                FailureKind.NOT_PAIRED,
+                "Pair this device with Statusline Companion first.",
+            )
+            val desired = PushPreferences(
+                resetCredits ?: resetNotificationsEnabled(),
+                quotaAlerts ?: quotaNotificationsEnabled(),
+            )
+            val deviceId = notificationPreferences.getString(RESET_PUSH_DEVICE_ID, null)
+                ?.takeIf(RelayProtocol::validateChannelId)
+                ?: UUID.randomUUID().toString().lowercase().also {
+                    notificationPreferences.edit().putString(RESET_PUSH_DEVICE_ID, it).apply()
+                }
+            Triple(reader, desired, deviceId)
+        }
+        val (reader, desired, deviceId) = registration
+        if (!desired.enabled) return@serializeRemote
         client.registerPushDevice(
             reader.channelId,
             reader.readerToken,
             deviceId,
             fid,
             if (language == "es") "es" else "en",
+            desired.resetCredits,
+            desired.quotaAlerts,
         )
-        notificationPreferences.edit()
-            .putBoolean(RESET_PUSH_ENABLED, true)
-            .putBoolean(RESET_PUSH_REMOVE_PENDING, false)
-            .apply()
+        check(PUSH_COORDINATOR.commit(revision) {
+            val current = credentials.load()
+            check(current?.channelId == reader.channelId && current.readerToken == reader.readerToken)
+            notificationPreferences.edit()
+                .putBoolean(RESET_PUSH_ENABLED, desired.resetCredits)
+                .putBoolean(QUOTA_PUSH_ENABLED, desired.quotaAlerts)
+                .putBoolean(RESET_PUSH_REMOVE_PENDING, false)
+                .apply()
+        }) { "Notification preferences changed before registration completed." }
     }
 
-    fun beginResetNotificationRemoval() {
+    fun beginResetNotificationRemoval() = PUSH_COORDINATOR.invalidate {
         notificationPreferences.edit()
             .putBoolean(RESET_PUSH_ENABLED, false)
+            .putBoolean(QUOTA_PUSH_ENABLED, false)
             .putBoolean(RESET_PUSH_REMOVE_PENDING, true)
             .apply()
     }
 
     fun unregisterResetNotifications() {
         beginResetNotificationRemoval()
-        val reader = credentials.load() ?: run {
-            notificationPreferences.edit().putBoolean(RESET_PUSH_REMOVE_PENDING, false).apply()
-            return
+        PUSH_COORDINATOR.serializeRemote {
+            val (revision, reader) = PUSH_COORDINATOR.snapshot { credentials.load() }
+            if (reader != null) {
+                client.unregisterPushDevice(reader.channelId, reader.readerToken)
+            }
+            PUSH_COORDINATOR.commit(revision) {
+                notificationPreferences.edit().putBoolean(RESET_PUSH_REMOVE_PENDING, false).apply()
+            }
         }
-        client.unregisterPushDevice(reader.channelId, reader.readerToken)
-        notificationPreferences.edit().putBoolean(RESET_PUSH_REMOVE_PENDING, false).apply()
     }
 
     fun retryResetNotificationRemoval() {
@@ -109,8 +137,8 @@ class StatuslineRepository(context: Context) {
         }
     }
 
-    fun disconnect() {
-        if (resetNotificationsEnabled() ||
+    fun disconnect() = PUSH_COORDINATOR.serializeRemote {
+        if (anyNotificationsEnabled() ||
             notificationPreferences.getBoolean(RESET_PUSH_REMOVE_PENDING, false)) {
             unregisterResetNotifications()
         }
@@ -134,10 +162,10 @@ class StatuslineRepository(context: Context) {
         }
     }
 
-    fun pair(rawValue: String): AgentServicesSnapshot? {
+    fun pair(rawValue: String): AgentServicesSnapshot? = PUSH_COORDINATOR.serializeRemote {
         val pairing = RelayProtocol.parsePairing(rawValue)
         credentials.load()
-            ?.takeIf { it.channelId != pairing.channelId && resetNotificationsEnabled() }
+            ?.takeIf { it.channelId != pairing.channelId && anyNotificationsEnabled() }
             ?.let { previous ->
                 client.unregisterPushDevice(previous.channelId, previous.readerToken)
             }
@@ -154,7 +182,7 @@ class StatuslineRepository(context: Context) {
         // quota while waiting for its first encrypted publication.
         servicesCache.clear()
         legacyCache.clear()
-        return fetch(readerCredentials)
+        fetch(readerCredentials)
     }
 
     fun refresh(): AgentServicesSnapshot? {
@@ -193,8 +221,10 @@ class StatuslineRepository(context: Context) {
     }
 
     private companion object {
+        val PUSH_COORDINATOR = PushRegistrationCoordinator()
         const val RESET_PUSH_PREFERENCES = "statusline.resetPush"
         const val RESET_PUSH_ENABLED = "enabled"
+        const val QUOTA_PUSH_ENABLED = "quotaAlerts"
         const val RESET_PUSH_DEVICE_ID = "deviceId"
         const val RESET_PUSH_REMOVE_PENDING = "removePending"
     }

@@ -19,11 +19,11 @@ interface RelayTransport {
 }
 
 class RelayHttpClient(private val configuration: RelayConfiguration) : RelayTransport {
-    fun supportsResetPush(): Boolean {
+    fun supportsResetPush(capability: String = "reset-push-v1"): Boolean {
         val response = perform(method = "GET", path = arrayOf("health"))
         requireStatus(response, setOf(HttpURLConnection.HTTP_OK))
         val capabilities = JSONObject(response.bodyAsText()).optJSONArray("capabilities") ?: return false
-        return (0 until capabilities.length()).any { capabilities.optString(it) == "reset-push-v1" }
+        return (0 until capabilities.length()).any { capabilities.optString(it) == capability }
     }
 
     override fun claim(channelId: String, pairingToken: String): String {
@@ -79,11 +79,14 @@ class RelayHttpClient(private val configuration: RelayConfiguration) : RelayTran
         }
     }
 
-    fun registerPushDevice(channelId: String, readerToken: String, deviceId: String, fid: String, language: String) {
+    fun registerPushDevice(channelId: String, readerToken: String, deviceId: String, fid: String, language: String,
+                           resetCredits: Boolean = true, quotaAlerts: Boolean = false) {
         val body = JSONObject()
             .put("deviceId", deviceId)
             .put("fid", fid)
             .put("language", language)
+            .put("resetCredits", resetCredits)
+            .put("quotaAlerts", quotaAlerts)
             .toString()
             .toByteArray(StandardCharsets.UTF_8)
         val response = perform(

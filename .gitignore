@@ -50,6 +50,7 @@ services/relay/.dev.vars
 
 # Android build state and local SDK configuration
 apps/android/.gradle/
+apps/android/.kotlin/
 apps/android/local.properties
 apps/android/app/build/
 apps/android/build/

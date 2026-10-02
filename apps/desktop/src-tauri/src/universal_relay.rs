@@ -20,6 +20,7 @@ use uuid::Uuid;
 
 use crate::{
     antigravity,
+    quota_alerts::{self, Provider as AlertProvider},
     relay_protocol::{
         ChannelMetadata, CreateChannelResponse, PROTOCOL_VERSION, ProtocolError,
         PublisherCredentials, SERVICES_CAPABILITY, ServicesPublication, SnapshotEnvelope,
@@ -247,6 +248,26 @@ impl RelayClient {
         ensure_empty_success(response, &[StatusCode::NO_CONTENT]).await
     }
 
+    async fn send_quota_alert(
+        &self,
+        configuration: &RelayConfiguration,
+        credentials: &PublisherCredentials,
+        alert: &quota_alerts::Alert,
+    ) -> Result<(), RelayError> {
+        let response = self
+            .http
+            .post(configuration.endpoint(&format!(
+                "v1/channels/{}/quota-alert-events",
+                credentials.channel_id
+            ))?)
+            .bearer_auth(&credentials.publisher_token)
+            .json(alert)
+            .send()
+            .await
+            .map_err(|_| RelayError::Transport)?;
+        ensure_empty_success(response, &[StatusCode::NO_CONTENT]).await
+    }
+
     async fn create_channel(
         &self,
         configuration: &RelayConfiguration,
@@ -299,29 +320,86 @@ pub struct UniversalRelayState {
     publication_requested: Notify,
     last_publication: Mutex<Option<(String, ServicesSnapshot)>>,
     reset_push: ResetPushTracker,
+    quota_alerts: quota_alerts::Tracker,
+    claude_alert_revision: Mutex<u64>,
+    google_alert_revision: Mutex<u64>,
+    google_alert_source: Mutex<Option<(Option<antigravity::Source>, Option<PathBuf>)>>,
 }
 
 impl UniversalRelayState {
     pub async fn record_claude(&self, view: &crate::claude::View) {
-        if self.inventory.lock().await.record_claude(view) {
+        let mut revision = self.claude_alert_revision.lock().await;
+        if view.revision < *revision {
+            return;
+        }
+        *revision = view.revision;
+        if view.status == crate::claude::Status::NotFound {
+            self.quota_alerts.remove(AlertProvider::Claude).await;
+        }
+        let alerts = self
+            .quota_alerts
+            .observe(
+                AlertProvider::Claude,
+                quota_alerts::claude_sample(view),
+                antigravity::timestamp(),
+            )
+            .await;
+        if self.inventory.lock().await.record_claude(view) || alerts {
             self.publication_requested.notify_one();
         }
     }
 
     pub async fn record_codex(&self, usage: &UsageResponse) {
+        if matches!(usage, UsageResponse::Error { code, .. } if code == "codexNotFound") {
+            self.quota_alerts.remove(AlertProvider::Codex).await;
+        }
         let inventory_changed = self.inventory.lock().await.record_codex(usage);
         let reset_added = self.reset_push.observe(usage).await;
-        if inventory_changed || reset_added || self.reset_push.has_pending().await {
+        let alerts = self
+            .quota_alerts
+            .observe(
+                AlertProvider::Codex,
+                quota_alerts::codex_sample(usage),
+                antigravity::timestamp(),
+            )
+            .await;
+        if inventory_changed || reset_added || alerts || self.reset_push.has_pending().await {
             self.publication_requested.notify_one();
         }
     }
 
     pub async fn configure_reset_push_tracking(&self, app_config_dir: &Path) {
         self.reset_push.configure(app_config_dir).await;
+        self.quota_alerts.configure(app_config_dir).await;
     }
 
     pub async fn record_google(&self, view: &antigravity::View) {
-        if self.inventory.lock().await.record_google(view) {
+        let mut revision = self.google_alert_revision.lock().await;
+        if view.revision < *revision {
+            return;
+        }
+        *revision = view.revision;
+        if matches!(view.usage, antigravity::Usage::Disabled) || view.settings.source.is_none() {
+            self.quota_alerts.remove(AlertProvider::Antigravity).await;
+        }
+        let selected = (view.settings.source, view.settings.path.clone());
+        let mut source = self.google_alert_source.lock().await;
+        if source
+            .as_ref()
+            .is_some_and(|previous| previous != &selected)
+        {
+            self.quota_alerts.remove(AlertProvider::Antigravity).await;
+        }
+        *source = Some(selected);
+        let alerts = self
+            .quota_alerts
+            .observe(
+                AlertProvider::Antigravity,
+                quota_alerts::google_sample(view),
+                antigravity::timestamp(),
+            )
+            .await;
+        if self.inventory.lock().await.record_google(view) || alerts {
             self.publication_requested.notify_one();
         }
     }
@@ -422,6 +500,22 @@ impl UniversalRelayState {
             }
         }
 
+        if metadata
+            .capabilities
+            .iter()
+            .any(|value| value == quota_alerts::CAPABILITY)
+        {
+            for alert in self.quota_alerts.pending(antigravity::timestamp()).await {
+                if self
+                    .client
+                    .send_quota_alert(configuration, &credentials, &alert)
+                    .await
+                    .is_ok()
+                {
+                    self.quota_alerts.complete(&alert.event_id).await;
+                }
+            }
+        }
         let status = status_for_credentials(configuration, &credentials)?;
         save_credentials(credentials).await?;
         Ok(status)
@@ -462,6 +556,7 @@ impl UniversalRelayState {
                 PublisherCredentials::from_created(configuration.origin.clone(), response)?;
             let status = pairing_status(&configuration, &credentials)?;
             save_credentials(credentials).await?;
+            self.quota_alerts.clear().await;
             self.publication_requested.notify_one();
             Ok::<_, RelayError>(status)
         }
@@ -479,6 +574,7 @@ impl UniversalRelayState {
             let _ = self.client.delete_channel(configuration, credentials).await;
         }
         self.reset_push.clear().await;
+        self.quota_alerts.clear().await;
         match delete_credentials().await {
             Ok(()) => configuration.map_or(RelayStatus::NotConfigured, |configuration| {
                 RelayStatus::Unpaired {

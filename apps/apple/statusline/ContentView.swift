@@ -24,7 +24,7 @@ struct ContentView: View {
                     }
 
                     if viewModel.relaySyncState.isPaired,
-                       viewModel.services?.providers.contains(where: { $0.id == .codex }) == true {
+                       (viewModel.services?.providers.contains(where: { $0.id == .codex }) == true || viewModel.resetNotificationsEnabled) {
                         Toggle(isOn: Binding(
                             get: { viewModel.resetNotificationsEnabled },
                             set: viewModel.setResetNotifications
@@ -36,7 +36,7 @@ struct ContentView: View {
                                 Text(L10n.text("Statusline sends a generic alert; reset details stay encrypted."))
                                     .font(.caption)
                                     .foregroundStyle(DataPlaneTheme.muted)
-                                Text(L10n.text("With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration."))
+                                Text(L10n.text("With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send alerts. Turning off all alerts removes the relay registration."))
                                     .font(.caption)
                                     .foregroundStyle(DataPlaneTheme.muted)
                             }
@@ -44,6 +44,29 @@ struct ContentView: View {
                         .tint(DataPlaneTheme.signal)
                         .disabled(viewModel.resetNotificationsBusy || !ResetPushManager.shared.isConfigured)
                         .accessibilityIdentifier("codexResetNotifications")
+                    }
+
+                    if viewModel.relaySyncState.isPaired,
+                       viewModel.services?.providers.isEmpty == false || viewModel.quotaNotificationsEnabled {
+                        Toggle(isOn: Binding(
+                            get: { viewModel.quotaNotificationsEnabled },
+                            set: viewModel.setQuotaNotifications
+                        )) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(L10n.text("Quota notifications"))
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(DataPlaneTheme.ink)
+                                Text(L10n.text("When an exhausted 5h or weekly quota resets, and one hour before a weekly reset with at least 20% left."))
+                                    .font(.caption)
+                                    .foregroundStyle(DataPlaneTheme.muted)
+                                Text(L10n.text("Only for services in your Companion, running and connected. With permission, the relay stores an encrypted Firebase installation ID and receives the alert type, service and delivery expiry; quota readings stay encrypted."))
+                                    .font(.caption)
+                                    .foregroundStyle(DataPlaneTheme.muted)
+                            }
+                        }
+                        .tint(DataPlaneTheme.signal)
+                        .disabled(viewModel.resetNotificationsBusy || !ResetPushManager.shared.isConfigured)
+                        .accessibilityIdentifier("quotaNotifications")
                     }
 
                     if viewModel.focusedProvider == nil {
@@ -109,7 +132,7 @@ struct ContentView: View {
             endpoint: viewModel.relayEndpoint,
             onRefresh: refreshFromRelay,
             onPair: { isPairingPresented = true },
-            onDisconnect: viewModel.disconnectRelay
+            onDisconnect: { viewModel.disconnectRelay() }
         )
     }
 

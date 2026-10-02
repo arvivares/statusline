@@ -388,14 +388,16 @@ export class D1RelayStore implements RelayStore {
     const result = await this.database
       .prepare(
         `INSERT INTO relay_push_devices (
-          channel_id, device_id, fid_nonce, fid_ciphertext, language, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?)
+          channel_id, device_id, fid_nonce, fid_ciphertext, language, updated_at, reset_credits, quota_alerts
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(channel_id) DO UPDATE SET
           device_id = excluded.device_id,
           fid_nonce = excluded.fid_nonce,
           fid_ciphertext = excluded.fid_ciphertext,
           language = excluded.language,
-          updated_at = excluded.updated_at`,
+          updated_at = excluded.updated_at,
+          reset_credits = excluded.reset_credits,
+          quota_alerts = excluded.quota_alerts`,
       )
       .bind(
         channelID,
@@ -404,6 +406,8 @@ export class D1RelayStore implements RelayStore {
         device.ciphertext,
         device.language,
         now,
+        device.resetCredits === false ? 0 : 1,
+        device.quotaAlerts === true ? 1 : 0,
       )
       .run();
     if (!result.success)
@@ -615,6 +619,8 @@ interface RelayPushDeviceRow {
   readonly fid_ciphertext: string;
   readonly language: "en" | "es";
   readonly updated_at: number;
+  readonly reset_credits: number;
+  readonly quota_alerts: number;
 }
 
 function mapPushDevice(row: RelayPushDeviceRow): PushDevice {
@@ -624,6 +630,8 @@ function mapPushDevice(row: RelayPushDeviceRow): PushDevice {
     ciphertext: row.fid_ciphertext,
     language: row.language,
     updatedAt: row.updated_at,
+    resetCredits: row.reset_credits === 1,
+    quotaAlerts: row.quota_alerts === 1,
   };
 }
 
