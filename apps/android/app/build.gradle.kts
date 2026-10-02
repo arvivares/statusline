@@ -68,7 +68,7 @@ android {
         applicationId = "inmerzion.statusline"
         minSdk = 23
         targetSdk = 36
-        versionCode = 30
+        versionCode = 31
         versionName = "0.1.34"
 
         buildConfigField("String", "RELAY_BASE_URL", relayBaseURL.asBuildConfigLiteral())
@@ -157,6 +157,8 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+    // 2.12 raises minSdk to 24; retain Android 6/API 23 support with 2.11.2.
+    implementation("androidx.work:work-runtime:2.11.2")
     val cameraXVersion = "1.6.2"
     implementation("androidx.camera:camera-camera2:$cameraXVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraXVersion")

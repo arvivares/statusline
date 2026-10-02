@@ -142,20 +142,22 @@ class StatuslineRepository(context: Context) {
             notificationPreferences.getBoolean(RESET_PUSH_REMOVE_PENDING, false)) {
             unregisterResetNotifications()
         }
-        credentials.clear()
-        servicesCache.clear()
-        legacyCache.clear()
+        SNAPSHOT_COORDINATOR.invalidate {
+            credentials.clear()
+            servicesCache.clear()
+            legacyCache.clear()
+        }
     }
 
-    fun enableDemo(): AgentServicesSnapshot {
+    fun enableDemo(): AgentServicesSnapshot = SNAPSHOT_COORDINATOR.invalidate {
         val status = DemoStatusFactory.create()
         val snapshot = AgentServicesSnapshot.fromLegacy(status).copy(isDemo = true)
         servicesCache.save(snapshot)
         legacyCache.save(status)
-        return snapshot
+        snapshot
     }
 
-    fun disableDemo() {
+    fun disableDemo() = SNAPSHOT_COORDINATOR.invalidate {
         if (cachedServices()?.isDemo == true) {
             servicesCache.clear()
             legacyCache.clear()
@@ -177,16 +179,19 @@ class StatuslineRepository(context: Context) {
             readerToken = readerToken,
             encryptionKey = pairing.encryptionKey,
         )
-        credentials.save(readerCredentials)
-        // A newly claimed channel must never display the previous channel's
-        // quota while waiting for its first encrypted publication.
-        servicesCache.clear()
-        legacyCache.clear()
-        fetch(readerCredentials)
+        val revision = SNAPSHOT_COORDINATOR.invalidate {
+            credentials.save(readerCredentials)
+            // A newly claimed channel must never display the previous channel's quota.
+            servicesCache.clear()
+            legacyCache.clear()
+            SNAPSHOT_COORDINATOR.snapshot { Unit }.first
+        }
+        fetch(readerCredentials, revision)
     }
 
     fun refresh(): AgentServicesSnapshot? {
-        val readerCredentials = credentials.load() ?: throw StatuslineException(
+        val (revision, storedReader) = SNAPSHOT_COORDINATOR.snapshot { credentials.load() }
+        val readerCredentials = storedReader ?: throw StatuslineException(
             FailureKind.NOT_PAIRED,
             "Empareja primero este dispositivo con Statusline Companion.",
         )
@@ -196,10 +201,10 @@ class StatuslineRepository(context: Context) {
                 "El vínculo guardado pertenece a otro endpoint de Statusline.",
             )
         }
-        return fetch(readerCredentials)
+        return fetch(readerCredentials, revision)
     }
 
-    private fun fetch(readerCredentials: ReaderCredentials): AgentServicesSnapshot? {
+    private fun fetch(readerCredentials: ReaderCredentials, revision: Long): AgentServicesSnapshot? {
         val envelope = client.fetchSnapshot(
             readerCredentials.channelId,
             readerCredentials.readerToken,
@@ -207,21 +212,24 @@ class StatuslineRepository(context: Context) {
         // A new channel can legitimately have no sample yet. Preserve an
         // existing same-channel sample during a refresh; a fresh pair has no
         // cache and therefore remains in WAITING_FOR_DESKTOP.
-        if (envelope == null) return cachedServices()
+        if (envelope == null) return SNAPSHOT_COORDINATOR.commit(revision) { cachedServices() }
 
         val incoming = RelayProtocol.decodeServices(envelope, readerCredentials)
-        val current = servicesCache.load()
-        if (current != null && current.channelId == incoming.channelId && !incoming.supersedes(current)) {
-            return current
-        }
+        return SNAPSHOT_COORDINATOR.commit(revision) {
+            val current = servicesCache.load()
+            if (current != null && current.channelId == incoming.channelId && !incoming.supersedes(current)) {
+                return@commit current
+            }
 
-        servicesCache.save(incoming)
-        incoming.focusedProvider(servicesCache.focusedProvider())?.usageStatus(incoming.isDemo)?.let(legacyCache::save)
-        return incoming
+            servicesCache.save(incoming)
+            incoming.focusedProvider(servicesCache.focusedProvider())?.usageStatus(incoming.isDemo)?.let(legacyCache::save)
+            incoming
+        }
     }
 
     private companion object {
         val PUSH_COORDINATOR = PushRegistrationCoordinator()
+        val SNAPSHOT_COORDINATOR = SnapshotRefreshCoordinator()
         const val RESET_PUSH_PREFERENCES = "statusline.resetPush"
         const val RESET_PUSH_ENABLED = "enabled"
         const val QUOTA_PUSH_ENABLED = "quotaAlerts"

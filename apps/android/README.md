@@ -98,7 +98,14 @@ Release también ejecuta `scripts/verify-r8-registrars.sh` sobre `mapping.txt`. 
 3. La app reclama el token efímero y lo reemplaza por un reader token.
 4. Añade `Codex Data Plane` desde el selector de widgets de Android.
 
-El widget sólo muestra la caché validada por la app y no realiza solicitudes de red por su cuenta. Al tocarlo se abre Statusline y se refresca el snapshot; esto mantiene predecible el consumo del relay.
+El widget muestra una caché privada validada. Una tarea única de WorkManager consulta
+el relay cada 30 minutos cuando hay un widget activo, emparejamiento válido y conexión;
+no necesita abrir la app. Android puede retrasarla por ahorro de batería o Doze, por
+lo que no es una garantía de puntualidad. Al tocar el widget se abre Statusline y se
+refresca también en primer plano. Sin widget, al desconectar o en demo se cancela la
+tarea. Los errores conservan la última lectura y los reintentos de red son limitados.
+No se guardan tokens ni claves en la base de datos de WorkManager. Véase
+[sincronización](../../docs/architecture/synchronization.md) para los límites y las pruebas.
 
 ## Seguridad
 

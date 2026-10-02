@@ -86,11 +86,31 @@ production publication, or proof of a real provider rollover.
   were not observed because its widget was not visible on the current home page;
   no new widget was added and no launcher layout was changed.
 
+## Widget implementation follow-up
+
+Subsequent inspection of the actual version-30 source found that
+`StatuslineWidgetProvider.onUpdate()` projects `repository.cachedServices()`;
+it does not fetch the relay. `updatePeriodMillis=1800000` triggers periodic
+redrawing of that cache, not independent network synchronization. The current
+manifest/application has no background relay worker, and the app's refresh
+updates widgets after fetching in the foreground.
+
+Consequently, do not claim independent Android widget synchronization for this
+build. Rendering the existing widget is still useful QA, but cannot establish a
+background fetch that this implementation does not perform. A background-sync
+correction needs separate implementation, tests and a new Android build. The
+operator approved that follow-up; source implementation and local tests are now
+recorded in [the versionCode 31 candidate](validation-0.1.34-31.md). The installed
+Play build 30 and the published GitHub installers have not been replaced by that
+candidate. This limitation does not invalidate the physical push-delivery
+observations above.
+
 ## Remaining gates
 
-- Observe the existing widget rendering and a fresh background sample; complete
-  physical Spanish/fallback UI and notification QA if required by the release
-  matrix. The physical notification observations above cover English only.
+- Observe the existing widget rendering. Independent background fetch requires
+  the implementation follow-up above, not merely waiting for this widget.
+  Complete physical Spanish/fallback UI and notification QA if required by the
+  release matrix; the physical notification observations cover English only.
 - Observe a real provider exhaustion/recovery or last-hour weekly warning
   separately. Synthetic transport and server ACKs do not prove provider rollover,
   exact timing, delivery during device suspension or every agent's data source.

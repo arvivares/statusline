@@ -11,12 +11,14 @@ import com.google.firebase.messaging.FirebaseMessaging
 import inmerzion.statusline.localization.L10n
 import inmerzion.statusline.localization.LocalizedContext
 import inmerzion.statusline.widget.StatuslineWidgetProvider
+import inmerzion.statusline.widget.WidgetSyncScheduler
 
 class StatuslineApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         L10n.primaryLanguage = LocalizedContext::systemLanguage
         configurePush()
+        WidgetSyncScheduler.reconcile(this)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

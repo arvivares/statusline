@@ -150,6 +150,16 @@ private data class WidgetSource(
 )
 
 class StatuslineWidgetProvider : AppWidgetProvider() {
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        WidgetSyncScheduler.reconcile(context)
+    }
+
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        WidgetSyncScheduler.cancel(context)
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == Intent.ACTION_LOCALE_CHANGED) updateAll(context)
@@ -164,6 +174,7 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
         appWidgetIds.forEach { widgetId ->
             updateWidget(context, appWidgetManager, widgetId, source)
         }
+        WidgetSyncScheduler.reconcile(context)
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -195,6 +206,7 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
             manager.getAppWidgetIds(component).forEach { widgetId ->
                 updateWidget(context, manager, widgetId, source)
             }
+            WidgetSyncScheduler.reconcile(context)
         }
 
         private fun updateWidget(
