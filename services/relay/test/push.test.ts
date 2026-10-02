@@ -112,6 +112,82 @@ describe("Firebase reset push gateway", () => {
     );
   });
 
+  it("expires weekly warnings at the reset and separates independent window notifications", async () => {
+    const messages: Array<Record<string, unknown>> = [];
+    const fetcher: typeof fetch = async (input, init) => {
+      if (String(input) === "https://oauth2.googleapis.com/token")
+        return Response.json({
+          access_token: "fixture-access-token",
+          expires_in: 3600,
+        });
+      messages.push(
+        (JSON.parse(String(init?.body)) as { message: Record<string, unknown> })
+          .message,
+      );
+      return Response.json({ name: "fixture-message" });
+    };
+    const gateway = createFcmPushGateway(
+      {
+        FCM_SERVICE_ACCOUNT_JSON: serviceAccountJSON,
+        PUSH_TOKEN_ENCRYPTION_KEY: encryptionKey,
+      },
+      fetcher,
+      () => NOW,
+    );
+    if (!gateway) throw new Error("Expected push gateway");
+    const device: PushDevice = {
+      deviceID: "f9e8cfd0-4ec4-4a57-8f9a-00a3f0670d50",
+      ...(await gateway.encryptInstallationID(FID)),
+      language: "en",
+      updatedAt: NOW,
+      quotaAlerts: true,
+    };
+    const base = {
+      eventID: "65ca6543-7652-4bde-a4cf-01c5c0766f8b",
+      provider: "claude" as const,
+      expiresAt: NOW + 45,
+    };
+    await gateway.sendQuotaAlert(device, {
+      ...base,
+      kind: "weeklyExpiring",
+      window: "weekly",
+    });
+    await gateway.sendQuotaAlert(device, {
+      ...base,
+      kind: "quotaRecovered",
+      window: "short",
+    });
+    expect(messages[0]?.android).toMatchObject({
+      ttl: "45s",
+      notification: { tag: "claude-weeklyExpiring-weekly" },
+    });
+    expect(messages[0]?.apns).toMatchObject({
+      headers: {
+        "apns-expiration": String(NOW + 45),
+        "apns-collapse-id": "claude-weeklyExpiring-weekly",
+      },
+    });
+    expect(messages[1]?.apns).toMatchObject({
+      headers: { "apns-collapse-id": "claude-quotaRecovered-short" },
+    });
+    expect(messages[0]?.data).toEqual({
+      alertCategory: "quota",
+      provider: "claude",
+      kind: "weeklyExpiring",
+      window: "weekly",
+    });
+    expect(JSON.stringify(messages)).not.toMatch(
+      /resetId|remainingPercent|readerToken|publisherToken/u,
+    );
+    await gateway.sendQuotaAlert(device, {
+      ...base,
+      expiresAt: NOW,
+      kind: "weeklyExpiring",
+      window: "weekly",
+    });
+    expect(messages).toHaveLength(2);
+  });
+
   it("marks an installation as invalid when FCM reports UNREGISTERED", async () => {
     let fcmAttempt = 0;
     const fetcher: typeof fetch = async (input) => {

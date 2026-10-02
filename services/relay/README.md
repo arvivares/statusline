@@ -26,6 +26,9 @@ mantiene el snapshot de Codex para clientes antiguos y añade una lista cifrada 
 servicios para móviles actualizados. Aplica las migraciones pendientes **antes**
 del nuevo Worker. La `0004_reset_credit_push.sql` añade únicamente registros de
 dispositivos y eventos push; no recrea canales ni invalida emparejamientos.
+La `0005_quota_alert_preferences.sql` añade preferencias independientes de
+créditos Codex y [avisos de cuota](../../docs/architecture/quota-alerts.md).
+Los registros anteriores conservan créditos activados y cuota desactivada.
 
 1. Instala dependencias con `npm ci`.
 2. Aplica la migración: `npm run db:migrate:local`.
@@ -34,13 +37,13 @@ dispositivos y eventos push; no recrea canales ni invalida emparejamientos.
 
 Wrangler carga secretos locales desde `.dev.vars`. Para probar push localmente,
 copia `.dev.vars.example` a `.dev.vars` y configura sus dos valores; sin ambos,
-`/health` no anuncia `reset-push-v1`. Conserva el archivo fuera de Git. La
+`/health` no anuncia `reset-push-v1` ni `quota-alerts-v1`. Conserva el archivo fuera de Git. La
 autenticación de Cloudflare se gestiona con `npx wrangler login` o con variables
 `CLOUDFLARE_*` cargadas desde el `.env` privado de la raíz.
 
 ### Parche temporal de las herramientas
 
-Wrangler `4.129.0` utiliza Miniflare `5.20260903.0-alpha`, que todavía solicita
+Wrangler `4.147.0` utiliza Miniflare `5.20261001.0-alpha`, que todavía solicita
 Sharp `0.35.2`. El override limitado a `miniflare.sharp` fija `0.35.4` para corregir
 [GHSA-rgj7-g3m4-5g8c](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c).
 Es una dependencia de desarrollo: el Worker de producción no procesa imágenes

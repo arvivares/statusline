@@ -83,6 +83,7 @@ fun StatuslineApp(
     viewModel: StatuslineViewModel,
     onSelectProvider: (AgentProviderId) -> Unit,
     onSetResetNotifications: (Boolean) -> Unit,
+    onSetQuotaNotifications: (Boolean) -> Unit,
     onScanPairing: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenSupport: () -> Unit,
@@ -152,12 +153,21 @@ fun StatuslineApp(
                         onClick = { viewModel.refresh() },
                         modifier = Modifier.align(Alignment.CenterHorizontally),
                     )
-                    if (state.inventory?.providers?.any { it.id == AgentProviderId.CODEX } == true) {
+                    if (state.inventory?.providers?.any { it.id == AgentProviderId.CODEX } == true || state.resetNotificationsEnabled) {
                         ResetNotificationControl(
                             enabled = state.resetNotificationsEnabled,
                             busy = state.resetNotificationsBusy,
                             available = state.isPaired && StatuslineApplication.isPushConfigured(),
                             onChange = onSetResetNotifications,
+                        )
+                    }
+                    if (!state.inventory?.providers.isNullOrEmpty() || state.quotaNotificationsEnabled) {
+                        ResetNotificationControl(
+                            enabled = state.quotaNotificationsEnabled,
+                            busy = state.resetNotificationsBusy,
+                            available = state.isPaired && StatuslineApplication.isPushConfigured(),
+                            onChange = onSetQuotaNotifications,
+                            quotaCategory = true,
                         )
                     }
                     PlaneDivider()
@@ -223,6 +233,7 @@ private fun ResetNotificationControl(
     busy: Boolean,
     available: Boolean,
     onChange: (Boolean) -> Unit,
+    quotaCategory: Boolean = false,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
@@ -231,17 +242,17 @@ private fun ResetNotificationControl(
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
-                L10n.text("Notify me when new Codex reset credits are added"),
+                L10n.text(if (quotaCategory) "Quota notifications" else "Notify me when new Codex reset credits are added"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = DataPlaneColors.Ink,
             )
             Text(
-                L10n.text("Statusline sends a generic alert; reset details stay encrypted."),
+                L10n.text(if (quotaCategory) "When an exhausted 5h or weekly quota resets, and one hour before a weekly reset with at least 20% left." else "Statusline sends a generic alert; reset details stay encrypted."),
                 style = MaterialTheme.typography.bodySmall,
                 color = DataPlaneColors.Muted,
             )
             Text(
-                L10n.text("With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration."),
+                L10n.text(if (quotaCategory) "Only for services in your Companion, running and connected. With permission, the relay stores an encrypted Firebase installation ID and receives the alert type, service and delivery expiry; quota readings stay encrypted." else "With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send alerts. Turning off all alerts removes the relay registration."),
                 style = MaterialTheme.typography.bodySmall,
                 color = DataPlaneColors.Muted,
             )
@@ -251,7 +262,7 @@ private fun ResetNotificationControl(
             onCheckedChange = onChange,
             enabled = available && !busy,
             modifier = Modifier.semantics {
-                contentDescription = L10n.text("Codex reset notifications")
+                contentDescription = L10n.text(if (quotaCategory) "Quota notifications" else "Codex reset notifications")
                 stateDescription = L10n.text(if (enabled) "On" else "Off")
             },
         )

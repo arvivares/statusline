@@ -229,6 +229,8 @@ private struct StatusRelayPushRegistration: Encodable, Sendable {
     let deviceId: String
     let fid: String
     let language: String
+    let resetCredits: Bool
+    let quotaAlerts: Bool
 }
 
 private struct StatusRelayPushEvent: Encodable, Sendable {
@@ -395,12 +397,12 @@ private final class StatusRelayAPIClient {
         return try decode(StatusRelayEnvelope.self, from: data)
     }
 
-    func supportsResetPush() async throws -> Bool {
+    func supportsResetPush(capability: String = "reset-push-v1") async throws -> Bool {
         var request = URLRequest(url: try configuration.endpoint("health"))
         request.httpMethod = "GET"
         let (data, response) = try await perform(request)
         try requireStatus(response, data: data, allowed: [200])
-        return try decode(RelayHealth.self, from: data).capabilities.contains("reset-push-v1")
+        return try decode(RelayHealth.self, from: data).capabilities.contains(capability)
     }
 
     func delete(_ credentials: StatusRelayPublisherCredentials) async throws {
@@ -419,7 +421,9 @@ private final class StatusRelayAPIClient {
         _ credentials: StatusRelayReaderCredentials,
         deviceID: UUID,
         fid: String,
-        language: String
+        language: String,
+        resetCredits: Bool = true,
+        quotaAlerts: Bool = false
     ) async throws {
         var request = URLRequest(url: try configuration.endpoint(
             "v1", "channels", credentials.channelID.uuidString.lowercased(), "push-device"
@@ -429,7 +433,9 @@ private final class StatusRelayAPIClient {
         request.httpBody = try encoder.encode(StatusRelayPushRegistration(
             deviceId: deviceID.uuidString.lowercased(),
             fid: fid,
-            language: language == "es" ? "es" : "en"
+            language: language == "es" ? "es" : "en",
+            resetCredits: resetCredits,
+            quotaAlerts: quotaAlerts
         ))
         authorize(&request, token: credentials.readerToken)
         let (data, response) = try await perform(request)
@@ -749,7 +755,9 @@ protocol CodexRelayReading {
     func fetchStatus() async throws -> CodexUsageStatus?
     func fetchServices() async throws -> AgentServicesSnapshot?
     func supportsResetPush() async throws -> Bool
+    func supportsQuotaAlerts() async throws -> Bool
     func registerPushDevice(deviceID: UUID, fid: String, language: String) async throws
+    func registerPushPreferences(deviceID: UUID, fid: String, language: String, resetCredits: Bool, quotaAlerts: Bool) async throws
     func unregisterPushDevice() async throws
     func disconnect() throws
 }
@@ -760,7 +768,12 @@ extension CodexRelayReading {
         try await fetchStatus().map { .legacy($0) }
     }
     func supportsResetPush() async throws -> Bool { false }
+    func supportsQuotaAlerts() async throws -> Bool { false }
     func registerPushDevice(deviceID: UUID, fid: String, language: String) async throws {}
+    func registerPushPreferences(deviceID: UUID, fid: String, language: String, resetCredits: Bool, quotaAlerts: Bool) async throws {
+        guard resetCredits && !quotaAlerts else { throw CodexRelayError.invalidResponse }
+        try await registerPushDevice(deviceID: deviceID, fid: fid, language: language)
+    }
     func unregisterPushDevice() async throws {}
 }
 
@@ -873,6 +886,21 @@ final class CodexRelayReaderRepository: CodexRelayReading {
     func supportsResetPush() async throws -> Bool {
         guard let client, try store.loadReader() != nil else { throw CodexRelayError.notPaired }
         return try await client.supportsResetPush()
+    }
+
+    func supportsQuotaAlerts() async throws -> Bool {
+        guard let client, try store.loadReader() != nil else { throw CodexRelayError.notPaired }
+        return try await client.supportsResetPush(capability: "quota-alerts-v1")
+    }
+
+    func registerPushPreferences(deviceID: UUID, fid: String, language: String, resetCredits: Bool, quotaAlerts: Bool) async throws {
+        guard let client, let credentials = try store.loadReader() else { throw CodexRelayError.notPaired }
+        guard credentials.protocolVersion == 1, credentials.relayOrigin == configuration?.origin else {
+            throw CodexRelayError.endpointMismatch
+        }
+        try await client.registerPushDevice(credentials, deviceID: deviceID, fid: fid, language: language,
+                                           resetCredits: resetCredits, quotaAlerts: quotaAlerts)
+        guard try store.loadReader() == credentials else { throw CancellationError() }
     }
 
     func unregisterPushDevice() async throws {

@@ -51,22 +51,25 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
+    private var pendingQuotaPermission = false
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) viewModel.enableResetNotifications()
+        if (granted) viewModel.enableResetNotifications(quotaCategory = pendingQuotaPermission)
         else viewModel.notificationPermissionDenied()
     }
     private var firstResume = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pendingQuotaPermission = savedInstanceState?.getBoolean("quotaPermission", false) ?: false
         val initialPairing = consumePairingUri(intent)
         setContent {
             StatuslineApp(
                 viewModel = viewModel,
                 onSelectProvider = viewModel::selectProvider,
-                onSetResetNotifications = ::setResetNotifications,
+                onSetResetNotifications = { setResetNotifications(it) },
+                onSetQuotaNotifications = { setResetNotifications(it, quotaCategory = true) },
                 onScanPairing = ::scanPairingCode,
                 onOpenPrivacy = { openPublicPage("privacy") },
                 onOpenSupport = { openPublicPage("support") },
@@ -82,6 +85,11 @@ class MainActivity : ComponentActivity() {
         if (pairingUri != null) viewModel.pair(pairingUri) else viewModel.refreshIfPaired()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean("quotaPermission", pendingQuotaPermission)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onResume() {
         super.onResume()
         if (firstResume) {
@@ -91,15 +99,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun setResetNotifications(enabled: Boolean) {
+    private fun setResetNotifications(enabled: Boolean, quotaCategory: Boolean = false) {
         if (!enabled) {
-            viewModel.disableResetNotifications()
+            viewModel.disableResetNotifications(quotaCategory)
             return
         }
-        viewModel.prepareResetNotifications {
+        viewModel.prepareResetNotifications(quotaCategory) {
+            pendingQuotaPermission = quotaCategory
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
                 checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                viewModel.enableResetNotifications()
+                viewModel.enableResetNotifications(quotaCategory)
             } else {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }

@@ -1,4 +1,10 @@
-import type { Env, EncryptedPushToken, PushDevice, PushGateway } from "./types";
+import type {
+  Env,
+  EncryptedPushToken,
+  PushDevice,
+  PushGateway,
+  QuotaAlert,
+} from "./types";
 
 const FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
 const OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -175,22 +181,6 @@ export function createFcmPushGateway(
     },
 
     async sendResetAdded(device: PushDevice): Promise<"sent" | "invalidToken"> {
-      let fid: string;
-      try {
-        const plaintext = await crypto.subtle.decrypt(
-          {
-            name: "AES-GCM",
-            iv: toArrayBuffer(decodeBase64URL(device.nonce)),
-            additionalData: toArrayBuffer(new TextEncoder().encode(FID_AAD)),
-          },
-          await getEncryptionKey(),
-          toArrayBuffer(decodeBase64URL(device.ciphertext)),
-        );
-        fid = new TextDecoder("utf-8", { fatal: true }).decode(plaintext);
-      } catch {
-        throw new Error("Stored push registration could not be decrypted.");
-      }
-
       const content =
         device.language === "es"
           ? {
@@ -201,55 +191,138 @@ export function createFcmPushGateway(
               title: "A Codex reset is available",
               body: "Open Statusline to see your reset count and expiry.",
             };
-      const response = await fetcher(
-        `https://fcm.googleapis.com/v1/projects/${account().project_id}/messages:send`,
+      return deliver(device, content, "codex-reset-credit", now() + 3_600);
+    },
+
+    async sendQuotaAlert(
+      device: PushDevice,
+      alert: QuotaAlert,
+    ): Promise<"sent" | "invalidToken"> {
+      return deliver(
+        device,
+        quotaAlertContent(device.language, alert),
+        `${alert.provider}-${alert.kind}-${alert.window}`,
+        alert.expiresAt,
         {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${await accessToken()}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: {
-              fid,
-              notification: content,
-              android: {
-                priority: "high",
-                ttl: "3600s",
-                notification: {
-                  tag: "codex-reset-credit",
-                  channel_id: "reset_alerts",
-                },
-              },
-              apns: {
-                headers: {
-                  "apns-priority": "10",
-                  "apns-push-type": "alert",
-                  "apns-collapse-id": "codex-reset-credit",
-                  "apns-expiration": String(now() + 3_600),
-                },
-                payload: {
-                  aps: {
-                    alert: content,
-                    sound: "default",
-                  },
-                },
-              },
-            },
-          }),
+          alertCategory: "quota",
+          provider: alert.provider,
+          kind: alert.kind,
+          window: alert.window,
         },
-      );
-      if (response.ok) return "sent";
-      const error = (await response
-        .json()
-        .catch(() => null)) as FCMErrorEnvelope | null;
-      if (response.status === 404 && isUnregistered(error))
-        return "invalidToken";
-      throw new Error(
-        "Push provider could not deliver the reset notification.",
       );
     },
   };
+
+  async function deliver(
+    device: PushDevice,
+    content: { title: string; body: string },
+    tag: string,
+    expiresAt: number,
+    data?: Record<string, string>,
+  ): Promise<"sent" | "invalidToken"> {
+    // Recheck after asynchronous OAuth work as well: never enqueue stale warnings.
+    const authorization = await accessToken();
+    const ttl = Math.min(3_600, expiresAt - now());
+    if (ttl <= 0) return "sent";
+    let fid: string;
+    try {
+      const plaintext = await crypto.subtle.decrypt(
+        {
+          name: "AES-GCM",
+          iv: toArrayBuffer(decodeBase64URL(device.nonce)),
+          additionalData: toArrayBuffer(new TextEncoder().encode(FID_AAD)),
+        },
+        await getEncryptionKey(),
+        toArrayBuffer(decodeBase64URL(device.ciphertext)),
+      );
+      fid = new TextDecoder("utf-8", { fatal: true }).decode(plaintext);
+    } catch {
+      throw new Error("Stored push registration could not be decrypted.");
+    }
+
+    const response = await fetcher(
+      `https://fcm.googleapis.com/v1/projects/${account().project_id}/messages:send`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authorization}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: {
+            fid,
+            notification: content,
+            ...(data ? { data } : {}),
+            android: {
+              priority: "high",
+              ttl: `${ttl}s`,
+              notification: {
+                tag,
+                channel_id: "reset_alerts",
+              },
+            },
+            apns: {
+              headers: {
+                "apns-priority": "10",
+                "apns-push-type": "alert",
+                "apns-collapse-id": tag,
+                "apns-expiration": String(expiresAt),
+              },
+              payload: {
+                aps: {
+                  alert: content,
+                  sound: "default",
+                },
+              },
+            },
+          },
+        }),
+      },
+    );
+    if (response.ok) return "sent";
+    const error = (await response
+      .json()
+      .catch(() => null)) as FCMErrorEnvelope | null;
+    if (response.status === 404 && isUnregistered(error)) return "invalidToken";
+    throw new Error("Push provider could not deliver the reset notification.");
+  }
+}
+
+export function quotaAlertContent(
+  language: "en" | "es",
+  alert: QuotaAlert,
+): { title: string; body: string } {
+  const name = {
+    codex: "Codex",
+    antigravity: "Antigravity",
+    claude: "Claude Code",
+  }[alert.provider];
+  if (alert.kind === "weeklyExpiring") {
+    return language === "es"
+      ? {
+          title: `${name}: aprovecha tu cuota semanal`,
+          body: "Queda al menos un 20 % y se reinicia en menos de una hora. Abre Statusline para ver los detalles.",
+        }
+      : {
+          title: `${name}: use your weekly quota`,
+          body: "At least 20% remains and resets within an hour. Open Statusline for details.",
+        };
+  }
+  const period =
+    alert.window === "weekly"
+      ? language === "es"
+        ? "semanal"
+        : "weekly"
+      : "5h";
+  return language === "es"
+    ? {
+        title: `${name}: cuota disponible de nuevo`,
+        body: `Tu cuota ${period} se reinició tras agotarse. Abre Statusline para consultar todos tus límites.`,
+      }
+    : {
+        title: `${name}: quota available again`,
+        body: `Your ${period} quota reset after running out. Open Statusline to check all your limits.`,
+      };
 }
 
 interface FCMErrorEnvelope {

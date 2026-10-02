@@ -34,8 +34,7 @@
 "AES-256-GCM · 30 DAY TTL" = "AES-256-GCM · 30 DAY TTL";
 "AES-256-GCM · UNIVERSAL" = "AES-256-GCM · UNIVERSAL";
 "Agent usage" = "Agent usage";
-"Allow notifications in Android Settings to receive Codex reset alerts." = "Allow notifications in Android Settings to receive Codex reset alerts.";
-"Allow notifications in iOS Settings to receive Codex reset alerts." = "Allow notifications in iOS Settings to receive Codex reset alerts.";
+"Allow notifications in system Settings to receive alerts." = "Allow notifications in system Settings to receive alerts.";
 "An encrypted snapshot is available on this device." = "An encrypted snapshot is available on this device.";
 "Antigravity · {0}% left" = "Antigravity · {0}% left";
 "Antigravity · no weekly data" = "Antigravity · no weekly data";
@@ -344,6 +343,7 @@
 "NOT PUBLISHED" = "NOT PUBLISHED";
 "Not selected" = "Not selected";
 "NOT UPLOADED" = "NOT UPLOADED";
+"Notification preferences updated." = "Notification preferences updated.";
 "Notifications are off because permission was revoked." = "Notifications are off because permission was revoked.";
 "Notifications are off on this device. Relay cleanup will retry when you open Statusline." = "Notifications are off on this device. Relay cleanup will retry when you open Statusline.";
 "Notifications are off. This device was unregistered." = "Notifications are off. This device was unregistered.";
@@ -359,6 +359,7 @@
 "On" = "On";
 "On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically." = "On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically.";
 "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits." = "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits.";
+"Only for services in your Companion, running and connected. With permission, the relay stores an encrypted Firebase installation ID and receives the alert type, service and delivery expiry; quota readings stay encrypted." = "Only for services in your Companion, running and connected. With permission, the relay stores an encrypted Firebase installation ID and receives the alert type, service and delivery expiry; quota readings stay encrypted.";
 "Open OpenAI" = "Open OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Open Source Settings to detect or select a local Codex runtime.";
 "Open Source Settings to detect or select the local CLI." = "Open Source Settings to detect or select the local CLI.";
@@ -409,6 +410,7 @@
 "QR EXPIRES {0}" = "QR EXPIRES {0}";
 "Quit" = "Quit";
 "Quota available" = "Quota available";
+"Quota notifications" = "Quota notifications";
 "Quota period" = "Quota period";
 "Quota updates while a Claude Code session is open and after it receives a response. Pro and Max report five-hour and weekly windows; Enterprise seats may report only the five-hour window; API-key sessions report none." = "Quota updates while a Claude Code session is open and after it receives a response. Pro and Max report five-hour and weekly windows; Enterprise seats may report only the five-hour window; API-key sessions report none.";
 "Quotas from your Companion. The small widget follows the service selected in Statusline." = "Quotas from your Companion. The small widget follows the service selected in Statusline.";
@@ -660,7 +662,8 @@
 "WEEKLY QUOTA" = "WEEKLY QUOTA";
 "Weekly quota, reset and private sync in one view." = "Weekly quota, reset and private sync in one view.";
 "Weekly window unavailable" = "Weekly window unavailable";
-"With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration." = "With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration.";
+"When an exhausted 5h or weekly quota resets, and one hour before a weekly reset with at least 20% left." = "When an exhausted 5h or weekly quota resets, and one hour before a weekly reset with at least 20% left.";
+"With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send alerts. Turning off all alerts removes the relay registration." = "With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send alerts. Turning off all alerts removes the relay registration.";
 "Working" = "Working";
 "WORKING" = "WORKING";
 "Writing Claude Code status line…" = "Writing Claude Code status line…";

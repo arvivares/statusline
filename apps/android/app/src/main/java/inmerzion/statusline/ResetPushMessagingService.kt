@@ -17,7 +17,7 @@ class ResetPushMessagingService : FirebaseMessagingService() {
         if (!StatuslineApplication.isPushConfigured()) return
         runCatching {
             val repository = StatuslineRepository(applicationContext)
-            if (repository.resetNotificationsEnabled() && repository.isPaired()) {
+            if (repository.anyNotificationsEnabled() && repository.isPaired()) {
                 repository.registerResetNotifications(installationId, L10n.locale.language)
             }
         }
@@ -27,7 +27,9 @@ class ResetPushMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         val repository = runCatching { StatuslineRepository(applicationContext) }.getOrNull() ?: return
-        if (!repository.resetNotificationsEnabled() || !repository.isPaired()) return
+        val quota = message.data["alertCategory"] == "quota"
+        val enabled = if (quota) repository.quotaNotificationsEnabled() else repository.resetNotificationsEnabled()
+        if (!enabled || !repository.isPaired()) return
         val content = message.notification ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -60,7 +62,8 @@ class ResetPushMessagingService : FirebaseMessagingService() {
 
         runCatching {
             getSystemService(NotificationManager::class.java)
-                .notify(RESET_NOTIFICATION_TAG, RESET_NOTIFICATION_ID, notification)
+                .notify(if (quota) "${message.data["provider"]}-${message.data["kind"]}-${message.data["window"]}" else RESET_NOTIFICATION_TAG,
+                    RESET_NOTIFICATION_ID, notification)
         }
     }
 

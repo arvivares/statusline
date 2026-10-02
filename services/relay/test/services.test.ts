@@ -3,7 +3,11 @@ import { readFileSync } from "node:fs";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterEach, describe, expect, it } from "vitest";
 import { createRelayApp } from "../src/app";
-import { SERVICES_MEDIA_TYPE, type ServicesPublication } from "../src/protocol";
+import {
+  SERVICES_MEDIA_TYPE,
+  hashToken,
+  type ServicesPublication,
+} from "../src/protocol";
 import { D1RelayStore, type RelayStore } from "../src/store";
 import type { D1Database, D1PreparedStatement } from "../src/types";
 import { MemoryRelayStore } from "./memory-store";
@@ -61,7 +65,7 @@ function publication(sequence: number, withCodex = true): ServicesPublication {
   };
 }
 
-async function fixture(kind: "memory" | "sqlite") {
+async function fixture(kind: "memory" | "sqlite", quotaMigration = true) {
   let clock = NOW;
   let fill = 0;
   const keys: string[] = [];
@@ -77,6 +81,7 @@ async function fixture(kind: "memory" | "sqlite") {
       "0004_reset_credit_push.sql",
     ])
       migrate(db, migration);
+    if (quotaMigration) migrate(db, "0005_quota_alert_preferences.sql");
     store = new D1RelayStore(sqliteAdapter(db));
   } else store = new MemoryRelayStore();
   const app = createRelayApp({
@@ -154,6 +159,67 @@ async function fixture(kind: "memory" | "sqlite") {
     },
   };
 }
+
+describe("Additive quota push migration", () => {
+  it("preserves a pre-upgrade pairing, snapshot and Codex-only subscription", async () => {
+    const f = await fixture("sqlite", false);
+    const db = f.db!;
+    await f.put(publication(1));
+    db.prepare("INSERT INTO relay_push_devices VALUES (?, ?, ?, ?, ?, ?)").run(
+      CHANNEL,
+      "f9e8cfd0-4ec4-4a57-8f9a-00a3f0670d50",
+      "old-nonce",
+      "old-ciphertext",
+      "es",
+      NOW,
+    );
+    migrate(db, "0005_quota_alert_preferences.sql");
+    const device = await f.store.readPushDevice(
+      CHANNEL,
+      await hashToken(f.credentials.publisherToken),
+      NOW,
+    );
+    expect(device).toMatchObject({
+      kind: "ok",
+      value: {
+        resetCredits: true,
+        quotaAlerts: false,
+        nonce: "old-nonce",
+        ciphertext: "old-ciphertext",
+      },
+    });
+    expect((await f.get()).status).toBe(200);
+    expect((await f.metadata()).status).toBe(200);
+    expect(
+      (
+        await f.store.registerPushDevice(
+          CHANNEL,
+          await hashToken(f.reader.readerToken),
+          {
+            deviceID: "f9e8cfd0-4ec4-4a57-8f9a-00a3f0670d50",
+            nonce: "new-nonce",
+            ciphertext: "new-ciphertext",
+            language: "en",
+            updatedAt: NOW,
+            resetCredits: false,
+            quotaAlerts: true,
+          },
+          NOW,
+        )
+      ).kind,
+    ).toBe("ok");
+    expect(
+      await f.store.readPushDevice(
+        CHANNEL,
+        await hashToken(f.credentials.publisherToken),
+        NOW,
+      ),
+    ).toMatchObject({
+      kind: "ok",
+      value: { quotaAlerts: true, resetCredits: false },
+    });
+  });
+});
 
 describe.each(["memory", "sqlite"] as const)(
   "services-v1 compatibility (%s)",

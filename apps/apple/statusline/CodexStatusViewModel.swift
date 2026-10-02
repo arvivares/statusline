@@ -97,6 +97,7 @@ final class CodexStatusViewModel {
     private(set) var feedback: CodexStatusFeedback?
     private(set) var relaySyncState: CodexRelaySyncState = .unpaired
     private(set) var resetNotificationsEnabled: Bool
+    private(set) var quotaNotificationsEnabled: Bool
     private(set) var resetNotificationsBusy = false
     private let store: CodexStatusStore
     private let relayRepository: any CodexRelayReading
@@ -115,12 +116,14 @@ final class CodexStatusViewModel {
     init(
         store: CodexStatusStore,
         relayRepository: any CodexRelayReading,
-        resetPushManager: ResetPushManager = .shared
+        resetPushManager: ResetPushManager? = nil
     ) {
         self.store = store
         self.relayRepository = relayRepository
-        self.resetPushManager = resetPushManager
-        resetNotificationsEnabled = resetPushManager.isEnabled
+        let pushManager = resetPushManager ?? .shared
+        self.resetPushManager = pushManager
+        resetNotificationsEnabled = pushManager.resetCreditsEnabled
+        quotaNotificationsEnabled = pushManager.quotaAlertsEnabled
         preferredProvider = store.servicesStore.focusedProvider
 
         reloadLocalStatus()
@@ -139,9 +142,18 @@ final class CodexStatusViewModel {
     var relayEndpoint: String? { relayRepository.endpoint }
 
     func setResetNotifications(_ enabled: Bool) {
+        setNotificationPreferences(resetCredits: enabled, quotaAlerts: quotaNotificationsEnabled)
+    }
+
+    func setQuotaNotifications(_ enabled: Bool) {
+        setNotificationPreferences(resetCredits: resetNotificationsEnabled, quotaAlerts: enabled)
+    }
+
+    private func setNotificationPreferences(resetCredits: Bool, quotaAlerts: Bool) {
         guard !resetNotificationsBusy else { return }
-        if !enabled {
+        if !resetCredits && !quotaAlerts {
             resetNotificationsEnabled = false
+            quotaNotificationsEnabled = false
             resetPushManager.beginOptOut()
             resetNotificationsBusy = true
             Task {
@@ -163,33 +175,39 @@ final class CodexStatusViewModel {
         resetNotificationsBusy = true
         Task {
             do {
-                guard try await relayRepository.supportsResetPush() else {
+                let available = try await (quotaAlerts ? relayRepository.supportsQuotaAlerts() : relayRepository.supportsResetPush())
+                guard available else {
                     throw ResetPushError.relayUnavailable
                 }
                 let installationID = try await resetPushManager.requestPermissionAndInstallationID()
-                try await relayRepository.registerPushDevice(
+                try await relayRepository.registerPushPreferences(
                     deviceID: resetPushManager.deviceID,
                     fid: installationID,
-                    language: L10n.language
+                    language: L10n.language,
+                    resetCredits: resetCredits,
+                    quotaAlerts: quotaAlerts
                 )
-                resetPushManager.markEnabled()
-                resetNotificationsEnabled = true
-                feedback = .success(L10n.text("Notifications are ready. Statusline will alert you when Codex reset credits are added."))
+                resetPushManager.markPreferences(resetCredits: resetCredits, quotaAlerts: quotaAlerts)
+                resetNotificationsEnabled = resetCredits
+                quotaNotificationsEnabled = quotaAlerts
+                feedback = .success(L10n.text("Notification preferences updated."))
             } catch ResetPushError.permissionDenied {
-                feedback = .error(L10n.text("Allow notifications in iOS Settings to receive Codex reset alerts."))
+                feedback = .error(L10n.text("Allow notifications in system Settings to receive alerts."))
             } catch ResetPushError.notConfigured {
                 feedback = .error(L10n.text("Push notifications are not configured for this build."))
             } catch ResetPushError.relayUnavailable {
                 feedback = .error(L10n.text("Push notifications are not available on this relay yet."))
             } catch {
-                resetPushManager.beginOptOut()
-                do {
-                    try await relayRepository.unregisterPushDevice()
-                    _ = await resetPushManager.finishOptOut()
-                } catch {
-                    await resetPushManager.invalidateTokenForOptOut()
+                // A failed category change must not remove an existing subscription.
+                if !resetPushManager.isEnabled {
+                    resetPushManager.beginOptOut()
+                    do {
+                        try await relayRepository.unregisterPushDevice()
+                        _ = await resetPushManager.finishOptOut()
+                    } catch {
+                        await resetPushManager.invalidateTokenForOptOut()
+                    }
                 }
-                resetNotificationsEnabled = false
                 feedback = .error(L10n.text("Could not enable notifications. Check your connection and try again."))
             }
             resetNotificationsBusy = false
@@ -197,6 +215,9 @@ final class CodexStatusViewModel {
     }
 
     private func refreshResetPushRegistration() async {
+        guard !resetNotificationsBusy else { return }
+        resetNotificationsBusy = true
+        defer { resetNotificationsBusy = false }
         if resetPushManager.pendingUnregistration {
             do {
                 try await relayRepository.unregisterPushDevice()
@@ -209,6 +230,7 @@ final class CodexStatusViewModel {
         guard await resetPushManager.hasNotificationPermission() else {
             resetPushManager.beginOptOut()
             resetNotificationsEnabled = false
+            quotaNotificationsEnabled = false
             do {
                 try await relayRepository.unregisterPushDevice()
                 let firebaseCleanupCompleted = await resetPushManager.finishOptOut()
@@ -223,10 +245,12 @@ final class CodexStatusViewModel {
         }
         do {
             let installationID = try await resetPushManager.currentInstallationID()
-            try await relayRepository.registerPushDevice(
+            try await relayRepository.registerPushPreferences(
                 deviceID: resetPushManager.deviceID,
                 fid: installationID,
-                language: L10n.language
+                language: L10n.language,
+                resetCredits: resetPushManager.resetCreditsEnabled,
+                quotaAlerts: resetPushManager.quotaAlertsEnabled
             )
         } catch {
             // A temporary push-registration failure must not interrupt quota sync.
@@ -335,11 +359,13 @@ final class CodexStatusViewModel {
         }
     }
 
-    func disconnectRelay() {
+    @discardableResult
+    func disconnectRelay() -> Task<Void, Never> {
         Task {
             if resetPushManager.isEnabled || resetPushManager.pendingUnregistration {
                 resetPushManager.beginOptOut()
                 resetNotificationsEnabled = false
+                quotaNotificationsEnabled = false
                 do {
                     try await relayRepository.unregisterPushDevice()
                 } catch {

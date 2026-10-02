@@ -6,6 +6,7 @@ export const CHANNEL_TTL_SECONDS = 30 * 24 * 60 * 60;
 export const PAIRING_TTL_SECONDS = 10 * 60;
 export const SERVICES_CAPABILITY = "services-v1";
 export const RESET_PUSH_CAPABILITY = "reset-push-v1";
+export const QUOTA_ALERTS_CAPABILITY = "quota-alerts-v1";
 export const SERVICES_MEDIA_TYPE =
   "application/vnd.statusline.services-v1+json";
 
@@ -17,6 +18,8 @@ export interface PushDeviceRegistration {
   readonly deviceID: string;
   readonly fid: string;
   readonly language: "en" | "es";
+  readonly resetCredits: boolean;
+  readonly quotaAlerts: boolean;
 }
 
 export interface ResetCreditPushEvent {
@@ -44,7 +47,44 @@ export function parsePushDeviceRegistration(
   if (language !== "en" && language !== "es") {
     throw new ProtocolError("language must be en or es.");
   }
-  return { deviceID, fid, language };
+  if (
+    (object.resetCredits !== undefined &&
+      typeof object.resetCredits !== "boolean") ||
+    (object.quotaAlerts !== undefined &&
+      typeof object.quotaAlerts !== "boolean")
+  ) {
+    throw new ProtocolError("Notification preferences must be booleans.");
+  }
+  return {
+    deviceID,
+    fid,
+    language,
+    resetCredits: object.resetCredits !== false,
+    quotaAlerts: object.quotaAlerts === true,
+  };
+}
+
+export function parseQuotaAlert(
+  value: unknown,
+  now: number,
+): import("./types").QuotaAlert {
+  const object = readObject(value);
+  const { eventID } = parseResetCreditPushEvent(value);
+  const { provider, kind, window, expiresAt } = object;
+  if (
+    (provider !== "codex" &&
+      provider !== "antigravity" &&
+      provider !== "claude") ||
+    (kind !== "quotaRecovered" && kind !== "weeklyExpiring") ||
+    (window !== "short" && window !== "weekly") ||
+    (kind === "weeklyExpiring" && window !== "weekly") ||
+    !Number.isSafeInteger(expiresAt) ||
+    (expiresAt as number) <= now ||
+    (expiresAt as number) > now + 3_600
+  ) {
+    throw new ProtocolError("Invalid or expired quota alert.");
+  }
+  return { eventID, provider, kind, window, expiresAt: expiresAt as number };
 }
 
 export function parseResetCreditPushEvent(

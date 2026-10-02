@@ -1,6 +1,6 @@
 # Statusline — Privacy Policy
 
-Effective date: 1 October 2026
+Effective date: 2 October 2026
 
 Public policy: https://statusline.inmerzion.io/privacy
 
@@ -71,7 +71,9 @@ The relay receives:
 
 If the user separately enables reset alerts on a paired phone and grants OS notification permission, the mobile app also sends its Firebase Installation ID (FID), a random local device ID and the selected language to the relay over HTTPS. The Worker encrypts the FID with AES-256-GCM before storing it in D1; it decrypts the FID in memory only to request delivery from Firebase Cloud Messaging (FCM). The relay stores an opaque event ID for idempotency, not reset IDs, counts, expiry times or quota percentages. The notification text is generic. FCM and, for iOS delivery, Apple Push Notification service process the installation and delivery metadata needed to route it. Firebase also processes app/device metadata described in its [Android](https://firebase.google.com/docs/android/play-data-disclosure) and [Apple](https://firebase.google.com/docs/ios/app-store-data-collection) disclosures.
 
-Push registration is off until the user opts in. Turning alerts off or disconnecting requests removal of the relay registration, disables FCM registration and requests deletion of the Firebase installation. Relay registration/event rows are deleted on opt-out or channel deletion; otherwise they expire with the channel after thirty days without publication. Provider-side deletion follows Firebase's retention process. Delivery is best-effort and may be delayed or suppressed by OS settings, connectivity, FCM or APNs.
+Periodic quota alerts are a separate opt-in for the services present in the user's Companion (Codex, Google Antigravity and Claude Code). Companion compares unrounded reported readings locally and persists cycle timestamps, exhausted/warned flags and opaque pending events for deduplication. A quota alert sends its service, event type (exhausted-window recovery or unused weekly quota), window kind and delivery-expiration timestamp over HTTPS to the relay and FCM/APNs. The weekly warning reveals that at least 20% remained at observation; no exact percentage, account identity or vendor reset-credit ID is sent. These operational fields are not end-to-end encrypted; detailed quota snapshots remain end-to-end encrypted. The relay stores independent category preferences and opaque event IDs; event content is not stored in D1. The mobile app explains this before opt-in. Existing Codex-credit subscriptions are not automatically expanded.
+
+Push registration is off until the user opts in. Turning off one category preserves the other. Turning off all alerts or disconnecting requests removal of the relay registration, disables FCM registration and requests deletion of the Firebase installation. Pending cleanup retries when the app next opens. Deduplication event rows are retained for at most thirty days; channel deletion also deletes registration/event rows, and inactive channels expire after thirty days without publication. Provider-side deletion follows Firebase's retention process. Delivery is best-effort and may be delayed or suppressed by OS settings, connectivity, FCM or APNs.
 
 The relay does not receive the encryption key, Codex credentials, email address, prompts or source code, and therefore cannot decrypt the quota snapshot. The Cloudflare deployment applies abuse limits before credential parsing using a SHA-256 digest of the source IP address. Neither the source IP nor that digest is written to the Statusline D1 database.
 

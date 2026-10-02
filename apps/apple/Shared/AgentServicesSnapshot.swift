@@ -158,7 +158,7 @@ struct AgentServicesSnapshot: Codable, Equatable, Sendable {
         return Self(providers: providers, updatedAt: Date(timeIntervalSince1970: TimeInterval(wire.updatedAt)), channelID: channelID, sequence: sequence)
     }
 
-    private static func validTimestamp(_ value: Int64) -> Bool { (1...253_402_300_799).contains(value) }
+    nonisolated private static func validTimestamp(_ value: Int64) -> Bool { (1...253_402_300_799).contains(value) }
 }
 
 private struct ServicesPayload: Decodable {

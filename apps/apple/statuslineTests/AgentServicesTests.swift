@@ -226,7 +226,7 @@ struct AgentServicesTests {
         #expect(vm.focusedProvider == nil)
         #expect(vm.status == nil)
         #expect(store.loadSaved() == nil)
-        vm.disconnectRelay()
+        await vm.disconnectRelay().value
         #expect(store.servicesStore.load() == nil)
         #expect(store.servicesStore.focusedProvider == nil)
     }

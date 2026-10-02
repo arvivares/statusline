@@ -34,8 +34,7 @@
 "AES-256-GCM · 30 DAY TTL" = "AES-256-GCM · CADUCA EN 30 DÍAS";
 "AES-256-GCM · UNIVERSAL" = "AES-256-GCM · UNIVERSAL";
 "Agent usage" = "Uso de agentes";
-"Allow notifications in Android Settings to receive Codex reset alerts." = "Permite las notificaciones en los ajustes de Android para recibir avisos de resets de Codex.";
-"Allow notifications in iOS Settings to receive Codex reset alerts." = "Permite las notificaciones en los ajustes de iOS para recibir avisos de resets de Codex.";
+"Allow notifications in system Settings to receive alerts." = "Permite las notificaciones en Configuración del sistema para recibir avisos.";
 "An encrypted snapshot is available on this device." = "Hay una muestra cifrada disponible en este dispositivo.";
 "Antigravity · {0}% left" = "Antigravity · {0}% libre";
 "Antigravity · no weekly data" = "Antigravity · sin datos semanales";
@@ -344,6 +343,7 @@
 "NOT PUBLISHED" = "SIN PUBLICAR";
 "Not selected" = "No seleccionado";
 "NOT UPLOADED" = "NO SE ENVÍA";
+"Notification preferences updated." = "Preferencias de notificaciones actualizadas.";
 "Notifications are off because permission was revoked." = "Las notificaciones están desactivadas porque se retiró el permiso.";
 "Notifications are off on this device. Relay cleanup will retry when you open Statusline." = "Las notificaciones están desactivadas en este dispositivo. Se volverá a limpiar el relay cuando abras Statusline.";
 "Notifications are off. This device was unregistered." = "Las notificaciones están desactivadas. Este dispositivo se desvinculó.";
@@ -359,6 +359,7 @@
 "On" = "Activadas";
 "On first detection, Desktop takes priority over CLI. The selected source is remembered and never switches accounts automatically." = "En la primera detección, Desktop tiene prioridad sobre CLI. Se recuerda la fuente elegida y nunca se cambia de cuenta automáticamente.";
 "Only enable a trusted Antigravity installation that you use. Statusline reads Google quota, not Claude or GPT limits." = "Habilita solo una instalación de Antigravity de confianza que utilices. Statusline lee la cuota de Google, no los límites de Claude o GPT.";
+"Only for services in your Companion, running and connected. With permission, the relay stores an encrypted Firebase installation ID and receives the alert type, service and delivery expiry; quota readings stay encrypted." = "Solo para los servicios de tu Companion, que debe estar ejecutándose y conectado. Con tu permiso, el relay guarda un identificador de instalación de Firebase cifrado y recibe el tipo de aviso, el servicio y la caducidad del envío; las lecturas de cuota siguen cifradas.";
 "Open OpenAI" = "Abrir OpenAI";
 "Open Source Settings to detect or select a local Codex runtime." = "Abre la configuración de origen para detectar o seleccionar un ejecutable local de Codex.";
 "Open Source Settings to detect or select the local CLI." = "Abre la configuración de origen para detectar o seleccionar la CLI local.";
@@ -409,6 +410,7 @@
 "QR EXPIRES {0}" = "EL QR CADUCA A LAS {0}";
 "Quit" = "Salir";
 "Quota available" = "Cuota disponible";
+"Quota notifications" = "Avisos de cuota";
 "Quota period" = "Período de cuota";
 "Quota updates while a Claude Code session is open and after it receives a response. Pro and Max report five-hour and weekly windows; Enterprise seats may report only the five-hour window; API-key sessions report none." = "La cuota se actualiza mientras hay una sesión de Claude Code abierta y tras recibir una respuesta. Pro y Max informan de las ventanas de cinco horas y semanal; los asientos Enterprise pueden informar solo de la de cinco horas; las sesiones con clave API no informan de ninguna.";
 "Quotas from your Companion. The small widget follows the service selected in Statusline." = "Cuotas de tu Companion. El widget pequeño muestra el servicio seleccionado en Statusline.";
@@ -660,7 +662,8 @@
 "WEEKLY QUOTA" = "CUOTA SEMANAL";
 "Weekly quota, reset and private sync in one view." = "Cuota semanal, reinicio y sincronización privada en una sola vista.";
 "Weekly window unavailable" = "Periodo semanal no disponible";
-"With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send this alert. Turning alerts off removes the relay registration." = "Con tu permiso, Statusline guarda un Firebase Installation ID cifrado en el relay para enviarte este aviso. Al desactivar los avisos, se elimina ese registro.";
+"When an exhausted 5h or weekly quota resets, and one hour before a weekly reset with at least 20% left." = "Cuando se reinicia una cuota de 5 h o semanal agotada, y una hora antes del reinicio semanal si queda al menos un 20 %.";
+"With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send alerts. Turning off all alerts removes the relay registration." = "Con tu permiso, Statusline guarda en su relay un identificador de instalación de Firebase cifrado para enviar avisos. Desactivar todos los avisos elimina el registro del relay.";
 "Working" = "Procesando";
 "WORKING" = "PROCESANDO";
 "Writing Claude Code status line…" = "Escribiendo la status line de Claude Code…";

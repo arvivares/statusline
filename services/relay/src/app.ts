@@ -3,6 +3,7 @@ import {
   PAIRING_TTL_SECONDS,
   PROTOCOL_VERSION,
   RESET_PUSH_CAPABILITY,
+  QUOTA_ALERTS_CAPABILITY,
   SERVICES_CAPABILITY,
   SERVICES_MEDIA_TYPE,
   ProtocolError,
@@ -11,6 +12,7 @@ import {
   parseChannelID,
   parsePushDeviceRegistration,
   parseResetCreditPushEvent,
+  parseQuotaAlert,
   parseSnapshotEnvelope,
   parseServicesPublication,
   randomToken,
@@ -61,7 +63,9 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
           protocolVersion: PROTOCOL_VERSION,
           capabilities: [
             SERVICES_CAPABILITY,
-            ...(readyGateway ? [RESET_PUSH_CAPABILITY] : []),
+            ...(readyGateway
+              ? [RESET_PUSH_CAPABILITY, QUOTA_ALERTS_CAPABILITY]
+              : []),
           ],
         });
       }
@@ -113,7 +117,8 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
           ? "snapshot"
           : segments[3] === "push-device"
             ? "push"
-            : segments[3] === "reset-credit-events"
+            : segments[3] === "reset-credit-events" ||
+                segments[3] === "quota-alert-events"
               ? "push-event"
               : (segments[3] ?? "metadata");
       const routeLimiter =
@@ -135,7 +140,11 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
         return metadata(
           await dependencies.store.metadata(channelID, tokenHash, now()),
           (await pushGateway)
-            ? [SERVICES_CAPABILITY, RESET_PUSH_CAPABILITY]
+            ? [
+                SERVICES_CAPABILITY,
+                RESET_PUSH_CAPABILITY,
+                QUOTA_ALERTS_CAPABILITY,
+              ]
             : [SERVICES_CAPABILITY],
         );
       }
@@ -179,6 +188,8 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
           ciphertext: encrypted.ciphertext,
           language: registration.language,
           updatedAt: now(),
+          resetCredits: registration.resetCredits,
+          quotaAlerts: registration.quotaAlerts,
         };
         return emptyResult(
           await dependencies.store.registerPushDevice(
@@ -204,7 +215,8 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
       }
       if (
         segments.length === 4 &&
-        segments[3] === "reset-credit-events" &&
+        (segments[3] === "reset-credit-events" ||
+          segments[3] === "quota-alert-events") &&
         request.method === "POST"
       ) {
         const gateway = await pushGateway;
@@ -214,10 +226,13 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
             "pushUnavailable",
             "Push notifications are not configured.",
           );
-        const { eventID } = parseResetCreditPushEvent(
-          await readJSON(request, 1_024),
-        );
         const timestamp = now();
+        const body = await readJSON(request, 1_024);
+        const alert =
+          segments[3] === "quota-alert-events"
+            ? parseQuotaAlert(body, timestamp)
+            : null;
+        const { eventID } = alert ?? parseResetCreditPushEvent(body);
         const claim = await dependencies.store.claimPushEvent(
           channelID,
           tokenHash,
@@ -226,6 +241,9 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
           timestamp + CHANNEL_TTL_SECONDS,
         );
         if (claim.kind !== "ok") return storeError(claim);
+        // A concurrent in-flight send is not an acknowledgement of delivery.
+        if (claim.value === "busy")
+          return apiError(503, "pushBusy", "Push delivery is in progress.");
         if (claim.value !== "claimed")
           return emptyResult({ kind: "ok", value: null });
 
@@ -243,7 +261,12 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
           );
           return storeError(registered);
         }
-        if (registered.value === null) {
+        if (
+          registered.value === null ||
+          (alert
+            ? registered.value.quotaAlerts !== true
+            : registered.value.resetCredits === false)
+        ) {
           await dependencies.store.completePushEvent(
             channelID,
             tokenHash,
@@ -253,7 +276,9 @@ export function createRelayApp(dependencies: RelayAppDependencies) {
           return emptyResult({ kind: "ok", value: null });
         }
         try {
-          const sent = await gateway.sendResetAdded(registered.value);
+          const sent = alert
+            ? await gateway.sendQuotaAlert(registered.value, alert)
+            : await gateway.sendResetAdded(registered.value);
           if (sent === "invalidToken") {
             await dependencies.store.unregisterInvalidPushDevice(
               channelID,

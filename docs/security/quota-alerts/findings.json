@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "project": "statusline",
+    "analyzed_at": "2026-10-02T14:04:23Z",
+    "git_ref": "c97aedfdba6490329c40080126429cb3fcf21f2e",
+    "scope": "quota-alerts-v1 local additions; excludes existing dependency advisories",
+    "tool_version": "threat-model skill (focused manual review)"
+  },
+  "findings": [],
+  "systemic": [],
+  "chains": []
+}

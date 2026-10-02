@@ -215,6 +215,9 @@ describe("Statusline universal relay", () => {
         deliveries.push(device.deviceID);
         return "sent";
       },
+      async sendQuotaAlert() {
+        return "sent";
+      },
     };
     const { app, store } = makeApp(new MemoryRelayStore(), {}, gateway);
     const created = await app(
@@ -321,6 +324,9 @@ describe("Statusline universal relay", () => {
       async sendResetAdded() {
         throw new Error("unready gateway must not send");
       },
+      async sendQuotaAlert() {
+        throw new Error("unready gateway must not send");
+      },
     };
     const { app } = makeApp(new MemoryRelayStore(), {}, gateway);
     const health = (await (
@@ -356,6 +362,9 @@ describe("Statusline universal relay", () => {
         return { nonce: "nonce", ciphertext: "ciphertext" };
       },
       async sendResetAdded() {
+        throw new Error("must not deliver a rate-limited event");
+      },
+      async sendQuotaAlert() {
         throw new Error("must not deliver a rate-limited event");
       },
     };
