@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "project": "Statusline",
+    "analyzed_at": "2026-10-02T21:50:00Z",
+    "git_ref": "3a1b676",
+    "scope": "Android widget background-sync working changes",
+    "tool_version": "threat-model"
+  },
+  "findings": [
+    {
+      "id": "AW-001",
+      "title": "Overlapping refresh could restore an obsolete local quota cache",
+      "severity": "low",
+      "category": "LIFETIME_RACE",
+      "status": "verified",
+      "description": "Adding a background caller exposes refresh-versus-pairing/demo and compare-versus-write races. The shared revision coordinator now rejects obsolete responses and serializes monotonic cache commits; local tests passed, not yet merged.",
+      "trace": {
+        "entry": {
+          "file": "apps/android/app/src/main/java/inmerzion/statusline/data/StatuslineRepository.kt",
+          "type": "deserialization",
+          "variable": "incoming"
+        },
+        "steps": [
+          {
+            "file": "apps/android/app/src/main/java/inmerzion/statusline/data/StatuslineRepository.kt",
+            "function": "fetch",
+            "operation": "transform",
+            "detail": "Authenticate/decode the snapshot, then compare with the current channel/sequence cache under a guarded revision commit."
+          }
+        ],
+        "sink": {
+          "file": "apps/android/app/src/main/java/inmerzion/statusline/data/AgentServicesCache.kt",
+          "operation": "file_write",
+          "impact": "An obsolete local quota projection could otherwise be restored after disconnect, re-pair or demo mode."
+        }
+      },
+      "mitigations": [
+        "Shared revision invalidation for pairing, disconnect and local demo changes",
+        "Atomic compare/write under the same lock; network I/O remains outside it",
+        "Unit tests for stale-response rejection and concurrent monotonic commits"
+      ],
+      "attacker_story": "A delayed relay reply overlaps a local pairing/mode change. Without a revision guard it could restore the previous projection, but cannot expose vendor credentials or bypass AES-GCM.",
+      "recommended_fix": "Keep all pairing/cache mutations and response commits on SnapshotRefreshCoordinator; verify physical lifecycle behavior before distribution.",
+      "relevant_paths": [
+        "apps/android/app/src/main/java/inmerzion/statusline/data/StatuslineRepository.kt",
+        "apps/android/app/src/main/java/inmerzion/statusline/data/SnapshotRefreshCoordinator.kt",
+        "apps/android/app/src/test/java/inmerzion/statusline/data/SnapshotRefreshCoordinatorTest.kt"
+      ],
+      "systemic_parent": null,
+      "chain_memberships": [],
+      "detected_at": "2026-10-02T21:46:00Z",
+      "resolved_at": "2026-10-02T21:50:00Z",
+      "resolved_by": "Working changes and local unit tests"
+    }
+  ],
+  "systemic": [],
+  "chains": []
+}

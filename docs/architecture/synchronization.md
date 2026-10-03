@@ -13,12 +13,13 @@ that independent widget synchronization works. See the dated
 
 ## Refresh ownership
 
-| Component                               | Trigger                                                                            | Work performed                                         | Important limit                                                                              |
-| --------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| Tauri companion (macOS, Windows, Linux) | Native Rust timer: immediately, then every 300 seconds                             | Read Codex, encrypt and publish a successful sample    | Computer must be awake and companion running; network and OS scheduling can delay completion |
-| Companion window                        | Manual refresh; foreground read if the latest operation is at least 60 seconds old | Use the same native coordinator                        | Concurrent callers reuse the in-flight operation                                             |
-| iPhone app                              | On becoming active, then wait 60 seconds after each check                          | Fetch and decrypt the relay snapshot                   | Task is cancelled when the scene is inactive/backgrounded                                    |
-| iOS widget                              | WidgetKit requests a timeline; next reload requested in 30 minutes                 | Independently fetch and decrypt with a bounded request | iOS decides actual execution time; 30 minutes is not an SLA                                  |
+| Component                               | Trigger                                                                            | Work performed                                                         | Important limit                                                                              |
+| --------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Tauri companion (macOS, Windows, Linux) | Native Rust timer: immediately, then every 300 seconds                             | Read Codex, encrypt and publish a successful sample                    | Computer must be awake and companion running; network and OS scheduling can delay completion |
+| Companion window                        | Manual refresh; foreground read if the latest operation is at least 60 seconds old | Use the same native coordinator                                        | Concurrent callers reuse the in-flight operation                                             |
+| iPhone app                              | On becoming active, then wait 60 seconds after each check                          | Fetch and decrypt the relay snapshot                                   | Task is cancelled when the scene is inactive/backgrounded                                    |
+| iOS widget                              | WidgetKit requests a timeline; next reload requested in 30 minutes                 | Independently fetch and decrypt with a bounded request                 | iOS decides actual execution time; 30 minutes is not an SLA                                  |
+| Android widget                          | Unique WorkManager job, nominally every 30 minutes, with a connected network       | Fetch/decrypt through the existing reader and redraw the private cache | Requires a widget, pairing and non-demo mode; Doze/OS scheduling can delay runs              |
 
 The companion's old five-minute `window.setInterval` was owned by the WebView.
 The Rust timer now starts in application setup, independently of frontend readiness,
@@ -29,7 +30,37 @@ does not end the periodic loop.
 
 The SwiftUI macOS target is a separate implementation, not the Tauri companion shipped
 in the cross-platform installers. Its existing schedule is not changed here.
-Android's existing scheduling is also unchanged by this iOS improvement.
+Android uses a separate WorkManager task; it is not a permanently running service.
+
+## Android widget synchronization
+
+In published Android `0.1.34 (30)`, `updatePeriodMillis` only redraws the cached
+reading. It does not fetch independently. The follow-up implementation in source
+adds one persistent, network-constrained task with a 30-minute interval. It is not
+present in that already published bundle and needs a new build/device validation.
+
+App startup and widget updates reconcile the unique task using `KEEP`, without
+resetting its schedule or creating one request per widget. Removing the last
+widget cancels it; disconnecting or entering demo cancels it on the next local
+widget update. Each run rechecks those conditions and reads the current Keystore
+credential, never a token or key from WorkManager input/output data.
+
+Pairing/cache mutations invalidate pending responses. Concurrent foreground and
+worker replies compare/write under the same lock so an older sequence cannot
+overwrite a newer one. A response from before disconnect, re-pair or a demo-mode
+change cannot restore the old cache. Network calls remain outside that lock.
+Invalid ciphertext, permanent errors and temporary storage unavailability do not
+clear credentials or fabricate quota. Network/timeouts/rate limiting get at most
+three retries with exponential backoff; later periodic runs remain possible.
+
+At the nominal interval, one continuously active Android widget installation adds
+about **48 snapshot requests/day**, independent of widget count, before retries
+and app-open refreshes. OS delays can reduce this; failures/retries can increase it.
+Push notifications do not require this task or notification permission for widget
+refresh. Android force-stop suspends background work until the app is opened again.
+
+References: [periodic work and OS constraints](https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work),
+[WorkManager release compatibility](https://developer.android.com/jetpack/androidx/releases/work).
 
 ## Widget access and cache safety
 

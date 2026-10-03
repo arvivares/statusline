@@ -1,0 +1,13 @@
+Statusline 1.1.3 (12) añade avisos opcionales de cuota para los servicios detectados en tu Companion: Codex, Google Antigravity y Claude Code. Requiere Companion 0.1.34 o posterior. Conserva el emparejamiento y los widgets actuales.
+
+Abre Statusline y activa Avisos de cuota. Es una opción independiente de los avisos de créditos de reset de Codex y permanece desactivada hasta que la actives y autorices las notificaciones. El relay y FCM/APNs reciben el servicio, el tipo de aviso y ventana, y su vencimiento; los avisos semanales revelan el umbral del 20 % disponible, no la cuota exacta ni la identidad de la cuenta.
+
+Comprueba:
+1. La actualización conserva el emparejamiento, las lecturas y los widgets. La opción de créditos de Codex mantiene su estado; la nueva opción de cuota empieza desactivada.
+2. Las dos opciones funcionan independientemente. Desactivar una no desactiva la otra.
+3. Tras observar un 0 % real y confirmar un ciclo posterior, llega un único aviso de recuperación de cuota de 5 h o semanal.
+4. Llega un único aviso semanal durante la última hora únicamente si queda al menos un 20 %.
+5. Al tocar un aviso se abre Statusline y se refrescan los datos. El aviso no sustituye una lectura actual.
+6. Inglés y español siguen el idioma del sistema; el resto usa inglés.
+
+El Companion debe estar despierto, abierto y conectado. La entrega y el horario son orientativos; no se garantiza una hora exacta ni la actualización en segundo plano. Las pruebas sintéticas de transporte no demuestran un reinicio real de cuota del proveedor.

@@ -1,0 +1,1 @@
+Widgets now fetch encrypted readings in the background, nominally every 30 minutes when connected. Android battery optimization may delay updates. No need to open the app; pairing, focus and notification choices are preserved. Optional quota alerts remain independent of widget refresh.

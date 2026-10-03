@@ -1,12 +1,29 @@
 # Google Play release kit
 
-This directory is the versioned source of truth for the Statusline Google Play listing. On 20 September 2026, `0.1.28-alpha.1` (`versionCode 24`) was published to Closed testing — Alpha. Play Console confirms **Available to selected testers**, with release time **12:48 Europe/Madrid**, replacing `21 (0.1.25)` in that track. Tester lists and regions are unchanged; this is not a production release or proof of installation on every device. See [the delivery record](validation-0.1.28.md).
+This directory is the versioned source of truth for the Statusline Google Play listing.
+
+## Internal quota-alert delivery — 2 October 2026
+
+Play Console confirms **0.1.34 (30)**, release
+`0.1.34-internal.1 - Quota notifications`, as **Available to internal testers**
+at **20:54 Europe/Madrid**. Internal testing selects only the account holder's
+existing list. A physical Play installation and background quota-push transport,
+deduplication and independent preferences were verified; original settings were
+restored. Alpha and production were not changed. Widget/locale follow-up, the
+operator's website policy deployment and Data safety review remain pending.
+See [validation-0.1.34.md](validation-0.1.34.md).
+
+Closed testing — Alpha still serves `0.1.28-alpha.1` (`versionCode 24`), published
+on 20 September at **12:48 Europe/Madrid**, replacing `21 (0.1.25)` in that track.
+Tester lists and regions are unchanged; this is not a production release or proof
+of installation on every device. See [the Alpha record](validation-0.1.28.md).
 
 ## Contents
 
 - `listing/`: default English listing and Spanish localization.
 - `release-notes/`: localized notes for current and previous bundles.
-- [validation-0.1.28.md](validation-0.1.28.md): latest artifact verification and Alpha submission receipt.
+- [validation-0.1.34.md](validation-0.1.34.md): quota-alert artifact verification, internal publication and remaining gates.
+- [validation-0.1.28.md](validation-0.1.28.md): latest Alpha submission receipt.
 - [validation-0.1.15.md](validation-0.1.15.md): artifact verification, Play submission evidence and remaining test gates.
 - [Historical submission records](validation-0.1.17.md): dated evidence for the 0.1.17, 0.1.20 and 0.1.21 Alpha candidates.
 - [Listing audit](listing-validation-2026-09-11.md): the localized listing and screenshot draft audit.

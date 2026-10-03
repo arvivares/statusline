@@ -84,7 +84,7 @@ Las opciones de hosting, el estado real de cada adaptador y el cálculo de capac
 
 ## Actualización móvil
 
-El transporte universal ya resuelve Windows/Linux/macOS → iOS y Android sin una cuenta compartida. El companion Tauri consulta y publica desde un temporizador nativo de Rust cada cinco minutos con el equipo despierto, sin depender de su ventana. iOS consulta al activarse y aproximadamente cada minuto en primer plano. Su widget también puede consultar directamente el relay usando la credencial reader del Keychain compartido, y solicita un nuevo timeline cada 30 minutos; iOS determina el momento real. Android mantiene su programación actual.
+El transporte universal ya resuelve Windows/Linux/macOS → iOS y Android sin una cuenta compartida. El companion Tauri consulta y publica desde un temporizador nativo de Rust cada cinco minutos con el equipo despierto, sin depender de su ventana. iOS consulta al activarse y aproximadamente cada minuto en primer plano. Su widget también puede consultar directamente el relay usando la credencial reader del Keychain compartido, y solicita un nuevo timeline cada 30 minutos; iOS determina el momento real. Android añade una tarea única de WorkManager cada 30 minutos con red disponible, solo si hay widget, emparejamiento y no está en demo. Android también puede retrasarla; el build 30 publicado solo redibuja caché y esta ampliación requiere el build 31 o posterior.
 
 La política de caché, migración de credenciales y validación en dispositivos está en [sincronización](synchronization.md).
 

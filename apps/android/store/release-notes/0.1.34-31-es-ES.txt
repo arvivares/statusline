@@ -1,0 +1,1 @@
+Los widgets consultan las lecturas cifradas en segundo plano, cada 30 minutos si hay conexión. El ahorro de batería de Android puede retrasar las actualizaciones. No hace falta abrir la app; se conservan el vínculo, el foco y los avisos. Las notificaciones de cuota siguen siendo independientes del widget.

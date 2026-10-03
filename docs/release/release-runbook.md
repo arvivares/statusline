@@ -13,8 +13,10 @@ component versions and curated release-notes path. For the current public beta:
 - prepared product tag: `v0.1.34` (not created merely by preparing this file);
 - desktop and Android candidate version: `0.1.34`;
 - Android candidate: `versionCode 30` (Google Play submission is separate);
-- recorded iOS source version: `1.1.2 (11)`, with optional reset-credit push
-  alerts. This metadata is not a live App Store/TestFlight status report.
+- prepared iOS source version: `1.1.3 (12)`, with independent optional quota
+  and Codex reset-credit alerts. Its archive/export and internal delivery are recorded in
+  [the mobile delivery record](../../apps/apple/store/validation-1.1.3.md).
+  This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
   before taking any store action. Build 5 has an empty widget endpoint and
   must not be publicly released. Historical device and submission evidence is
@@ -162,9 +164,17 @@ The current profile publishes a normal GitHub release marked **Latest**.
 - Existing registrations must retain their Codex-credit scope and default quota
   alerts to off. Never replace live credentials, channels or push encryption keys.
 - Preserve updater signatures, asset names and complete platform inventory.
-- iOS source and simulator tests include quota alerts; recorded `1.1.2 (11)`
-  remains the previous delivery. New physical push QA, store privacy declarations
-  and mobile-store submissions are separate steps, not part of GitHub publication.
+- iOS source and simulator tests include quota alerts; `1.1.2 (11)` remains
+  the previous delivery and `1.1.3 (12)` is the separate mobile candidate.
+  New physical push QA, store privacy declarations and mobile-store submissions
+  are separate steps, not part of GitHub publication.
+- On 2 October, iOS `1.1.3 (12)` reached account-holder-only TestFlight
+  **Internal QA / Testing** and Android `0.1.34 (30)` became **Available to
+  internal testers** on the account-holder-only Internal track. These are not
+  App Store or Alpha releases. Physical upgrade/push QA and verification of the
+  operator-deployed public privacy policy remain broader-distribution gates.
+  See the dated [iOS](../../apps/apple/store/validation-1.1.3.md) and
+  [Android](../../apps/android/store/validation-0.1.34.md) records before promotion.
 - Relay tooling now pins Wrangler 4.147.0 and passes npm audit. Preserve its
   bounded Sharp override and run local migrations/tests/typecheck/dry-run.
 - See the [release notes](notes/v0.1.34.md) for best-effort timing and other limits.

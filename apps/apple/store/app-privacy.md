@@ -1,8 +1,51 @@
 # App Privacy record
 
-Validated against the iPhone source, Apple frameworks and the production relay on 2 September 2026. Revalidate before every submission when the relay, logging, dependencies or retention policy changes.
+Revalidate before every submission when the relay, logging, dependencies or retention policy changes.
 
-## Current App Store Connect record
+## App Store Connect update — 2 October 2026
+
+The authenticated portal's data-type answers were updated and published while
+preparing `1.1.3 (12)`. This changes the global privacy label, not the published
+app version. The distribution page still shows `1.1.1` as Ready for Distribution.
+The public website policy still needs the operator's separate deployment.
+
+| Data type             | Purpose                      | Linked | Tracking |
+| --------------------- | ---------------------------- | ------ | -------- |
+| Device ID             | App Functionality            | Yes    | No       |
+| Product Interaction   | App Functionality            | Yes    | No       |
+| Other Diagnostic Data | Analytics, App Functionality | No     | No       |
+| Other Data Types      | App Functionality, Analytics | Yes    | No       |
+
+The preview confirms linked Identifiers, Usage Data and Other Data, and unlinked
+Diagnostics. No advertising purpose, account registration or tracking is added.
+The localized website privacy/choices URLs are unchanged.
+
+- Device ID covers the opt-in Firebase installation identifier and associated
+  APNs delivery registration. It is retained to route alerts, not anonymized
+  before collection. Apple explicitly includes device linkage in its identity
+  definition; absence of a name/email is not sufficient to answer unlinked.
+- Product Interaction covers the optional provider, alert/window type and
+  delivery expiration processed by the relay/FCM/APNs. A weekly warning discloses
+  the threshold condition, not an exact reading. These events are routed to an
+  installation and therefore conservatively declared linked.
+- Other Data Types retains the encrypted-relay/protocol declaration and includes
+  Firebase's aggregate technical platform metadata. Its combined declaration is
+  conservatively linked because a push-enabled channel retains an installation
+  association; exact quota snapshots remain end-to-end encrypted.
+- Other Diagnostic Data covers the actual bundled Messaging, Installations and
+  GoogleDataTransport manifests. Those manifests mark SDK diagnostics unlinked
+  and include Analytics and/or App Functionality. This is SDK operational
+  measurement, not installation of Firebase Analytics or first-party behavioral
+  analytics. No crash-reporting or advertising SDK was added.
+
+Primary references:
+[Apple's definitions](https://developer.apple.com/app-store/app-privacy-details/),
+[Firebase Apple disclosure](https://firebase.google.com/docs/ios/app-store-data-collection).
+The SDK manifests were inspected in the exact exported build 12, not inferred
+only from a dependency list. Physical push/upgrade QA is tracked separately in
+[validation-1.1.3.md](validation-1.1.3.md).
+
+## Historical App Store Connect record — 2 September 2026
 
 - Privacy Policy URL: https://statusline.inmerzion.io/privacy
 - Privacy Choices URL: https://statusline.inmerzion.io/delete-data
@@ -16,7 +59,7 @@ Validated against the iPhone source, Apple frameworks and the production relay o
 - Data used to track users: **None**
 - Account deletion: Not applicable; Statusline has no user account.
 
-## Rationale
+## Historical rationale before Firebase push
 
 - The iPhone app contains no advertising, analytics, attribution, crash-reporting or third-party scanner SDK.
 - Camera frames and decoded QR contents are processed on-device by Apple's VisionKit APIs and are not stored or transmitted as camera data.
@@ -28,7 +71,11 @@ Validated against the iPhone source, Apple frameworks and the production relay o
 
 The conservative **Other Data Types** declaration covers the random channel identifier, hashes, opaque ciphertext and protocol timestamps retained by the relay for app functionality. None of them is tied to an email address, Apple ID, Codex account or device identifier, and none is used for tracking.
 
-## Required delta before submitting a build with reset push enabled
+## Superseded push preparation notes
+
+The original September record below predates push-enabled builds. The October
+table above replaces its proposed linkage/category answers; do not use the older
+unlinked declaration for a retained installation identifier.
 
 ### Periodic quota alerts (development delta)
 
@@ -39,16 +86,17 @@ This operational metadata is not end-to-end encrypted and must be disclosed in
 addition to the installation identifier. Before submitting, reassess **Usage Data
 → Product Interaction** (or the current form's closest quota/feature-use category)
 for **App Functionality**; no advertising/tracking purpose is introduced. Do not
-claim the current store declarations already include this change. The generic
+infer a store change from source code alone. The October table records the
+observed portal update. The generic
 credit-payload statement below does not describe the new typed quota alert.
 
 The published build represented above does not include Firebase push registration. For the next build that enables reset alerts, update App Store Connect before submission:
 
 - Add **Identifiers → Device ID**.
-- Mark it as collected for **App Functionality**, **not linked to the user**, and **not used for tracking**.
+- Mark it as collected for **App Functionality**, **linked through the device**, and **not used for tracking**.
 - This covers the opt-in Firebase Installation ID (FID) and APNs registration association used to route a generic reset alert. The app has no Statusline account and does not use the identifier for advertising or analytics.
 - Firebase Messaging's Apple disclosure states that it associates the APNs token with an app installation ID; see [Firebase's current Apple data-collection disclosure](https://firebase.google.com/docs/ios/app-store-data-collection).
-- The app sends no quota count, reset ID, expiry, prompt, account email or other Codex data in the push payload. The payload contains only generic notification text.
+- The credit-alert payload sends no quota count, reset ID, expiry, prompt or account email. Periodic quota alerts additionally send the metadata disclosed above; do not apply the generic credit-alert description to them.
 
 Recheck the current Apple questionnaire and bundled Firebase manifests when submitting. The existing live 1.0 listing is unchanged until a new version is submitted and released. See [PRIVACY.md](../../../PRIVACY.md) and [the reset-push architecture note](../../../docs/architecture/codex-reset-credits.md).
 

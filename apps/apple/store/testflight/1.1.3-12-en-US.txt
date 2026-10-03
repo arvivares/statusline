@@ -1,0 +1,13 @@
+Statusline 1.1.3 (12) adds optional quota notifications for the services detected in your Companion: Codex, Google Antigravity and Claude Code. Companion 0.1.34 or later is required. Your existing pairing and widgets are preserved.
+
+Open Statusline and enable Quota notifications. This is separate from Codex reset-credit alerts and remains off until you opt in and grant notification permission. The relay and FCM/APNs receive the service, event/window kind and delivery expiration; weekly warnings reveal the 20%-remaining threshold, not an exact quota or account identity.
+
+Please check:
+1. An update preserves your pairing, readings and widgets. The existing Codex-credit switch keeps its previous state; the new quota switch starts off.
+2. Both switches work independently. Turning off one does not disable the other.
+3. After a real observed 0% reading and a confirmed later cycle, a 5h/weekly recovery alert arrives once.
+4. A weekly warning arrives once within the last hour only when at least 20% remains.
+5. Tap an alert to open Statusline and refresh current data. Do not assume the notification is the latest reading.
+6. English/Spanish follow the system language; other languages use English.
+
+Companion must be awake, running and connected. Timing and push delivery are best-effort; no background refresh or precise delivery time is guaranteed. Synthetic transport checks do not establish a real vendor quota rollover.
