@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "product": "Statusline",
-  "version": "0.1.34",
+  "version": "0.1.35",
   "channel": "beta",
-  "tag": "v0.1.34",
-  "notes": "docs/release/notes/v0.1.34.md",
+  "tag": "v0.1.35",
+  "notes": "docs/release/notes/v0.1.35.md",
   "distribution": {
     "githubReleasePlatforms": ["windows", "linux", "macos", "android"],
     "publishPrerelease": false,
@@ -12,11 +12,11 @@
   },
   "components": {
     "desktop": {
-      "version": "0.1.34"
+      "version": "0.1.35"
     },
     "android": {
-      "versionName": "0.1.34",
-      "versionCode": 31
+      "versionName": "0.1.35",
+      "versionCode": 32
     },
     "ios": {
       "version": "1.1.3",

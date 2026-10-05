@@ -100,10 +100,14 @@ cuando la app esté aprobada. Los APK de la beta de Android ya están disponible
 
 ## Plataformas
 
-La candidata 0.1.34 añade avisos opcionales cuando vuelve a estar
+Desde 0.1.34, Statusline ofrece avisos opcionales cuando vuelve a estar
 disponible una cuota de 5 h/semanal agotada, y una hora antes del reinicio semanal
 si queda al menos un 20 %. Requiere relay y móvil compatibles con avisos activados;
 iOS se distribuye aparte de GitHub. Consulta el [funcionamiento y despliegue](docs/architecture/quota-alerts.md).
+
+La [versión de mantenimiento 0.1.35](docs/release/notes/v0.1.35.md) actualiza
+dependencias de escritorio, adopta la corrección oficial de bandeja para macOS 27
+y conserva Android 6, los emparejamientos y la compatibilidad de las firmas del actualizador.
 
 | Plataforma                  | Rol          | Implementación   | Distribución                                                    |
 | --------------------------- | ------------ | ---------------- | --------------------------------------------------------------- |
