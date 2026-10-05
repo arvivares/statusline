@@ -188,10 +188,16 @@ export async function prepareAppDir(root) {
   const actual = Object.keys(files)
     .filter((path) => /^libwayland-.*\.so/.test(basename(path)))
     .sort();
-  const expected = waylandLibraries.map((name) => `usr/lib/${name}`).sort();
+  // linuxdeploy 07333c6 (pinned by Tauri CLI 2.12.1) already excludes the
+  // client library. The remaining exact three-file inventory was inspected
+  // in our CI-built input; reject reintroduced clients and unknown aliases.
+  const expected = waylandLibraries
+    .filter((name) => name !== "libwayland-client.so.0")
+    .map((name) => `usr/lib/${name}`)
+    .sort();
   requireCondition(
     JSON.stringify(actual) === JSON.stringify(expected),
-    `Expected exactly four known Wayland files; unknown aliases/layout require review. Found: ${JSON.stringify(actual)}`,
+    `Expected exactly three known Wayland files (client excluded upstream); unknown aliases/layout require review. Found: ${JSON.stringify(actual)}`,
   );
   for (const path of expected) await elf(root, path);
   const hook = await readFile(hookSource);

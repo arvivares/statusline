@@ -14,6 +14,12 @@ aislamiento de los módulos GIO del host. El diagnóstico acepta esa ruta o la
 ruta multiarch histórica, pero rechaza ambas a la vez, enlaces simbólicos o TLS
 ausente; no busca módulos en el sistema. El candidato 0.1.35 no se publicó:
 su control de empaquetado detectó el cambio de ruta antes de firmar el AppImage.
+La inspección del AppImage compilado en CI con linuxdeploy `07333c6` confirmó
+que ya no incluye `libwayland-client.so.0`, excluido por el empaquetador. La
+preparación exige exactamente las otras tres bibliotecas conocidas como archivos
+ELF x64 regulares antes de retirarlas de la copia privada; rechaza clientes
+reintroducidos o alias inesperados y verifica que no quede ninguna biblioteca
+Wayland incluida tras reextraer el resultado.
 
 ## Hallazgos en el artefacto 0.1.12
 

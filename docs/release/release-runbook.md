@@ -163,6 +163,9 @@ The current profile publishes a normal GitHub release marked **Latest**.
 - Validate the real Tauri 2.12.1 AppImage's normalized `usr/lib/gio/modules`
   layout, retained bundled TLS and explicit X11/XWayland backend on Ubuntu
   22.04 and 24.04 before tagging. Do not weaken the layout or inventory gates.
+  The pinned linuxdeploy 07333c6 already excludes the Wayland client: inspect
+  exactly the three remaining regular x64 files, then require no bundled Wayland
+  libraries after repacking. A reintroduced client or unknown alias is a failure.
 - The signed v0.1.35 tag is retained unchanged for audit. Its incomplete private
   draft failed Linux packaging and is not a published release.
 - The isolated macOS 27 tray probe passed, as did the dependency PR's native
