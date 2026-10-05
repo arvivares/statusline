@@ -191,7 +191,7 @@ export async function prepareAppDir(root) {
   const expected = waylandLibraries.map((name) => `usr/lib/${name}`).sort();
   requireCondition(
     JSON.stringify(actual) === JSON.stringify(expected),
-    "Expected exactly four known Wayland files; unknown aliases/layout require review.",
+    `Expected exactly four known Wayland files; unknown aliases/layout require review. Found: ${JSON.stringify(actual)}`,
   );
   for (const path of expected) await elf(root, path);
   const hook = await readFile(hookSource);
