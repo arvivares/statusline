@@ -25,7 +25,7 @@ import {
 const elf = Buffer.alloc(64);
 elf.set([127, 69, 76, 70, 2, 1]);
 elf.writeUInt16LE(62, 18); // x86_64 header fixture, not an executable.
-const modules = "usr/lib/x86_64-linux-gnu/gio/modules";
+const modules = "usr/lib/gio/modules";
 const hook = "apprun-hooks/statusline-gio.sh";
 const launcher =
   '#!/usr/bin/env bash\nset -e\nthis_dir="$(cd -- "$(dirname -- "$0")" && pwd -P)"\nsource "$this_dir"/apprun-hooks/"linuxdeploy-plugin-gtk.sh"\nexec "$this_dir"/AppRun.wrapped "$@"\n';
@@ -50,14 +50,17 @@ async function fixture() {
     "usr/bin/statusline-desktop",
     `${modules}/libgiognutls.so`,
     "usr/lib/libgio-2.0.so.0",
-    ...waylandLibraries.map((name) => `usr/lib/${name}`),
+    // Real Tauri CLI 2.12.1 / linuxdeploy 07333c6 input from CI:
+    "usr/lib/libwayland-server.so.0",
+    "usr/lib/libwayland-egl.so.1",
+    "usr/lib/libwayland-cursor.so.0",
   ]) {
     await writeFile(join(root, path), elf, { mode: 0o755 });
   }
   await writeFile(join(root, "AppRun"), launcher, { mode: 0o755 });
   await writeFile(
     join(root, "apprun-hooks/linuxdeploy-plugin-gtk.sh"),
-    'export GDK_BACKEND=x11\nexport GIO_EXTRA_MODULES="/overwritten-by-statusline-hook"\n',
+    'export GIO_MODULE_DIR="$this_dir/usr/lib/gio/modules"\nexport GIO_EXTRA_MODULES="/overwritten-by-statusline-hook"\n',
   );
   return root;
 }
@@ -65,7 +68,7 @@ async function fixture() {
 describe.skipIf(process.platform === "win32")(
   "AppImage packaging policy",
   () => {
-    it("removes only four Wayland files and keeps every other payload byte and mode", async () => {
+    it("removes only three shipped Wayland files and keeps every other payload byte and mode", async () => {
       const root = await fixture();
       const before = await inventory(root);
       const after = await prepareAppDir(root);
@@ -103,12 +106,16 @@ describe.skipIf(process.platform === "win32")(
       "missing-tls",
       "unknown-launcher",
       "symlink-parent",
+      "legacy-module-layout",
+      "unexpected-client",
     ])("rejects %s before changing the input tree", async (problem) => {
       const root = await fixture();
-      const library = join(root, "usr/lib/libwayland-client.so.0");
+      const library = join(root, "usr/lib/libwayland-egl.so.1");
       if (problem === "missing-wayland") await rm(library);
       if (problem === "extra-alias")
         await writeFile(join(root, "usr/lib/libwayland-client.so"), elf);
+      if (problem === "unexpected-client")
+        await writeFile(join(root, "usr/lib/libwayland-client.so.0"), elf);
       if (problem === "symlink") {
         await rm(library);
         await symlink("libgio-2.0.so.0", library);
@@ -128,6 +135,11 @@ describe.skipIf(process.platform === "win32")(
         await cp(join(root, modules), external, { recursive: true });
         await rm(join(root, modules), { recursive: true });
         await symlink(external, join(root, modules));
+      }
+      if (problem === "legacy-module-layout") {
+        const legacy = join(root, "usr/lib/x86_64-linux-gnu/gio/modules");
+        await cp(join(root, modules), legacy, { recursive: true });
+        await rm(join(root, modules), { recursive: true });
       }
       const before = await inventory(root);
       await expect(prepareAppDir(root)).rejects.toThrow();
@@ -182,6 +194,7 @@ describe.skipIf(process.platform === "win32")(
               APPDIR: "/wrong",
               GIO_MODULE_DIR: "/host",
               GIO_EXTRA_MODULES: "/host",
+              GDK_BACKEND: "wayland",
               LIBGL_ALWAYS_SOFTWARE: "false",
             },
           },

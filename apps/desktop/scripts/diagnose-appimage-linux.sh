@@ -124,15 +124,29 @@ if ! (cd "$diagnostic_root/extracted" && env -u APPIMAGE_EXTRACT_AND_RUN -u NO_C
 fi
 appdir="$diagnostic_root/extracted/squashfs-root"
 [[ -x $appdir/AppRun ]] || fail 'The extracted image has no executable AppRun.'
-bundled_modules="$appdir/usr/lib/x86_64-linux-gnu/gio/modules"
-[[ -d $bundled_modules && ! -L $bundled_modules ]] || fail 'The expected bundled GIO module directory is absent or a symlink; do not guess another path.'
-[[ $(realpath -- "$bundled_modules") == "$appdir"/* ]] || fail 'Bundled modules must resolve inside the extracted image.'
+# Explicitly support the inspected legacy layout and Tauri CLI 2.12.1's
+# normalized layout. Never search the host or guess an arbitrary module path.
+bundled_modules_relative=""
+for candidate in usr/lib/gio/modules usr/lib/x86_64-linux-gnu/gio/modules; do
+  bundled_modules="$appdir/$candidate"
+  [[ -e $bundled_modules || -L $bundled_modules ]] || continue
+  [[ -z $bundled_modules_relative ]] || fail 'Ambiguous bundled GIO module layout; no application was launched.'
+  [[ -d $bundled_modules && ! -L $bundled_modules ]] || fail 'The expected bundled GIO module directory is absent or a symlink; do not guess another path.'
+  [[ $(realpath -- "$bundled_modules") == "$bundled_modules" ]] || fail 'Bundled modules must resolve inside the extracted image without directory symlinks.'
+  [[ -f $bundled_modules/libgiognutls.so && ! -L $bundled_modules/libgiognutls.so ]] || fail 'The bundled GIO TLS module is absent or a symlink.'
+  bundled_modules_relative=$candidate
+done
+[[ -n $bundled_modules_relative ]] || fail 'The expected bundled GIO module directory is absent; do not guess another path.'
 
 if [[ -f $appdir/apprun-hooks/linuxdeploy-plugin-gtk.sh ]]; then
   cp "$appdir/apprun-hooks/linuxdeploy-plugin-gtk.sh" "$diagnostic_root/launcher-gtk.sh"
   if grep -Eq '^[[:space:]]*export[[:space:]]+GDK_BACKEND=x11' "$diagnostic_root/launcher-gtk.sh"; then
     printf '%s\n' 'This AppImage forces X11 in its GTK hook. On Wayland it requires XWayland; an external Wayland override is not a real Wayland test.'
   fi
+fi
+if [[ -f $appdir/apprun-hooks/statusline-gio.sh ]] &&
+   grep -Eq '^[[:space:]]*export[[:space:]]+GDK_BACKEND=x11' "$appdir/apprun-hooks/statusline-gio.sh"; then
+  printf '%s\n' 'This AppImage forces X11 in its Statusline hook. On Wayland it requires XWayland; an external Wayland override is not a real Wayland test.'
 fi
 find "$appdir/usr/lib" -type f \( -name 'libgio*' -o -name 'libglib*' -o -name 'libgvfs*' -o -name 'libEGL*' -o -name 'libgbm*' -o -name 'libwayland*' \) \
   -printf '%P\n' > "$diagnostic_root/bundled-libraries.txt"
@@ -200,7 +214,7 @@ for case_name in "${case_names[@]}"; do
   require_no_statusline
   appdir=$original_appdir
   if [[ $case_name == gio-host-wayland ]]; then appdir=$host_appdir; fi
-  bundled_modules="$appdir/usr/lib/x86_64-linux-gnu/gio/modules"
+  bundled_modules="$appdir/$bundled_modules_relative"
   case_directory="$diagnostic_root/$case_name"
   mkdir -p "$case_directory/config" "$case_directory/data" "$case_directory/cache"
   case_environment=(
