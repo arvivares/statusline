@@ -7,6 +7,14 @@ de los instaladores finales depende de completar los controles de la release;
 consulta [GitHub Releases](https://github.com/arvivares/statusline/releases) para
 descargas verificadas. Las comparaciones históricas siguientes no requieren recompilar.
 
+El empaquetado preparado para 0.1.36 sigue la ruta normalizada de módulos GIO
+`usr/lib/gio/modules` de [Tauri CLI 2.12.1](https://github.com/tauri-apps/tauri/blob/tauri-cli-v2.12.1/crates/tauri-bundler/src/bundle/linux/appimage/linuxdeploy-plugin-gtk.sh).
+El hook propio conserva explícitamente X11/XWayland, el módulo TLS incluido y el
+aislamiento de los módulos GIO del host. El diagnóstico acepta esa ruta o la
+ruta multiarch histórica, pero rechaza ambas a la vez, enlaces simbólicos o TLS
+ausente; no busca módulos en el sistema. El candidato 0.1.35 no se publicó:
+su control de empaquetado detectó el cambio de ruta antes de firmar el AppImage.
+
 ## Hallazgos en el artefacto 0.1.12
 
 Inspección estática del AppImage publicado, con SHA-256

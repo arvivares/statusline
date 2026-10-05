@@ -24,7 +24,9 @@ export const waylandLibraries = [
   "libwayland-egl.so.1",
   "libwayland-cursor.so.0",
 ];
-const moduleDirectory = "usr/lib/x86_64-linux-gnu/gio/modules";
+// Tauri CLI 2.12.1 normalizes GTK/GIO modules to usr/lib, independently of
+// the build host's multiarch path. Keep this exact reviewed layout fail-closed.
+const moduleDirectory = "usr/lib/gio/modules";
 const hookPath = "apprun-hooks/statusline-gio.sh";
 const manifestPath = "statusline-appimage-policy.json";
 const launcherExec = 'exec "$this_dir"/AppRun.wrapped "$@"';
@@ -35,7 +37,7 @@ const hookSource = new URL(
 );
 const policy = {
   schemaVersion: 1,
-  policy: "host-wayland-isolated-gio-v1",
+  policy: "host-wayland-isolated-gio-v2",
   architecture: "x86_64",
   excludedLibraries: waylandLibraries,
   gioModuleDirectory: moduleDirectory,

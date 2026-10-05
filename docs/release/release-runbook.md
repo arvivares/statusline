@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.35` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.35`;
-- Android candidate: `versionCode 32` (Google Play submission is separate);
+- prepared product tag: `v0.1.36` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.36`;
+- Android candidate: `versionCode 33` (Google Play submission is separate);
 - prepared iOS source version: `1.1.3 (12)`, with independent optional quota
   and Codex reset-credit alerts. Its archive/export and internal delivery are recorded in
   [the mobile delivery record](../../apps/apple/store/validation-1.1.3.md).
@@ -57,7 +57,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.35`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.36`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -141,8 +141,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.35 -m "Statusline 0.1.35 beta"
-git push origin v0.1.35
+git tag -s v0.1.36 -m "Statusline 0.1.36 beta"
+git push origin v0.1.36
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -151,7 +151,7 @@ approval: after every build, trust, inventory, checksum and provenance gate pass
 draft is published automatically according to `distribution.publishPrerelease`.
 The current profile publishes a normal GitHub release marked **Latest**.
 
-### 0.1.35 candidate gates
+### 0.1.36 candidate gates
 
 - Publish the dependency maintenance already reviewed in PRs #83–#86 and
   #88–#89: native/JavaScript Tauri alignment, fixed upstream tray-icon,
@@ -160,13 +160,18 @@ The current profile publishes a normal GitHub release marked **Latest**.
   because 2.12.0 requires API 24. Do not override the library manifest minimum.
 - Keep all platform signing, notarization, updater signature and complete
   inventory gates. Windows remains an explicitly unsigned preview.
+- Validate the real Tauri 2.12.1 AppImage's normalized `usr/lib/gio/modules`
+  layout, retained bundled TLS and explicit X11/XWayland backend on Ubuntu
+  22.04 and 24.04 before tagging. Do not weaken the layout or inventory gates.
+- The signed v0.1.35 tag is retained unchanged for audit. Its incomplete private
+  draft failed Linux packaging and is not a published release.
 - The isolated macOS 27 tray probe passed, as did the dependency PR's native
   checks on macOS, Windows and Linux. Installed-package upgrade and physical
   file-picker/desktop-manager checks remain device QA, not typecheck evidence.
 - No relay deployment, D1 migration, account/pairing change or mobile-store
   submission is part of this maintenance release. iOS stays recorded as
-  `1.1.3 (12)`; Android APK/AAB are `0.1.35 (32)`.
-- See the [release notes](notes/v0.1.35.md) and run the manual Release preflight
+  `1.1.3 (12)`; Android APK/AAB are `0.1.36 (33)`.
+- See the [release notes](notes/v0.1.36.md) and run the manual Release preflight
   on the reviewed commit before pushing the signed tag.
 
 ### Historical 0.1.34 candidate gates

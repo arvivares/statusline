@@ -25,7 +25,7 @@ import {
 const elf = Buffer.alloc(64);
 elf.set([127, 69, 76, 70, 2, 1]);
 elf.writeUInt16LE(62, 18); // x86_64 header fixture, not an executable.
-const modules = "usr/lib/x86_64-linux-gnu/gio/modules";
+const modules = "usr/lib/gio/modules";
 const hook = "apprun-hooks/statusline-gio.sh";
 const launcher =
   '#!/usr/bin/env bash\nset -e\nthis_dir="$(cd -- "$(dirname -- "$0")" && pwd -P)"\nsource "$this_dir"/apprun-hooks/"linuxdeploy-plugin-gtk.sh"\nexec "$this_dir"/AppRun.wrapped "$@"\n';
@@ -57,7 +57,7 @@ async function fixture() {
   await writeFile(join(root, "AppRun"), launcher, { mode: 0o755 });
   await writeFile(
     join(root, "apprun-hooks/linuxdeploy-plugin-gtk.sh"),
-    'export GDK_BACKEND=x11\nexport GIO_EXTRA_MODULES="/overwritten-by-statusline-hook"\n',
+    'export GIO_MODULE_DIR="$this_dir/usr/lib/gio/modules"\nexport GIO_EXTRA_MODULES="/overwritten-by-statusline-hook"\n',
   );
   return root;
 }
@@ -103,6 +103,7 @@ describe.skipIf(process.platform === "win32")(
       "missing-tls",
       "unknown-launcher",
       "symlink-parent",
+      "legacy-module-layout",
     ])("rejects %s before changing the input tree", async (problem) => {
       const root = await fixture();
       const library = join(root, "usr/lib/libwayland-client.so.0");
@@ -128,6 +129,11 @@ describe.skipIf(process.platform === "win32")(
         await cp(join(root, modules), external, { recursive: true });
         await rm(join(root, modules), { recursive: true });
         await symlink(external, join(root, modules));
+      }
+      if (problem === "legacy-module-layout") {
+        const legacy = join(root, "usr/lib/x86_64-linux-gnu/gio/modules");
+        await cp(join(root, modules), legacy, { recursive: true });
+        await rm(join(root, modules), { recursive: true });
       }
       const before = await inventory(root);
       await expect(prepareAppDir(root)).rejects.toThrow();
@@ -182,6 +188,7 @@ describe.skipIf(process.platform === "win32")(
               APPDIR: "/wrong",
               GIO_MODULE_DIR: "/host",
               GIO_EXTRA_MODULES: "/host",
+              GDK_BACKEND: "wayland",
               LIBGL_ALWAYS_SOFTWARE: "false",
             },
           },

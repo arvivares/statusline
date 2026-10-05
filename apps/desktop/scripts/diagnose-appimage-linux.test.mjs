@@ -43,7 +43,9 @@ async function fixture(overrides = {}) {
   fixtureRoot = await mkdtemp(join(tmpdir(), "statusline-appimage-test-"));
   const bin = join(fixtureRoot, "bin");
   const appdir = join(fixtureRoot, "source-appdir");
-  const modules = join(appdir, "usr/lib/x86_64-linux-gnu/gio/modules");
+  const moduleRelative =
+    overrides.FIXTURE_MODULE_LAYOUT ?? "usr/lib/x86_64-linux-gnu/gio/modules";
+  const modules = join(appdir, moduleRelative);
   const temporary = join(fixtureRoot, "tmp");
   const hostLibraries = join(fixtureRoot, "host-libraries");
   await Promise.all([
@@ -53,6 +55,7 @@ async function fixture(overrides = {}) {
     mkdir(temporary),
     mkdir(hostLibraries),
   ]);
+  await writeFile(join(modules, "libgiognutls.so"), "bundled TLS fixture");
   for (const name of waylandLibraries) {
     await writeFile(join(appdir, "usr/lib", name), `bundled:${name}`);
     await writeFile(join(hostLibraries, name), `host:${name}`);
@@ -94,7 +97,7 @@ async function fixture(overrides = {}) {
     join(appdir, "AppRun"),
     `
 export GDK_BACKEND=x11
-export GIO_EXTRA_MODULES="$PWD/usr/lib/x86_64-linux-gnu/gio/modules"
+export GIO_EXTRA_MODULES="$PWD/${moduleRelative}"
 printf 'module=%s\\nextra=%s\\nsoftware=%s\\nrelay=%s\\n' "\${GIO_MODULE_DIR:-unset}" "$GIO_EXTRA_MODULES" "\${LIBGL_ALWAYS_SOFTWARE:-unset}" "\${STATUSLINE_RELAY_BASE_URL:-disabled}"
 printf 'config=%s\\ndata=%s\\ncache=%s\\nregistry=%s\\n' "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$GST_REGISTRY"
 printf 'cwd=%s\\nsandbox_override=%s\\nextract_override=%s\\ncleanup_override=%s\\n' "$PWD" "\${WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS:-unset}" "\${APPIMAGE_EXTRACT_AND_RUN:-unset}" "\${NO_CLEANUP:-unset}"
@@ -291,6 +294,38 @@ describe.skipIf(process.platform === "win32")(
         "baseline\t124\tyes\tyes\tnot-observed",
       );
     });
+
+    it("supports the normalized Tauri 2.12 GIO layout without guessing host paths", async () => {
+      const f = await fixture({ FIXTURE_MODULE_LAYOUT: "usr/lib/gio/modules" });
+      const result = f.run();
+      expect(result.status, result.stderr).toBe(0);
+      const directory = await f.outputDirectory();
+      const log = await readFile(
+        join(directory, "gio-bundled-only/startup.log"),
+        "utf8",
+      );
+      expect(log).toContain(
+        `module=${directory}/extracted/squashfs-root/usr/lib/gio/modules`,
+      );
+    });
+
+    it.each(["ambiguous-layout", "missing-tls"])(
+      "rejects %s without launching the app",
+      async (problem) => {
+        const f = await fixture();
+        if (problem === "ambiguous-layout")
+          await mkdir(join(f.appdir, "usr/lib/gio/modules"), {
+            recursive: true,
+          });
+        if (problem === "missing-tls")
+          await rm(join(f.modules, "libgiognutls.so"));
+        const result = f.run();
+        expect(result.status).toBe(1);
+        expect(await readdir(await f.outputDirectory())).not.toContain(
+          "baseline",
+        );
+      },
+    );
 
     it("compares the mounted and extracted entry points with equivalent clean conditions without changing a 0.1.13-style payload", async () => {
       const f = await fixture({
