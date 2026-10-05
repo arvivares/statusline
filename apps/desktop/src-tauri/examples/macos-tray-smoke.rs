@@ -1,5 +1,5 @@
 //! Manual native probe: blank test views, no agents, relay or user settings.
-//! Uses the patched tray dependency and production visibility policy. Auto-exits
+//! Uses the upstream tray dependency and production visibility policy. Auto-exits
 //! after 60 seconds. Emits only its own click/menu/visibility state as JSON.
 #[cfg(target_os = "macos")]
 #[allow(dead_code)]
