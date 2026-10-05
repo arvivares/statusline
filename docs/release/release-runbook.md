@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.34` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.34`;
-- Android candidate: `versionCode 30` (Google Play submission is separate);
+- prepared product tag: `v0.1.35` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.35`;
+- Android candidate: `versionCode 32` (Google Play submission is separate);
 - prepared iOS source version: `1.1.3 (12)`, with independent optional quota
   and Codex reset-credit alerts. Its archive/export and internal delivery are recorded in
   [the mobile delivery record](../../apps/apple/store/validation-1.1.3.md).
@@ -57,7 +57,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.34`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.35`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -141,8 +141,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.34 -m "Statusline 0.1.34 beta"
-git push origin v0.1.34
+git tag -s v0.1.35 -m "Statusline 0.1.35 beta"
+git push origin v0.1.35
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -151,7 +151,25 @@ approval: after every build, trust, inventory, checksum and provenance gate pass
 draft is published automatically according to `distribution.publishPrerelease`.
 The current profile publishes a normal GitHub release marked **Latest**.
 
-### 0.1.34 candidate gates
+### 0.1.35 candidate gates
+
+- Publish the dependency maintenance already reviewed in PRs #83–#86 and
+  #88–#89: native/JavaScript Tauri alignment, fixed upstream tray-icon,
+  signature verifier, build tooling and test updates.
+- Preserve Android 6/API 23 support with WorkManager 2.11.2; PR #87 was closed
+  because 2.12.0 requires API 24. Do not override the library manifest minimum.
+- Keep all platform signing, notarization, updater signature and complete
+  inventory gates. Windows remains an explicitly unsigned preview.
+- The isolated macOS 27 tray probe passed, as did the dependency PR's native
+  checks on macOS, Windows and Linux. Installed-package upgrade and physical
+  file-picker/desktop-manager checks remain device QA, not typecheck evidence.
+- No relay deployment, D1 migration, account/pairing change or mobile-store
+  submission is part of this maintenance release. iOS stays recorded as
+  `1.1.3 (12)`; Android APK/AAB are `0.1.35 (32)`.
+- See the [release notes](notes/v0.1.35.md) and run the manual Release preflight
+  on the reviewed commit before pushing the signed tag.
+
+### Historical 0.1.34 candidate gates
 
 - Run provider-independent quota detector tests on macOS, Windows and Linux,
   plus frontend, relay and Android CI. Preserve all existing reset-credit tests.
