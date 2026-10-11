@@ -1,11 +1,22 @@
 # Codex runtime sources
 
 Statusline can read Codex usage without a separately installed Codex CLI by using
-a compatible desktop app's bundled runtime. On macOS it reuses
-`Contents/Resources/codex` inside **ChatGPT.app** or **Codex.app**. Windows desktop
-discovery is implemented in source; validation on a desktop-only Windows device
-is still pending. An older ChatGPT installation without a Codex executable is not
-supported by this source. Statusline does not bundle or download OpenAI binaries.
+a compatible desktop app's bundled runtime. On macOS it checks these bounded,
+version-independent paths inside **ChatGPT.app** or **Codex.app**, in order:
+
+- `Contents/Resources/codex` (legacy layout).
+- `Contents/Resources/codex-cli/bin/codex` (current bundled launcher).
+- `Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex` (nested native runtime).
+
+ChatGPT `26.1002.52244`, inspected on 11 October 2026, no longer supplies the
+legacy path. Its bundled launcher invokes the nested native runtime and reports
+`codex-cli 0.162.0-alpha.2`. These are observed package layouts, not a stable
+OpenAI packaging contract; Statusline never pins an app or runtime version.
+
+Windows desktop discovery is implemented in source; validation on a desktop-only
+Windows device is still pending. An older ChatGPT installation without a Codex
+executable is not supported by this source. Statusline does not bundle or download
+OpenAI binaries.
 
 ## Discovery and precedence
 
@@ -23,10 +34,14 @@ install the OpenAI app from its official distribution and keep OS protections
 enabled. Explicitly selecting a different source can change the local session used.
 
 macOS users with a renamed app or a nonstandard install location can select the
-`.app` package manually. Statusline resolves its bundled executable without a
-shell and keeps the package path in settings. Automatic results are not persisted
-or pinned to an updater's version directory. `DESKTOP APP` / `APP DE ESCRITORIO`
-identifies an automatically found bundle; explicit choices remain `SAVED PATH`.
+`.app` package manually. Statusline tries the same supported layouts, verifies
+each launcher, and keeps the package path in settings so a layout change does not
+invalidate the choice. An invalid old launcher cannot hide a valid new runtime
+inside that package. Statusline starts the launcher directly without constructing
+a shell command; the current vendor-supplied launcher is itself a shell script.
+Automatic results are not persisted or pinned to an updater's version directory.
+`DESKTOP APP` / `APP DE ESCRITORIO` identifies an automatically found bundle;
+explicit choices remain `SAVED PATH`.
 
 ### Windows desktop discovery
 
@@ -104,7 +119,8 @@ can also select a different profile. If Statusline asks for sign-in:
 2. Check the selected source; do not copy account files or share credentials.
 3. If the session is still unavailable, the user can explicitly run `login` with
    the bundled executable shown in Source Settings, using its quoted absolute
-   path (for example, `"/Applications/ChatGPT.app/Contents/Resources/codex" login`).
+   path (for example, `"/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex" login`
+   for the current layout, or the legacy path on an older installation).
    This invokes OpenAI's own login flow without installing a separate CLI. It may
    change the shared Codex session; Statusline never runs it automatically.
 
@@ -114,7 +130,9 @@ this is reported as a query error, not treated as permission to inspect credenti
 
 ## Release validation: macOS without a separate CLI
 
-Use the **signed and notarized 0.1.14 DMG or PKG** from the reviewed release.
+Use a **signed and notarized DMG or PKG containing the layout fix** from a reviewed
+release. Earlier releases that only check the legacy path cannot validate the
+current ChatGPT package.
 Do not uninstall a working CLI or delete authentication files just to test.
 
 - On the clean test Mac, record macOS version, CPU architecture, OpenAI app version
@@ -124,7 +142,8 @@ Do not uninstall a working CLI or delete authentication files just to test.
 - Open Codex in ChatGPT/Codex.app and sign in through the official UI.
 - Launch Statusline from Applications, not a development terminal. In Codex Source,
   confirm **VERIFIED**, **DESKTOP APP**, and a path ending in
-  `.app/Contents/Resources/codex`, with no saved path/override.
+  one of the three supported bundle-relative paths above, with no saved
+  path/override.
 - Refresh. Compare weekly remaining percentage and reset with the OpenAI app.
   No CLI installation, API key or Statusline-managed login should be necessary.
 - Close and reopen Statusline and repeat. Check the menu-bar meter, then existing
@@ -137,6 +156,20 @@ Do not uninstall a working CLI or delete authentication files just to test.
 Development-machine validation with a reduced `PATH` proves that the embedded
 executable is sufficient, but not that a new OS user can reuse the desktop session.
 Keep the clean-device result pending until physically tested.
+
+On 11 October 2026, the maintainer ran the production discovery/usage helper
+from a normal macOS Terminal with ChatGPT `26.1002.52244`. Discovery selected
+the current bundled launcher as `desktopApp`, with no saved path or override,
+and the same runtime returned a ready, normalized live quota. No separate CLI
+runtime, credential extraction or pairing change was used for that read.
+This validates the installed desktop source and session on that Mac, not a
+never-used CLI profile or the final packaged Companion upgrade.
+
+Regression fixtures cover both app names, system and per-user Applications
+directories, paths containing spaces, a stale saved executable, a broken old
+launcher, a missing/broken current shim, the nested native fallback and a saved
+renamed app that changes layout. These fixtures contain no standalone CLI
+candidate and do not access real accounts, credentials or the relay.
 
 Developers can inspect production discovery without compiling the UI:
 
