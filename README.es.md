@@ -105,10 +105,12 @@ disponible una cuota de 5 h/semanal agotada, y una hora antes del reinicio seman
 si queda al menos un 20 %. Requiere relay y móvil compatibles con avisos activados;
 iOS se distribuye aparte de GitHub. Consulta el [funcionamiento y despliegue](docs/architecture/quota-alerts.md).
 
-La [versión de mantenimiento 0.1.36](docs/release/notes/v0.1.36.md) actualiza
-dependencias de escritorio, adopta la corrección oficial de bandeja para macOS 27
-y conserva Android 6, los emparejamientos y la compatibilidad de las firmas del actualizador.
-El empaquetado Linux se adapta a las nuevas rutas GIO de Tauri y mantiene X11/XWayland.
+La [versión de compatibilidad 0.1.37](docs/release/notes/v0.1.37.md) recupera
+el discovery automático de Codex en las instalaciones recientes de ChatGPT para
+macOS, incluido el runtime anidado. Conserva las rutas antiguas, los paquetes
+de app guardados, los emparejamientos y las firmas del actualizador. No hace
+falta un Codex CLI separado si el runtime de escritorio compatible puede acceder
+a la sesión local.
 
 | Plataforma                  | Rol          | Implementación   | Distribución                                                    |
 | --------------------------- | ------------ | ---------------- | --------------------------------------------------------------- |

@@ -110,10 +110,11 @@ Requires the updated relay and an opted-in compatible mobile build; iOS delivery
 remains separate from GitHub releases.
 See [quota-alert behavior and rollout](docs/architecture/quota-alerts.md).
 
-The [0.1.36 maintenance release](docs/release/notes/v0.1.36.md) updates desktop
-dependencies, adopts the official macOS 27 tray fix and preserves Android 6
-support, existing pairings and updater signature compatibility. Linux packaging
-tracks Tauri's normalized GIO layout while retaining X11/XWayland behavior.
+The [0.1.37 compatibility release](docs/release/notes/v0.1.37.md) restores
+automatic Codex discovery in recent ChatGPT installations on macOS, including
+the nested bundled runtime. Legacy layouts, saved app packages, existing pairings
+and updater signatures remain compatible. No separate Codex CLI is needed when
+a supported desktop runtime can access the local session.
 
 Statusline for iPhone is available on the App Store; desktop and Android remain in
 beta. The product flow has been tested on physical mobile devices and desktop
