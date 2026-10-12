@@ -35,6 +35,33 @@ test("Actions patch/minor updates cannot absorb signing major upgrades", () => {
   assert.doesNotMatch(actions, /- major|ignore:/);
 });
 
+test("Android dependency updates preserve the API 23 compatibility boundary", () => {
+  const gradle = block("gradle");
+  assert.match(
+    gradle,
+    /dependency-name: "?androidx\.work:work-runtime"?\n        versions: \[">=2\.12\.0"\]/,
+  );
+  assert.match(
+    gradle,
+    /dependency-name: "?com\.google\.firebase:firebase-bom"?\n        versions: \[">=35\.0\.0"\]/,
+  );
+  const app = readFileSync(
+    new URL("../apps/android/app/build.gradle.kts", import.meta.url),
+    "utf8",
+  );
+  assert.match(app, /minSdk = 23\b/);
+  assert.match(app, /androidx\.work:work-runtime:2\.11\.\d+"/);
+  assert.match(app, /com\.google\.firebase:firebase-bom:34\.\d+\.\d+"/);
+  const manifest = readFileSync(
+    new URL(
+      "../apps/android/app/src/main/AndroidManifest.xml",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  assert.doesNotMatch(manifest, /tools:overrideLibrary/);
+});
+
 test("CI tests the production Vite build without producing installers", () => {
   const workflow = readFileSync(
     new URL("../.github/workflows/repository-quality.yml", import.meta.url),

@@ -12,6 +12,20 @@ La aplicación compila contra API 37.0 para usar Compose 1.12, pero conserva `ta
 y `minSdk 23`; este cambio de toolchain no reduce la compatibilidad con dispositivos. En
 línea de comandos, el identificador exacto del paquete es `platforms;android-37.0`.
 
+### Compatibilidad de dependencias
+
+Se mantiene Android 6/API 23 con WorkManager `2.11.2` y Firebase BoM
+`34.19.0`. [WorkManager 2.12](https://developer.android.com/jetpack/androidx/releases/work#2.12.0)
+y [Firebase BoM 35](https://firebase.google.com/support/release-notes/android#bom_v35-0-0)
+requieren API 24 para las bibliotecas usadas por Statusline. Dependabot excluye
+esas líneas incompatibles, pero conserva las actualizaciones compatibles y las
+alertas de seguridad. No se fuerza `tools:overrideLibrary` para saltar el requisito.
+
+Una migración futura de `minSdk` requiere una decisión explícita de producto,
+actualizar estos límites y sus pruebas, comprobar sincronización/widget/push
+y revisar la compatibilidad publicada en Google Play. Gradle y Kotlin pueden
+recibir parches independientemente de esta decisión.
+
 ## Configuración
 
 El build usa por defecto `https://statusline-relay.inmerzion.workers.dev`. Para otro relay compatible, pasa el mismo origen HTTPS usado por el companion:
