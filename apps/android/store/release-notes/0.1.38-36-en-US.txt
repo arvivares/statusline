@@ -1,0 +1,3 @@
+Optional alerts when exhausted quota becomes available again or at least 20% of weekly quota remains in its final hour. Separate push alerts when OpenAI adds Codex reset credits.
+Widgets can refresh in the background, subject to Android scheduling. Your pairing and notification preferences are preserved.
+Now requires Android 7 or later to retain Google Play automatic protection.

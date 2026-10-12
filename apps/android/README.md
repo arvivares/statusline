@@ -9,19 +9,25 @@ Cliente Android nativo del Statusline Relay Protocol v1. La aplicación reclama 
 - Android SDK Build Tools 36.0.0 o posterior
 
 La aplicación compila contra API 37.0 para usar Compose 1.12, pero conserva `targetSdk 36`
-y `minSdk 23`; este cambio de toolchain no reduce la compatibilidad con dispositivos. En
+y usa `minSdk 24` (Android 7.0 o posterior) desde el build `0.1.38 (36)`. En
 línea de comandos, el identificador exacto del paquete es `platforms;android-37.0`.
+
+El mínimo se elevó con autorización explícita para conservar la protección automática
+de Google Play, que exige API 24. No cambia el paquete, firma, emparejamiento o permisos;
+Android 6 ya no recibe estos builds nuevos. El APK/AAB histórico del tag `v0.1.38`
+es el build 35, con API 23; no se reemplaza ni se mueve ese tag.
 
 ### Compatibilidad de dependencias
 
-Se mantiene Android 6/API 23 con WorkManager `2.11.2` y Firebase BoM
+Esta corrección conserva las versiones probadas de WorkManager `2.11.2` y Firebase BoM
 `34.19.0`. [WorkManager 2.12](https://developer.android.com/jetpack/androidx/releases/work#2.12.0)
 y [Firebase BoM 35](https://firebase.google.com/support/release-notes/android#bom_v35-0-0)
-requieren API 24 para las bibliotecas usadas por Statusline. Dependabot excluye
-esas líneas incompatibles, pero conserva las actualizaciones compatibles y las
-alertas de seguridad. No se fuerza `tools:overrideLibrary` para saltar el requisito.
+requieren API 24 para las bibliotecas usadas por Statusline. El nuevo mínimo elimina
+ese bloqueo de compatibilidad, pero no integra sus cambios de runtime: Dependabot
+mantiene esos límites hasta una revisión separada de widget y push. Las alertas de
+seguridad siguen activas; no se fuerza `tools:overrideLibrary`.
 
-Una migración futura de `minSdk` requiere una decisión explícita de producto,
+Otra migración futura de `minSdk` requiere una decisión explícita de producto,
 actualizar estos límites y sus pruebas, comprobar sincronización/widget/push
 y revisar la compatibilidad publicada en Google Play. Gradle y Kotlin pueden
 recibir parches independientemente de esta decisión.

@@ -84,8 +84,8 @@ updates:
       time: "05:45"
       timezone: Europe/Madrid
     open-pull-requests-limit: 5
-    # Preserve Android 6/API 23 until an explicit minimum-SDK migration.
-    # Compatible maintenance releases remain eligible; security alerts stay on.
+    # Keep tested dependency lines during the API-24 Play-protection hotfix.
+    # Reassess deferred majors separately with widget/push QA; security alerts stay on.
     ignore:
       - dependency-name: "androidx.work:work-runtime"
         versions: [">=2.12.0"]

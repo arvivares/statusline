@@ -128,7 +128,7 @@ public code-signing onboarding are tracked in the
 | Linux x64                   | Beta                  | DEB, RPM and AppImage with OpenPGP signatures                   |
 | macOS Apple Silicon + Intel | Beta                  | Universal DMG and PKG, Developer ID and notarization            |
 | iPhone, iOS 17+             | Available             | [App Store](https://apps.apple.com/app/statusline/id6807851320) |
-| Android 6.0+                | Beta                  | Signed APK/AAB and Google Play closed testing                   |
+| Android 7.0+                | Beta                  | Signed APK/AAB and Google Play closed testing                   |
 | Cloudflare Workers + D1     | Operational reference | Public encrypted relay                                          |
 
 ## Releases

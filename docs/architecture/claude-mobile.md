@@ -64,11 +64,13 @@ automatically enable notifications or create another FCM subscription.
 
 Reserve the next candidate versions during release preparation, not by retagging
 or replacing v0.1.38. A possible coordinated next set is Companion/Android
-**0.1.39**, Android code **36**, iOS **1.1.4 (13)**; these are proposed, not bumped
+**0.1.39**, Android code **37**, iOS **1.1.4 (13)**; these are proposed, not bumped
 or published. If Android needs a separate protection-compatibility hotfix first,
 allocate its versions before finalizing this candidate.
 
 The current Mac has less than 1 GB free, so no unnecessary native compilation or
 archive is started. Recover enough build space before producing a new iOS binary.
-The Play minSdk decision remains a separate release blocker, not a reason to
-disable protections or change Firebase dependencies in this integration.
+The authorized API-24 compatibility hotfix reserves Android code 36 and keeps
+Play automatic protection. It is separate from this integration and does not
+upgrade Firebase dependencies; confirm its accepted delivery before reserving
+the next candidate code.

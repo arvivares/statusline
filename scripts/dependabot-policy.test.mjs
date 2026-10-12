@@ -35,7 +35,7 @@ test("Actions patch/minor updates cannot absorb signing major upgrades", () => {
   assert.doesNotMatch(actions, /- major|ignore:/);
 });
 
-test("Android dependency updates preserve the API 23 compatibility boundary", () => {
+test("Android retains API 24 and isolates deferred dependency upgrades", () => {
   const gradle = block("gradle");
   assert.match(
     gradle,
@@ -49,7 +49,7 @@ test("Android dependency updates preserve the API 23 compatibility boundary", ()
     new URL("../apps/android/app/build.gradle.kts", import.meta.url),
     "utf8",
   );
-  assert.match(app, /minSdk = 23\b/);
+  assert.match(app, /minSdk = 24\b/);
   assert.match(app, /androidx\.work:work-runtime:2\.11\.\d+"/);
   assert.match(app, /com\.google\.firebase:firebase-bom:34\.\d+\.\d+"/);
   const manifest = readFileSync(
@@ -60,6 +60,30 @@ test("Android dependency updates preserve the API 23 compatibility boundary", ()
     "utf8",
   );
   assert.doesNotMatch(manifest, /tools:overrideLibrary/);
+});
+
+test("Android release checks inspect the packaged manifest before uploading", () => {
+  const workflow = readFileSync(
+    new URL("../.github/workflows/android.yml", import.meta.url),
+    "utf8",
+  );
+  for (const field of [
+    "application-id",
+    "version-name",
+    "version-code",
+    "min-sdk",
+    "target-sdk",
+    "debuggable",
+  ]) {
+    assert.ok(workflow.includes(`manifest ${field} \"$apk\"`));
+  }
+  assert.match(workflow, /manifest min-sdk "\$apk"\)" == 24/);
+  assert.match(workflow, /manifest debuggable "\$apk"\)" == false/);
+  const preflight = readFileSync(
+    new URL("../apps/desktop/scripts/check-release.mjs", import.meta.url),
+    "utf8",
+  );
+  assert.match(preflight, /androidMinSdk === 24/);
 });
 
 test("CI tests the production Vite build without producing installers", () => {

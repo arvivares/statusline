@@ -12,7 +12,8 @@ component versions and curated release-notes path. For the current public beta:
 
 - prepared product tag: `v0.1.38` (not created merely by preparing this file);
 - desktop and Android candidate version: `0.1.38`;
-- Android candidate: `versionCode 35` (Google Play submission is separate);
+- Android store candidate: `versionCode 36`, minimum Android 7/API 24 (Google Play
+  submission is separate; the immutable v0.1.38 tag still contains build 35);
 - prepared iOS source version: `1.1.3 (12)`, with independent optional quota
   and Codex reset-credit alerts. Its archive/export and internal delivery are recorded in
   [the mobile delivery record](../../apps/apple/store/validation-1.1.3.md).
@@ -151,7 +152,22 @@ approval: after every build, trust, inventory, checksum and provenance gate pass
 draft is published automatically according to `distribution.publishPrerelease`.
 The current profile publishes a normal GitHub release marked **Latest**.
 
-### 0.1.38 candidate gates
+### Android 0.1.38 (36) store compatibility hotfix
+
+- The account holder authorized raising minSdk from 23 to 24 to keep Play
+  automatic protection. Keep targetSdk 36, package/signing identity, tested
+  dependencies, credentials, pairing and notification choices unchanged.
+- Increment only the Android code to 36. Reuse the signed manual Android workflow
+  at the reviewed main commit; do not recompile desktop/iOS, retag v0.1.38 or replace
+  its existing build-35 assets. Store validation must identify the workflow and
+  exact code-36 artifact rather than pointing to the old tag as its provenance.
+- CI inspects the packaged APK's min/target SDK, version, package and debuggable
+  flag before upload. Test/lint, alignment, R8 and signature gates remain required.
+- Submit the same accepted code-36 AAB to Internal and Closed Alpha for all existing
+  eligible testers; preserve lists, regions and managed publishing. Do not request
+  production access or claim physical protected-build QA from CI alone.
+
+### Historical 0.1.38 candidate gates
 
 - Publish the compatible dependency maintenance reviewed in PRs #93–#99 and
   #101–#102: Tauri, rustls, runtime libraries, frontend build tooling, Gradle,
