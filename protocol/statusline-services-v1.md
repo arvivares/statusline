@@ -95,10 +95,13 @@ Swift; its deterministic key/nonce are test-only, never production credentials.
 }
 ```
 
-- IDs are stable adapter identifiers: codex and antigravity (Google Gemini only).
-  The experimental Claude foundation adds `claude` **only when locally detected**,
-  with `status: "unavailable"` and no windows. Detection is not quota or login.
-  Existing iOS/Android releases ignore this unknown ID and retain Codex/Gemini.
+- IDs are stable adapter identifiers: `codex`, `antigravity` (Google models only)
+  and `claude` (Anthropic Claude Code). Companion includes `claude` **only when
+  locally detected and enabled**. Its documented status-line bridge can publish
+  a ready five-hour (300 minutes) and/or weekly (10,080 minutes) window; detection
+  alone remains unavailable with no windows. It does not imply quota or login.
+  The Claude mobile reader accepts those existing windows; older mobile binaries
+  ignore the unknown ID and continue receiving Codex/Antigravity unchanged.
   No static entry for an absent service, account email, vendor token, path or
   prompt is sent. See [Claude source gates](../docs/architecture/claude-sources.md).
 - The list is authoritative and bounded to 16 unique IDs (lowercase ASCII

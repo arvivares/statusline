@@ -508,12 +508,14 @@ private val AgentProviderReading.sourceLabel: String
     get() = when (id) {
         AgentProviderId.CODEX -> "OpenAI"
         AgentProviderId.ANTIGRAVITY -> "Google"
+        AgentProviderId.CLAUDE -> "Anthropic"
     }
 
 private val AgentProviderReading.displayLabel: String
     get() = when (id) {
         AgentProviderId.CODEX -> L10n.text("OpenAI · Codex")
         AgentProviderId.ANTIGRAVITY -> L10n.text("Google · Antigravity")
+        AgentProviderId.CLAUDE -> L10n.text("Anthropic · Claude Code")
     }
 
 private val AgentProviderReading.hasBothWindows: Boolean
@@ -754,7 +756,7 @@ private fun PublicLinksFooter(
             )
         }
         Text(
-            text = L10n.text("Statusline is independent and is not affiliated with or endorsed by OpenAI or Google."),
+            text = L10n.text("Statusline is independent and is not affiliated with or endorsed by OpenAI, Google or Anthropic."),
             style = MaterialTheme.typography.bodySmall,
             color = DataPlaneColors.Muted,
         )

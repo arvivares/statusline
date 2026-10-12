@@ -36,6 +36,7 @@
 "Agent usage" = "Uso de agentes";
 "Allow notifications in system Settings to receive alerts." = "Permite las notificaciones en Configuración del sistema para recibir avisos.";
 "An encrypted snapshot is available on this device." = "Hay una muestra cifrada disponible en este dispositivo.";
+"Anthropic · Claude Code" = "Anthropic · Claude Code";
 "Antigravity · {0}% left" = "Antigravity · {0}% libre";
 "Antigravity · no weekly data" = "Antigravity · sin datos semanales";
 "Antigravity · unavailable" = "Antigravity · no disponible";
@@ -343,11 +344,13 @@
 "NOT PUBLISHED" = "SIN PUBLICAR";
 "Not selected" = "No seleccionado";
 "NOT UPLOADED" = "NO SE ENVÍA";
+"Notification preferences saved. Registration is pending and will retry while Statusline is open." = "Preferencias de avisos guardadas. El registro está pendiente y se reintentará mientras Statusline esté abierta.";
 "Notification preferences updated." = "Preferencias de notificaciones actualizadas.";
 "Notifications are off because permission was revoked." = "Las notificaciones están desactivadas porque se retiró el permiso.";
 "Notifications are off on this device. Relay cleanup will retry when you open Statusline." = "Las notificaciones están desactivadas en este dispositivo. Se volverá a limpiar el relay cuando abras Statusline.";
 "Notifications are off. This device was unregistered." = "Las notificaciones están desactivadas. Este dispositivo se desvinculó.";
 "Notifications are ready. Statusline will alert you when Codex reset credits are added." = "Las notificaciones están activas. Statusline te avisará cuando se añadan créditos de reinicio de Codex.";
+"Notifications pending registration" = "Avisos pendientes de registro";
 "Notify me about new versions. Installation always needs my approval." = "Avisarme de nuevas versiones. La instalación siempre requiere mi aprobación.";
 "Notify me when new Codex reset credits are added" = "Avisarme cuando haya nuevos créditos de reinicio de Codex";
 "NOW" = "AHORA";
@@ -546,6 +549,7 @@
 "Statusline could not verify the selected Codex executable." = "Statusline no pudo verificar el ejecutable de Codex seleccionado.";
 "Statusline is an independent app and is not affiliated with or endorsed by OpenAI." = "Statusline es una aplicación independiente y no está afiliada ni respaldada por OpenAI.";
 "Statusline is independent and is not affiliated with or endorsed by OpenAI or Google." = "Statusline es independiente y no está afiliada ni respaldada por OpenAI o Google.";
+"Statusline is independent and is not affiliated with or endorsed by OpenAI, Google or Anthropic." = "Statusline es independiente y no está afiliada ni respaldada por OpenAI, Google o Anthropic.";
 "Statusline needs a ChatGPT session, not an API key." = "Statusline necesita una sesión de ChatGPT, no una API key.";
 "Statusline needs camera permission to scan the QR. You can also paste the link manually." = "Statusline necesita permiso de cámara para escanear el QR. También puedes pegar el vínculo manualmente.";
 "Statusline sends a generic alert; reset details stay encrypted." = "Statusline envía un aviso genérico; los detalles de los resets permanecen cifrados.";

@@ -20,6 +20,11 @@ iPhone and Android. The desktop companion reads usage metadata from the user's l
 Codex session, then optionally sends an end-to-end encrypted snapshot to the mobile
 apps and widgets.
 
+Companion also supports Google Antigravity and Anthropic Claude Code. The next
+mobile source candidate adds Claude to the app and widgets alongside Codex and
+Antigravity; only services enabled in your paired Companion appear. See the
+[Claude mobile delivery notes](docs/architecture/claude-mobile.md) for store gates.
+
 No OpenAI API key is required. Statusline never asks for or transports Codex account
 credentials, prompts, conversations or source code.
 
@@ -153,14 +158,11 @@ SignPath configuration and verification commands.
 
 ## Roadmap
 
-Codex is the complete v1 experience. The next product stage is a capability-based
-adapter architecture that can show Codex, AGY, Claude Code, GitHub Copilot and future
-coding agents in one honest capacity view—even when providers expose different units.
-
-The current order is: ship the Codex foundation, extract the shared provider contract,
-validate AGY as the first additional adapter, read Claude Code quota through its
-documented status-line hook with automatic CLI discovery, then research supported GitHub Copilot
-integrations. Planned product work includes multi-provider widgets, a
+Codex, Antigravity and Claude Code use the shared provider contract. The current
+mobile candidate completes Claude's app/widget presentation without changing the
+relay or existing pairings. Next, research supported GitHub Copilot integrations
+and future coding agents in one honest capacity view—even when providers expose
+different units. Planned product work includes a
 cross-provider reset timeline, local history, low-capacity alerts, forecasts with clear
 confidence and an independently hosted relay.
 

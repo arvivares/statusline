@@ -1,8 +1,9 @@
 # Claude Code mobile integration plan
 
-Status: preparation only, based on main
-`25fa6fd0e421afef541a9f2e9a34cad8828a4859` (v0.1.38), 12 October 2026.
-No new mobile binary is built or submitted by this plan.
+Status: implementation on `feat/mobile-claude-notifications`, based on main
+`ce78634a5aa834176040c3b46df829d625374187`, 13 October 2026.
+Local QA builds are not store submissions. See the
+[validation record](../validation/mobile-claude-notifications.md).
 
 ## Current boundary
 
@@ -12,9 +13,9 @@ documented status-line bridge. `claude_quota_projection` emits provider ID
 Enterprise can report only five hours. Gateway spend limits are not quota windows.
 See [the source and plan coverage](claude-sources.md).
 
-Both mobile decoders currently recognize only `codex` and `antigravity`; they
-intentionally ignore unknown IDs. This explains why Companion already supports
-three agents while the currently distributed mobiles show only two.
+The distributed mobile decoders recognize only `codex` and `antigravity`.
+This branch adds `claude` to both apps and widgets. Unknown future IDs remain
+ignored. Only the authoritative paired Companion inventory determines visibility.
 
 ## Delivery sequence
 
@@ -62,15 +63,14 @@ automatically enable notifications or create another FCM subscription.
 
 ## Version and validation gates
 
-Reserve the next candidate versions during release preparation, not by retagging
-or replacing v0.1.38. A possible coordinated next set is Companion/Android
-**0.1.39**, Android code **37**, iOS **1.1.4 (13)**; these are proposed, not bumped
-or published. If Android needs a separate protection-compatibility hotfix first,
-allocate its versions before finalizing this candidate.
+The reviewed source candidate prepares Companion/Android **0.1.39**, Android code
+**37**, and iOS **1.1.4 (13)** without retagging or replacing v0.1.38. Source
+metadata is not a store submission or evidence of public availability. The
+[release notes](../release/notes/v0.1.39.md) separate GitHub installers from
+the manual iOS and Google Play delivery gates.
 
-The current Mac has less than 1 GB free, so no unnecessary native compilation or
-archive is started. Recover enough build space before producing a new iOS binary.
-The authorized API-24 compatibility hotfix reserves Android code 36 and keeps
-Play automatic protection. It is separate from this integration and does not
-upgrade Firebase dependencies; confirm its accepted delivery before reserving
-the next candidate code.
+The API-24 compatibility hotfix already uses Android code 36 and keeps Play
+automatic protection; allocate code 37 or higher for the next store binary.
+Run lightweight checks before compilation and reuse dependency caches. A store
+archive, physical-device push validation and new native store captures remain
+separate release gates; never reuse or replace the published build 12.

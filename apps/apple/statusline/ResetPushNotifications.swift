@@ -13,7 +13,25 @@ enum ResetPushError: Error {
 }
 
 @MainActor
-final class ResetPushManager {
+protocol ResetPushManaging: AnyObject {
+    var resetCreditsEnabled: Bool { get }
+    var quotaAlertsEnabled: Bool { get }
+    var isEnabled: Bool { get }
+    var pendingUnregistration: Bool { get }
+    var pendingRegistration: Bool { get }
+    var deviceID: UUID { get }
+    func requestPermission() async throws
+    func currentInstallationID() async throws -> String
+    func hasNotificationPermission() async -> Bool
+    func markPreferences(resetCredits: Bool, quotaAlerts: Bool)
+    func markRegistered()
+    func beginOptOut()
+    @discardableResult func finishOptOut() async -> Bool
+    @discardableResult func invalidateTokenForOptOut() async -> Bool
+}
+
+@MainActor
+final class ResetPushManager: ResetPushManaging {
     static let shared = ResetPushManager()
 
     private let defaults: UserDefaults
@@ -21,11 +39,9 @@ final class ResetPushManager {
     private let quotaEnabledKey = "statusline.quotaAlerts.enabled"
     private let deviceIDKey = "statusline.codexResetPush.deviceID"
     private let pendingUnregistrationKey = "statusline.codexResetPush.pendingUnregistration"
-    private var apnsRegistrationWaiter: CheckedContinuation<Void, Error>?
-    private var registrationAttempt: UUID?
-    private var registrationTimeout: Task<Void, Never>?
-    private var registrationWaiters: [CheckedContinuation<String, Error>] = []
-    private var latestInstallationID: String?
+    private let pendingRegistrationKey = "statusline.push.pendingRegistration"
+    private let apnsRegistration = PushRegistrationGate<Void>()
+    private let firebaseRegistration = PushRegistrationGate<String>()
 
     init(defaults: UserDefaults = .standard) { self.defaults = defaults }
 
@@ -33,6 +49,7 @@ final class ResetPushManager {
     var quotaAlertsEnabled: Bool { defaults.bool(forKey: quotaEnabledKey) }
     var isEnabled: Bool { resetCreditsEnabled || quotaAlertsEnabled }
     var pendingUnregistration: Bool { defaults.bool(forKey: pendingUnregistrationKey) }
+    var pendingRegistration: Bool { defaults.bool(forKey: pendingRegistrationKey) }
     var isConfigured: Bool { FirebaseApp.app() != nil }
 
     var deviceID: UUID {
@@ -44,7 +61,7 @@ final class ResetPushManager {
         return newValue
     }
 
-    func requestPermissionAndInstallationID() async throws -> String {
+    func requestPermission() async throws {
         guard FirebaseApp.app() != nil else { throw ResetPushError.notConfigured }
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
@@ -60,40 +77,27 @@ final class ResetPushManager {
             allowed = false
         }
         guard allowed else { throw ResetPushError.permissionDenied }
-        Messaging.messaging().isAutoInitEnabled = true
-        if Messaging.messaging().apnsToken == nil {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                apnsRegistrationWaiter = continuation
-                UIApplication.shared.registerForRemoteNotifications()
-                Task { @MainActor [weak self] in
-                    try? await Task.sleep(for: .seconds(20))
-                    guard let self, let waiter = self.apnsRegistrationWaiter else { return }
-                    self.apnsRegistrationWaiter = nil
-                    waiter.resume(throwing: ResetPushError.installationIDUnavailable)
-                }
-            }
-        } else {
-            UIApplication.shared.registerForRemoteNotifications()
-        }
-        return try await registerForInstallationID()
     }
 
     func didRegisterForRemoteNotifications(with deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
-        let waiter = apnsRegistrationWaiter
-        apnsRegistrationWaiter = nil
-        waiter?.resume()
+        if let attempt = apnsRegistration.attempt { apnsRegistration.finish(attempt, with: .success(())) }
     }
 
     func didFailToRegisterForRemoteNotifications(_ error: Error) {
-        let waiter = apnsRegistrationWaiter
-        apnsRegistrationWaiter = nil
-        waiter?.resume(throwing: error)
+        if let attempt = apnsRegistration.attempt { apnsRegistration.finish(attempt, with: .failure(error)) }
     }
 
     func currentInstallationID() async throws -> String {
         guard isEnabled, FirebaseApp.app() != nil else { throw ResetPushError.notConfigured }
-        UIApplication.shared.registerForRemoteNotifications()
+        // Always use this system registration's token, including warm starts.
+        // A cached SDK token is not proof of the current APNs association.
+        try await apnsRegistration.wait(timeout: .seconds(20)) { _ in
+            UIApplication.shared.registerForRemoteNotifications()
+        }
+        try Task.checkCancellation()
+        guard isEnabled else { throw CancellationError() }
+        Messaging.messaging().isAutoInitEnabled = true
         return try await registerForInstallationID()
     }
 
@@ -102,24 +106,22 @@ final class ResetPushManager {
         return [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus)
     }
 
-    func markEnabled() { defaults.set(true, forKey: enabledKey) }
     func markPreferences(resetCredits: Bool, quotaAlerts: Bool) {
         defaults.set(resetCredits, forKey: enabledKey)
         defaults.set(quotaAlerts, forKey: quotaEnabledKey)
         defaults.set(false, forKey: pendingUnregistrationKey)
+        defaults.set(resetCredits || quotaAlerts, forKey: pendingRegistrationKey)
     }
 
-    func didReceiveRegistration(_ installationID: String?) {
-        guard let installationID, !installationID.isEmpty else { return }
-        latestInstallationID = installationID
-        guard let attempt = registrationAttempt else { return }
-        finishRegistration(attempt, with: .success(installationID))
-    }
+    func markRegistered() { defaults.set(false, forKey: pendingRegistrationKey) }
 
     func beginOptOut() {
         defaults.set(false, forKey: enabledKey)
         defaults.set(false, forKey: quotaEnabledKey)
         defaults.set(true, forKey: pendingUnregistrationKey)
+        defaults.set(false, forKey: pendingRegistrationKey)
+        apnsRegistration.cancel()
+        firebaseRegistration.cancel()
         if FirebaseApp.app() != nil { Messaging.messaging().isAutoInitEnabled = false }
     }
 
@@ -145,43 +147,30 @@ final class ResetPushManager {
         } catch {
             succeeded = false
         }
-        latestInstallationID = nil
         return succeeded
     }
 
     private func registerForInstallationID() async throws -> String {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
-            registrationWaiters.append(continuation)
-            guard registrationAttempt == nil else { return }
-            let attempt = UUID()
-            registrationAttempt = attempt
+        try await firebaseRegistration.wait(timeout: .seconds(30)) { attempt in
             Messaging.messaging().register { [weak self] error in
-                guard let error else { return }
                 Task { @MainActor [weak self] in
-                    self?.finishRegistration(attempt, with: .failure(error))
+                    guard let self, self.firebaseRegistration.attempt == attempt else { return }
+                    if let error {
+                        self.firebaseRegistration.finish(attempt, with: .failure(error))
+                        return
+                    }
+                    // Only use the FID after FCM confirms registration. Do not
+                    // treat an early auto-init delegate event as delivery-ready.
+                    do {
+                        let fid = try await Installations.installations().installationID()
+                        guard !fid.isEmpty else { throw ResetPushError.installationIDUnavailable }
+                        self.firebaseRegistration.finish(attempt, with: .success(fid))
+                    } catch {
+                        self.firebaseRegistration.finish(attempt, with: .failure(error))
+                    }
                 }
             }
-            registrationTimeout = Task { @MainActor [weak self] in
-                try? await Task.sleep(for: .seconds(30))
-                self?.finishRegistration(
-                    attempt,
-                    with: .failure(ResetPushError.installationIDUnavailable)
-                )
-            }
         }
-    }
-
-    private func finishRegistration(
-        _ attempt: UUID,
-        with result: Result<String, Error>
-    ) {
-        guard registrationAttempt == attempt else { return }
-        registrationAttempt = nil
-        registrationTimeout?.cancel()
-        registrationTimeout = nil
-        let waiters = registrationWaiters
-        registrationWaiters.removeAll()
-        for waiter in waiters { waiter.resume(with: result) }
     }
 }
 
@@ -222,9 +211,8 @@ final class StatuslineAppDelegate: NSObject, UIApplicationDelegate, UNUserNotifi
     }
 
     nonisolated func messaging(_ messaging: Messaging, didReceiveRegistration installationID: String?) {
-        Task { @MainActor in
-            ResetPushManager.shared.didReceiveRegistration(installationID)
-        }
+        // Registration completion (including cached registrations) owns the
+        // activation flow. Auto-init events alone must not commit user consent.
     }
 
     private func configureFirebaseIfAvailable() {

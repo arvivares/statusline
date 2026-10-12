@@ -10,13 +10,14 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.38` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.38`;
-- Android store candidate: `versionCode 36`, minimum Android 7/API 24 (Google Play
+- prepared product tag: `v0.1.39` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.39`;
+- Android store candidate: `versionCode 37`, minimum Android 7/API 24 (Google Play
   submission is separate; the immutable v0.1.38 tag still contains build 35);
-- prepared iOS source version: `1.1.3 (12)`, with independent optional quota
-  and Codex reset-credit alerts. Its archive/export and internal delivery are recorded in
-  [the mobile delivery record](../../apps/apple/store/validation-1.1.3.md).
+- prepared iOS source version: `1.1.4 (13)`, adding Claude Code in the app/widget
+  and fixing optional notification activation. Local runtime QA and remaining
+  signed/physical delivery gates are recorded in
+  [the mobile validation record](../validation/mobile-claude-notifications.md).
   This metadata is not a live App Store/TestFlight status report.
   iOS delivery is manual; verify the actual candidate in App Store Connect
   before taking any store action. Build 5 has an empty widget endpoint and
@@ -58,7 +59,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.38`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.39`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -142,8 +143,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.38 -m "Statusline 0.1.38 beta"
-git push origin v0.1.38
+git tag -s v0.1.39 -m "Statusline 0.1.39 beta"
+git push origin v0.1.39
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -152,7 +153,24 @@ approval: after every build, trust, inventory, checksum and provenance gate pass
 draft is published automatically according to `distribution.publishPrerelease`.
 The current profile publishes a normal GitHub release marked **Latest**.
 
-### Android 0.1.38 (36) store compatibility hotfix
+### 0.1.39 candidate gates
+
+- Add Claude Code to both mobile decoders, focus/watchlists and native widgets,
+  showing only services in the paired Companion inventory. Preserve services-v1,
+  existing encryption, replay protection, pairing and unknown-provider handling.
+- Include the shared iOS notification activation fix, pending-registration state,
+  consent/opt-out safeguards and regression coverage for both categories.
+- Require fresh PR CI and manual Release preflight before the signed tag. Preserve
+  all installer signing, notarization, smoke, updater and inventory requirements.
+- Android APK/AAB use **0.1.39 (37)** with the accepted minimum API 24. Google Play
+  beta delivery is separate and must retain testers, regions and upload identity.
+- iOS **1.1.4 (13)** is a new source candidate. Archive and TestFlight preparation
+  remain manual; validate the new runtime on an affected physical iPhone before
+  later production submission. Never replace the previously published build 12.
+- No relay deployment, D1 migration, credential access or user-worktree cleanup
+  is needed. See the [release notes](notes/v0.1.39.md).
+
+### Historical Android 0.1.38 (36) store compatibility hotfix
 
 - The account holder authorized raising minSdk from 23 to 24 to keep Play
   automatic protection. Keep targetSdk 36, package/signing identity, tested

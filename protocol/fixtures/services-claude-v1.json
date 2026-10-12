@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": 1900000000,
+  "providers": [
+    {
+      "id": "codex",
+      "status": "ready",
+      "updatedAt": 1900000000,
+      "weekly": {
+        "remainingPercentage": 53,
+        "resetAt": 1900500000,
+        "windowMinutes": 10080
+      },
+      "shortWindow": null
+    },
+    {
+      "id": "antigravity",
+      "status": "ready",
+      "updatedAt": 1900000000,
+      "weekly": null,
+      "shortWindow": {
+        "remainingPercentage": 73,
+        "resetAt": 1900010000,
+        "windowMinutes": 300
+      }
+    },
+    {
+      "id": "claude",
+      "status": "ready",
+      "updatedAt": 1899999940,
+      "weekly": {
+        "remainingPercentage": 81,
+        "resetAt": 1900400000,
+        "windowMinutes": 10080
+      },
+      "shortWindow": {
+        "remainingPercentage": 32,
+        "resetAt": 1900007200,
+        "windowMinutes": 300
+      }
+    }
+  ]
+}

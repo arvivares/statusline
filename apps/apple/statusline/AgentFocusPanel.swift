@@ -21,6 +21,7 @@ struct AgentFocusPanel: View {
                 }
                 .pickerStyle(.segmented)
                 .frame(maxWidth: 240)
+                .accessibilityIdentifier("quotaPeriodPicker")
                 .padding(.top, 12)
             } else {
                 Text(window?.label ?? L10n.text("Unavailable"))

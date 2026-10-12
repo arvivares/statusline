@@ -63,6 +63,93 @@ struct AgentServicesTests {
     private let channel = UUID(uuidString: "018f47a0-7b52-4c15-9e55-5f0f266b7440")!
     private let now = Date(timeIntervalSince1970: 1_900_000_120)
 
+    private func claudeFixture() throws -> [String: Any] {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let data = try Data(contentsOf: root.appending(path: "protocol/fixtures/services-claude-v1.json"))
+        return try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    }
+
+    @Test(arguments: ["all", "claude-only", "short-only", "weekly-only", "unavailable", "removed"])
+    func claudeInventoryUsesOnlyPublishedWindows(variant: String) throws {
+        var wire = try claudeFixture()
+        var providers = try #require(wire["providers"] as? [[String: Any]])
+        if variant != "all" { providers = providers.filter { $0["id"] as? String == "claude" } }
+        switch variant {
+        case "short-only": providers[0]["weekly"] = NSNull()
+        case "weekly-only": providers[0]["shortWindow"] = NSNull()
+        case "unavailable":
+            providers[0]["status"] = "unavailable"
+            providers[0]["weekly"] = NSNull(); providers[0]["shortWindow"] = NSNull()
+        case "removed": providers = []
+        default: break
+        }
+        wire["providers"] = providers
+        let parsed = try AgentServicesSnapshot.decode(JSONSerialization.data(withJSONObject: wire), channelID: channel, sequence: 44)
+        #expect(parsed.providers.count == (variant == "all" ? 3 : variant == "removed" ? 0 : 1))
+        let claude = parsed.providers.first { $0.id == .claude }
+        #expect(claude?.resetCredits == nil)
+        if let claude {
+            #expect(claude.id.name == "Claude Code" && claude.id.source == "Anthropic")
+            #expect(claude.defaultPeriod == .shortWindow)
+            #expect(claude.updatedAt == Date(timeIntervalSince1970: 1_899_999_940))
+            #expect(claude.window()?.remainingPercentage == (variant == "weekly-only" ? 81 : variant == "unavailable" ? nil : 32))
+            #expect(claude.window()?.windowMinutes == (variant == "weekly-only" ? 10_080 : variant == "unavailable" ? nil : 300))
+        }
+        #expect(parsed.focusedProvider(preferred: .claude)?.id == (variant == "removed" ? nil : .claude))
+    }
+
+    @Test(arguments: ["weekly", "shortWindow", "percentage", "fraction", "timestamp", "missing", "unavailable-with-quota"])
+    func malformedClaudeCannotBeSilentlyIgnored(variant: String) throws {
+        var wire = try claudeFixture()
+        var providers = try #require(wire["providers"] as? [[String: Any]])
+        var claude = providers[2]
+        if variant == "weekly" || variant == "shortWindow" {
+            var window = try #require(claude[variant] as? [String: Any])
+            window["windowMinutes"] = variant == "weekly" ? 10_079 : 301
+            claude[variant] = window
+        } else if variant == "percentage" || variant == "fraction" {
+            var window = try #require(claude["shortWindow"] as? [String: Any])
+            window["remainingPercentage"] = variant == "fraction" ? 32.5 : 101
+            claude["shortWindow"] = window
+        } else if variant == "timestamp" { claude["updatedAt"] = 1_900_000_001 }
+        else if variant == "missing" { claude["weekly"] = NSNull(); claude["shortWindow"] = NSNull() }
+        else { claude["status"] = "unavailable" }
+        providers[2] = claude; wire["providers"] = providers
+        #expect(throws: (any Error).self) {
+            try AgentServicesSnapshot.decode(JSONSerialization.data(withJSONObject: wire), channelID: channel, sequence: 44)
+        }
+    }
+
+    @Test func claudeFocusSurvivesOfflineCacheButNotAuthoritativeRemoval() async throws {
+        let (store, clear) = try cache(); defer { clear() }
+        let reader = ServicesReader()
+        reader.result = try AgentServicesSnapshot.decode(JSONSerialization.data(withJSONObject: claudeFixture()), channelID: channel, sequence: 44)
+        let vm = CodexStatusViewModel(store: store, relayRepository: reader)
+        await vm.refreshFromRelay()
+        vm.focus(.claude)
+        #expect(vm.focusedProvider?.id == .claude)
+        #expect(vm.watchlist.map(\.id) == [.codex, .antigravity])
+        #expect(store.servicesStore.focusedProvider == .claude)
+        reader.failure = URLError(.notConnectedToInternet)
+        await vm.refreshFromRelay()
+        #expect(vm.focusedProvider?.id == .claude)
+        #expect(store.servicesStore.load()?.providers.count == 3)
+        reader.failure = nil
+        var wire = try claudeFixture()
+        let providers = try #require(wire["providers"] as? [[String: Any]])
+        wire["providers"] = providers.filter { $0["id"] as? String != "claude" }
+        reader.result = try AgentServicesSnapshot.decode(JSONSerialization.data(withJSONObject: wire), channelID: channel, sequence: 45)
+        await vm.refreshFromRelay()
+        #expect(vm.focusedProvider?.id == .codex)
+        #expect(!vm.watchlist.contains { $0.id == .claude })
+        reader.result = try AgentServicesSnapshot.decode(JSONSerialization.data(withJSONObject: claudeFixture()), channelID: channel, sequence: 44)
+        await vm.refreshFromRelay()
+        #expect(vm.focusedProvider?.id == .codex)
+        await vm.disconnectRelay().value
+        #expect(store.servicesStore.load() == nil && store.servicesStore.focusedProvider == nil)
+    }
+
     @Test func productionReaderNegotiatesOneRequestForBothServices() async throws {
         let config = try StatusRelayConfiguration("https://fixture.example")
         let credentials = ServicesCredentials()

@@ -1,0 +1,5 @@
+Claude Code joins Codex and Antigravity in the app and Home Screen widgets. View five-hour and weekly quota when provided, focus on one service and keep the others visible. Only services enabled in your paired Companion appear.
+
+Notification choices now stay enabled after you accept system permission, even if registration is delayed. A visible pending state retries while Statusline is active. Quota alerts and Codex reset-credit alerts remain separate and optional.
+
+Existing pairing, saved readings and notification preferences are preserved. Refresh timing and push delivery remain best effort.

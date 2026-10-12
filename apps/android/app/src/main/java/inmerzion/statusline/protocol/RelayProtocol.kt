@@ -172,7 +172,9 @@ object RelayProtocol {
                         val minutes = raw.strictLong("windowMinutes")
                         require(remaining in 0..100 && validTimestamp(reset) && minutes in 1..11_520)
                         require(if (key == "weekly") minutes in 8_640..11_520 else minutes < 8_640)
-                        if (id == AgentProviderId.ANTIGRAVITY) require(minutes == if (key == "weekly") 10_080L else 300L)
+                        if (id == AgentProviderId.ANTIGRAVITY || id == AgentProviderId.CLAUDE) {
+                            require(minutes == if (key == "weekly") 10_080L else 300L)
+                        }
                         return AgentQuotaWindow(remaining.toInt(), reset, minutes.toInt())
                     }
                     val weekly = window("weekly")

@@ -15,6 +15,7 @@ struct QuotaPushTests {
         #expect(manager.isEnabled)
         #expect(manager.resetCreditsEnabled)
         #expect(!manager.quotaAlertsEnabled)
+        #expect(!manager.pendingRegistration)
     }
 
     @Test("Notification categories are independent", arguments: [false, true], [false, true])
@@ -30,6 +31,11 @@ struct QuotaPushTests {
         let reloaded = ResetPushManager(defaults: defaults)
         #expect(reloaded.quotaAlertsEnabled == quota)
         #expect(reloaded.resetCreditsEnabled == credits)
+        #expect(reloaded.pendingRegistration == (credits || quota))
+        manager.markRegistered()
+        #expect(!manager.pendingRegistration)
+        manager.beginOptOut()
+        #expect(!manager.isEnabled && !manager.pendingRegistration)
     }
 }
 
