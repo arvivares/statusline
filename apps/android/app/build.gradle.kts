@@ -142,7 +142,7 @@ android {
 }
 
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
+    implementation(platform("com.google.firebase:firebase-bom:35.0.0"))
     implementation("com.google.firebase:firebase-installations")
     implementation("com.google.firebase:firebase-messaging")
     // Compose 1.12 requires compileSdk 37; targetSdk remains independently pinned to 36.
