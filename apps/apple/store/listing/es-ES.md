@@ -40,7 +40,7 @@ Companion lee los metadatos de cuota localmente y los cifra antes de enviarlos a
 
 NOTIFICACIONES OPCIONALES
 
-Con Companion 0.1.34 o posterior, activa avisos cuando se recupera una cuota agotada o queda al menos un 20% de cuota semanal en su última hora. Los avisos de créditos de reset de Codex tienen otro ajuste. Necesitan permiso y su entrega es orientativa. Firebase y Apple procesan identificadores de instalación y metadatos mínimos del aviso, no tu cuota exacta ni la identidad de tu cuenta. Las muestras de cuota siguen cifradas de extremo a extremo.
+Con Companion 0.1.34 o posterior, activa avisos cuando se recupera una cuota agotada o queda al menos un 20% de cuota semanal en su última hora. Otra opción envía un push cuando Companion detecta nuevos créditos de reset que OpenAI añade a Codex. Necesitan permiso y su entrega es orientativa. Firebase y Apple procesan identificadores de instalación y metadatos mínimos del aviso, no tu cuota exacta ni la identidad de tu cuenta. Las muestras de cuota siguen cifradas de extremo a extremo.
 
 BAJO TU CONTROL
 

@@ -2,6 +2,17 @@
 
 This is a dated audit record, not a substitute for rechecking the live Play Console definitions.
 
+## Submitted privacy update — 12 October 2026
+
+Rechecked the actual preview: App interactions and Device or other IDs include
+optional **App functionality + Analytics** collection, not sharing. Diagnostics
+and other app-performance data retain optional Analytics. Encryption in transit
+and no account creation remain unchanged. Updated deletion/privacy links to the
+official website and sent both declarations from Publishing overview, which now
+shows **Changes in review**. Approval is not claimed. The Android 0.1.38 upload
+was separately blocked by Play's API-24 automatic-protection requirement; see
+[the delivery record](validation-0.1.38.md).
+
 ## Saved quota-alert update — 2 October 2026
 
 The authenticated form now has a saved draft adding **App functionality** to

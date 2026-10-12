@@ -40,7 +40,7 @@ Companion reads quota metadata locally and encrypts it before sending it to the 
 
 OPTIONAL NOTIFICATIONS
 
-With Companion 0.1.34 or later, opt in to alerts when an exhausted quota recovers or at least 20% of weekly quota remains during its final hour. Codex reset-credit alerts have a separate setting. Permission is required and delivery is best effort. Firebase and Apple process installation identifiers and minimal alert metadata, not your exact quota or account identity. Quota snapshots remain end-to-end encrypted.
+With Companion 0.1.34 or later, opt in to alerts when an exhausted quota recovers or at least 20% of weekly quota remains during its final hour. A separate option sends a push when Companion detects new reset credits added by OpenAI for Codex. Permission is required and delivery is best effort. Firebase and Apple process installation identifiers and minimal alert metadata, not your exact quota or account identity. Quota snapshots remain end-to-end encrypted.
 
 BUILT FOR CONTROL
 

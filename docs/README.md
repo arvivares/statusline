@@ -38,6 +38,8 @@ requests are welcome.
 - [Claude Code source](architecture/claude-sources.md): automatic CLI discovery, the
   reversible `statusLine` bridge, per-plan window coverage, privacy boundaries and
   desktop-only limitations.
+- [Claude Code mobile plan](architecture/claude-mobile.md): decoder, focus/watchlist,
+  widget and store delivery gates for three providers without a relay migration.
 - [Synchronization and freshness](architecture/synchronization.md): native desktop
   scheduling, independent iOS widgets, cache safety and verification limits.
 - [Companion window behavior](architecture/companion-window.md): cross-platform
@@ -57,8 +59,8 @@ requests are welcome.
 
 - [Public release runbook](release/release-runbook.md): canonical version, unified tag,
   required assets, SignPath inputs, provenance and publication procedure.
-- [Current beta candidate notes](release/notes/v0.1.34.md): curated user-facing notes and
-  known limitations for the next candidate.
+- [v0.1.38 release notes](release/notes/v0.1.38.md): curated user-facing notes and
+  known limitations for the published release.
 - [Desktop installers](release/desktop-installers.md): build matrix, signing, checksums and
   smoke tests.
 - [Public repository launch](release/public-repository-checklist.md): source-history,
