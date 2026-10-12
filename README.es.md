@@ -120,7 +120,7 @@ a la sesión local.
 | macOS nativo                | Publisher    | SwiftUI          | Target `StatuslineCompanion` de Xcode                           |
 | iPhone, iOS 17 o posterior  | Reader       | SwiftUI          | [App Store](https://apps.apple.com/app/statusline/id6807851320) |
 | Widget de iOS               | Presentación | WidgetKit        | Incluido con la app de iPhone                                   |
-| Android 6.0 o posterior     | Reader       | Kotlin + Compose | APK y AAB firmados                                              |
+| Android 7.0 o posterior     | Reader       | Kotlin + Compose | APK y AAB firmados                                              |
 | Widget de Android           | Presentación | App Widget       | Incluido con la app Android                                     |
 | Cloudflare Workers + D1     | Relay        | TypeScript       | Despliegue con Wrangler                                         |
 

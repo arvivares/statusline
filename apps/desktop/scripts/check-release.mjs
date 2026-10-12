@@ -232,6 +232,9 @@ const androidVersionName = androidGradle.match(
 const androidVersionCode = Number(
   androidGradle.match(/^\s*versionCode\s*=\s*(\d+)/mu)?.[1],
 );
+const androidMinSdk = Number(
+  androidGradle.match(/^\s*minSdk\s*=\s*(\d+)/mu)?.[1],
+);
 const iosApplicationBuildSettings = [
   ...appleProject.matchAll(/buildSettings = \{([\s\S]*?)^\s*\};/gmu),
 ]
@@ -372,6 +375,10 @@ assert(
     androidVersionName === releaseMetadata.version &&
     androidVersionCode === releaseMetadata.components?.android?.versionCode,
   "Android versionName/versionCode must match release.json",
+);
+assert(
+  androidMinSdk === 24,
+  "Android minSdk must be 24 to retain Google Play automatic protection",
 );
 assert(
   iosApplicationBuildSettings.length >= 2 &&

@@ -8,8 +8,9 @@ The verified **0.1.38 (35)** CI bundle is public in the GitHub release, but Play
 rejected its upload: automatic protection now requires **minSdk 24**, while this
 bundle retains **minSdk 23**. No new binary has been published to either testing
 track. A localized Internal draft was saved without an accepted bundle. The
-choice between preserving Android 6 support and retaining Play automatic
-protection requires the account holder's decision; neither setting was changed.
+account holder subsequently authorized a build-36 hotfix raising the minimum
+to Android 7/API 24 while preserving Play automatic protection. The source is
+prepared; signing, accepted upload and beta rollout are not yet confirmed.
 
 The existing Alpha and Internal releases remain available. Tester lists and
 regions are unchanged. Privacy/Data safety updates were sent separately and

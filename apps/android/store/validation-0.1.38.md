@@ -1,5 +1,17 @@
 # Android 0.1.38 (35) delivery attempt — 12 October 2026
 
+## Authorized build-36 correction
+
+After the upload rejection below, the account holder authorized minimum Android 7
+(API 24) while preserving Play automatic protection. A separate reviewed change
+raises minSdk and Android version code to **36**, retaining versionName **0.1.38**,
+target SDK 36, existing dependencies, upload certificate, package and relay pairing.
+The old v0.1.38 tag/assets remain immutable. Build-36 signing, upload acceptance
+and rollout must be recorded separately; none is inferred from the failed build 35.
+
+Prepared [English](release-notes/0.1.38-36-en-US.txt) and
+[Spanish](release-notes/0.1.38-36-es-ES.txt) notes explicitly disclose the new minimum.
+
 ## Artifact provenance and verification
 
 - Source: reviewed main `25fa6fd0e421afef541a9f2e9a34cad8828a4859`, signed tag

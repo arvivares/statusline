@@ -1,0 +1,3 @@
+Avisos opcionales cuando se recupera una cuota agotada o queda al menos un 20% de cuota semanal en su última hora. Push independientes por nuevos resets de Codex que añade OpenAI.
+Los widgets pueden actualizarse en segundo plano, según Android. Se conservan tu emparejamiento y preferencias de avisos.
+Ahora requiere Android 7 o posterior para conservar la protección automática de Google Play.

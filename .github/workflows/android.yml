@@ -287,6 +287,14 @@ jobs:
           diagnostics_dir="$RUNNER_TEMP/statusline-android-diagnostics"
 
           [[ -s "$apk" && -s "$aab" && -s "$mapping" ]]
+          analyzer="$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer"
+          expected_code=$(node -p "require('./release.json').components.android.versionCode")
+          [[ "$("$analyzer" manifest application-id "$apk")" == inmerzion.statusline ]]
+          [[ "$("$analyzer" manifest version-name "$apk")" == "$release_version" ]]
+          [[ "$("$analyzer" manifest version-code "$apk")" == "$expected_code" ]]
+          [[ "$("$analyzer" manifest min-sdk "$apk")" == 24 ]]
+          [[ "$("$analyzer" manifest target-sdk "$apk")" == 36 ]]
+          [[ "$("$analyzer" manifest debuggable "$apk")" == false ]]
           bash apps/android/scripts/verify-r8-registrars.sh "$mapping"
           "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/zipalign" -c -P 16 -v 4 "$apk"
           "$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS/apksigner" \
