@@ -2,7 +2,22 @@
 
 This directory is the versioned source of truth for the Statusline Google Play listing.
 
-## Delivery attempt — 12 October 2026
+## Android 7 hotfix delivery — 12 October 2026
+
+**0.1.38 (36)** passed signed CI and was accepted by Play with **minSdk 24** and
+automatic protection retained. Internal release
+`0.1.38-internal.1 - Android 7 + quota alerts` is **Available to internal testers**.
+The same bundle was submitted to Closed Alpha as
+`0.1.38-alpha.1 - Android 7 + quota alerts`, **Changes in review**, full rollout
+after approval. Existing lists, regions and opt-in link are unchanged.
+
+The source minimum is now Android 7. Android 6 receives no new builds. Public
+GitHub v0.1.38 remains its immutable build-35 release; code-36 provenance comes
+from the reviewed manual CI run, not a moved tag. No iOS/desktop rebuild or phone
+installation was performed. See [validation-0.1.38-36.md](validation-0.1.38-36.md)
+for hashes, warnings, submission evidence and remaining QA limits.
+
+## Historical delivery attempt — 12 October 2026
 
 The verified **0.1.38 (35)** CI bundle is public in the GitHub release, but Play
 rejected its upload: automatic protection now requires **minSdk 24**, while this

@@ -4,6 +4,10 @@ This is a dated audit record, not a substitute for rechecking the live Play Cons
 
 ## Submitted privacy update — 12 October 2026
 
+Follow-up: Play confirmed publication of these declarations before the build-36
+Alpha submission. Publishing overview has no pending privacy changes. The new
+binary's Alpha review is separate; see [the hotfix record](validation-0.1.38-36.md).
+
 Rechecked the actual preview: App interactions and Device or other IDs include
 optional **App functionality + Analytics** collection, not sharing. Diagnostics
 and other app-performance data retain optional Analytics. Encryption in transit
