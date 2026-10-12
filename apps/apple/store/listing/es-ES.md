@@ -38,6 +38,10 @@ La integración de Antigravity muestra las cuotas de los modelos Gemini de Googl
 
 Companion lee los metadatos de cuota localmente y los cifra antes de enviarlos al servidor de sincronización. El servidor no puede leer la cuota ni recibe la clave de cifrado. El ordenador debe estar despierto y Companion en ejecución para publicar nuevas muestras. El widget puede solicitar actualizaciones sin abrir la app del iPhone; iOS decide cuándo actualizarlo, por lo que no funciona en tiempo real.
 
+NOTIFICACIONES OPCIONALES
+
+Con Companion 0.1.34 o posterior, activa avisos cuando se recupera una cuota agotada o queda al menos un 20% de cuota semanal en su última hora. Los avisos de créditos de reset de Codex tienen otro ajuste. Necesitan permiso y su entrega es orientativa. Firebase y Apple procesan identificadores de instalación y metadatos mínimos del aviso, no tu cuota exacta ni la identidad de tu cuenta. Las muestras de cuota siguen cifradas de extremo a extremo.
+
 BAJO TU CONTROL
 
 La app del iPhone no te pide contraseñas de los servicios ni claves de API. Las credenciales permanecen en tu ordenador; Statusline no las envía al móvil ni al servidor de sincronización, ni tampoco tus instrucciones, código o conversaciones. No contiene anuncios, no exige una cuenta de Statusline y no tiene compras dentro de la app. Puedes desconectar el iPhone cuando quieras. El proyecto y el protocolo de sincronización son de código abierto.
@@ -57,6 +61,10 @@ https://statusline.inmerzion.io/es/support
 ## URL de marketing
 
 https://statusline.inmerzion.io/es/
+
+## Novedades — 1.1.3
+
+Avisos opcionales de recuperación de cuota y cuota semanal sin usar, con un ajuste independiente para los créditos de reset de Codex. Se conservan el emparejamiento, las lecturas y los widgets. Requiere permiso para notificaciones y un Companion vinculado en un ordenador despierto y conectado; la entrega y el refresco son orientativos.
 
 ## Novedades — 1.1.1
 

@@ -38,6 +38,10 @@ Antigravity support shows quotas for Google's Gemini models, not the third-party
 
 Companion reads quota metadata locally and encrypts it before sending it to the relay. The relay cannot read your quota or receive the encryption key. Your computer must be awake and Companion running to publish new samples. The widget can request updates without opening the iPhone app; iOS controls when it refreshes, so updates are not real-time.
 
+OPTIONAL NOTIFICATIONS
+
+With Companion 0.1.34 or later, opt in to alerts when an exhausted quota recovers or at least 20% of weekly quota remains during its final hour. Codex reset-credit alerts have a separate setting. Permission is required and delivery is best effort. Firebase and Apple process installation identifiers and minimal alert metadata, not your exact quota or account identity. Quota snapshots remain end-to-end encrypted.
+
 BUILT FOR CONTROL
 
 The iPhone app does not ask for your service password or API key. Service credentials remain on your computer; Statusline does not send them, your prompts, code or conversations to the phone or relay. There are no ads, no Statusline account and no in-app purchases. You can disconnect your iPhone at any time. The project and relay protocol are open source.
@@ -57,6 +61,10 @@ https://statusline.inmerzion.io/support
 ## Marketing URL
 
 https://statusline.inmerzion.io/
+
+## What's new — 1.1.3
+
+Optional quota recovery and unused-weekly-quota alerts, with a separate setting for Codex reset-credit notifications. Existing pairing, readings and widgets are preserved. Requires notification permission and a paired Companion running on an awake, connected computer; delivery and refresh timing are best effort.
 
 ## What's new — 1.1.1
 

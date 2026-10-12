@@ -1,0 +1,5 @@
+Optional quota alerts help you know when you can use your coding agent again after exhausting its quota, or when at least 20% of your weekly quota remains during the final hour before its reset.
+
+Codex reset-credit alerts have a separate setting. Both alert types are optional and require notification permission and a paired Companion running on an awake, connected computer.
+
+Your existing pairing, readings and widgets are preserved. Notification delivery and widget refresh timing are best effort, not guaranteed real-time.
