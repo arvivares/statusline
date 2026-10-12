@@ -1,38 +1,38 @@
 App Review information — iOS 1.1.3 (12)
 
-The account holder has tested this existing build through TestFlight and requests App Store distribution. This submission reuses build 12 without recompiling it. Pairing, quota readings and Home Screen widgets are preserved.
+The account holder tested build 12 through TestFlight and requests App Store distribution. This submission reuses that binary. Pairing, readings and widgets are preserved.
 
 1. Recording
-Please retain the previously supplied physical-iPhone recording. It demonstrates launch, pairing, refresh and adding a widget. It predates this build and does not demonstrate the new optional notification settings. Do not use a real pairing QR as review metadata or a public screenshot.
+Retain the previously supplied physical-iPhone recording: launch, pairing, refresh and adding a widget. It predates this build and does not show the new notification settings. No real pairing QR should appear in public metadata.
 
 2. Purpose and audience
-Statusline is a free, open-source utility for developers to view the remaining Codex and Google Antigravity quotas published by their own desktop Companion. It presents quota snapshots, reset times and sample age in an iPhone dashboard and Home Screen widgets. It is not a chatbot or content-generation service.
+A free, open-source utility for developers to view Codex and Google Antigravity quotas from their own desktop Companion: remaining quota, reset times and sample age in an iPhone dashboard and widgets. This is not a chatbot or content-generation service.
 
 3. Setup and main features
-There is no Statusline account registration, login, user-generated content, paid content, advertising, subscription or in-app purchase. No reviewer credentials or sample files are needed for the local demo.
+No Statusline registration/login, user-generated content, paid content, ads, subscription or in-app purchase. No reviewer credentials or sample files are needed.
 
-Launch Statusline and tap View local demo / Ver demo local. This clearly marked fixed Codex example works offline and can be shown in the widget; it is not a live account or a simulation of notification delivery.
+Launch and tap View local demo / Ver demo local. This labelled fixed Codex example works offline in the app/widget; it is not live data or a notification simulation.
 
 Optional live synchronization:
-1. Install Statusline Companion from https://github.com/arvivares/statusline/releases/tag/v0.1.38 on macOS, Windows or Linux. Windows is an explicitly unsigned beta preview; macOS installers are Developer ID signed and notarized.
-2. Use a compatible, authenticated Codex or Antigravity installation. Companion discovers available services without reading or transferring prompts, source code, conversations or vendor login credentials. Antigravity readings include Google models only.
-3. In Companion Settings > Mobile sync, create a pairing. On iPhone, scan that private QR or paste the pairing link. No Statusline login is required.
-4. Select a service below the main reading. The small widget follows that selection and the medium widget also shows the other available service. Only services published by that Companion are shown.
-5. Keep the computer awake, Companion running and both devices connected. Open the iPhone app once after an update. WidgetKit controls actual widget scheduling; readings are timestamped snapshots, not guaranteed real-time.
+1. Install Companion from https://github.com/arvivares/statusline/releases/tag/v0.1.38 on macOS, Windows or Linux. Windows is an unsigned beta preview; macOS is signed/notarized.
+2. Use your own compatible signed-in Codex/Antigravity installation. Companion discovers services; Antigravity readings include Google models only.
+3. In Settings > Mobile sync, create a pairing. Scan its private QR on iPhone or paste the link. No Statusline login.
+4. Select a service below the main quota. The small widget follows it; the medium widget also shows other available services. Absent services stay hidden.
+5. Keep the computer awake, Companion running and devices connected. Open the app once after updating. WidgetKit controls refresh timing; these are timestamped snapshots, not guaranteed real-time.
 
-Notifications are optional and independent of displaying quota. Enable Codex reset-credit alerts and/or quota alerts in Statusline, then grant the system notification permission. The quota option is separate and defaults off for existing users. After a real observed 0%, the Companion can report confirmed recovery of a short/weekly quota. A weekly unused-quota warning requires at least 20% remaining during the last hour before reset. Delivery and timing are best effort; no synthetic event or sample file is needed to use the app. Revoking either category preserves the other preference; disabling all categories removes its push registration.
+Notifications are optional. Enable reset-credit and/or quota alerts, then grant OS permission. Quota alerts default off for existing users. After observing a real 0%, Companion can report confirmed short/weekly recovery; unused-weekly alerts require at least 20% during the final hour. Timing/delivery is best effort. Categories are independent; disabling all removes the push registration.
 
 4. External services and data
-- OpenAI Codex and Google Antigravity supply quota metadata through the user's local installation. Statusline does not generate AI content or transmit vendor credentials, prompts, code or conversations.
-- Cloudflare Workers/D1 relay transports AES-256-GCM encrypted quota snapshots and credential hashes. The snapshot decryption key stays on paired devices. Notification routing separately stores an encrypted Firebase Installation ID, language and independent category preferences.
-- Firebase Cloud Messaging and Apple APNs deliver opted-in notifications. Quota-alert payloads disclose the service, event/window kind and expiration; the weekly alert also implies the 20% threshold. They do not contain exact quota values or vendor/account identities. This minimal push metadata is not end-to-end encrypted like snapshots. Firebase Analytics and advertising tracking are not used.
-- Apple camera APIs process the user-initiated QR scan on-device. Frames are not stored. WidgetKit/App Groups provide widgets/cache; Keychain stores pairing secrets.
+- OpenAI Codex/Google Antigravity provide local quota metadata. Vendor credentials, prompts, code and conversations are not transmitted.
+- Cloudflare Workers/D1 transports AES-256-GCM snapshots and credential hashes; decryption keys stay on paired devices. Push routing stores an encrypted Firebase Installation ID, language and category preferences.
+- Firebase Cloud Messaging/Apple APNs deliver opted-in alerts: service, event/window and expiration; weekly alerts imply the 20% threshold, not exact quota or account identity. This minimal push metadata is not end-to-end encrypted like snapshots. No Firebase Analytics or advertising tracking.
+- Apple camera APIs scan on-device without storing frames; WidgetKit/App Groups handle widgets/cache and Keychain stores pairing secrets.
 
 5. Regions
-China mainland remains excluded. The app is free and functions consistently in enabled storefronts, subject to third-party service availability. There are no regional content or feature variants.
+China mainland remains excluded. Free pricing and features are consistent elsewhere, subject to third-party availability.
 
 6. Regulated industry and third-party material
-Statusline is not a regulated-industry service and does not distribute protected third-party content. It is independent and not affiliated with or endorsed by OpenAI, Google or Anthropic. Product names identify compatibility, not an official partnership.
+No regulated-industry service or protected third-party content. Independent; not affiliated with or endorsed by OpenAI, Google or Anthropic. Names identify compatibility.
 
 Privacy: https://statusline.inmerzion.io/privacy
 Support: https://statusline.inmerzion.io/support
