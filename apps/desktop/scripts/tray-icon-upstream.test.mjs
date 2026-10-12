@@ -31,9 +31,9 @@ describe("upstream macOS 27 tray compatibility", () => {
     const pkg = JSON.parse(
       readFileSync(new URL("../package.json", native), "utf8"),
     );
-    expect(cargo).toContain('tauri = { version = "=2.12.1"');
+    expect(cargo).toContain('tauri = { version = "=2.12.2"');
     expect(entries("tauri")).toHaveLength(1);
-    expect(entries("tauri")[0]).toContain('version = "2.12.1"');
+    expect(entries("tauri")[0]).toContain('version = "2.12.2"');
     expect(pkg.dependencies["@tauri-apps/plugin-dialog"]).toBe("2.8.1");
     expect(cargo).toContain('tauri-plugin-dialog = "=2.8.1"');
     expect(entries("tauri-plugin-dialog")).toHaveLength(1);
