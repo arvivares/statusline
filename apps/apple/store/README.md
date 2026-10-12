@@ -1,5 +1,21 @@
 # Apple App Store release kit
 
+## App Store submission — 12 October 2026
+
+**1.1.3 (12)** is **Waiting for Review** for App Store production. The existing
+TestFlight binary was reused after the account holder confirmed its testing;
+no new archive, upload or device installation was performed. Submission ID:
+`c3599b9b-3e24-4897-9fbc-0b409073072e`, submitted at **13:35 Europe/Madrid**.
+Automatic release after approval is selected. **1.1.1** remains the observed
+public version until approval and release complete.
+
+EN/ES descriptions and release notes now explain independent quota alerts and
+push when OpenAI adds new Codex reset credits. Five existing screenshots per
+language were verified in Media Manager; the UI is unchanged in build 12.
+Claude Code is supported by Companion but not by this mobile binary, so the
+mobile listing does not advertise it yet. See
+[the dated delivery record](validation-1.1.3.md#app-store-submission--12-october-2026).
+
 ## Internal quota-alert candidate — 2 October 2026
 
 **1.1.3 (12)** adds independent optional quota notifications for services present

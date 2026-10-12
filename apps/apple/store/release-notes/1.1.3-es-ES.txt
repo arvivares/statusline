@@ -1,5 +1,5 @@
 Avisos opcionales para saber cuándo puedes volver a usar tu agente tras agotar su cuota o cuándo queda al menos un 20% de la cuota semanal durante la última hora antes de su reinicio.
 
-Los avisos de créditos de reset de Codex tienen un ajuste independiente. Ambos tipos son opcionales y necesitan permiso para notificaciones y un Companion emparejado en un ordenador despierto y conectado.
+Recibe un push opcional cuando Companion detecta nuevos créditos de reset que OpenAI añade a Codex. Los resets y los avisos de cuota tienen ajustes independientes. Necesitan permiso para notificaciones y un Companion emparejado en un ordenador despierto y conectado.
 
 Se conservan el emparejamiento, las lecturas y los widgets. La entrega de avisos y el refresco del widget son orientativos, no se garantiza tiempo real.

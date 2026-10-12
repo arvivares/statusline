@@ -2,6 +2,21 @@
 
 This directory is the versioned source of truth for the Statusline Google Play listing.
 
+## Delivery attempt — 12 October 2026
+
+The verified **0.1.38 (35)** CI bundle is public in the GitHub release, but Play
+rejected its upload: automatic protection now requires **minSdk 24**, while this
+bundle retains **minSdk 23**. No new binary has been published to either testing
+track. A localized Internal draft was saved without an accepted bundle. The
+choice between preserving Android 6 support and retaining Play automatic
+protection requires the account holder's decision; neither setting was changed.
+
+The existing Alpha and Internal releases remain available. Tester lists and
+regions are unchanged. Privacy/Data safety updates were sent separately and
+show **Changes in review**; this is not a binary rollout. See
+[validation-0.1.38.md](validation-0.1.38.md) for artifact verification, exact track
+states and the blocker.
+
 ## Internal quota-alert delivery — 2 October 2026
 
 Play Console confirms **0.1.34 (30)**, release

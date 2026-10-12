@@ -1,5 +1,41 @@
 # iOS quota-alert candidate — 1.1.3 (12)
 
+## App Store submission — 12 October 2026
+
+- Reused the existing distribution build **1.1.3 (12)** after the account holder
+  explicitly confirmed prior TestFlight testing and requested production rather
+  than another TestFlight cycle. No compile, new binary upload, phone installation
+  or pairing/preference mutation was performed for this submission.
+- Created the App Store version, selected build **12** rather than 11, saved
+  English and Spanish description, promotional text and What's New, and updated
+  the six-part App Review notes. Notes explicitly describe the account-free demo,
+  optional Companion setup, Firebase/APNs and best-effort notification/widget
+  delivery. They disclose that the older physical recording predates alerts.
+- What's New explicitly includes exhausted-quota recovery, the last-hour weekly
+  warning at **at least 20% remaining**, and separately configured push when
+  OpenAI adds new Codex reset credits. Mobile support remains Codex and
+  Antigravity; Companion already supports Claude Code, which these mobile
+  decoders still ignore. No unsupported mobile feature is advertised.
+- Media Manager confirms five native large-iPhone screenshots for **each**
+  localization: `01-quota.png`, `02-gemini.png`, `03-pairing.png`, `04-widget.png`
+  and `05-privacy.png`. Smaller supported sizes inherit the corresponding set.
+  Existing Still Focus artwork is reused; no new captures were generated.
+- App Privacy remains published with the previously reviewed SDK declarations.
+  The live official privacy page now states **Effective 2 October 2026** and
+  includes Firebase and minimal quota-alert metadata, closing the website gate
+  recorded below. The operator deployed it; no site/relay deployment occurred here.
+- App Review confirms submission **`c3599b9b-3e24-4897-9fbc-0b409073072e`** at
+  **13:35 Europe/Madrid**, status **Waiting for Review**. Automatic release after
+  approval and immediate availability to all eligible users are selected. Existing
+  countries, contacts, rating, account-free access and pricing are unchanged.
+- Public **1.1.1** remains Ready for Distribution. This is an App Store submission,
+  not approval or confirmed public availability of 1.1.3. Historical device-test
+  limitations below remain documented; user confirmation is not relabeled as a
+  fresh automated physical-device pass.
+- [GitHub v0.1.38](https://github.com/arvivares/statusline/releases/tag/v0.1.38)
+  was verified public before final submission. It is not the iOS binary source:
+  the existing build-12 archive provenance remains recorded below.
+
 ## Verified locally on 2 October 2026
 
 - Source starts from reviewed main commit
