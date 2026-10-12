@@ -16,6 +16,50 @@ The source tree and maintainer-account controls are suitable for public distribu
 Repository-native security controls are enabled, and the one accepted dependency risk
 is documented below with explicit reachability evidence, ownership and exit criteria.
 
+## 12 October addendum: Dependabot alert 16
+
+Scope: PR #97, relay development-tooling manifests, native image-library
+regressions and the exact Wrangler update. This is not a whole-application
+audit, a production deployment or evidence of exploitation.
+
+### [HIGH — corrected in candidate] Sharp/librsvg tooling dependency
+
+- **Category:** OWASP A06 Vulnerable and Outdated Components; CWE-416.
+- **Affected files:** `services/relay/package.json` and
+  `services/relay/package-lock.json`, resolving Sharp `0.35.4`.
+- **Advisory:** [GHSA-wq5f-xc86-pv6w](https://github.com/lovell/sharp/security/advisories/GHSA-wq5f-xc86-pv6w).
+  Sharp below `0.35.5` includes affected librsvg. Under runtime-specific
+  conditions, malicious SVG processing can cause memory corruption and possible
+  code execution on glibc-based Linux.
+- **Reachability:** The package belongs to Wrangler/Miniflare development
+  tooling. Statusline's production Worker handles encrypted JSON, not image
+  transformations. This limits application exposure but does not eliminate
+  developer/CI supply-chain risk.
+- **Correction:** Wrangler `4.149.0` resolves Miniflare
+  `5.20261006.1-alpha`, which requests Sharp `0.35.5` upstream. Remove the
+  temporary `miniflare.sharp = "0.35.4"` override and regenerate the lockfile;
+  keeping it would defeat the upstream fix. No forced audit downgrade is used.
+- **Regression policy:** Check all locked Sharp copies and the loaded native
+  version against the `0.35.5` security floor, retaining the libheif
+  `1.23.2` floor and adding librsvg `2.63.2`. Benign generated AVIF and SVG
+  conversions exercise the real native library without untrusted input.
+- **Local verification:** Clean Node `26.9.0` / npm `11.19.1` install and
+  full audit report zero known npm vulnerabilities. All 75 relay tests and
+  TypeScript pass. The loaded libraries are Sharp `0.35.5`, libheif
+  `1.23.5` and librsvg `2.63.2`. All five migrations apply to a fresh
+  local-only D1 database, and dry-run packaging succeeds. No exploit was run.
+  Fresh PR CI remains the merge gate; confirm the GitHub alert is fixed after
+  merge rather than manually dismissing it.
+- **Compatibility boundary:** No relay routes, roles, encryption, pairing,
+  migration source, production configuration or signing gates change. Remote
+  Cloudflare provisioning and physical devices are outside this tooling review.
+- **Owner:** `@arvivares`; maintain the regression floors when future advisories
+  require a newer upstream version.
+
+Primary sources: [Wrangler 4.149.0 release notes](https://github.com/cloudflare/workers-sdk/releases/tag/wrangler%404.149.0)
+and the Sharp advisory linked above. The 10 September record below is historical;
+its original Sharp `0.35.4` fix is superseded by this addendum.
+
 ## 10 September addendum: Dependabot alert 2
 
 This targeted review identified a high-severity development-tooling dependency
