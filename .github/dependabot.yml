@@ -84,6 +84,13 @@ updates:
       time: "05:45"
       timezone: Europe/Madrid
     open-pull-requests-limit: 5
+    # Preserve Android 6/API 23 until an explicit minimum-SDK migration.
+    # Compatible maintenance releases remain eligible; security alerts stay on.
+    ignore:
+      - dependency-name: "androidx.work:work-runtime"
+        versions: [">=2.12.0"]
+      - dependency-name: "com.google.firebase:firebase-bom"
+        versions: [">=35.0.0"]
     groups:
       compatible-updates:
         update-types:
