@@ -1,0 +1,3 @@
+Avisos opcionales cuando vuelve a estar disponible una cuota agotada o queda al menos un 20% de la cuota semanal cerca del reinicio. Los avisos de créditos de reset de Codex se configuran por separado.
+Los widgets pueden actualizarse en segundo plano, según la programación de Android. Se conservan el emparejamiento y tus preferencias.
+Dependencias actualizadas manteniendo Android 6.

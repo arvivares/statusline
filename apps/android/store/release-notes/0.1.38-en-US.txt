@@ -1,0 +1,3 @@
+Optional alerts let you know when exhausted quota becomes available again, or when at least 20% of weekly quota remains near its reset. Codex reset-credit alerts are configured separately.
+Widgets can refresh in the background, subject to Android scheduling. Existing pairing and notification choices are preserved.
+Updated compatible dependencies while retaining Android 6 support.

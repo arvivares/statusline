@@ -10,9 +10,9 @@ by this workflow.
 [`release.json`](../../release.json) owns the product version, release channel, tag,
 component versions and curated release-notes path. For the current public beta:
 
-- prepared product tag: `v0.1.37` (not created merely by preparing this file);
-- desktop and Android candidate version: `0.1.37`;
-- Android candidate: `versionCode 34` (Google Play submission is separate);
+- prepared product tag: `v0.1.38` (not created merely by preparing this file);
+- desktop and Android candidate version: `0.1.38`;
+- Android candidate: `versionCode 35` (Google Play submission is separate);
 - prepared iOS source version: `1.1.3 (12)`, with independent optional quota
   and Codex reset-credit alerts. Its archive/export and internal delivery are recorded in
   [the mobile delivery record](../../apps/apple/store/validation-1.1.3.md).
@@ -57,7 +57,7 @@ artifacts are not releases.
 
 ## Required release inventory
 
-For `v0.1.37`, the finalizer fails unless it finds exactly one of each enabled
+For `v0.1.38`, the finalizer fails unless it finds exactly one of each enabled
 distributable:
 
 | Platform | Required assets                                            |
@@ -141,8 +141,8 @@ is verified on GitHub:
 ```shell
 npm ci --prefix apps/desktop
 npm run release:check --prefix apps/desktop
-git tag -s v0.1.37 -m "Statusline 0.1.37 beta"
-git push origin v0.1.37
+git tag -s v0.1.38 -m "Statusline 0.1.38 beta"
+git push origin v0.1.38
 ```
 
 The workflow verifies that the tag is annotated, cryptographically verified by GitHub,
@@ -151,7 +151,31 @@ approval: after every build, trust, inventory, checksum and provenance gate pass
 draft is published automatically according to `distribution.publishPrerelease`.
 The current profile publishes a normal GitHub release marked **Latest**.
 
-### 0.1.37 candidate gates
+### 0.1.38 candidate gates
+
+- Publish the compatible dependency maintenance reviewed in PRs #93–#99 and
+  #101–#102: Tauri, rustls, runtime libraries, frontend build tooling, Gradle,
+  the Kotlin Compose plugin and SHA-pinned GitHub Actions.
+- Preserve Android 6/API 23 support with WorkManager 2.11.2 and Firebase BoM
+  34.19.0. The deferred API-24-only updates are not part of this release.
+- Require fresh cross-platform native, frontend, relay, Android and website CI,
+  followed by the manual Release preflight before creating the signed tag.
+  Keep signing, notarization, installer smoke tests, checksums, inventory,
+  updater signatures and provenance gates unchanged.
+- Android APK/AAB target `0.1.38 (35)`. The separately authorized Play delivery
+  updates the existing beta tracks without replacing tester lists or regions;
+  it does not request Google Play production access.
+- iOS remains `1.1.3 (12)`: no app/widget source changed since that tested
+  TestFlight build. The account holder requests App Store production delivery
+  using that existing build, not another TestFlight upload or USB installation.
+  Verify live privacy disclosures, metadata and build availability before
+  submitting; record the actual Apple review/publication state separately.
+- No relay deployment, D1 migration, pairing change or pending user-worktree
+  change is included. Website source updates do not deploy the website.
+- See the [release notes](notes/v0.1.38.md). Store submission and approval are
+  separate from GitHub installer publication; do not claim either in advance.
+
+### Historical 0.1.37 candidate gates
 
 - Verify bounded macOS discovery of the legacy launcher, current vendor shim
   and nested native runtime for both ChatGPT.app and Codex.app in system and
