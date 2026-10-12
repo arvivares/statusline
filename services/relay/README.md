@@ -41,23 +41,23 @@ copia `.dev.vars.example` a `.dev.vars` y configura sus dos valores; sin ambos,
 autenticación de Cloudflare se gestiona con `npx wrangler login` o con variables
 `CLOUDFLARE_*` cargadas desde el `.env` privado de la raíz.
 
-### Parche temporal de las herramientas
+### Seguridad de las herramientas
 
-Wrangler `4.147.0` utiliza Miniflare `5.20261001.0-alpha`, que todavía solicita
-Sharp `0.35.2`. El override limitado a `miniflare.sharp` fija `0.35.4` para corregir
-[GHSA-rgj7-g3m4-5g8c](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c).
-Es una dependencia de desarrollo: el Worker de producción no procesa imágenes
-ni incorpora Sharp. No añadas un `npm audit fix --force` ni elimines el override
-sin validar la dependencia que lo sustituye.
+Wrangler `4.149.0` utiliza Miniflare `5.20261006.1-alpha`, que solicita
+Sharp `0.35.5` de forma nativa. Se retira el override temporal a `0.35.4`:
+esa versión corregía el aviso anterior de libheif, pero no el nuevo
+[GHSA-wq5f-xc86-pv6w](https://github.com/lovell/sharp/security/advisories/GHSA-wq5f-xc86-pv6w).
+Sharp sigue siendo una dependencia de desarrollo: el Worker de producción no
+procesa imágenes ni incorpora Sharp. No uses `npm audit fix --force` ni
+reintroduzcas una versión vulnerable mediante overrides.
 
-`npm test` verifica el lockfile y el binario nativo corregido, incluida una
-conversión AVIF de prueba generada en memoria. No utiliza imágenes externas ni
-datos de usuarios. Tras actualizar dependencias, ejecuta `npm ci`, `npm audit`,
-`npm test`, `npm run check`, migraciones locales y un empaquetado `--dry-run`.
-Retira el override y su comprobación de versión exacta cuando Miniflare incluya
-una versión corregida por sí mismo y esas verificaciones vuelvan a pasar.
-La evidencia y los límites de la validación están en la
-[revisión de seguridad](../../docs/security/security-review.md#10-september-addendum-dependabot-alert-2).
+`npm test` verifica que todas las copias del lockfile y el binario cargado
+incluyan Sharp `>=0.35.5`, libheif `>=1.23.2` y librsvg `>=2.63.2`.
+También convierte AVIF y SVG benignos generados en memoria, sin imágenes
+externas ni datos de usuarios. Tras actualizar dependencias, ejecuta `npm ci`,
+`npm audit`, `npm test`, `npm run check`, migraciones locales y un empaquetado
+`--dry-run`. La evidencia y los límites están en la
+[revisión de seguridad](../../docs/security/security-review.md#12-october-addendum-dependabot-alert-16).
 
 ## Despliegue en Cloudflare
 
