@@ -131,7 +131,7 @@ jobs:
           bash -n apps/desktop/scripts/verify-detached-signature.sh
 
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: ".node-version"
           cache: npm
@@ -406,7 +406,7 @@ jobs:
           }
 
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: ".node-version"
           cache: npm
@@ -542,7 +542,7 @@ jobs:
           failure() && runner.os == 'Linux' &&
           steps.appimage-policy.outcome == 'failure' &&
           github.event_name == 'workflow_dispatch' && inputs.release != true
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: diagnostic-appimage-input-${{ github.sha }}-attempt-${{ github.run_attempt }}
           path: apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage
@@ -559,7 +559,7 @@ jobs:
       - name: Upload unsigned Windows application for SignPath
         id: signpath-application-input
         if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: unsigned-signpath-input-application-${{ github.sha }}-attempt-${{ github.run_attempt }}
           path: apps/desktop/src-tauri/target/release/statusline-desktop.exe
@@ -610,7 +610,7 @@ jobs:
       - name: Upload unsigned Windows installers for SignPath
         id: signpath-installers-input
         if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: unsigned-signpath-input-installers-${{ github.sha }}-attempt-${{ github.run_attempt }}
           path: ${{ runner.temp }}/statusline-windows-installers-unsigned
@@ -735,7 +735,7 @@ jobs:
 
       - name: Upload tested unsigned Windows preview installers
         if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD != 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: statusline-${{ env.STATUSLINE_VERSION }}-windows-x64-unsigned-attempt-${{ github.run_attempt }}
           path: |
@@ -766,7 +766,7 @@ jobs:
 
       - name: Upload signed Windows release installers
         if: runner.os == 'Windows' && env.WINDOWS_SIGNED_BUILD == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: statusline-${{ env.STATUSLINE_VERSION }}-windows-x64-signed-attempt-${{ github.run_attempt }}
           path: ${{ runner.temp }}/statusline-windows-installers-signed
@@ -838,7 +838,7 @@ jobs:
 
       - name: Upload validated Linux installers
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: statusline-${{ env.STATUSLINE_VERSION }}-linux-x64-installers-attempt-${{ github.run_attempt }}
           path: |
@@ -852,7 +852,7 @@ jobs:
 
       - name: Upload Linux signature artifact
         if: runner.os == 'Linux' && env.LINUX_SIGNED_BUILD == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: statusline-${{ env.STATUSLINE_VERSION }}-linux-x64-signatures-attempt-${{ github.run_attempt }}
           path: apps/desktop/src-tauri/target/linux-signatures/*
@@ -886,7 +886,7 @@ jobs:
 
       - name: Upload verified macOS updater archive and signature
         if: runner.os == 'macOS' && inputs.release == true && github.repository == 'arvivares/statusline' && github.event_name == 'push' && github.ref_type == 'tag'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-updater-attempt-${{ github.run_attempt }}
           path: apps/desktop/src-tauri/target/macos-updater/*
@@ -896,7 +896,7 @@ jobs:
 
       - name: Upload macOS DMG artifact
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-dmg-attempt-${{ github.run_attempt }}
           path: apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
@@ -905,7 +905,7 @@ jobs:
 
       - name: Upload macOS PKG artifact
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: statusline-${{ env.STATUSLINE_VERSION }}-darwin-universal-pkg-attempt-${{ github.run_attempt }}
           path: apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle/pkg/*.pkg
@@ -947,7 +947,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: ".node-version"
 
@@ -957,7 +957,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends dbus-x11 file gnupg rpm xvfb xauth libegl1 libgl1-mesa-dri libwayland-client0 libwayland-server0 libwayland-cursor0 libwayland-egl1
 
       - name: Download the exact Linux build artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: statusline-${{ needs.validate.outputs.version }}-linux-*-attempt-${{ github.run_attempt }}
           path: downloaded-installers
@@ -988,12 +988,12 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: ".node-version"
 
       - name: Download installer artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: statusline-${{ needs.validate.outputs.version }}-*-attempt-${{ github.run_attempt }}
           path: release-assets
@@ -1021,7 +1021,7 @@ jobs:
         run: bash apps/desktop/scripts/sign-linux-files.sh SHA256SUMS.txt
 
       - name: Upload checksum artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: statusline-${{ needs.validate.outputs.version }}-checksums-attempt-${{ github.run_attempt }}
           path: SHA256SUMS.txt*
