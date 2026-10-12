@@ -17,6 +17,11 @@
 
 Statusline muestra el estado de la cuota de Codex en Windows, Linux, macOS, iPhone y Android, con widgets nativos y sincronización cifrada de extremo a extremo.
 
+Companion también admite Google Antigravity y Anthropic Claude Code. El siguiente
+candidato móvil integra Claude en las apps y widgets junto a Codex y Antigravity;
+solo aparecen los servicios habilitados en tu Companion emparejado. Consulta los
+[pasos de distribución móvil de Claude](docs/architecture/claude-mobile.md).
+
 > [!NOTE]
 > Statusline es un proyecto open source independiente. No está afiliado, patrocinado ni respaldado por OpenAI.
 
@@ -148,9 +153,13 @@ inventario exacto, la configuración SignPath y los comandos de verificación.
 
 ## Roadmap
 
-Codex es la experiencia completa de v1. La siguiente etapa será una arquitectura de adaptadores por capacidades para mostrar Codex, AGY, Claude Code, GitHub Copilot y futuros agentes en una sola vista, manteniendo las unidades reales de cada proveedor.
-
-El orden propuesto es: publicar una base sólida de Codex, extraer el contrato común, validar AGY como primer adaptador adicional, leer la cuota de Claude Code mediante su hook documentado de status line con activación explícita y después investigar integraciones soportadas para GitHub Copilot. El backlog incluye widgets multiproveedor, timeline de resets, historial local, alertas de capacidad, pronósticos con confianza explícita y relay autohospedado.
+Codex, Antigravity y Claude Code utilizan el contrato común de proveedores. El
+candidato móvil actual completa la presentación de Claude en apps y widgets sin
+cambiar el relay ni los emparejamientos. La siguiente etapa es investigar
+integraciones soportadas para GitHub Copilot y futuros agentes, manteniendo las
+unidades reales de cada proveedor. El backlog incluye timeline de resets,
+historial local, alertas de capacidad, pronósticos con confianza explícita y relay
+autohospedado.
 
 Consulta el [roadmap completo de producto e ingeniería](ROADMAP.md) para ver factibilidad, principios de privacidad, hitos de arquitectura y definición de terminado.
 

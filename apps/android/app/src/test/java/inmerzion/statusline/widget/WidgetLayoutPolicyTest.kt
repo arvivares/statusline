@@ -10,6 +10,40 @@ import inmerzion.statusline.protocol.AgentServicesSnapshot
 
 class WidgetLayoutPolicyTest {
     @Test
+    fun `three services need room for two rows and respect system font scaling`() {
+        assertEquals(WidgetLayoutSize.SMALL, WidgetLayoutPolicy.layoutSize(276f, 149f, 3))
+        assertEquals(WidgetLayoutSize.MEDIUM, WidgetLayoutPolicy.layoutSize(276f, 150f, 3))
+        assertEquals(WidgetLayoutSize.SMALL, WidgetLayoutPolicy.layoutSize(276f, 200f, 3, 1.5f))
+        assertEquals(WidgetLayoutSize.MEDIUM, WidgetLayoutPolicy.layoutSize(276f, 225f, 3, 1.5f))
+        assertEquals(WidgetLayoutSize.COMPACT, WidgetLayoutPolicy.layoutSize(276f, 50f, 3))
+        assertEquals(40f, WidgetLayoutPolicy.numberSizeSp(WidgetLayoutSize.MEDIUM, 276f, 150f, true, 2))
+    }
+
+    @Test
+    fun `three services show a Claude focus and two watchlist rows only in medium widgets`() {
+        val snapshot = AgentServicesSnapshot(
+            listOf(
+                AgentProviderReading(AgentProviderId.CODEX, "ready", 1_900_000_000,
+                    weekly = AgentQuotaWindow(53, 1_900_500_000, 10_080)),
+                AgentProviderReading(AgentProviderId.ANTIGRAVITY, "ready", 1_900_000_000,
+                    shortWindow = AgentQuotaWindow(73, 1_900_010_000, 300)),
+                AgentProviderReading(AgentProviderId.CLAUDE, "ready", 1_899_999_940,
+                    weekly = AgentQuotaWindow(81, 1_900_400_000, 10_080),
+                    shortWindow = AgentQuotaWindow(32, 1_900_007_200, 300)),
+            ), 1_900_000_000, sequence = 44,
+        )
+        val medium = WidgetPresentationPolicy.present(snapshot, AgentProviderId.CLAUDE, WidgetLayoutSize.MEDIUM)
+        assertEquals("Claude Code · 5h", medium.focused?.heading)
+        assertEquals(32, medium.focused?.remainingPercentage)
+        assertEquals(listOf(AgentProviderId.CODEX, AgentProviderId.ANTIGRAVITY), medium.watchlist.map { it.id })
+        for (size in listOf(WidgetLayoutSize.SMALL, WidgetLayoutSize.COMPACT)) {
+            val result = WidgetPresentationPolicy.present(snapshot, AgentProviderId.CLAUDE, size)
+            assertEquals("Claude Code · 5h", result.focused?.heading)
+            assertEquals(0, result.watchlist.size)
+        }
+    }
+
+    @Test
     fun `uses the one row composition below the tall height boundary`() {
         assertEquals(
             WidgetLayoutSize.COMPACT,

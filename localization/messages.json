@@ -1,4 +1,8 @@
 {
+  "Anthropic · Claude Code": "Anthropic · Claude Code",
+  "Notification preferences saved. Registration is pending and will retry while Statusline is open.": "Preferencias de avisos guardadas. El registro está pendiente y se reintentará mientras Statusline esté abierta.",
+  "Notifications pending registration": "Avisos pendientes de registro",
+  "Statusline is independent and is not affiliated with or endorsed by OpenAI, Google or Anthropic.": "Statusline es independiente y no está afiliada ni respaldada por OpenAI, Google o Anthropic.",
   "Enable quota": "Activar cuota",
   "Credentials and conversations stay with Claude.": "Las credenciales y conversaciones se quedan en Claude.",
   "Claude desktop detected. Install Claude Code to share quota through its status line; detection will run automatically.": "Claude de escritorio detectado. Instala Claude Code para compartir la cuota mediante su línea de estado; se detectará automáticamente.",

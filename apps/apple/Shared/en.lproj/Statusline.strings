@@ -36,6 +36,7 @@
 "Agent usage" = "Agent usage";
 "Allow notifications in system Settings to receive alerts." = "Allow notifications in system Settings to receive alerts.";
 "An encrypted snapshot is available on this device." = "An encrypted snapshot is available on this device.";
+"Anthropic · Claude Code" = "Anthropic · Claude Code";
 "Antigravity · {0}% left" = "Antigravity · {0}% left";
 "Antigravity · no weekly data" = "Antigravity · no weekly data";
 "Antigravity · unavailable" = "Antigravity · unavailable";
@@ -343,11 +344,13 @@
 "NOT PUBLISHED" = "NOT PUBLISHED";
 "Not selected" = "Not selected";
 "NOT UPLOADED" = "NOT UPLOADED";
+"Notification preferences saved. Registration is pending and will retry while Statusline is open." = "Notification preferences saved. Registration is pending and will retry while Statusline is open.";
 "Notification preferences updated." = "Notification preferences updated.";
 "Notifications are off because permission was revoked." = "Notifications are off because permission was revoked.";
 "Notifications are off on this device. Relay cleanup will retry when you open Statusline." = "Notifications are off on this device. Relay cleanup will retry when you open Statusline.";
 "Notifications are off. This device was unregistered." = "Notifications are off. This device was unregistered.";
 "Notifications are ready. Statusline will alert you when Codex reset credits are added." = "Notifications are ready. Statusline will alert you when Codex reset credits are added.";
+"Notifications pending registration" = "Notifications pending registration";
 "Notify me about new versions. Installation always needs my approval." = "Notify me about new versions. Installation always needs my approval.";
 "Notify me when new Codex reset credits are added" = "Notify me when new Codex reset credits are added";
 "NOW" = "NOW";
@@ -546,6 +549,7 @@
 "Statusline could not verify the selected Codex executable." = "Statusline could not verify the selected Codex executable.";
 "Statusline is an independent app and is not affiliated with or endorsed by OpenAI." = "Statusline is an independent app and is not affiliated with or endorsed by OpenAI.";
 "Statusline is independent and is not affiliated with or endorsed by OpenAI or Google." = "Statusline is independent and is not affiliated with or endorsed by OpenAI or Google.";
+"Statusline is independent and is not affiliated with or endorsed by OpenAI, Google or Anthropic." = "Statusline is independent and is not affiliated with or endorsed by OpenAI, Google or Anthropic.";
 "Statusline needs a ChatGPT session, not an API key." = "Statusline needs a ChatGPT session, not an API key.";
 "Statusline needs camera permission to scan the QR. You can also paste the link manually." = "Statusline needs camera permission to scan the QR. You can also paste the link manually.";
 "Statusline sends a generic alert; reset details stay encrypted." = "Statusline sends a generic alert; reset details stay encrypted.";

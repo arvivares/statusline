@@ -5,7 +5,7 @@ import Testing
 @Suite("Still Signature layout captures")
 @MainActor
 struct AgentLayoutTests {
-    @Test(arguments: ["codex", "antigravity", "both", "unavailable"])
+    @Test(arguments: ["codex", "antigravity", "claude", "both", "three", "unavailable"])
     func capturesActualViews(variant: String) throws {
         let now = Date.now
         let checked = now.addingTimeInterval(-120)
@@ -14,8 +14,11 @@ struct AgentLayoutTests {
         let codex = AgentProviderReading(id: .codex, status: "ready", updatedAt: checked, weekly: weekly, shortWindow: nil)
         let google = AgentProviderReading(id: .antigravity, status: variant == "unavailable" ? "unavailable" : "ready",
             updatedAt: checked, weekly: nil, shortWindow: variant == "unavailable" ? nil : short)
-        let focused = variant == "codex" ? codex : google
-        let watchlist = variant == "both" || variant == "unavailable" ? [codex] : []
+        let claude = AgentProviderReading(id: .claude, status: "ready", updatedAt: checked,
+            weekly: weekly, shortWindow: AgentQuotaWindow(remainingPercentage: 32,
+                resetAt: Int64(now.timeIntervalSince1970) + 7_200, windowMinutes: 300))
+        let focused = variant == "codex" ? codex : variant == "claude" || variant == "three" ? claude : google
+        let watchlist = variant == "three" ? [codex, google] : variant == "both" || variant == "unavailable" ? [codex] : []
         try capture(SmallAgentWidget(provider: focused, date: now).padding(16).frame(width: 170, height: 170), name: "small-\(variant)")
         try capture(MediumAgentWidget(provider: focused, watchlist: watchlist, date: now).padding(16).frame(width: 364, height: 170), name: "medium-\(variant)")
         try capture(VStack(spacing: 16) {

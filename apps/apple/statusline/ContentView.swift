@@ -69,6 +69,13 @@ struct ContentView: View {
                         .accessibilityIdentifier("quotaNotifications")
                     }
 
+                    if viewModel.notificationRegistrationPending {
+                        Label(L10n.text("Notifications pending registration"), systemImage: "clock")
+                            .font(.caption)
+                            .foregroundStyle(DataPlaneTheme.muted)
+                            .accessibilityIdentifier("notificationRegistrationPending")
+                    }
+
                     if viewModel.focusedProvider == nil {
                         relayControls
                     } else {
@@ -198,7 +205,7 @@ private struct StatuslineLegalFooter: View {
                 }
             }
 
-            Text(L10n.text("Statusline is independent and is not affiliated with or endorsed by OpenAI or Google."))
+            Text(L10n.text("Statusline is independent and is not affiliated with or endorsed by OpenAI, Google or Anthropic."))
                 .font(.caption)
                 .foregroundStyle(DataPlaneTheme.muted)
         }

@@ -3,9 +3,22 @@ import Foundation
 enum AgentProviderID: String, Codable, Sendable {
     case codex
     case antigravity
+    case claude
 
-    var name: String { self == .codex ? "Codex" : "Antigravity" }
-    var source: String { self == .codex ? "OpenAI" : "Google" }
+    var name: String {
+        switch self {
+        case .codex: "Codex"
+        case .antigravity: "Antigravity"
+        case .claude: "Claude Code"
+        }
+    }
+    var source: String {
+        switch self {
+        case .codex: "OpenAI"
+        case .antigravity: "Google"
+        case .claude: "Anthropic"
+        }
+    }
 }
 
 enum AgentQuotaPeriod: String, Codable, Sendable {
@@ -133,7 +146,7 @@ struct AgentServicesSnapshot: Codable, Equatable, Sendable {
             if let short = value.shortWindow, short.windowMinutes >= 8_640 {
                 throw CodexRelayError.invalidSnapshot
             }
-            if id == .antigravity,
+            if id == .antigravity || id == .claude,
                ((value.weekly.map { $0.windowMinutes != 10_080 } ?? false)
                 || (value.shortWindow.map { $0.windowMinutes != 300 } ?? false)) { throw CodexRelayError.invalidSnapshot }
             guard status == "ready" ? (value.weekly != nil || value.shortWindow != nil)

@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "project": "statusline",
+    "analyzed_at": "2026-10-12T23:24:45Z",
+    "git_ref": "ce78634a5aa834176040c3b46df829d625374187",
+    "scope": "working diff: mobile Claude reader and iOS notification activation; not a production audit",
+    "tool_version": "threat-model skill (focused manual review)"
+  },
+  "findings": [],
+  "systemic": [],
+  "chains": []
+}

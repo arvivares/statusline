@@ -1,0 +1,5 @@
+Claude Code se suma a Codex y Antigravity en la app y los widgets de inicio. Consulta cuotas de cinco horas y semanales cuando estén disponibles, destaca un servicio y mantén los demás a la vista. Solo aparecen los habilitados en tu Companion emparejado.
+
+Los avisos permanecen activados tras aceptar el permiso del sistema, aunque el registro se retrase. Un estado pendiente visible reintenta mientras Statusline está activa. Los avisos de cuota y de créditos de reset de Codex siguen siendo independientes y opcionales.
+
+Se conservan el vínculo, las lecturas y las preferencias de avisos. El refresco y la entrega push siguen siendo orientativos.

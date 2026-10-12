@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Two flat, single-line rows on the same Still Signature widget surface. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="20dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+  <TextView
+      android:id="@+id/widgetWatchlistProvider"
+      android:layout_width="0dp"
+      android:layout_weight="1"
+      android:layout_height="wrap_content"
+      android:ellipsize="end"
+      android:fontFamily="sans-serif"
+      android:includeFontPadding="false"
+      android:maxLines="1"
+      android:textColor="@color/data_plane_ink"
+      android:textSize="11sp" />
+  <TextView
+      android:id="@+id/widgetWatchlistAge"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:visibility="gone" />
+  <TextView
+      android:id="@+id/widgetWatchlistNumber"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:fontFamily="sans-serif"
+      android:includeFontPadding="false"
+      android:maxLines="1"
+      android:textColor="@color/data_plane_ink"
+      android:textSize="14sp" />
+  <TextView
+      android:id="@+id/widgetWatchlistPercent"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="3dp"
+      android:fontFamily="sans-serif"
+      android:includeFontPadding="false"
+      android:maxLines="1"
+      android:text="@string/widget_percent_symbol"
+      android:textColor="@color/data_plane_muted"
+      android:textSize="10sp" />
+</LinearLayout>

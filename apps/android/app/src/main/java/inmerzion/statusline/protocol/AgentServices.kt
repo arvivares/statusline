@@ -2,7 +2,8 @@ package inmerzion.statusline.protocol
 
 enum class AgentProviderId(val wireId: String, val displayName: String) {
     CODEX("codex", "Codex"),
-    ANTIGRAVITY("antigravity", "Antigravity");
+    ANTIGRAVITY("antigravity", "Antigravity"),
+    CLAUDE("claude", "Claude Code");
 
     companion object {
         fun fromWire(value: String): AgentProviderId? = values().firstOrNull { it.wireId == value }
@@ -39,7 +40,7 @@ data class AgentProviderReading(
     val resetCredits: ResetCreditsSummary? = null,
 ) {
     val defaultPeriod: AgentQuotaPeriod
-        get() = if (id == AgentProviderId.ANTIGRAVITY) {
+        get() = if (id != AgentProviderId.CODEX) {
             AgentQuotaPeriod.SHORT_WINDOW
         } else {
             AgentQuotaPeriod.WEEKLY

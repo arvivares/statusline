@@ -68,8 +68,8 @@ android {
         applicationId = "inmerzion.statusline"
         minSdk = 24
         targetSdk = 36
-        versionCode = 36
-        versionName = "0.1.38"
+        versionCode = 37
+        versionName = "0.1.39"
 
         buildConfigField("String", "RELAY_BASE_URL", relayBaseURL.asBuildConfigLiteral())
         buildConfigField("String", "FIREBASE_API_KEY", firebaseApiKey.asBuildConfigLiteral())
@@ -129,6 +129,10 @@ android {
             it.systemProperty(
                 "statusline.services.fixture",
                 rootProject.file("../../protocol/fixtures/aes-gcm-services-v1.json").absolutePath,
+            )
+            it.systemProperty(
+                "statusline.claude.fixture",
+                rootProject.file("../../protocol/fixtures/services-claude-v1.json").absolutePath,
             )
         }
     }

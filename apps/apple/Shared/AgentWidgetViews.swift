@@ -43,14 +43,14 @@ struct MediumAgentWidget: View {
     let date: Date
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
+        VStack(alignment: .leading, spacing: watchlist.count > 1 ? 4 : 7) {
             HStack {
                 AgentWidgetHeading(provider: provider)
                 Spacer(minLength: 8)
                 AgentWidgetAge(provider: provider, date: date)
             }
             HStack {
-                AgentWidgetNumber(window: provider.window(), size: watchlist.isEmpty ? 58 : 46)
+                AgentWidgetNumber(window: provider.window(), size: watchlist.count > 1 ? 40 : watchlist.isEmpty ? 58 : 46)
                 Spacer(minLength: 12)
                 if let window = provider.window() {
                     VStack(alignment: .trailing, spacing: 2) {
@@ -78,7 +78,9 @@ struct MediumAgentWidget: View {
                             .foregroundStyle(DataPlaneTheme.muted).accessibilityLabel(L10n.text("Waiting for a fresh sample"))
                     }
                 }
-                .padding(.top, 4)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .padding(.top, watchlist.count > 1 ? 2 : 4)
                 .accessibilityElement(children: .combine)
             }
         }

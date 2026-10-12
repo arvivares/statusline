@@ -40,13 +40,16 @@ internal object WidgetLayoutPolicy {
     const val DEFAULT_HEIGHT_DP = 50f
     const val MEDIUM_MIN_WIDTH_DP = 270f
     const val TALL_MIN_HEIGHT_DP = 110f
+    const val THREE_SERVICE_MIN_HEIGHT_DP = 150f
     const val MAX_RESPONSIVE_SIZES = 16
     const val MAX_METER_WIDTH_DP = 1_024f
     const val MAX_METER_WIDTH_PX = 1_024
     const val MAX_METER_HEIGHT_PX = 12
 
-    fun layoutSize(widthDp: Float, heightDp: Float): WidgetLayoutSize = when {
+    fun layoutSize(widthDp: Float, heightDp: Float, providerCount: Int = 2, fontScale: Float = 1f): WidgetLayoutSize = when {
         !validSize(widthDp, heightDp) || heightDp < TALL_MIN_HEIGHT_DP -> WidgetLayoutSize.COMPACT
+        providerCount > 2 && heightDp < THREE_SERVICE_MIN_HEIGHT_DP *
+            (if (fontScale.isFinite()) fontScale.coerceAtLeast(1f) else 1f) -> WidgetLayoutSize.SMALL
         widthDp >= MEDIUM_MIN_WIDTH_DP -> WidgetLayoutSize.MEDIUM
         else -> WidgetLayoutSize.SMALL
     }
@@ -54,12 +57,13 @@ internal object WidgetLayoutPolicy {
     fun validSize(widthDp: Float, heightDp: Float): Boolean =
         widthDp.isFinite() && heightDp.isFinite() && widthDp > 0 && heightDp > 0
 
-    fun numberSizeSp(size: WidgetLayoutSize, widthDp: Float, heightDp: Float, hasWatchlist: Boolean): Float =
+    fun numberSizeSp(size: WidgetLayoutSize, widthDp: Float, heightDp: Float, hasWatchlist: Boolean, watchlistCount: Int = 1): Float =
         when (size) {
             WidgetLayoutSize.COMPACT -> 30f
             WidgetLayoutSize.SMALL -> minOf(46f, heightDp - 86f, (widthDp - 50f) / 1.8f).coerceAtLeast(18f)
             WidgetLayoutSize.MEDIUM -> if (hasWatchlist) {
-                minOf(46f, heightDp - 82f).coerceAtLeast(28f)
+                if (watchlistCount > 1) minOf(40f, heightDp - 110f).coerceAtLeast(24f)
+                else minOf(46f, heightDp - 82f).coerceAtLeast(28f)
             } else {
                 minOf(54f, heightDp - 56f).coerceAtLeast(28f)
             }
@@ -116,11 +120,8 @@ internal object WidgetPresentationPolicy {
 
     private fun provider(reading: AgentProviderReading): WidgetProviderPresentation = WidgetProviderPresentation(
         id = reading.id,
-        // Match iOS defaults: Codex weekly; Gemini short window. Never relabel a fallback window.
-        window = if (reading.status == "ready") {
-            if (reading.id == AgentProviderId.ANTIGRAVITY) reading.shortWindow ?: reading.weekly
-            else reading.primaryWindow
-        } else null,
+        // Codex weekly; Antigravity and Claude Code five hours, with a weekly fallback.
+        window = if (reading.status == "ready") reading.primaryWindow else null,
         updatedAtEpochSeconds = reading.updatedAtEpochSeconds,
         isReady = reading.status == "ready",
     )
@@ -274,7 +275,8 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
             val validSize = WidgetLayoutPolicy.validSize(widthDp, heightDp)
             val width = if (validSize) widthDp else WidgetLayoutPolicy.DEFAULT_WIDTH_DP
             val height = if (validSize) heightDp else WidgetLayoutPolicy.DEFAULT_HEIGHT_DP
-            val size = WidgetLayoutPolicy.layoutSize(width, height)
+            val size = WidgetLayoutPolicy.layoutSize(width, height,
+                source.snapshot?.providers?.size ?: 0, context.resources.configuration.fontScale)
             val presentation = WidgetPresentationPolicy.present(source.snapshot, source.preferred, size)
             val layout = when (size) {
                 WidgetLayoutSize.COMPACT -> R.layout.statusline_widget_compact
@@ -286,7 +288,7 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
                 bindStatus(context, views, presentation, source.nowEpochSeconds, width - 24f, size)
                 // SP preserves the user's system font scaling; do not cancel it with density math.
                 views.setTextViewTextSize(R.id.widgetQuotaNumber, TypedValue.COMPLEX_UNIT_SP,
-                    WidgetLayoutPolicy.numberSizeSp(size, width, height, presentation.watchlist.isNotEmpty()))
+                    WidgetLayoutPolicy.numberSizeSp(size, width, height, presentation.watchlist.isNotEmpty(), presentation.watchlist.size))
             }
         }
 
@@ -371,7 +373,9 @@ class StatuslineWidgetProvider : AppWidgetProvider() {
             views.removeAllViews(R.id.widgetWatchlist)
             views.setViewVisibility(R.id.widgetWatchlist, if (presentation.watchlist.isEmpty()) View.GONE else View.VISIBLE)
             presentation.watchlist.forEach { provider ->
-                val row = RemoteViews(views.`package`, R.layout.statusline_widget_watchlist_row)
+                val layout = if (presentation.watchlist.size > 1) R.layout.statusline_widget_watchlist_compact_row
+                    else R.layout.statusline_widget_watchlist_row
+                val row = RemoteViews(views.`package`, layout)
                 row.setTextViewText(R.id.widgetWatchlistProvider, provider.heading)
                 row.setTextViewText(R.id.widgetWatchlistNumber, provider.remainingPercentage?.toString().orEmpty())
                 row.setViewVisibility(R.id.widgetWatchlistPercent, if (provider.window == null) View.GONE else View.VISIBLE)
