@@ -5,7 +5,7 @@ import Foundation
 @MainActor
 final class PushRegistrationGate<Value: Sendable> {
     private(set) var attempt: UUID?
-    private var waiters: [CheckedContinuation<Value, Error>] = []
+    private var waiters: [UUID: CheckedContinuation<Value, Error>] = [:]
     private var timeoutTask: Task<Void, Never>?
     private let sleep: (Duration) async throws -> Void
 
@@ -15,16 +15,25 @@ final class PushRegistrationGate<Value: Sendable> {
 
     func wait(timeout: Duration, start: (UUID) -> Void) async throws -> Value {
         try Task.checkCancellation()
-        return try await withCheckedThrowingContinuation { continuation in
-            waiters.append(continuation)
-            guard attempt == nil else { return }
-            let id = UUID()
-            attempt = id
-            timeoutTask = Task { [weak self, sleep] in
-                do { try await sleep(timeout) } catch { return }
-                self?.finish(id, with: .failure(ResetPushError.installationIDUnavailable))
+        let waiterID = UUID()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                guard !Task.isCancelled else {
+                    continuation.resume(throwing: CancellationError())
+                    return
+                }
+                waiters[waiterID] = continuation
+                guard attempt == nil else { return }
+                let id = UUID()
+                attempt = id
+                timeoutTask = Task { [weak self, sleep] in
+                    do { try await sleep(timeout) } catch { return }
+                    self?.finish(id, with: .failure(ResetPushError.installationIDUnavailable))
+                }
+                start(id)
             }
-            start(id)
+        } onCancel: {
+            Task { @MainActor [weak self] in self?.cancelWaiter(waiterID) }
         }
     }
 
@@ -33,7 +42,7 @@ final class PushRegistrationGate<Value: Sendable> {
         attempt = nil
         timeoutTask?.cancel()
         timeoutTask = nil
-        let pending = waiters
+        let pending = Array(waiters.values)
         waiters.removeAll()
         for waiter in pending { waiter.resume(with: result) }
     }
@@ -41,5 +50,15 @@ final class PushRegistrationGate<Value: Sendable> {
     func cancel() {
         guard let attempt else { return }
         finish(attempt, with: .failure(CancellationError()))
+    }
+
+    private func cancelWaiter(_ id: UUID) {
+        guard let waiter = waiters.removeValue(forKey: id) else { return }
+        if waiters.isEmpty {
+            attempt = nil
+            timeoutTask?.cancel()
+            timeoutTask = nil
+        }
+        waiter.resume(throwing: CancellationError())
     }
 }

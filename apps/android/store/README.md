@@ -2,6 +2,21 @@
 
 This directory is the versioned source of truth for the Statusline Google Play listing.
 
+## Claude mobile delivery — 13 October 2026
+
+**0.1.39 (37)** is **Available to internal testers**, release
+`0.1.39-internal.1 - Claude Code`, published at **08:34 Europe/Madrid**.
+The same verified GitHub release bundle was submitted to Closed Alpha as
+`0.1.39-alpha.1 - Claude Code` at **15:01 Europe/Madrid**, full rollout after
+approval. The track confirms **In review**; existing lists and 178 regions remain
+unchanged. This is not a production release or proof of installation on every phone.
+
+The EN/ES listing text is saved but **not submitted**. Its pending asset draft
+still contains four September Data Plane captures; those images must be replaced
+with current native Android screenshots before submitting the listing group.
+Only the Alpha binary change was sent. See
+[validation-0.1.39.md](validation-0.1.39.md) for hashes, receipt and remaining work.
+
 ## Android 7 hotfix delivery — 12 October 2026
 
 **0.1.38 (36)** passed signed CI and was accepted by Play with **minSdk 24** and

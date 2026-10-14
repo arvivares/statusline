@@ -54,7 +54,7 @@ final class StillFocusScreenshotTests: XCTestCase {
         XCTAssertEqual(quota.value as? String, es ? "70 por ciento restante" : "70 percent remaining")
         retain(app, "\(language)-01-quota")
 
-        let sync = app.buttons[es ? "Sincronización privada" : "Private sync"]
+        let sync = app.buttons["openSettings"]
         reveal(sync, app: app)
         sync.tap()
         let scan = app.buttons[es ? "Escanear QR" : "Scan QR"]

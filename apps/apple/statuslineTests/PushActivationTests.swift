@@ -15,6 +15,8 @@ private final class ActivationPushFixture: ResetPushManaging {
     var onPermission: (() -> Void)?
     var onPermissionCheck: (() async -> Void)?
     var onInstallation: (() -> Void)?
+    var onInstallationWait: (() async throws -> Void)?
+    var onCancelRegistration: (() -> Void)?
     var registrationCalls = 0
     func requestPermission() async throws {
         onPermission?()
@@ -23,6 +25,7 @@ private final class ActivationPushFixture: ResetPushManaging {
     func currentInstallationID() async throws -> String {
         registrationCalls += 1
         onInstallation?()
+        try await onInstallationWait?()
         if let installationFailure { throw installationFailure }
         return "fixture-installation"
     }
@@ -32,7 +35,9 @@ private final class ActivationPushFixture: ResetPushManaging {
         pendingRegistration = isEnabled; pendingUnregistration = false
     }
     func markRegistered() { pendingRegistration = false }
+    func cancelRegistration() { onCancelRegistration?() }
     func beginOptOut() {
+        cancelRegistration()
         resetCreditsEnabled = false; quotaAlertsEnabled = false
         pendingRegistration = false; pendingUnregistration = true
     }
@@ -47,6 +52,8 @@ private final class ActivationReaderFixture: CodexRelayReading {
     var failure: Error?
     var registered: [(Bool, Bool)] = []
     var onRegister: (() async -> Void)?
+    var onUnregister: (() async -> Void)?
+    var unregisterFailure: Error?
     var operations: [String] = []
     func pairedChannelID() throws -> UUID? { channel }
     func isPaired() throws -> Bool { channel != nil }
@@ -61,13 +68,22 @@ private final class ActivationReaderFixture: CodexRelayReading {
         registered.append((resetCredits, quotaAlerts))
         operations.append("PUT")
     }
-    func unregisterPushDevice() async throws { operations.append("DELETE") }
+    func unregisterPushDevice() async throws {
+        await onUnregister?()
+        if let unregisterFailure { throw unregisterFailure }
+        operations.append("DELETE")
+    }
     func disconnect() throws { channel = nil }
 }
 
 @Suite("Notification activation survives delivery delays")
 @MainActor
 struct PushActivationTests {
+    @Test func swiftUIReceivesAPNsCallbacksWithoutFirebaseSwizzling() {
+        #expect(Bundle.main.object(forInfoDictionaryKey: "FirebaseAppDelegateProxyEnabled") as? Bool == false)
+        #expect(Bundle.main.object(forInfoDictionaryKey: "FirebaseMessagingAutoInitEnabled") as? Bool == false)
+    }
+
     private func fixture() throws -> (CodexStatusViewModel, ActivationPushFixture, ActivationReaderFixture, () -> Void) {
         let name = "statusline.tests.activation.\(UUID())"
         let defaults = try #require(UserDefaults(suiteName: name))
@@ -198,6 +214,94 @@ struct PushActivationTests {
         #expect(reader.channel == nil && !push.isEnabled)
         #expect(!vm.notificationRegistrationPending)
     }
+
+    @Test func turningOffInterruptsAPNsWaitAndIgnoresItsLateCallback() async throws {
+        let (vm, push, reader, clear) = try fixture(); defer { clear() }
+        let gate = PushRegistrationGate<String>()
+        var attempt: UUID?
+        push.onCancelRegistration = { gate.cancel() }
+        await withCheckedContinuation { started in
+            push.onInstallationWait = {
+                _ = try await gate.wait(timeout: .seconds(30)) { id in
+                    attempt = id
+                    started.resume()
+                }
+            }
+            vm.setQuotaNotifications(true)
+        }
+        #expect(vm.resetNotificationsBusy && vm.quotaNotificationsEnabled)
+        vm.setQuotaNotifications(false)
+        #expect(!vm.quotaNotificationsEnabled && !push.isEnabled)
+        gate.finish(try #require(attempt), with: .success("late-token"))
+        await vm.notificationPreferenceTask?.value
+        #expect(reader.operations == ["DELETE"])
+        #expect(!vm.resetNotificationsBusy && !vm.notificationRegistrationPending)
+    }
+
+    @Test func rapidOnOffOnUsesLatestChoices() async throws {
+        let (vm, push, reader, clear) = try fixture(); defer { clear() }
+        vm.setResetNotifications(true)
+        vm.setResetNotifications(false)
+        vm.setQuotaNotifications(true)
+        #expect(!vm.resetNotificationsEnabled && vm.quotaNotificationsEnabled)
+        await vm.notificationPreferenceTask?.value
+        #expect(!push.resetCreditsEnabled && push.quotaAlertsEnabled)
+        #expect(reader.registered.count == 1)
+        #expect(reader.registered.last?.0 == false && reader.registered.last?.1 == true)
+        #expect(!vm.resetNotificationsBusy && !vm.notificationRegistrationPending)
+    }
+
+    @Test func offDeletesAfterAnAlreadyIssuedOptIn() async throws {
+        let (vm, push, reader, clear) = try fixture(); defer { clear() }
+        var releaseWrite: CheckedContinuation<Void, Never>?
+        await withCheckedContinuation { started in
+            reader.onRegister = {
+                await withCheckedContinuation { release in
+                    releaseWrite = release; started.resume()
+                }
+            }
+            vm.setQuotaNotifications(true)
+        }
+        vm.setQuotaNotifications(false)
+        #expect(!vm.quotaNotificationsEnabled)
+        releaseWrite?.resume()
+        await vm.notificationPreferenceTask?.value
+        #expect(reader.operations == ["PUT", "DELETE"])
+        #expect(!push.isEnabled && !vm.notificationRegistrationPending)
+    }
+
+    @Test func optingInWaitsForEarlierCleanupWithoutBlockingSwitches() async throws {
+        let (vm, push, reader, clear) = try fixture(); defer { clear() }
+        vm.setQuotaNotifications(true)
+        await vm.notificationPreferenceTask?.value
+        var releaseDelete: CheckedContinuation<Void, Never>?
+        await withCheckedContinuation { started in
+            reader.onUnregister = {
+                await withCheckedContinuation { release in
+                    releaseDelete = release; started.resume()
+                }
+            }
+            vm.setQuotaNotifications(false)
+        }
+        vm.setResetNotifications(true)
+        vm.setQuotaNotifications(true)
+        #expect(vm.resetNotificationsEnabled && vm.quotaNotificationsEnabled)
+        releaseDelete?.resume()
+        await vm.notificationPreferenceTask?.value
+        #expect(reader.operations == ["PUT", "DELETE", "PUT"])
+        #expect(push.resetCreditsEnabled && push.quotaAlertsEnabled)
+        #expect(!vm.notificationRegistrationPending && !vm.resetNotificationsBusy)
+    }
+
+    @Test func deniedPermissionKeepsFailedUnregistrationPending() async throws {
+        let (vm, push, reader, clear) = try fixture(); defer { clear() }
+        push.permission = false
+        reader.unregisterFailure = URLError(.notConnectedToInternet)
+        vm.setQuotaNotifications(true)
+        await vm.notificationPreferenceTask?.value
+        #expect(!push.isEnabled && push.pendingUnregistration)
+        #expect(!vm.quotaNotificationsEnabled && !vm.notificationRegistrationPending)
+    }
 }
 
 @Suite("Registration attempts isolate callbacks and timeouts")
@@ -237,6 +341,20 @@ struct PushRegistrationGateTests {
                 gate.finish(id, with: .success("late"))
             }
         }
+        #expect(gate.attempt == nil)
+    }
+
+    @Test func cancellingTaskResumesItsWaiter() async throws {
+        let gate = PushRegistrationGate<String>()
+        var task: Task<String, Error>?
+        await withCheckedContinuation { started in
+            task = Task {
+                try await gate.wait(timeout: .seconds(30)) { _ in started.resume() }
+            }
+        }
+        let waiting = try #require(task)
+        waiting.cancel()
+        await #expect(throws: CancellationError.self) { try await waiting.value }
         #expect(gate.attempt == nil)
     }
 }

@@ -49,7 +49,7 @@ final class AgentStoreScreenshotTests: XCTestCase {
         XCTAssertEqual(quota.value as? String, es ? "73 por ciento restante" : "73 percent remaining")
         retain(app, "\(language)-02-gemini")
 
-        let sync = app.buttons[es ? "Sincronización privada" : "Private sync"]
+        let sync = app.buttons["openSettings"]
         reveal(sync, app: app)
         sync.tap()
         let scan = app.buttons[es ? "Escanear QR" : "Scan QR"]

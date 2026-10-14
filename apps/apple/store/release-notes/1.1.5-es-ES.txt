@@ -1,0 +1,5 @@
+Una vista de cuotas más limpia: Actualizar y Configuración ahora están arriba a la derecha. Los avisos, la sincronización privada, Privacidad y Ayuda se reúnen en Configuración.
+
+Los interruptores de avisos siguen respondiendo mientras se completa el registro, incluso al apagarlos y volverlos a activar. Mejoramos los reintentos y la desactivación sin cambiar tu emparejamiento.
+
+Compatible con Codex, Antigravity y Claude Code desde tu Companion. La entrega de avisos y la actualización del widget dependen de la planificación del sistema.

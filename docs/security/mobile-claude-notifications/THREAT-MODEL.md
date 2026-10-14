@@ -8,6 +8,34 @@ persists notification category consent and tracks APNs/FCM/relay readiness.
 This is a source and synthetic-test review, not a production certification.
 Structured results are in [findings.json](findings.json).
 
+### Follow-up diff — 14 October 2026, v0.1.40 candidate
+
+Reviewed the iOS follow-up against `94de658`: settings navigation, responsive
+notification controls, registration-gate cancellation and named stage logging.
+The relay protocol, permission scope, pairing and encryption are unchanged.
+
+- A newer preference revision cancels SDK waiters, not an already-issued HTTP
+  write. Tasks drain earlier writes/cleanup before registering the latest choice
+  or issuing the final DELETE. Stale revisions cannot restore local consent.
+- Category removal takes effect locally immediately. New consent is persisted
+  only after authorization. Failed DELETEs remain durable, including permission
+  denial; SDK invalidation is best effort, not proof of server-side removal.
+- Individual task cancellation resumes only its gate waiter. Attempt IDs reject
+  stale SDK completions/timeouts; the real system APNs callback may be reused
+  only in the same process while UIKit and Firebase still report a token.
+- Firebase delegate proxying is explicitly disabled as required for SwiftUI by
+  [Firebase's integration documentation](https://firebase.google.com/docs/ios/learn-more#swiftui).
+  The existing application delegate maps APNs tokens manually. Auto-init remains
+  disabled until consent; no Analytics or extra collection is introduced.
+- Logging accepts only stage/event enums and numeric error codes, not arbitrary
+  error descriptions, user-info dictionaries, tokens, FIDs, URLs or quota data.
+- Settings shares the existing observable model rather than copying consent.
+  External links retain fixed official HTTPS destinations, not relay-provided URLs.
+
+No new independently exploitable finding, systemic cluster or attack chain was
+identified in this scoped review. Device tests are required for the SwiftUI/APNs
+integration; unit mocks and the settings redesign alone cannot prove delivery.
+
 ## 2. Trust boundaries and assumptions
 
 Protect channel credentials, the AES key, optional installation routing IDs,

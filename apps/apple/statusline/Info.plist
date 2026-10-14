@@ -20,6 +20,8 @@
 	<string>$(STATUSLINE_FIREBASE_IOS_APP_ID)</string>
 	<key>FirebaseMessagingAutoInitEnabled</key>
 	<false/>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<key>FirebaseMessagingInstallationIdEnabled</key>
 	<true/>
 </dict>

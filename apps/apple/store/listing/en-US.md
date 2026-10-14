@@ -6,15 +6,15 @@ Statusline: Agent Quota
 
 ## Subtitle
 
-Codex & Gemini, at a glance
+Your agents, at a glance
 
 ## Promotional text
 
-Codex and Gemini quotas, together on your iPhone and Home Screen. Pair with Companion for encrypted sync. Only your enabled services appear.
+Codex, Antigravity and Claude Code quotas, together on your iPhone and Home Screen. Pair with Companion for encrypted sync. Only your enabled services appear.
 
 ## Description
 
-Know how much agent quota you have left without returning to your computer. Statusline brings Codex and Google Gemini quotas from Antigravity to a focused iPhone dashboard and Home Screen widgets.
+Know how much agent quota you have left without returning to your computer. Statusline brings OpenAI Codex, Google Antigravity and Anthropic Claude Code quotas to a focused iPhone dashboard and Home Screen widgets.
 
 AT A GLANCE
 
@@ -32,7 +32,7 @@ Try the built-in Codex demo without an account or network connection. Pair with 
 
 OPTIONAL PRIVATE SYNC
 
-For synchronized samples, install the free, open-source Statusline Companion 0.1.24 or later on Windows, Linux or macOS. Use your own signed-in, compatible Codex or Antigravity installation on that computer. Companion discovers supported local installations. Pair your iPhone using a one-time QR code or a private link.
+For synchronized samples, install the latest free, open-source Statusline Companion on Windows, Linux or macOS. Use your own signed-in, compatible Codex, Antigravity or Claude Code installation on that computer. Companion discovers supported local installations. Pair your iPhone using a one-time QR code or a private link.
 
 Antigravity support shows quotas for Google's Gemini models, not the third-party models offered within Antigravity. Availability and quota windows depend on the connected service and account.
 
@@ -48,11 +48,11 @@ The iPhone app does not ask for your service password or API key. Service creden
 
 Statusline displays quota information; it does not run coding tasks, increase your limits or replace any service subscription.
 
-Statusline is an independent project and is not affiliated with, endorsed by or sponsored by OpenAI or Google. Product names and trademarks belong to their respective owners.
+Statusline is an independent project and is not affiliated with, endorsed by or sponsored by OpenAI, Google or Anthropic. Product names and trademarks belong to their respective owners.
 
 ## Keywords
 
-quota,usage,antigravity,weekly,widget,developer,remaining,reset,privacy,companion
+quota,usage,antigravity,claude,codex,weekly,widget,developer,remaining,reset,privacy,companion
 
 ## Support URL
 
@@ -61,6 +61,22 @@ https://statusline.inmerzion.io/support
 ## Marketing URL
 
 https://statusline.inmerzion.io/
+
+## What's new — 1.1.5
+
+A cleaner quota overview: Refresh and Settings now sit in the top-right corner. Notification preferences, private sync, Privacy and Support are together in Settings.
+
+Notification switches remain responsive while registration is pending, including turning alerts off and back on. Improved retry and opt-out handling preserves your choices without changing your pairing.
+
+Supports Codex, Antigravity and Claude Code from your paired Companion. Notification delivery and widget refresh remain subject to system scheduling.
+
+## What's new — 1.1.4
+
+Claude Code joins Codex and Antigravity in the app and Home Screen widgets. View five-hour and weekly quota when provided, focus on one service and keep the others visible. Only services enabled in your paired Companion appear.
+
+Notification choices now stay enabled after you accept system permission, even if registration is delayed. A visible pending state retries while Statusline is active. Quota alerts and Codex reset-credit alerts remain separate and optional.
+
+Existing pairing, saved readings and notification preferences are preserved. Refresh timing and push delivery remain best effort.
 
 ## What's new — 1.1.3
 

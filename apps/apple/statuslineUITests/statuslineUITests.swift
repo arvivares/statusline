@@ -46,11 +46,7 @@ final class statuslineUITests: XCTestCase {
         try XCTSkipUnless(app.staticTexts["SIN VÍNCULO"].waitForExistence(timeout: 5),
             "Pairing UI checks require an unpaired installation.")
 
-        let sync = app.buttons["Sincronización privada"]
-        if sync.exists {
-            scrollToHittable(sync, in: app)
-            sync.tap()
-        }
+        app.buttons["openSettings"].tap()
 
         let scanButton = app.buttons["Escanear QR"]
         XCTAssertTrue(scanButton.waitForExistence(timeout: 5))
@@ -95,6 +91,14 @@ final class statuslineUITests: XCTestCase {
             XCTAssertFalse(app.buttons[spanish ? "Guardar en este dispositivo" : "Save on this device"].exists)
             app.swipeUp()
         }
+        for _ in 0..<5 { app.swipeDown() }
+        let settings = app.buttons["openSettings"]
+        XCTAssertTrue(settings.isHittable)
+        XCTAssertTrue(app.buttons["refreshStatus"].exists)
+        XCTAssertFalse(app.switches["quotaNotifications"].exists)
+        settings.tap()
+        XCTAssertTrue(app.navigationBars[spanish ? "Configuración" : "Settings"].waitForExistence(timeout: 5))
+        for _ in 0..<5 { app.swipeUp() }
         // SwiftUI Link is exposed as a link by newer accessibility runtimes.
         // Query the visible label independently of the former button trait.
         let privacy = app.descendants(matching: .any)
@@ -103,6 +107,8 @@ final class statuslineUITests: XCTestCase {
             .matching(identifier: spanish ? "Ayuda" : "Support").firstMatch
         XCTAssertTrue(privacy.isHittable)
         XCTAssertTrue(support.isHittable)
+        app.buttons["closeSettings"].tap()
+        XCTAssertTrue(app.buttons["openSettings"].waitForExistence(timeout: 5))
     }
 
     @MainActor

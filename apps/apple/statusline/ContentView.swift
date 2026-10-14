@@ -3,14 +3,18 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var viewModel = CodexStatusViewModel()
-    @State private var isPairingPresented = false
-    @State private var isSyncExpanded = false
+    @State private var isSettingsPresented = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    DataPlaneAppHeader(syncState: viewModel.relaySyncState)
+                    DataPlaneAppHeader(
+                        syncState: viewModel.relaySyncState,
+                        isRefreshing: viewModel.isRefreshing,
+                        onRefresh: refreshFromRelay,
+                        onSettings: { isSettingsPresented = true }
+                    )
 
                     if let focused = viewModel.focusedProvider {
                         AgentFocusPanel(provider: focused).id(focused.id)
@@ -23,87 +27,16 @@ struct ContentView: View {
                         )
                     }
 
-                    if viewModel.relaySyncState.isPaired,
-                       (viewModel.services?.providers.contains(where: { $0.id == .codex }) == true || viewModel.resetNotificationsEnabled) {
-                        Toggle(isOn: Binding(
-                            get: { viewModel.resetNotificationsEnabled },
-                            set: viewModel.setResetNotifications
-                        )) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(L10n.text("Notify me when new Codex reset credits are added"))
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(DataPlaneTheme.ink)
-                                Text(L10n.text("Statusline sends a generic alert; reset details stay encrypted."))
-                                    .font(.caption)
-                                    .foregroundStyle(DataPlaneTheme.muted)
-                                Text(L10n.text("With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send alerts. Turning off all alerts removes the relay registration."))
-                                    .font(.caption)
-                                    .foregroundStyle(DataPlaneTheme.muted)
-                            }
+                    if !viewModel.relaySyncState.isPaired {
+                        Button(L10n.text("Private sync"), systemImage: "link") {
+                            isSettingsPresented = true
                         }
-                        .tint(DataPlaneTheme.signal)
-                        .disabled(viewModel.resetNotificationsBusy || !ResetPushManager.shared.isConfigured)
-                        .accessibilityIdentifier("codexResetNotifications")
-                    }
-
-                    if viewModel.relaySyncState.isPaired,
-                       viewModel.services?.providers.isEmpty == false || viewModel.quotaNotificationsEnabled {
-                        Toggle(isOn: Binding(
-                            get: { viewModel.quotaNotificationsEnabled },
-                            set: viewModel.setQuotaNotifications
-                        )) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(L10n.text("Quota notifications"))
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(DataPlaneTheme.ink)
-                                Text(L10n.text("When an exhausted 5h or weekly quota resets, and one hour before a weekly reset with at least 20% left."))
-                                    .font(.caption)
-                                    .foregroundStyle(DataPlaneTheme.muted)
-                                Text(L10n.text("Only for services in your Companion, running and connected. With permission, the relay stores an encrypted Firebase installation ID and receives the alert type, service and delivery expiry; quota readings stay encrypted."))
-                                    .font(.caption)
-                                    .foregroundStyle(DataPlaneTheme.muted)
-                            }
-                        }
-                        .tint(DataPlaneTheme.signal)
-                        .disabled(viewModel.resetNotificationsBusy || !ResetPushManager.shared.isConfigured)
-                        .accessibilityIdentifier("quotaNotifications")
-                    }
-
-                    if viewModel.notificationRegistrationPending {
-                        Label(L10n.text("Notifications pending registration"), systemImage: "clock")
-                            .font(.caption)
-                            .foregroundStyle(DataPlaneTheme.muted)
-                            .accessibilityIdentifier("notificationRegistrationPending")
-                    }
-
-                    if viewModel.focusedProvider == nil {
-                        relayControls
-                    } else {
-                        Button(L10n.text("Refresh"), systemImage: "arrow.clockwise", action: refreshFromRelay)
-                            .buttonStyle(DataPlaneSecondaryButtonStyle())
-                            .disabled(viewModel.relaySyncState == .syncing)
-                        DataPlaneRule()
-                        DisclosureGroup(L10n.text("Private sync"), isExpanded: $isSyncExpanded) {
-                            relayControls.padding(.top, 12)
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(DataPlaneTheme.ink)
-                        .frame(minHeight: 44)
-                        .padding(.vertical, 8)
+                        .buttonStyle(DataPlaneSecondaryButtonStyle())
                     }
 
                     if let feedback = viewModel.feedback {
-                        Label(feedback.message, systemImage: feedback.systemImage)
-                            .font(.caption)
-                            .foregroundStyle(feedback.isError ? DataPlaneTheme.critical : DataPlaneTheme.signal)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .accessibilityIdentifier("statusFeedback")
+                        StatusFeedbackLabel(feedback: feedback)
                     }
-
-                    StatuslineLegalFooter(
-                        privacyURL: StatuslinePublicPage.url(path: "privacy"),
-                        supportURL: StatuslinePublicPage.url(path: "support")
-                    )
                 }
                 .frame(maxWidth: 720)
                 .frame(maxWidth: .infinity)
@@ -120,27 +53,12 @@ struct ContentView: View {
                 guard scenePhase == .active else { return }
                 await viewModel.runForegroundRefresh()
             }
-            .sheet(isPresented: $isPairingPresented) {
-                RelayPairingSheet { uri in
-                    await viewModel.pair(using: uri)
-                    if viewModel.relaySyncState.isPaired {
-                        isPairingPresented = false
-                    }
-                }
+            .sheet(isPresented: $isSettingsPresented) {
+                StatuslineSettingsView(viewModel: viewModel)
             }
         }
         .tint(DataPlaneTheme.signal)
         .preferredColorScheme(.dark)
-    }
-
-    private var relayControls: some View {
-        UniversalRelayPanel(
-            state: viewModel.relaySyncState,
-            endpoint: viewModel.relayEndpoint,
-            onRefresh: refreshFromRelay,
-            onPair: { isPairingPresented = true },
-            onDisconnect: { viewModel.disconnectRelay() }
-        )
     }
 
     private func refreshFromRelay() {
@@ -151,6 +69,178 @@ struct ContentView: View {
 
     private func loadLocalDemo() {
         viewModel.loadLocalDemo()
+    }
+}
+
+private struct StatuslineSettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var viewModel: CodexStatusViewModel
+    @State private var isPairingPresented = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    VStack(alignment: .leading, spacing: 18) {
+                        DataPlaneLabel(text: L10n.text("Notifications"), tint: DataPlaneTheme.ink)
+
+                        if viewModel.relaySyncState.isPaired,
+                            viewModel.services?.providers.contains(where: { $0.id == .codex })
+                                == true
+                                || viewModel.resetNotificationsEnabled
+                        {
+                            Toggle(
+                                isOn: Binding(
+                                    get: { viewModel.resetNotificationsEnabled },
+                                    set: viewModel.setResetNotifications
+                                )
+                            ) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(
+                                        L10n.text(
+                                            "Notify me when new Codex reset credits are added")
+                                    )
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(DataPlaneTheme.ink)
+                                    Text(
+                                        L10n.text(
+                                            "Statusline sends a generic alert; reset details stay encrypted."
+                                        )
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(DataPlaneTheme.muted)
+                                    Text(
+                                        L10n.text(
+                                            "With your permission, Statusline stores an encrypted Firebase installation ID on its relay to send alerts. Turning off all alerts removes the relay registration."
+                                        )
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(DataPlaneTheme.muted)
+                                }
+                            }
+                            .tint(DataPlaneTheme.signal)
+                            .disabled(
+                                !ResetPushManager.shared.isConfigured || viewModel.isDisconnecting
+                            )
+                            .accessibilityIdentifier("codexResetNotifications")
+                        }
+
+                        if viewModel.relaySyncState.isPaired,
+                            viewModel.services?.providers.isEmpty == false
+                                || viewModel.quotaNotificationsEnabled
+                        {
+                            Toggle(
+                                isOn: Binding(
+                                    get: { viewModel.quotaNotificationsEnabled },
+                                    set: viewModel.setQuotaNotifications
+                                )
+                            ) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(L10n.text("Quota notifications"))
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundStyle(DataPlaneTheme.ink)
+                                    Text(
+                                        L10n.text(
+                                            "When an exhausted 5h or weekly quota resets, and one hour before a weekly reset with at least 20% left."
+                                        )
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(DataPlaneTheme.muted)
+                                    Text(
+                                        L10n.text(
+                                            "Only for services in your Companion, running and connected. With permission, the relay stores an encrypted Firebase installation ID and receives the alert type, service and delivery expiry; quota readings stay encrypted."
+                                        )
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(DataPlaneTheme.muted)
+                                }
+                            }
+                            .tint(DataPlaneTheme.signal)
+                            .disabled(
+                                !ResetPushManager.shared.isConfigured || viewModel.isDisconnecting
+                            )
+                            .accessibilityIdentifier("quotaNotifications")
+                        }
+
+                        if !viewModel.relaySyncState.isPaired {
+                            Text(L10n.text("Connect Companion to enable notifications."))
+                                .font(.subheadline)
+                                .foregroundStyle(DataPlaneTheme.muted)
+                        }
+
+                        if viewModel.notificationRegistrationPending {
+                            Label(
+                                L10n.text("Notifications pending registration"),
+                                systemImage: "clock"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(DataPlaneTheme.muted)
+                            .accessibilityIdentifier("notificationRegistrationPending")
+                        }
+
+                    }
+
+                    if let feedback = viewModel.feedback {
+                        StatusFeedbackLabel(feedback: feedback)
+                    }
+
+                    DataPlaneRule()
+                    UniversalRelayPanel(
+                        state: viewModel.relaySyncState,
+                        endpoint: viewModel.relayEndpoint,
+                        onPair: { isPairingPresented = true },
+                        onDisconnect: { viewModel.disconnectRelay() }
+                    )
+                    DataPlaneRule()
+                    StatuslineLegalFooter(
+                        privacyURL: StatuslinePublicPage.url(path: "privacy"),
+                        supportURL: StatuslinePublicPage.url(path: "support")
+                    )
+                }
+                .frame(maxWidth: 720, alignment: .leading)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 24)
+            }
+            .scrollIndicators(.hidden)
+            .background {
+                DataPlaneGridBackground()
+                    .ignoresSafeArea()
+            }
+            .navigationTitle(L10n.text("Settings"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(L10n.text("Done")) { dismiss() }
+                        .accessibilityIdentifier("closeSettings")
+                }
+            }
+            .sheet(isPresented: $isPairingPresented) {
+                RelayPairingSheet { uri in
+                    await viewModel.pair(using: uri)
+                    if viewModel.relaySyncState.isPaired {
+                        isPairingPresented = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        .tint(DataPlaneTheme.signal)
+        .preferredColorScheme(.dark)
+    }
+
+}
+
+private struct StatusFeedbackLabel: View {
+    let feedback: CodexStatusFeedback
+
+    var body: some View {
+        Label(feedback.message, systemImage: feedback.systemImage)
+            .font(.caption)
+            .foregroundStyle(feedback.isError ? DataPlaneTheme.critical : DataPlaneTheme.signal)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityIdentifier("statusFeedback")
     }
 }
 
@@ -205,9 +295,13 @@ private struct StatuslineLegalFooter: View {
                 }
             }
 
-            Text(L10n.text("Statusline is independent and is not affiliated with or endorsed by OpenAI, Google or Anthropic."))
-                .font(.caption)
-                .foregroundStyle(DataPlaneTheme.muted)
+            Text(
+                L10n.text(
+                    "Statusline is independent and is not affiliated with or endorsed by OpenAI, Google or Anthropic."
+                )
+            )
+            .font(.caption)
+            .foregroundStyle(DataPlaneTheme.muted)
         }
         .padding(.horizontal, 2)
         .accessibilityElement(children: .contain)
@@ -230,19 +324,49 @@ private struct DataPlaneExternalLink: View {
 
 private struct DataPlaneAppHeader: View {
     let syncState: CodexRelaySyncState
+    let isRefreshing: Bool
+    let onRefresh: () -> Void
+    let onSettings: () -> Void
 
     var body: some View {
-        HStack {
-            Text(L10n.text("Statusline"))
-                .font(.headline)
-                .foregroundStyle(DataPlaneTheme.ink)
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(L10n.text("Statusline"))
+                    .font(.headline)
+                    .foregroundStyle(DataPlaneTheme.ink)
+                DataPlaneStatusIndicator(
+                    label: syncState.dataPlaneLabel, tint: syncState.dataPlaneTint)
+            }
             Spacer()
-            DataPlaneStatusIndicator(label: syncState.dataPlaneLabel, tint: syncState.dataPlaneTint)
+            Button(action: onRefresh) {
+                Group {
+                    if isRefreshing {
+                        ProgressView().tint(DataPlaneTheme.signal)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(.rect)
+            }
+            .disabled(!syncState.isPaired || isRefreshing)
+            .accessibilityLabel(L10n.text("Refresh"))
+            .accessibilityIdentifier("refreshStatus")
+
+            Button(action: onSettings) {
+                Image(systemName: "gearshape")
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(.rect)
+            }
+            .accessibilityLabel(L10n.text("Settings"))
+            .accessibilityIdentifier("openSettings")
         }
+        .buttonStyle(.plain)
+        .font(.system(size: 18, weight: .medium))
+        .foregroundStyle(DataPlaneTheme.ink)
         .frame(minHeight: 44)
     }
 }
-
 
 private struct WaitingForDesktopPanel: View {
     let syncState: CodexRelaySyncState
@@ -274,15 +398,27 @@ private struct WaitingForDesktopPanel: View {
                     DataPlaneMeter(remainingPercentage: 0)
                         .accessibilityHidden(true)
 
-                    Text(hasInventory
-                        ? L10n.text("Enable a supported service in your Companion to see its quota here.")
-                        : L10n.text("Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample."))
-                        .font(.subheadline)
-                        .foregroundStyle(DataPlaneTheme.muted)
+                    Text(
+                        hasInventory
+                            ? L10n.text(
+                                "Enable a supported service in your Companion to see its quota here."
+                            )
+                            : L10n.text(
+                                "Open Statusline Companion on Windows, Linux or macOS, create a pairing and scan its QR to receive the first encrypted sample."
+                            )
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(DataPlaneTheme.muted)
 
-                    Button(L10n.text("View local demo"), systemImage: "play.rectangle.fill", action: onLoadDemo)
-                        .buttonStyle(DataPlaneSecondaryButtonStyle())
-                        .accessibilityHint(L10n.text("Loads a local sample and updates the widget without an account, a computer or the network."))
+                    Button(
+                        L10n.text("View local demo"), systemImage: "play.rectangle.fill",
+                        action: onLoadDemo
+                    )
+                    .buttonStyle(DataPlaneSecondaryButtonStyle())
+                    .accessibilityHint(
+                        L10n.text(
+                            "Loads a local sample and updates the widget without an account, a computer or the network."
+                        ))
                 }
                 .padding(18)
 
@@ -307,46 +443,44 @@ private struct WaitingForDesktopPanel: View {
 private struct UniversalRelayPanel: View {
     let state: CodexRelaySyncState
     let endpoint: String?
-    let onRefresh: () -> Void
     let onPair: () -> Void
     let onDisconnect: () -> Void
 
     var body: some View {
-        DataPlaneSurface {
-            VStack(alignment: .leading, spacing: 15) {
-                HStack {
-                    DataPlaneLabel(text: L10n.text("RELAY.CONTROL"), tint: DataPlaneTheme.ink)
-                    Spacer()
-                    DataPlaneStatusIndicator(
-                        label: state.dataPlaneLabel,
-                        tint: state.dataPlaneTint
-                    )
-                }
-
-                DataPlaneRule()
-
-                Text(state.message)
-                    .font(.subheadline)
-                    .foregroundStyle(state.isError ? DataPlaneTheme.critical : DataPlaneTheme.ink)
-
-                Text(L10n.text("The relay stores only AES-256-GCM encrypted quota snapshots. Your agents’ credentials and the encryption key never reach the relay."))
-                    .font(.caption)
-                    .foregroundStyle(DataPlaneTheme.muted)
-
-                if let endpoint {
-                    Text(endpoint)
-                        .font(.caption2.monospaced())
-                        .foregroundStyle(DataPlaneTheme.muted)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
-
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 10) { controls }
-                    VStack(spacing: 10) { controls }
-                }
+        VStack(alignment: .leading, spacing: 15) {
+            HStack {
+                DataPlaneLabel(text: L10n.text("Private sync"), tint: DataPlaneTheme.ink)
+                Spacer()
+                DataPlaneStatusIndicator(
+                    label: state.dataPlaneLabel,
+                    tint: state.dataPlaneTint
+                )
             }
-            .padding(17)
+
+            Text(state.message)
+                .font(.subheadline)
+                .foregroundStyle(state.isError ? DataPlaneTheme.critical : DataPlaneTheme.ink)
+
+            Text(
+                L10n.text(
+                    "The relay stores only AES-256-GCM encrypted quota snapshots. Your agents’ credentials and the encryption key never reach the relay."
+                )
+            )
+            .font(.caption)
+            .foregroundStyle(DataPlaneTheme.muted)
+
+            if let endpoint {
+                Text(endpoint)
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(DataPlaneTheme.muted)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) { controls }
+                VStack(spacing: 10) { controls }
+            }
         }
     }
 
@@ -369,19 +503,6 @@ private struct UniversalRelayPanel: View {
             .foregroundStyle(DataPlaneTheme.signal)
 
         case .syncing, .waitingForDesktop, .synced:
-            Button(action: onRefresh) {
-                HStack(spacing: 9) {
-                    if state == .syncing {
-                        ProgressView()
-                            .controlSize(.small)
-                            .tint(DataPlaneTheme.canvas)
-                    }
-                    Text(state == .syncing ? L10n.text("Syncing") : L10n.text("Refresh"))
-                }
-            }
-            .buttonStyle(DataPlanePrimaryButtonStyle())
-            .disabled(state == .syncing)
-
             Button(L10n.text("Disconnect"), systemImage: "link.badge.minus", action: onDisconnect)
                 .buttonStyle(DataPlaneSecondaryButtonStyle())
                 .disabled(state == .syncing)
@@ -389,8 +510,8 @@ private struct UniversalRelayPanel: View {
     }
 }
 
-private extension CodexRelaySyncState {
-    var dataPlaneLabel: String {
+extension CodexRelaySyncState {
+    fileprivate var dataPlaneLabel: String {
         switch self {
         case .notConfigured:
             L10n.text("NO ENDPOINT")
@@ -409,7 +530,7 @@ private extension CodexRelaySyncState {
         }
     }
 
-    var dataPlaneTint: Color {
+    fileprivate var dataPlaneTint: Color {
         switch self {
         case .failed:
             DataPlaneTheme.critical
@@ -420,7 +541,7 @@ private extension CodexRelaySyncState {
         }
     }
 
-    var relayValue: String {
+    fileprivate var relayValue: String {
         switch self {
         case .notConfigured:
             L10n.text("Relay / config")

@@ -1,4 +1,7 @@
 {
+  "Done": "Listo",
+  "Notifications": "Notificaciones",
+  "Connect Companion to enable notifications.": "Conecta Companion para activar las notificaciones.",
   "Anthropic · Claude Code": "Anthropic · Claude Code",
   "Notification preferences saved. Registration is pending and will retry while Statusline is open.": "Preferencias de avisos guardadas. El registro está pendiente y se reintentará mientras Statusline esté abierta.",
   "Notifications pending registration": "Avisos pendientes de registro",

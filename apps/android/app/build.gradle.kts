@@ -68,8 +68,8 @@ android {
         applicationId = "inmerzion.statusline"
         minSdk = 24
         targetSdk = 36
-        versionCode = 37
-        versionName = "0.1.39"
+        versionCode = 38
+        versionName = "0.1.40"
 
         buildConfigField("String", "RELAY_BASE_URL", relayBaseURL.asBuildConfigLiteral())
         buildConfigField("String", "FIREBASE_API_KEY", firebaseApiKey.asBuildConfigLiteral())
