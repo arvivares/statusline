@@ -25,6 +25,7 @@ protocol ResetPushManaging: AnyObject {
     func hasNotificationPermission() async -> Bool
     func markPreferences(resetCredits: Bool, quotaAlerts: Bool)
     func markRegistered()
+    func cancelRegistration()
     func beginOptOut()
     @discardableResult func finishOptOut() async -> Bool
     @discardableResult func invalidateTokenForOptOut() async -> Bool
@@ -42,6 +43,7 @@ final class ResetPushManager: ResetPushManaging {
     private let pendingRegistrationKey = "statusline.push.pendingRegistration"
     private let apnsRegistration = PushRegistrationGate<Void>()
     private let firebaseRegistration = PushRegistrationGate<String>()
+    private var receivedAPNSToken = false
 
     init(defaults: UserDefaults = .standard) { self.defaults = defaults }
 
@@ -62,6 +64,7 @@ final class ResetPushManager: ResetPushManaging {
     }
 
     func requestPermission() async throws {
+        PushDiagnostics.record(.permission, .started)
         guard FirebaseApp.app() != nil else { throw ResetPushError.notConfigured }
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
@@ -77,28 +80,53 @@ final class ResetPushManager: ResetPushManaging {
             allowed = false
         }
         guard allowed else { throw ResetPushError.permissionDenied }
+        PushDiagnostics.record(.permission, .ready)
     }
 
     func didRegisterForRemoteNotifications(with deviceToken: Data) {
+        // SwiftUI delegates forward APNs explicitly. Firebase delegate proxying
+        // is disabled in Info.plist per its SwiftUI integration requirements.
         Messaging.messaging().apnsToken = deviceToken
+        receivedAPNSToken = true
+        PushDiagnostics.record(.apns, .ready)
         if let attempt = apnsRegistration.attempt { apnsRegistration.finish(attempt, with: .success(())) }
     }
 
     func didFailToRegisterForRemoteNotifications(_ error: Error) {
+        PushDiagnostics.failure(.apns, error)
         if let attempt = apnsRegistration.attempt { apnsRegistration.finish(attempt, with: .failure(error)) }
     }
 
     func currentInstallationID() async throws -> String {
         guard isEnabled, FirebaseApp.app() != nil else { throw ResetPushError.notConfigured }
-        // Always use this system registration's token, including warm starts.
-        // A cached SDK token is not proof of the current APNs association.
-        try await apnsRegistration.wait(timeout: .seconds(20)) { _ in
-            UIApplication.shared.registerForRemoteNotifications()
+        // Reuse only a real system callback received in THIS process while
+        // UIKit still reports registration. Never trust a disk-cached FID/token.
+        if receivedAPNSToken, UIApplication.shared.isRegisteredForRemoteNotifications,
+           Messaging.messaging().apnsToken != nil {
+            PushDiagnostics.record(.apns, .reused)
+        } else {
+            PushDiagnostics.record(.apns, .started)
+            do {
+                try await apnsRegistration.wait(timeout: .seconds(20)) { _ in
+                    UIApplication.shared.registerForRemoteNotifications()
+                }
+            } catch {
+                PushDiagnostics.failure(.apns, error)
+                throw error
+            }
         }
         try Task.checkCancellation()
         guard isEnabled else { throw CancellationError() }
         Messaging.messaging().isAutoInitEnabled = true
-        return try await registerForInstallationID()
+        PushDiagnostics.record(.firebase, .started)
+        do {
+            let id = try await registerForInstallationID()
+            PushDiagnostics.record(.firebase, .ready)
+            return id
+        } catch {
+            PushDiagnostics.failure(.firebase, error)
+            throw error
+        }
     }
 
     func hasNotificationPermission() async -> Bool {
@@ -115,13 +143,17 @@ final class ResetPushManager: ResetPushManaging {
 
     func markRegistered() { defaults.set(false, forKey: pendingRegistrationKey) }
 
+    func cancelRegistration() {
+        apnsRegistration.cancel()
+        firebaseRegistration.cancel()
+    }
+
     func beginOptOut() {
         defaults.set(false, forKey: enabledKey)
         defaults.set(false, forKey: quotaEnabledKey)
         defaults.set(true, forKey: pendingUnregistrationKey)
         defaults.set(false, forKey: pendingRegistrationKey)
-        apnsRegistration.cancel()
-        firebaseRegistration.cancel()
+        cancelRegistration()
         if FirebaseApp.app() != nil { Messaging.messaging().isAutoInitEnabled = false }
     }
 

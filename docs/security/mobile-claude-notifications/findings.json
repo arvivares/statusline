@@ -2,9 +2,9 @@
   "schema_version": "1.0",
   "metadata": {
     "project": "statusline",
-    "analyzed_at": "2026-10-12T23:24:45Z",
-    "git_ref": "ce78634a5aa834176040c3b46df829d625374187",
-    "scope": "working diff: mobile Claude reader and iOS notification activation; not a production audit",
+    "analyzed_at": "2026-10-14T21:39:00Z",
+    "git_ref": "94de6586c974c0d86a6e923ce9240396c43a7033",
+    "scope": "working iOS follow-up diff: settings, cancellable registration, ordered opt-out, SwiftUI APNs mapping and privacy-safe logging; not a production audit",
     "tool_version": "threat-model skill (focused manual review)"
   },
   "findings": [],

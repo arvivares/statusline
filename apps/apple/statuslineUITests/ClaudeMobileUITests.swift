@@ -40,6 +40,13 @@ final class ClaudeMobileUITests: XCTestCase {
         XCTAssertTrue(app.buttons["focus-codex"].exists)
         XCTAssertTrue(app.buttons["focus-antigravity"].exists)
         for _ in 0..<3 { app.swipeDown() }
+        XCTAssertTrue(app.buttons["refreshStatus"].exists)
+        app.buttons["openSettings"].tap()
+        XCTAssertTrue(app.navigationBars[es ? "Configuración" : "Settings"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts[es ? "Notificaciones" : "Notifications"].exists)
+        XCTAssertTrue(app.staticTexts[es ? "Sincronización privada" : "Private sync"].exists)
+        app.buttons["closeSettings"].tap()
+        XCTAssertEqual(quota.value as? String, es ? "32 por ciento restante" : "32 percent remaining")
         let capture = XCTAttachment(screenshot: app.screenshot())
         capture.name = "claude-three-services-\(language)"
         capture.lifetime = .keepAlways

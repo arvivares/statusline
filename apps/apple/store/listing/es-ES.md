@@ -6,15 +6,15 @@ Statusline
 
 ## Subtítulo
 
-Codex y Gemini a la vista
+Tus agentes, de un vistazo
 
 ## Texto promocional
 
-Codex y Gemini, juntos en el iPhone y el widget. Vincula Companion para sincronizar de forma cifrada. Solo aparecen tus servicios habilitados.
+Codex, Antigravity y Claude Code, juntos en el iPhone y el widget. Vincula Companion para sincronizar de forma cifrada. Solo aparecen tus servicios habilitados.
 
 ## Descripción
 
-Consulta cuánta cuota te queda sin volver al ordenador. Statusline reúne las cuotas de Codex y de Google Gemini desde Antigravity en un panel para iPhone y widgets de pantalla de inicio.
+Consulta cuánta cuota te queda sin volver al ordenador. Statusline reúne las cuotas de OpenAI Codex, Google Antigravity y Anthropic Claude Code en un panel para iPhone y widgets de pantalla de inicio.
 
 DE UN VISTAZO
 
@@ -32,7 +32,7 @@ Prueba la demo integrada de Codex sin cuenta ni conexión. Empareja con Statusli
 
 SINCRONIZACIÓN PRIVADA OPCIONAL
 
-Para sincronizar las muestras, instala Statusline Companion 0.1.24 o posterior, gratuito y de código abierto, en Windows, Linux o macOS. Utiliza tu propia sesión iniciada en una instalación compatible de Codex o Antigravity en ese ordenador. Companion descubre las instalaciones locales compatibles. Empareja el iPhone mediante un QR de un solo uso o un enlace privado.
+Para sincronizar las muestras, instala la última versión de Statusline Companion, gratuita y de código abierto, en Windows, Linux o macOS. Utiliza tu propia sesión iniciada en una instalación compatible de Codex, Antigravity o Claude Code en ese ordenador. Companion descubre las instalaciones locales compatibles. Empareja el iPhone mediante un QR de un solo uso o un enlace privado.
 
 La integración de Antigravity muestra las cuotas de los modelos Gemini de Google, no las de los modelos de terceros que ofrece Antigravity. La disponibilidad y los periodos de cuota dependen del servicio y de la cuenta.
 
@@ -48,11 +48,11 @@ La app del iPhone no te pide contraseñas de los servicios ni claves de API. Las
 
 Statusline muestra información de cuota: no ejecuta tareas de programación, no amplía tus límites ni sustituye las suscripciones de los servicios.
 
-Statusline es un proyecto independiente y no está afiliado, respaldado ni patrocinado por OpenAI ni Google. Los nombres de productos y las marcas pertenecen a sus respectivos titulares.
+Statusline es un proyecto independiente y no está afiliado, respaldado ni patrocinado por OpenAI, Google ni Anthropic. Los nombres de productos y las marcas pertenecen a sus respectivos titulares.
 
 ## Palabras clave
 
-cuota,uso,antigravity,semanal,widget,desarrollo,restante,reinicio,privacidad,sincronización
+cuota,uso,antigravity,claude,codex,semanal,widget,restante,reinicio,privacidad,sincronización
 
 ## URL de soporte
 
@@ -61,6 +61,22 @@ https://statusline.inmerzion.io/es/support
 ## URL de marketing
 
 https://statusline.inmerzion.io/es/
+
+## Novedades — 1.1.5
+
+Una vista de cuotas más limpia: Actualizar y Configuración ahora están arriba a la derecha. Los avisos, la sincronización privada, Privacidad y Ayuda se reúnen en Configuración.
+
+Los interruptores de avisos siguen respondiendo mientras se completa el registro, incluso al apagarlos y volverlos a activar. Mejoramos los reintentos y la desactivación sin cambiar tu emparejamiento.
+
+Compatible con Codex, Antigravity y Claude Code desde tu Companion. La entrega de avisos y la actualización del widget dependen de la planificación del sistema.
+
+## Novedades — 1.1.4
+
+Claude Code se suma a Codex y Antigravity en la app y los widgets de inicio. Consulta cuotas de cinco horas y semanales cuando estén disponibles, destaca un servicio y mantén los demás a la vista. Solo aparecen los habilitados en tu Companion emparejado.
+
+Los avisos permanecen activados tras aceptar el permiso del sistema, aunque el registro se retrase. Un estado pendiente visible reintenta mientras Statusline está activa. Los avisos de cuota y de créditos de reset de Codex siguen siendo independientes y opcionales.
+
+Se conservan el vínculo, las lecturas y las preferencias de avisos. El refresco y la entrega push siguen siendo orientativos.
 
 ## Novedades — 1.1.3
 

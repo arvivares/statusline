@@ -1,0 +1,5 @@
+A cleaner quota overview: Refresh and Settings now sit in the top-right corner. Notification preferences, private sync, Privacy and Support are together in Settings.
+
+Notification switches remain responsive while registration is pending, including turning alerts off and back on. Improved retry and opt-out handling preserves your choices without changing your pairing.
+
+Supports Codex, Antigravity and Claude Code from your paired Companion. Notification delivery and widget refresh remain subject to system scheduling.

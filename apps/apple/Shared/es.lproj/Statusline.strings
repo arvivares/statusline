@@ -155,6 +155,7 @@
 "Connect Claude Code in Settings › Services to read your plan quota. Statusline never accesses your Claude credentials or conversations." = "Conecta Claude Code en Configuración › Servicios para leer la cuota de tu plan. Statusline nunca accede a tus credenciales ni conversaciones de Claude.";
 "Connect Codex" = "Conectar Codex";
 "CONNECT COMPANION" = "CONECTA COMPANION";
+"Connect Companion to enable notifications." = "Conecta Companion para activar las notificaciones.";
 "Connect device" = "Conectar dispositivo";
 "Connect once, then use Claude Code as usual. Quota updates after a response." = "Conéctalo una vez y usa Claude Code como siempre. La cuota se actualiza tras una respuesta.";
 "Connect this device" = "Conecta este dispositivo";
@@ -234,6 +235,7 @@
 "DISCONNECT" = "DESCONECTAR";
 "DISCONNECT.READER" = "DESCONECTAR.LECTOR";
 "Disconnected. Your previous status line is restored." = "Desconectado. Se ha restaurado tu status line anterior.";
+"Done" = "Listo";
 "Download & install" = "Descargar e instalar";
 "Downloading update" = "Descargando actualización";
 "Downloading…" = "Descargando…";
@@ -346,6 +348,7 @@
 "NOT UPLOADED" = "NO SE ENVÍA";
 "Notification preferences saved. Registration is pending and will retry while Statusline is open." = "Preferencias de avisos guardadas. El registro está pendiente y se reintentará mientras Statusline esté abierta.";
 "Notification preferences updated." = "Preferencias de notificaciones actualizadas.";
+"Notifications" = "Notificaciones";
 "Notifications are off because permission was revoked." = "Las notificaciones están desactivadas porque se retiró el permiso.";
 "Notifications are off on this device. Relay cleanup will retry when you open Statusline." = "Las notificaciones están desactivadas en este dispositivo. Se volverá a limpiar el relay cuando abras Statusline.";
 "Notifications are off. This device was unregistered." = "Las notificaciones están desactivadas. Este dispositivo se desvinculó.";

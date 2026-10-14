@@ -1,5 +1,21 @@
 # Apple App Store release kit
 
+## App Store submission — 13 October 2026
+
+**1.1.4 (13)** is **Waiting for Review** for App Store production. It adds
+Claude Code to the app and widgets and fixes notification choices turning off
+after accepting system permission. Submission ID:
+`63e84e07-7d21-47ad-9fa8-4da9ed8127a9`, submitted at **15:01 Europe/Madrid**.
+Automatic release after approval and immediate availability remain selected.
+**1.1.3** is the observed Ready for Distribution version until approval.
+
+The same verified Release archive was exported and uploaded, with production
+APNs, matching app/widget versions and the existing encrypted relay contract.
+EN/ES metadata and review instructions are updated. Five existing Still Focus
+screenshots per language are retained, not presented as new Claude captures.
+No phone installation or fresh physical push-delivery test was performed.
+See [validation-1.1.4.md](validation-1.1.4.md) for the delivery receipt and QA limits.
+
 ## App Store submission — 12 October 2026
 
 **1.1.3 (12)** is **Waiting for Review** for App Store production. The existing

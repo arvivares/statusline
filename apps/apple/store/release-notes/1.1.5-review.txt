@@ -1,0 +1,40 @@
+App Review — iOS 1.1.5 (14)
+
+Refresh and Settings are now top-right icons. Settings groups notifications, private sync and Privacy / Support. This update keeps alert switches responsive during registration and explicitly maps APNs callbacks for SwiftUI without Firebase delegate proxying.
+
+Tested in place on an affected iPhone 17 Pro / iOS 27.0: both alerts OFF, relay cleanup, both ON, Firebase/relay ready. Pairing and original choices were preserved. Local development-entitlement testing does not prove production push delivery. EN/ES unit and native UI tests passed.
+
+1. Recording
+Retain the previously supplied physical-device recording: launch, pairing, refresh and widget. It predates this Settings layout, Claude and alerts. No live QR is public.
+
+2. Purpose and audience
+Free, open-source developer utility displaying OpenAI Codex, Google Antigravity and Anthropic Claude Code quota metadata from the user's desktop Companion: remaining quota, supported reset times and sample age. Not a chatbot or coding service.
+
+3. Setup and main features
+No Statusline account, login, reviewer credentials, sample files, UGC, ads, paid features or purchases.
+
+Launch > View local demo / Ver demo local for an offline, labelled Codex example in app/widget. Fixed data, not a live account or push simulation.
+
+Optional live sync:
+- Install Companion from https://github.com/arvivares/statusline/releases on macOS, Windows or Linux. Windows is an unsigned beta; macOS is signed/notarized.
+- Use your own compatible signed-in Codex, Antigravity or Claude Code. Companion discovers local tools; Antigravity shows Google models only. Credentials stay with those tools.
+- Create a pairing in Companion Settings > Mobile sync. On iPhone open the gear > Private sync > Scan QR, or paste the private link in that sheet.
+- Select a service below the main quota. Small widgets follow that selection; medium widgets show secondary services. Absent tools stay hidden; unknown quota is not zero.
+- Keep Companion running, computer awake and devices connected. Open Statusline after updating. WidgetKit controls refresh; data is timestamped, not guaranteed real-time.
+
+Optional alerts: iPhone gear > Notifications. Independently enable quota and/or Codex credit alerts; grant OS permission. Choices persist during registration; pending readiness retries while active. Quota alerts cover confirmed recovery from zero and at least 20% remaining during the weekly window's final hour. Credit alerts require new Codex reset credits detected by Companion. Turning all alerts off unregisters this device. Delivery is best effort.
+
+4. External services/data
+- Local agents provide quota metadata, not prompts, code, conversations or credentials.
+- Cloudflare Workers/D1 transports AES-256-GCM snapshots; keys stay on paired devices. Push routing stores an encrypted Firebase Installation ID, language and category choices.
+- Firebase Cloud Messaging/Apple APNs process opted-in service/event/expiry metadata, not exact quota or account identity. Push routing is separate from encrypted snapshots. No Firebase Analytics or advertising SDK.
+- Camera scanning stays on-device; no stored frames. Keychain holds pairing secrets; App Groups/WidgetKit share caches.
+
+5. Regions
+China mainland stays excluded. Free features are consistent elsewhere, subject to third-party availability.
+
+6. Regulated industry/material
+No regulated service or protected third-party content. Independent; not endorsed by OpenAI, Google or Anthropic. Names identify compatibility.
+
+Privacy: https://statusline.inmerzion.io/privacy
+Support: https://statusline.inmerzion.io/support

@@ -155,6 +155,7 @@
 "Connect Claude Code in Settings › Services to read your plan quota. Statusline never accesses your Claude credentials or conversations." = "Connect Claude Code in Settings › Services to read your plan quota. Statusline never accesses your Claude credentials or conversations.";
 "Connect Codex" = "Connect Codex";
 "CONNECT COMPANION" = "CONNECT COMPANION";
+"Connect Companion to enable notifications." = "Connect Companion to enable notifications.";
 "Connect device" = "Connect device";
 "Connect once, then use Claude Code as usual. Quota updates after a response." = "Connect once, then use Claude Code as usual. Quota updates after a response.";
 "Connect this device" = "Connect this device";
@@ -234,6 +235,7 @@
 "DISCONNECT" = "DISCONNECT";
 "DISCONNECT.READER" = "DISCONNECT.READER";
 "Disconnected. Your previous status line is restored." = "Disconnected. Your previous status line is restored.";
+"Done" = "Done";
 "Download & install" = "Download & install";
 "Downloading update" = "Downloading update";
 "Downloading…" = "Downloading…";
@@ -346,6 +348,7 @@
 "NOT UPLOADED" = "NOT UPLOADED";
 "Notification preferences saved. Registration is pending and will retry while Statusline is open." = "Notification preferences saved. Registration is pending and will retry while Statusline is open.";
 "Notification preferences updated." = "Notification preferences updated.";
+"Notifications" = "Notifications";
 "Notifications are off because permission was revoked." = "Notifications are off because permission was revoked.";
 "Notifications are off on this device. Relay cleanup will retry when you open Statusline." = "Notifications are off on this device. Relay cleanup will retry when you open Statusline.";
 "Notifications are off. This device was unregistered." = "Notifications are off. This device was unregistered.";

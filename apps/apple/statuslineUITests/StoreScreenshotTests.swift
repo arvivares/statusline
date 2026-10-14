@@ -44,7 +44,7 @@ final class StoreScreenshotTests: XCTestCase {
             spanish ? "70 por ciento restante" : "70 percent remaining")
         retain(app, "\(language)-01-weekly-quota")
 
-        let sync = app.buttons[spanish ? "Sincronización privada" : "Private sync"]
+        let sync = app.buttons["openSettings"]
         reveal(sync, in: app)
         sync.tap()
         reveal(scan, in: app)
