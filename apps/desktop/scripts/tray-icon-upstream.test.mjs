@@ -31,13 +31,22 @@ describe("upstream macOS 27 tray compatibility", () => {
     const pkg = JSON.parse(
       readFileSync(new URL("../package.json", native), "utf8"),
     );
+    const npmLock = JSON.parse(
+      readFileSync(new URL("../package-lock.json", native), "utf8"),
+    );
     expect(cargo).toContain('tauri = { version = "=2.12.2"');
     expect(entries("tauri")).toHaveLength(1);
     expect(entries("tauri")[0]).toContain('version = "2.12.2"');
-    expect(pkg.dependencies["@tauri-apps/plugin-dialog"]).toBe("2.8.1");
-    expect(cargo).toContain('tauri-plugin-dialog = "=2.8.1"');
+    expect(pkg.dependencies["@tauri-apps/plugin-dialog"]).toBe("2.8.3");
+    expect(npmLock.packages[""].dependencies["@tauri-apps/plugin-dialog"]).toBe(
+      "2.8.3",
+    );
+    expect(
+      npmLock.packages["node_modules/@tauri-apps/plugin-dialog"].version,
+    ).toBe("2.8.3");
+    expect(cargo).toContain('tauri-plugin-dialog = "=2.8.3"');
     expect(entries("tauri-plugin-dialog")).toHaveLength(1);
-    expect(entries("tauri-plugin-dialog")[0]).toContain('version = "2.8.1"');
+    expect(entries("tauri-plugin-dialog")[0]).toContain('version = "2.8.3"');
   });
 
   it("preserves left-click toggling instead of showing the menu on macOS", () => {
