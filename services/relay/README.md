@@ -43,7 +43,7 @@ autenticación de Cloudflare se gestiona con `npx wrangler login` o con variable
 
 ### Seguridad de las herramientas
 
-Wrangler `4.149.0` utiliza Miniflare `5.20261006.1-alpha`, que solicita
+Wrangler `4.151.0` utiliza Miniflare `5.20261012.0-beta`, que solicita
 Sharp `0.35.5` de forma nativa. Se retira el override temporal a `0.35.4`:
 esa versión corregía el aviso anterior de libheif, pero no el nuevo
 [GHSA-wq5f-xc86-pv6w](https://github.com/lovell/sharp/security/advisories/GHSA-wq5f-xc86-pv6w).
