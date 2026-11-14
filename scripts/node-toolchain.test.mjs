@@ -91,7 +91,7 @@ test("jobs invoking Node tooling do not rely on the runner's default Node", () =
 test("CI runs the toolchain guard and cross-platform relay smoke checks", () => {
   const workflow = read(".github/workflows/repository-quality.yml");
   assert.ok(workflow.includes("scripts/node-toolchain.test.mjs"));
-  assert.ok(workflow.includes("os: [ubuntu-22.04, macos-14, windows-latest]"));
+  assert.ok(workflow.includes("os: [ubuntu-22.04, macos-15, windows-latest]"));
   for (const command of [
     "npm run db:migrate:local",
     "npx wrangler deploy --dry-run",
