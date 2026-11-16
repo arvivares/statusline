@@ -23,9 +23,9 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "devDependencies": {
-    "parse5": "8.1.0",
-    "prettier": "3.9.10",
+    "parse5": "8.1.1",
+    "prettier": "3.10.1",
     "typescript": "7.0.2",
-    "vite": "8.3.6"
+    "vite": "8.3.8"
   }
 }
