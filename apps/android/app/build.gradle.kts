@@ -150,7 +150,7 @@ dependencies {
     implementation("com.google.firebase:firebase-installations")
     implementation("com.google.firebase:firebase-messaging")
     // Compose 1.12 requires compileSdk 37; targetSdk remains independently pinned to 36.
-    val composeBOM = platform("androidx.compose:compose-bom:2026.09.00")
+    val composeBOM = platform("androidx.compose:compose-bom:2026.11.01")
 
     implementation(composeBOM)
     androidTestImplementation(composeBOM)
@@ -163,7 +163,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     // Keep the tested WorkManager line; review 2.12 separately from the API-24 hotfix.
     implementation("androidx.work:work-runtime:2.11.2")
-    val cameraXVersion = "1.6.2"
+    val cameraXVersion = "1.7.0"
     implementation("androidx.camera:camera-camera2:$cameraXVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraXVersion")
     implementation("androidx.camera:camera-view:$cameraXVersion")
